@@ -1,8 +1,8 @@
 package org.sharetrace.model.message;
 
+import static org.sharetrace.util.Preconditions.checkArgument;
 import java.time.Duration;
 import org.immutables.value.Value;
-import org.sharetrace.util.Preconditions;
 
 @Value.Immutable
 public abstract class Parameters implements NodeMessage {
@@ -25,14 +25,12 @@ public abstract class Parameters implements NodeMessage {
 
   @Value.Check
   protected void check() {
-    Preconditions.checkArgument(
+    checkArgument(
         transmissionRate() >= MIN_TRANSMISSION_RATE || transmissionRate() <= MAX_TRANSMISSION_RATE,
         transmissionRateMessage());
-    Preconditions.checkArgument(sendTolerance() >= MIN_SEND_TOLERANCE, sendToleranceMessage());
-    Preconditions.checkArgument(!timeBuffer().isZero() && !timeBuffer().isNegative(),
-        timeBufferMessage());
-    Preconditions.checkArgument(!scoreTtl().isZero() && !scoreTtl().isNegative(),
-        scoreTtlMessage());
+    checkArgument(sendTolerance() >= MIN_SEND_TOLERANCE, sendToleranceMessage());
+    checkArgument(!timeBuffer().isNegative(), timeBufferMessage());
+    checkArgument(!scoreTtl().isZero() && !scoreTtl().isNegative(), scoreTtlMessage());
   }
 
   private String transmissionRateMessage() {
@@ -49,7 +47,7 @@ public abstract class Parameters implements NodeMessage {
   }
 
   private String timeBufferMessage() {
-    return "'timeBuffer' must be positive; got " + timeBuffer();
+    return "'timeBuffer' must be non-negative; got " + timeBuffer();
   }
 
   private String scoreTtlMessage() {
