@@ -11,6 +11,7 @@ import java.util.TreeMap;
 import java.util.function.BinaryOperator;
 import java.util.function.Supplier;
 import java.util.stream.LongStream;
+import javax.annotation.Nullable;
 
 public class IntervalCache<T> {
 
@@ -40,6 +41,7 @@ public class IntervalCache<T> {
     return new Builder<>();
   }
 
+  @Nullable
   public T get(Instant timestamp) {
     Objects.requireNonNull(timestamp);
     refresh();

@@ -15,7 +15,8 @@ def versions = [
         immutables: "2.9.0",
         jgrapht   : "1.5.1",
         junit     : "5.8.2",
-        logback   : "1.2.11"
+        logback   : "1.2.11",
+        spotBugs  : "4.6.0"
 ]
 
 dependencies {
@@ -25,6 +26,7 @@ dependencies {
     implementation "com.typesafe.akka:akka-actor-typed_$versions.akkaScala:$versions.akka"
     implementation "ch.qos.logback:logback-classic:$versions.logback"
     implementation "org.jgrapht:jgrapht-core:$versions.jgrapht"
+    implementation "com.github.spotbugs:spotbugs-annotations:$versions.spotBugs"
 
     testImplementation "org.junit.jupiter:junit-jupiter-api:$versions.junit"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$versions.junit"
