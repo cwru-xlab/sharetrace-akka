@@ -58,7 +58,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
   }
 
   @Builder.Factory
-  public static Behavior<NodeMessage> node(
+  protected static Behavior<NodeMessage> node(
       Parameters parameters, Supplier<Instant> clock, IntervalCache<RiskScore> cache) {
     return Behaviors.setup(context -> new Node(context, parameters, clock, cache));
   }
