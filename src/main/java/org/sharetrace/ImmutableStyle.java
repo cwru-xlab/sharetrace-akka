@@ -1,4 +1,4 @@
-package org.sharetrace.propagation;
+package org.sharetrace;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

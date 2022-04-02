@@ -1,4 +1,4 @@
-package org.sharetrace.propagation;
+package org.sharetrace;
 
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
@@ -14,16 +14,16 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.immutables.builder.Builder;
-import org.sharetrace.propagation.model.graph.ContactGraph;
-import org.sharetrace.propagation.model.graph.Edge;
-import org.sharetrace.propagation.model.graph.NodeBuilder;
-import org.sharetrace.propagation.model.message.Contact;
-import org.sharetrace.propagation.model.message.NodeMessage;
-import org.sharetrace.propagation.model.message.Parameters;
-import org.sharetrace.propagation.model.message.RiskPropagationMessage;
-import org.sharetrace.propagation.model.message.RiskScore;
-import org.sharetrace.propagation.model.message.Run;
-import org.sharetrace.propagation.util.IntervalCache;
+import org.sharetrace.model.graph.ContactGraph;
+import org.sharetrace.model.graph.Edge;
+import org.sharetrace.model.graph.NodeBuilder;
+import org.sharetrace.model.message.Contact;
+import org.sharetrace.model.message.NodeMessage;
+import org.sharetrace.model.message.Parameters;
+import org.sharetrace.model.message.RiskPropagationMessage;
+import org.sharetrace.model.message.RiskScore;
+import org.sharetrace.model.message.Run;
+import org.sharetrace.util.IntervalCache;
 
 public class RiskPropagation extends AbstractBehavior<RiskPropagationMessage> {
 

@@ -1,4 +1,4 @@
-package org.sharetrace.propagation.model.message;
+package org.sharetrace.model.message;
 
 public enum Run implements RiskPropagationMessage {
   INSTANCE

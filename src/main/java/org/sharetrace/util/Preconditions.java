@@ -1,4 +1,4 @@
-package org.sharetrace.propagation.util;
+package org.sharetrace.util;
 
 public final class Preconditions {
 

@@ -1,4 +1,4 @@
-package org.sharetrace.propagation.model.graph;
+package org.sharetrace.model.graph;
 
 import java.util.function.Supplier;
 import org.jgrapht.generate.GraphGenerator;

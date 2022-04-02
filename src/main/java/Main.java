@@ -6,14 +6,14 @@ import akka.actor.typed.javadsl.Behaviors;
 import java.time.Duration;
 import java.time.Instant;
 import org.jgrapht.generate.BarabasiAlbertGraphGenerator;
-import org.sharetrace.propagation.RiskPropagationBuilder;
-import org.sharetrace.propagation.model.graph.ContactGraph;
-import org.sharetrace.propagation.model.message.NodeMessage;
-import org.sharetrace.propagation.model.message.Parameters;
-import org.sharetrace.propagation.model.message.RiskPropagationMessage;
-import org.sharetrace.propagation.model.message.RiskScore;
-import org.sharetrace.propagation.model.message.Run;
-import org.sharetrace.propagation.util.IntervalCache;
+import org.sharetrace.RiskPropagationBuilder;
+import org.sharetrace.model.graph.ContactGraph;
+import org.sharetrace.model.message.NodeMessage;
+import org.sharetrace.model.message.Parameters;
+import org.sharetrace.model.message.RiskPropagationMessage;
+import org.sharetrace.model.message.RiskScore;
+import org.sharetrace.model.message.Run;
+import org.sharetrace.util.IntervalCache;
 
 public class Main {
 

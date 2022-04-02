@@ -1,4 +1,4 @@
-package org.sharetrace.propagation.util;
+package org.sharetrace.util;
 
 import java.time.Duration;
 import java.time.Instant;

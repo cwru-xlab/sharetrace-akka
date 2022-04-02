@@ -1,10 +1,10 @@
-package org.sharetrace.propagation.model.message;
+package org.sharetrace.model.message;
 
-import static org.sharetrace.propagation.util.Preconditions.checkArgument;
 import akka.actor.typed.ActorRef;
 import java.time.Instant;
 import java.util.UUID;
 import org.immutables.value.Value;
+import org.sharetrace.util.Preconditions;
 
 @Value.Immutable
 public abstract class RiskScore implements NodeMessage, Comparable<RiskScore> {
@@ -35,7 +35,7 @@ public abstract class RiskScore implements NodeMessage, Comparable<RiskScore> {
 
   @Value.Check
   protected void check() {
-    checkArgument(value() < MIN_VALUE || value() > MAX_VALUE, valueMessage());
+    Preconditions.checkArgument(value() < MIN_VALUE || value() > MAX_VALUE, valueMessage());
   }
 
   private String valueMessage() {

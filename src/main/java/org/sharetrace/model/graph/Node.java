@@ -1,4 +1,4 @@
-package org.sharetrace.propagation.model.graph;
+package org.sharetrace.model.graph;
 
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
@@ -15,11 +15,11 @@ import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import org.immutables.builder.Builder;
-import org.sharetrace.propagation.model.message.Contact;
-import org.sharetrace.propagation.model.message.NodeMessage;
-import org.sharetrace.propagation.model.message.Parameters;
-import org.sharetrace.propagation.model.message.RiskScore;
-import org.sharetrace.propagation.util.IntervalCache;
+import org.sharetrace.model.message.Contact;
+import org.sharetrace.model.message.NodeMessage;
+import org.sharetrace.model.message.Parameters;
+import org.sharetrace.model.message.RiskScore;
+import org.sharetrace.util.IntervalCache;
 import org.slf4j.Logger;
 
 public class Node extends AbstractBehavior<NodeMessage> {

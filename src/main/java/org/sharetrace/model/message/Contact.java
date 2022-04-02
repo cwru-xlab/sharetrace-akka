@@ -1,4 +1,4 @@
-package org.sharetrace.propagation.model.message;
+package org.sharetrace.model.message;
 
 import akka.actor.typed.ActorRef;
 import java.time.Instant;
