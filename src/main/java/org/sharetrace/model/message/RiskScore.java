@@ -35,7 +35,7 @@ public abstract class RiskScore implements NodeMessage, Comparable<RiskScore> {
 
   @Value.Check
   protected void check() {
-    checkArgument(value() >= MIN_VALUE && value() <= MAX_VALUE, valueMessage());
+    checkArgument(value() >= MIN_VALUE && value() <= MAX_VALUE, this::valueMessage);
   }
 
   private String valueMessage() {

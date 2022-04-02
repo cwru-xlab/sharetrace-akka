@@ -27,10 +27,10 @@ public abstract class Parameters implements NodeMessage {
   protected void check() {
     checkArgument(
         transmissionRate() >= MIN_TRANSMISSION_RATE || transmissionRate() <= MAX_TRANSMISSION_RATE,
-        transmissionRateMessage());
-    checkArgument(sendTolerance() >= MIN_SEND_TOLERANCE, sendToleranceMessage());
-    checkArgument(!timeBuffer().isNegative(), timeBufferMessage());
-    checkArgument(!scoreTtl().isZero() && !scoreTtl().isNegative(), scoreTtlMessage());
+        this::transmissionRateMessage);
+    checkArgument(sendTolerance() >= MIN_SEND_TOLERANCE, this::sendToleranceMessage);
+    checkArgument(!timeBuffer().isNegative(), this::timeBufferMessage);
+    checkArgument(!scoreTtl().isZero() && !scoreTtl().isNegative(), this::scoreTtlMessage);
   }
 
   private String transmissionRateMessage() {

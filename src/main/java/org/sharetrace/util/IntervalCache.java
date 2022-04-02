@@ -1,5 +1,6 @@
 package org.sharetrace.util;
 
+import static org.sharetrace.util.Preconditions.checkArgument;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Comparator;
@@ -15,6 +16,7 @@ import javax.annotation.Nullable;
 
 public class IntervalCache<T> {
 
+  private static final long MIN_INTERVALS = 1L;
   private final NavigableMap<Instant, T> cache;
   private final BinaryOperator<T> mergeStrategy;
   private final Supplier<Instant> clock;
@@ -115,11 +117,13 @@ public class IntervalCache<T> {
   }
 
   private Instant checkInRange(Instant timestamp) {
-    if (timestamp.isBefore(rangeStart) || timestamp.isAfter(rangeEnd)) {
-      throw new IllegalArgumentException(
-          "'timestamp' must be between " + rangeStart + " and " + rangeEnd + "; got " + timestamp);
-    }
+    boolean inRange = !timestamp.isBefore(rangeStart) && !timestamp.isAfter(rangeEnd);
+    checkArgument(inRange, () -> rangeMessage(timestamp));
     return timestamp;
+  }
+
+  private String rangeMessage(Instant timestamp) {
+    return "'timestamp' must be between " + rangeStart + " and " + rangeEnd + "; got " + timestamp;
   }
 
   private void refresh() {
@@ -171,7 +175,7 @@ public class IntervalCache<T> {
       this.mergeStrategy = (oldValue, newValue) -> newValue;
       this.clock = Instant::now;
       this.interval = Duration.ofDays(1L);
-      this.nIntervals = 1L;
+      this.nIntervals = MIN_INTERVALS;
       this.refreshRate = Duration.ofMinutes(1L);
     }
 
@@ -222,12 +226,16 @@ public class IntervalCache<T> {
       Objects.requireNonNull(clock);
       Objects.requireNonNull(interval);
       Objects.requireNonNull(refreshRate);
-      if (refreshRate.isNegative() || refreshRate.isZero()) {
-        throw new IllegalArgumentException("'refreshRate' must be positive; got " + refreshRate);
-      }
-      if (nIntervals < 1L) {
-        throw new IllegalArgumentException("'nIntervals' must be at least 1; got " + nIntervals);
-      }
+      checkArgument(!refreshRate.isNegative() && !refreshRate.isZero(), this::refreshRateMessage);
+      checkArgument(nIntervals >= MIN_INTERVALS, this::nIntervalsMessage);
+    }
+
+    private String refreshRateMessage() {
+      return "'refreshRate' must be positive; got " + refreshRate;
+    }
+
+    private String nIntervalsMessage() {
+      return "'nIntervals' must be at least " + MIN_INTERVALS + "; got " + nIntervals;
     }
 
     private void setSpan() {
