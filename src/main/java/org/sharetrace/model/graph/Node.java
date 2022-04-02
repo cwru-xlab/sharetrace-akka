@@ -193,48 +193,25 @@ public class Node extends AbstractBehavior<NodeMessage> {
             current.uuid());
   }
 
-  private void logSendCurrent(ActorRef<NodeMessage> replyTo, RiskScore score) {
-    log()
-        .info(
-            SEND_CURRENT_PATTERN,
-            name(),
-            name(replyTo),
-            score.value(),
-            score.timestamp(),
-            score.uuid());
+  private void logSendCurrent(ActorRef<NodeMessage> contact, RiskScore score) {
+    logMessageOp(SEND_CURRENT_PATTERN, self(), contact, score);
   }
 
-  private void logSendCached(ActorRef<NodeMessage> replyTo, RiskScore score) {
-    log()
-        .info(
-            SEND_CACHED_PATTERN,
-            name(),
-            name(replyTo),
-            score.value(),
-            score.timestamp(),
-            score.uuid());
+  private void logSendCached(ActorRef<NodeMessage> contact, RiskScore score) {
+    logMessageOp(SEND_CACHED_PATTERN, self(), contact, score);
   }
 
-  private void logBroadcast(ActorRef<NodeMessage> replyTo, RiskScore score) {
-    log()
-        .info(
-            BROADCAST_PATTERN,
-            name(),
-            name(replyTo),
-            score.value(),
-            score.timestamp(),
-            score.uuid());
+  private void logBroadcast(ActorRef<NodeMessage> contact, RiskScore score) {
+    logMessageOp(BROADCAST_PATTERN, self(), contact, score);
   }
 
   private void logReceive(RiskScore score) {
-    log()
-        .info(
-            RECEIVE_PATTERN,
-            name(score.replyTo()),
-            name(),
-            score.value(),
-            score.timestamp(),
-            score.uuid());
+    logMessageOp(RECEIVE_PATTERN, score.replyTo(), self(), score);
+  }
+
+  private void logMessageOp(
+      String pattern, ActorRef<NodeMessage> source, ActorRef<NodeMessage> target, RiskScore score) {
+    log().info(pattern, name(source), name(target), score.value(), score.timestamp(), score.uuid());
   }
 
   private Logger log() {

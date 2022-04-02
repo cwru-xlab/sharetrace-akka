@@ -42,7 +42,7 @@ public class Main {
 
   private static ContactGraph graph() {
     System.out.println("Building the graph...");
-    ContactGraph graph = ContactGraph.create(new BarabasiAlbertGraphGenerator<>(2, 1, 10000));
+    ContactGraph graph = ContactGraph.create(new BarabasiAlbertGraphGenerator<>(2, 1, 100));
     System.out.println("Finished building the graph...");
     return graph;
   }
