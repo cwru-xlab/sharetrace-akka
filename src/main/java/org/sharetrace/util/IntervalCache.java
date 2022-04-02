@@ -230,9 +230,7 @@ public class IntervalCache<T> {
     }
 
     private void setSpan() {
-      if (span == null) {
-        span = interval.multipliedBy(nIntervals);
-      }
+      span = interval.multipliedBy(nIntervals);
     }
 
     private void initializeCache() {
