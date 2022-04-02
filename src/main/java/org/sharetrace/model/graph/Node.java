@@ -102,8 +102,8 @@ public class Node extends AbstractBehavior<NodeMessage> {
   private void sendCached(Contact contact) {
     RiskScore cached = cache.headMax(buffered(contact.timestamp()), RiskScore::compareTo);
     if (cached != null && isScoreNewEnough(cached)) {
-      RiskScore transmitted = transmitted(cached);
       ActorRef<NodeMessage> replyTo = contact.replyTo();
+      RiskScore transmitted = transmitted(cached);
       logSendCached(replyTo, transmitted);
       replyTo.tell(transmitted);
     }

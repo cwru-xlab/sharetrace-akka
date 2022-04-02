@@ -67,6 +67,7 @@ public class IntervalCache<T> {
     cache.merge(key, value, mergeStrategy);
   }
 
+  @Nullable
   public T headMax(Instant timestamp, Comparator<T> comparator) {
     Objects.requireNonNull(timestamp);
     Objects.requireNonNull(comparator);
