@@ -1,4 +1,4 @@
-package org.sharetrace.propagation.model;
+package org.sharetrace.propagation.model.graph;
 
 import org.jgrapht.graph.DefaultEdge;
 

@@ -7,12 +7,12 @@ import java.time.Duration;
 import java.time.Instant;
 import org.jgrapht.generate.BarabasiAlbertGraphGenerator;
 import org.sharetrace.propagation.RiskPropagationBuilder;
-import org.sharetrace.propagation.model.ContactGraph;
-import org.sharetrace.propagation.model.NodeMessage;
-import org.sharetrace.propagation.model.Parameters;
-import org.sharetrace.propagation.model.RiskPropagationMessage;
-import org.sharetrace.propagation.model.RiskScore;
-import org.sharetrace.propagation.model.Run;
+import org.sharetrace.propagation.model.graph.ContactGraph;
+import org.sharetrace.propagation.model.message.NodeMessage;
+import org.sharetrace.propagation.model.message.Parameters;
+import org.sharetrace.propagation.model.message.RiskPropagationMessage;
+import org.sharetrace.propagation.model.message.RiskScore;
+import org.sharetrace.propagation.model.message.Run;
 import org.sharetrace.propagation.util.IntervalCache;
 
 public class Main {

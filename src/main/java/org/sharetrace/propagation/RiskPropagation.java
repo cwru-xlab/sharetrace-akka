@@ -14,15 +14,15 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.immutables.builder.Builder;
-import org.sharetrace.propagation.model.Contact;
-import org.sharetrace.propagation.model.ContactGraph;
-import org.sharetrace.propagation.model.Edge;
-import org.sharetrace.propagation.model.NodeBuilder;
-import org.sharetrace.propagation.model.NodeMessage;
-import org.sharetrace.propagation.model.Parameters;
-import org.sharetrace.propagation.model.RiskPropagationMessage;
-import org.sharetrace.propagation.model.RiskScore;
-import org.sharetrace.propagation.model.Run;
+import org.sharetrace.propagation.model.graph.ContactGraph;
+import org.sharetrace.propagation.model.graph.Edge;
+import org.sharetrace.propagation.model.graph.NodeBuilder;
+import org.sharetrace.propagation.model.message.Contact;
+import org.sharetrace.propagation.model.message.NodeMessage;
+import org.sharetrace.propagation.model.message.Parameters;
+import org.sharetrace.propagation.model.message.RiskPropagationMessage;
+import org.sharetrace.propagation.model.message.RiskScore;
+import org.sharetrace.propagation.model.message.Run;
 import org.sharetrace.propagation.util.IntervalCache;
 
 public class RiskPropagation extends AbstractBehavior<RiskPropagationMessage> {

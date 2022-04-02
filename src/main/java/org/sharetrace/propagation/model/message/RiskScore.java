@@ -1,4 +1,4 @@
-package org.sharetrace.propagation.model;
+package org.sharetrace.propagation.model.message;
 
 import static org.sharetrace.propagation.util.Preconditions.checkArgument;
 import akka.actor.typed.ActorRef;
