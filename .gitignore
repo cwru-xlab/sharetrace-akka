@@ -28,3 +28,8 @@ gradle-app.setting
 
 # Cache of project
 .gradletasknamecache
+
+# Ignore Gradle build output directory
+build
+/gradle/wrapper/
+/.idea/
