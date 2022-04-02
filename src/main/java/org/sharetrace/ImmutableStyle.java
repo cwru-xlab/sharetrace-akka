@@ -18,6 +18,4 @@ import org.immutables.value.Value.Style.ImplementationVisibility;
     newBuilder = "create",
     jdkOnly = true,
     defaults = @Value.Immutable(copy = false, lazyhash = true))
-@interface ImmutableStyle {
-
-}
+@interface ImmutableStyle {}

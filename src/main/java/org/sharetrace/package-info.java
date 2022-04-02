@@ -1,3 +1,2 @@
 @ImmutableStyle
 package org.sharetrace;
-

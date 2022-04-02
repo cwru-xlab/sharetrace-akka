@@ -1,5 +1,3 @@
 package org.sharetrace.model.message;
 
-public interface NodeMessage {
-
-}
+public interface NodeMessage {}
