@@ -91,10 +91,9 @@ public class Node extends AbstractBehavior<NodeMessage> {
   private boolean sendCurrent(Contact contact) {
     boolean sent = isContactNewEnough(contact, current) && isScoreNewEnough(current);
     if (sent) {
-      ActorRef<NodeMessage> replyTo = contact.replyTo();
       RiskScore transmitted = transmitted(current);
-      logSendCurrent(replyTo, transmitted);
-      replyTo.tell(transmitted);
+      logSendCurrent(contact.replyTo(), transmitted);
+      contact.replyTo().tell(transmitted);
     }
     return sent;
   }
@@ -102,10 +101,9 @@ public class Node extends AbstractBehavior<NodeMessage> {
   private void sendCached(Contact contact) {
     RiskScore cached = cache.headMax(buffered(contact.timestamp()), RiskScore::compareTo);
     if (cached != null && isScoreNewEnough(cached)) {
-      ActorRef<NodeMessage> replyTo = contact.replyTo();
       RiskScore transmitted = transmitted(cached);
-      logSendCached(replyTo, transmitted);
-      replyTo.tell(transmitted);
+      logSendCached(contact.replyTo(), transmitted);
+      contact.replyTo().tell(transmitted);
     }
   }
 
@@ -172,9 +170,9 @@ public class Node extends AbstractBehavior<NodeMessage> {
     return parameters.scoreTtl().compareTo(sinceComputed) > 0;
   }
 
-  private void sendBroadcast(ActorRef<NodeMessage> replyTo, RiskScore score) {
-    logBroadcast(replyTo, score);
-    replyTo.tell(score);
+  private void sendBroadcast(ActorRef<NodeMessage> contact, RiskScore score) {
+    logBroadcast(contact, score);
+    contact.tell(score);
   }
 
   private void logContact(Contact contact) {
