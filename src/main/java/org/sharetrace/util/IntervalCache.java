@@ -19,6 +19,7 @@ public class IntervalCache<T> {
   private final BinaryOperator<T> mergeStrategy;
   private final Supplier<Instant> clock;
   private final Duration interval;
+  private final long nIntervals;
   private final Duration span;
   private final Duration refreshRate;
   private Instant lastRefresh;
@@ -31,6 +32,7 @@ public class IntervalCache<T> {
     this.mergeStrategy = builder.mergeStrategy;
     this.clock = builder.clock;
     this.interval = builder.interval;
+    this.nIntervals = builder.nIntervals;
     this.span = builder.span;
     this.refreshRate = builder.refreshRate;
     this.lastRefresh = clock.get();
@@ -39,6 +41,10 @@ public class IntervalCache<T> {
 
   public static <T> Builder<T> builder() {
     return new Builder<>();
+  }
+
+  public Builder<T> toBuilder() {
+    return new Builder<>(this);
   }
 
   @Nullable
@@ -134,9 +140,13 @@ public class IntervalCache<T> {
   }
 
   private void extend(long nIntervals) {
-    LongStream.rangeClosed(1, nIntervals)
-        .mapToObj(i -> startOfRangeEnd.plus(interval.multipliedBy(i)))
-        .forEach(timestamp -> cache.put(timestamp, null));
+    if (cache.isEmpty()) {
+      cache.putAll(toBuilder().build().cache);
+    } else {
+      LongStream.rangeClosed(1, nIntervals)
+          .mapToObj(i -> startOfRangeEnd.plus(interval.multipliedBy(i)))
+          .forEach(timestamp -> cache.put(timestamp, null));
+    }
   }
 
   private void updateRange() {
@@ -147,7 +157,7 @@ public class IntervalCache<T> {
 
   public static final class Builder<T> {
 
-    private NavigableMap<Instant, T> cache;
+    private final NavigableMap<Instant, T> cache;
     private BinaryOperator<T> mergeStrategy;
     private Supplier<Instant> clock;
     private Duration interval;
@@ -156,11 +166,22 @@ public class IntervalCache<T> {
     private Duration refreshRate;
 
     private Builder() {
+      this.cache = new TreeMap<>();
       this.mergeStrategy = (oldValue, newValue) -> newValue;
       this.clock = Instant::now;
       this.interval = Duration.ofDays(1L);
       this.nIntervals = 1L;
       this.refreshRate = Duration.ofMinutes(1L);
+    }
+
+    private Builder(IntervalCache<T> cache) {
+      this.cache = new TreeMap<>(cache.cache);
+      this.mergeStrategy = cache.mergeStrategy;
+      this.clock = cache.clock;
+      this.interval = cache.interval;
+      this.nIntervals = cache.nIntervals;
+      this.span = cache.span;
+      this.refreshRate = cache.refreshRate;
     }
 
     public Builder<T> interval(Duration interval) {
@@ -209,15 +230,18 @@ public class IntervalCache<T> {
     }
 
     private void setSpan() {
-      span = interval.multipliedBy(nIntervals);
+      if (span == null) {
+        span = interval.multipliedBy(nIntervals);
+      }
     }
 
     private void initializeCache() {
-      cache = new TreeMap<>();
-      Instant now = clock.get();
-      LongStream.range(0L, nIntervals)
-          .mapToObj(i -> now.minus(interval.multipliedBy(i)))
-          .forEach(timestamp -> cache.put(timestamp, null));
+      if (cache.isEmpty()) {
+        Instant now = clock.get();
+        LongStream.range(0L, nIntervals)
+            .mapToObj(i -> now.minus(interval.multipliedBy(i)))
+            .forEach(timestamp -> cache.put(timestamp, null));
+      }
     }
   }
 }
