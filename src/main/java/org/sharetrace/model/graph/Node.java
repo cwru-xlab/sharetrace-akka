@@ -178,7 +178,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
   }
 
   private void logContact(Contact contact) {
-    log().info(CONTACT_PATTERN, name(), name(contact.replyTo()));
+    log().info(CONTACT_PATTERN, name(self()), name(contact.replyTo()));
   }
 
   private void logUpdate(RiskScore previous, RiskScore current) {
@@ -186,7 +186,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
         .info(
             UPDATE_PATTERN,
             name(current.replyTo()),
-            name(),
+            name(self()),
             previous.value(),
             current.value(),
             current.timestamp(),
@@ -216,10 +216,6 @@ public class Node extends AbstractBehavior<NodeMessage> {
 
   private Logger log() {
     return getContext().getLog();
-  }
-
-  private String name() {
-    return name(self());
   }
 
   private String name(ActorRef<NodeMessage> node) {
