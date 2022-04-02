@@ -117,7 +117,7 @@ public class IntervalCache<T> {
   }
 
   private Instant checkInRange(Instant timestamp) {
-    boolean inRange = !timestamp.isBefore(rangeStart) && !timestamp.isAfter(rangeEnd);
+    boolean inRange = rangeStart.isBefore(timestamp) && rangeEnd.isAfter(timestamp);
     checkArgument(inRange, () -> rangeMessage(timestamp));
     return timestamp;
   }
