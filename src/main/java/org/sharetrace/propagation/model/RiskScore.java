@@ -1,5 +1,6 @@
 package org.sharetrace.propagation.model;
 
+import static org.sharetrace.propagation.util.Preconditions.checkArgument;
 import akka.actor.typed.ActorRef;
 import java.time.Instant;
 import java.util.UUID;
@@ -10,8 +11,6 @@ public abstract class RiskScore implements NodeMessage, Comparable<RiskScore> {
 
   public static final double MIN_VALUE = 0d;
   public static final double MAX_VALUE = 1d;
-  private static final String VALUE_MESSAGE =
-      "'value' must be between " + MIN_VALUE + " and " + MAX_VALUE + ", inclusive; got %s";
 
   public static Builder builder() {
     return ImmutableRiskScore.builder();
@@ -36,10 +35,16 @@ public abstract class RiskScore implements NodeMessage, Comparable<RiskScore> {
 
   @Value.Check
   protected void check() {
-    double value = value();
-    if (value < MIN_VALUE || value > MAX_VALUE) {
-      throw new IllegalArgumentException(String.format(VALUE_MESSAGE, value));
-    }
+    checkArgument(value() < MIN_VALUE || value() > MAX_VALUE, valueMessage());
+  }
+
+  private String valueMessage() {
+    return "'value' must be between "
+        + MIN_VALUE
+        + " and "
+        + MAX_VALUE
+        + ", inclusive; got "
+        + value();
   }
 
   public interface Builder {
