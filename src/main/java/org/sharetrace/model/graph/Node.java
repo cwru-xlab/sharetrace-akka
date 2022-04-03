@@ -47,31 +47,30 @@ public class Node extends AbstractBehavior<NodeMessage> {
   private static final String UPDATE_PATTERN =
       "{\"event\": \"update\", \"source\": \"{}\", \"target\": \"{}\", \"previous\": {}, \"current\": {}, \"timestamp\": \"{}\", \"uuid\": \"{}\"}";
 
+  private final TimerScheduler<NodeMessage> timers;
   private final Map<ActorRef<NodeMessage>, Instant> contacts;
   private final Parameters parameters;
   private final Supplier<Instant> clock;
   private final IntervalCache<RiskScore> cache;
   private final Duration idleTimeout;
   private RiskScore current;
-  private Instant lastReceived;
 
   private Node(
       ActorContext<NodeMessage> context,
-      TimerScheduler<NodeMessage> timer,
+      TimerScheduler<NodeMessage> timers,
       Parameters parameters,
       Supplier<Instant> clock,
       IntervalCache<RiskScore> cache,
       Duration idleTimeout) {
     super(context);
+    this.timers = timers;
     this.contacts = new HashMap<>();
     this.parameters = parameters;
     this.clock = clock;
     this.cache = cache;
     this.idleTimeout = idleTimeout;
     this.current = defaultScore();
-    this.lastReceived = clock.get();
     cache.put(current.timestamp(), current);
-    timer.startTimerWithFixedDelay(Timeout.INSTANCE, idleTimeout);
   }
 
   @Builder.Factory
@@ -138,7 +137,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
   }
 
   private void update(RiskScore score) {
-    lastReceived = clock.get();
+    timers.startSingleTimer(Timeout.INSTANCE, idleTimeout);
     cache.put(score.timestamp(), score);
     if (score.value() > current.value()) {
       logUpdate(current, score);
@@ -200,12 +199,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
   }
 
   private Behavior<NodeMessage> onTimeout(Timeout timeout) {
-    Duration sinceReceived = Duration.between(lastReceived, clock.get());
-    Behavior<NodeMessage> behavior = this;
-    if (sinceReceived.compareTo(idleTimeout) >= 0) {
-      behavior = Behaviors.stopped();
-    }
-    return behavior;
+    return Behaviors.stopped();
   }
 
   private void logContact(Contact contact) {
