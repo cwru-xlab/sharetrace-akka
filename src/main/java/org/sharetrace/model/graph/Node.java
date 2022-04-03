@@ -15,6 +15,7 @@ import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import org.immutables.builder.Builder;
+import org.sharetrace.RiskPropagation;
 import org.sharetrace.model.message.Contact;
 import org.sharetrace.model.message.NodeMessage;
 import org.sharetrace.model.message.Parameters;
@@ -22,7 +23,13 @@ import org.sharetrace.model.message.RiskScore;
 import org.sharetrace.util.IntervalCache;
 import org.slf4j.Logger;
 
-// TODO(rtatton) Add Javadoc
+/**
+ * An actor that corresponds to a {@link ContactGraph} node. Collectively, all {@link Node}s carry
+ * out the execution of {@link RiskPropagation}.
+ *
+ * @see Parameters
+ * @see IntervalCache
+ */
 public class Node extends AbstractBehavior<NodeMessage> {
 
   private static final String CONTACT_PATTERN =
