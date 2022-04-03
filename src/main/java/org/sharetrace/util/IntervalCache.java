@@ -14,6 +14,24 @@ import java.util.function.Supplier;
 import java.util.stream.LongStream;
 import javax.annotation.Nullable;
 
+/**
+ * A cache that maintains a finite number of contiguous time intervals in which values are cached.
+ * The timespan of the cache is defined as {@code nIntervals * intervalDuration}. This
+ * implementation differs from a standard cache in that the time-to-live of a value is based on its
+ * specified timestamp, and not how long it has existed in the cache.
+ *
+ * <p>On each call to {@link #get(Instant)} and {@link #put(Instant, Object)}, the cache checks to
+ * see if it should synchronously refresh itself by shifting forward its time horizon and removing
+ * expired time intervals and their associated values. The frequency with which this refresh
+ * operation occurs is based on the specified {@code refreshRate} and {@code clock}. Note that if
+ * all values have expired, the cache is reinitialized based on the current time, according to the
+ * {@code clock}.
+ *
+ * <p>A user-defined strategy can be provided that determines how values in a given time interval
+ * are merged. By default, the new value unconditionally replaces the old value.
+ *
+ * @param <T> The type of the cached values.
+ */
 public class IntervalCache<T> {
 
   private static final long MIN_INTERVALS = 1L;
@@ -49,6 +67,12 @@ public class IntervalCache<T> {
     return new Builder<>(this);
   }
 
+  /**
+   * Returns the cached value associated with the time interval that contains the specified
+   * timestamp . If the timestamp falls outside the timespan of the cache, {@code null} is returned.
+   * Prior to retrieving the value, the cache is possibly refreshed if it has been sufficiently long
+   * since its previous refresh.
+   */
   @Nullable
   public T get(Instant timestamp) {
     Objects.requireNonNull(timestamp);
@@ -61,6 +85,13 @@ public class IntervalCache<T> {
     return value;
   }
 
+  /**
+   * Adds the specified value to the time interval that contains the specified timestamp according
+   * merge strategy of this instance. Prior to adding the value, the cache is possibly refreshed if
+   * it has been sufficiently long since its previous refresh.
+   *
+   * @throws IllegalArgumentException if the timespan does not contain the specified timestamp.
+   */
   public void put(Instant timestamp, T value) {
     Objects.requireNonNull(timestamp);
     Objects.requireNonNull(value);
@@ -69,6 +100,12 @@ public class IntervalCache<T> {
     cache.merge(key, value, mergeStrategy);
   }
 
+  /**
+   * Returns the maximum value, according to the specified comparator, whose time interval contains
+   * or occurs before the specified timestamp. No maximum may be found if no value has been cached
+   * in the time intervals before or during the specified timestamp. In this case, {@code null} is
+   * returned.
+   */
   @Nullable
   public T headMax(Instant timestamp, Comparator<T> comparator) {
     Objects.requireNonNull(timestamp);
@@ -77,43 +114,6 @@ public class IntervalCache<T> {
         .filter(Objects::nonNull)
         .max(comparator)
         .orElse(null);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(cache, mergeStrategy, clock, interval, refreshRate);
-  }
-
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }
-    IntervalCache<?> that = (IntervalCache<?>) o;
-    return cache.equals(that.cache)
-        && mergeStrategy.equals(that.mergeStrategy)
-        && clock.equals(that.clock)
-        && interval.equals(that.interval)
-        && refreshRate.equals(that.refreshRate);
-  }
-
-  @Override
-  public String toString() {
-    return "IntervalCache{"
-        + "interval="
-        + interval
-        + ", refreshRate="
-        + refreshRate
-        + ", lastRefresh="
-        + lastRefresh
-        + ", rangeStart="
-        + rangeStart
-        + ", rangeEnd="
-        + rangeEnd
-        + '}';
   }
 
   private Instant checkInRange(Instant timestamp) {
@@ -189,31 +189,37 @@ public class IntervalCache<T> {
       this.refreshRate = cache.refreshRate;
     }
 
+    /** Sets duration of each contiguous time interval. */
     public Builder<T> interval(Duration interval) {
       this.interval = interval;
       return this;
     }
 
+    /** Sets the number of contiguous time intervals. */
     public Builder<T> nIntervals(long nIntervals) {
       this.nIntervals = nIntervals;
       return this;
     }
 
+    /** Sets the duration after which the cache will refresh. */
     public Builder<T> refreshRate(Duration refreshRate) {
       this.refreshRate = refreshRate;
       return this;
     }
 
+    /** Sets the clock that the cache will use for its notion of time. */
     public Builder<T> clock(Supplier<Instant> clock) {
       this.clock = clock;
       return this;
     }
 
+    /** Sets the strategy that will be used when adding values to the cache. */
     public Builder<T> mergeStrategy(BinaryOperator<T> mergeStrategy) {
       this.mergeStrategy = mergeStrategy;
       return this;
     }
 
+    /** Returns an initialized instance of the cache. */
     public IntervalCache<T> build() {
       checkFields();
       setSpan();
