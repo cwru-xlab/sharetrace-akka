@@ -22,6 +22,7 @@ import org.sharetrace.model.message.RiskScore;
 import org.sharetrace.util.IntervalCache;
 import org.slf4j.Logger;
 
+// TODO(rtatton) Add Javadoc
 public class Node extends AbstractBehavior<NodeMessage> {
 
   private static final String CONTACT_PATTERN =

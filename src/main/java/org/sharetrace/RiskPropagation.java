@@ -25,6 +25,7 @@ import org.sharetrace.model.message.RiskScore;
 import org.sharetrace.model.message.Run;
 import org.sharetrace.util.IntervalCache;
 
+/** A non-iterative, asynchronous implementation of the ShareTrace algorithm. */
 public class RiskPropagation extends AbstractBehavior<RiskPropagationMessage> {
 
   private final Parameters parameters;
