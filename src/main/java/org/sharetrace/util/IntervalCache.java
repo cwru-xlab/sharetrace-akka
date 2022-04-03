@@ -3,6 +3,7 @@ package org.sharetrace.util;
 import static org.sharetrace.util.Preconditions.checkArgument;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Map.Entry;
 import java.util.NavigableMap;
@@ -104,16 +105,20 @@ public class IntervalCache<T> {
    * Returns the maximum value, according to the specified comparator, whose time interval contains
    * or occurs before the specified timestamp. No maximum may be found if no value has been cached
    * in the time intervals before or during the specified timestamp. In this case, {@code null} is
-   * returned.
+   * returned. Prior to retrieving the value, the cache is possibly refreshed if it has been
+   * sufficiently long since its previous refresh.
    */
   @Nullable
   public T headMax(Instant timestamp, Comparator<T> comparator) {
     Objects.requireNonNull(timestamp);
     Objects.requireNonNull(comparator);
-    return cache.headMap(timestamp, true).values().stream()
-        .filter(Objects::nonNull)
-        .max(comparator)
-        .orElse(null);
+    refresh();
+    T value = null;
+    if (timestamp.isBefore(rangeEnd)) {
+      Collection<T> values = cache.headMap(timestamp, true).values();
+      value = values.stream().filter(Objects::nonNull).max(comparator).orElse(null);
+    }
+    return value;
   }
 
   private Instant checkInRange(Instant timestamp) {
