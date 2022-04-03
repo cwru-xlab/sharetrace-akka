@@ -8,16 +8,16 @@ import org.jgrapht.generate.GnmRandomGraphGenerator;
 import org.sharetrace.RiskPropagationBuilder;
 import org.sharetrace.Runner;
 import org.sharetrace.model.graph.ContactGraph;
+import org.sharetrace.model.message.AlgorithmMessage;
 import org.sharetrace.model.message.NodeMessage;
 import org.sharetrace.model.message.Parameters;
-import org.sharetrace.model.message.RiskPropMessage;
 import org.sharetrace.model.message.RiskScore;
 import org.sharetrace.util.IntervalCache;
 
 public class Main {
 
   public static void main(String[] args) {
-    Behavior<RiskPropMessage> riskPropagation =
+    Behavior<AlgorithmMessage> riskPropagation =
         RiskPropagationBuilder.create()
             .graph(newGraph())
             .parameters(parameters())

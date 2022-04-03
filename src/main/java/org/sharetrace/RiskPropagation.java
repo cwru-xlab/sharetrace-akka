@@ -21,10 +21,10 @@ import org.sharetrace.model.graph.ContactGraph;
 import org.sharetrace.model.graph.Edge;
 import org.sharetrace.model.graph.Node;
 import org.sharetrace.model.graph.NodeBuilder;
+import org.sharetrace.model.message.AlgorithmMessage;
 import org.sharetrace.model.message.Contact;
 import org.sharetrace.model.message.NodeMessage;
 import org.sharetrace.model.message.Parameters;
-import org.sharetrace.model.message.RiskPropMessage;
 import org.sharetrace.model.message.RiskScore;
 import org.sharetrace.model.message.Run;
 import org.sharetrace.util.IntervalCache;
@@ -46,7 +46,7 @@ import org.sharetrace.util.IntervalCache;
  *
  * @see Parameters
  */
-public class RiskPropagation extends AbstractBehavior<RiskPropMessage> {
+public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
 
   private final Parameters parameters;
   private final ContactGraph graph;
@@ -60,7 +60,7 @@ public class RiskPropagation extends AbstractBehavior<RiskPropMessage> {
   private long nStopped;
 
   private RiskPropagation(
-      ActorContext<RiskPropMessage> context,
+      ActorContext<AlgorithmMessage> context,
       ContactGraph graph,
       Parameters parameters,
       Supplier<Instant> clock,
@@ -82,7 +82,7 @@ public class RiskPropagation extends AbstractBehavior<RiskPropMessage> {
   }
 
   @Builder.Factory
-  protected static Behavior<RiskPropMessage> riskPropagation(
+  protected static Behavior<AlgorithmMessage> riskPropagation(
       ContactGraph graph,
       Duration nodeTimeout,
       Parameters parameters,
@@ -104,15 +104,15 @@ public class RiskPropagation extends AbstractBehavior<RiskPropMessage> {
   }
 
   @Override
-  public Receive<RiskPropMessage> createReceive() {
+  public Receive<AlgorithmMessage> createReceive() {
     return newReceiveBuilder()
         .onMessage(Run.class, this::onRun)
         .onSignal(Terminated.class, this::onTerminate)
         .build();
   }
 
-  private Behavior<RiskPropMessage> onRun(Run run) {
-    Behavior<RiskPropMessage> behavior = this;
+  private Behavior<AlgorithmMessage> onRun(Run run) {
+    Behavior<AlgorithmMessage> behavior = this;
     if (nNodes > 0) {
       Map<Long, ActorRef<NodeMessage>> nodes = newNodes();
       setScores(nodes);
@@ -146,8 +146,8 @@ public class RiskPropagation extends AbstractBehavior<RiskPropMessage> {
         .build();
   }
 
-  private Behavior<RiskPropMessage> onTerminate(Terminated terminated) {
-    Behavior<RiskPropMessage> behavior = this;
+  private Behavior<AlgorithmMessage> onTerminate(Terminated terminated) {
+    Behavior<AlgorithmMessage> behavior = this;
     if (++nStopped == nNodes) {
       // Do not include "PT" of Duration string.
       String runtime = Duration.between(startedAt, clock.get()).toString().substring(2);

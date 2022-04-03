@@ -5,21 +5,21 @@ import akka.actor.typed.ActorSystem;
 import akka.actor.typed.Behavior;
 import akka.actor.typed.Terminated;
 import akka.actor.typed.javadsl.Behaviors;
-import org.sharetrace.model.message.RiskPropMessage;
+import org.sharetrace.model.message.AlgorithmMessage;
 import org.sharetrace.model.message.Run;
 
 public class Runner {
 
   private Runner() {}
 
-  public static void run(Behavior<RiskPropMessage> riskPropagation) {
-    ActorSystem.create(runner(riskPropagation), "Runner");
+  public static void run(Behavior<AlgorithmMessage> algorithm) {
+    ActorSystem.create(runner(algorithm), "Runner");
   }
 
-  private static Behavior<Void> runner(Behavior<RiskPropMessage> riskPropagation) {
+  private static Behavior<Void> runner(Behavior<AlgorithmMessage> algorithm) {
     return Behaviors.setup(
         context -> {
-          ActorRef<RiskPropMessage> riskProp = context.spawn(riskPropagation, "RiskPropagation");
+          ActorRef<AlgorithmMessage> riskProp = context.spawn(algorithm, "Algorithm");
           context.watch(riskProp);
           riskProp.tell(Run.INSTANCE);
           return Behaviors.receive(Void.class)
