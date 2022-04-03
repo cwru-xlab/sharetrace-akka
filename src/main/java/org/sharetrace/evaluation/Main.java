@@ -1,30 +1,23 @@
 package org.sharetrace.evaluation;
 
 import akka.actor.typed.ActorRef;
-import akka.actor.typed.ActorSystem;
 import akka.actor.typed.Behavior;
-import akka.actor.typed.javadsl.ActorContext;
-import akka.actor.typed.javadsl.Behaviors;
 import java.time.Duration;
 import java.time.Instant;
-import org.jgrapht.generate.BarabasiAlbertGraphGenerator;
+import org.jgrapht.generate.GnmRandomGraphGenerator;
 import org.sharetrace.RiskPropagationBuilder;
 import org.sharetrace.Runner;
 import org.sharetrace.model.graph.ContactGraph;
 import org.sharetrace.model.message.NodeMessage;
 import org.sharetrace.model.message.Parameters;
-import org.sharetrace.model.message.RiskPropagationMessage;
+import org.sharetrace.model.message.RiskPropMessage;
 import org.sharetrace.model.message.RiskScore;
 import org.sharetrace.util.IntervalCache;
 
 public class Main {
 
   public static void main(String[] args) {
-    ActorSystem.create(Behaviors.setup(Main::run), "Runner");
-  }
-
-  private static Behavior<Void> run(ActorContext<Void> context) {
-    Behavior<RiskPropagationMessage> riskPropagation =
+    Behavior<RiskPropMessage> riskPropagation =
         RiskPropagationBuilder.create()
             .graph(newGraph())
             .parameters(parameters())
@@ -32,12 +25,13 @@ public class Main {
             .scoreFactory(Main::initialScore)
             .timeFactory(Main::contactTime)
             .cacheFactory(Main::nodeCache)
+            .nodeTimeout(nodeTimeout())
             .build();
-    return new Runner(riskPropagation).run();
+    Runner.run(riskPropagation);
   }
 
   private static ContactGraph newGraph() {
-    return ContactGraph.create(new BarabasiAlbertGraphGenerator<>(2, 1, 100));
+    return ContactGraph.create(new GnmRandomGraphGenerator<>(100_000, 500_000));
   }
 
   private static RiskScore initialScore(ActorRef<NodeMessage> node) {
@@ -49,7 +43,7 @@ public class Main {
   }
 
   private static Instant timestamp() {
-    return Instant.now().minus(lookBack());
+    return time().minus(lookBack());
   }
 
   private static Duration lookBack() {
@@ -71,7 +65,7 @@ public class Main {
 
   private static IntervalCache<RiskScore> nodeCache() {
     return IntervalCache.<RiskScore>builder()
-        .nIntervals(14)
+        .nIntervals(15L)
         .interval(Duration.ofDays(1L))
         .refreshRate(Duration.ofHours(1L))
         .clock(Main::time)
@@ -87,5 +81,9 @@ public class Main {
     boolean isHigher = oldValue < newValue;
     boolean isOlder = oldValue == newValue && oldTimestamp.isAfter(newTimestamp);
     return isHigher || isOlder ? newScore : oldScore;
+  }
+
+  private static Duration nodeTimeout() {
+    return Duration.ofSeconds(10L);
   }
 }

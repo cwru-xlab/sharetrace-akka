@@ -1,26 +1,30 @@
 package org.sharetrace;
 
+import akka.actor.typed.ActorRef;
+import akka.actor.typed.ActorSystem;
 import akka.actor.typed.Behavior;
-import akka.actor.typed.javadsl.ActorContext;
+import akka.actor.typed.Terminated;
 import akka.actor.typed.javadsl.Behaviors;
-import org.sharetrace.model.message.RiskPropagationMessage;
+import org.sharetrace.model.message.RiskPropMessage;
 import org.sharetrace.model.message.Run;
 
 public class Runner {
 
-  private final Behavior<RiskPropagationMessage> riskPropagation;
+  private Runner() {}
 
-  public Runner(Behavior<RiskPropagationMessage> riskPropagation) {
-    this.riskPropagation = riskPropagation;
+  public static void run(Behavior<RiskPropMessage> riskPropagation) {
+    ActorSystem.create(runner(riskPropagation), "Runner");
   }
 
-  public Behavior<Void> run() {
-    return Behaviors.setup(this::run);
-  }
-
-  private Behavior<Void> run(ActorContext<Void> context) {
-    context.spawn(riskPropagation, "RiskPropagation").tell(Run.INSTANCE);
-    // TODO How can we stop once activity has stopped?
-    return Behaviors.receive(Void.class).build();
+  private static Behavior<Void> runner(Behavior<RiskPropMessage> riskPropagation) {
+    return Behaviors.setup(
+        context -> {
+          ActorRef<RiskPropMessage> riskProp = context.spawn(riskPropagation, "RiskPropagation");
+          context.watch(riskProp);
+          riskProp.tell(Run.INSTANCE);
+          return Behaviors.receive(Void.class)
+              .onSignal(Terminated.class, signal -> Behaviors.stopped())
+              .build();
+        });
   }
 }
