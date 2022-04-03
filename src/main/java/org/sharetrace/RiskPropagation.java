@@ -7,7 +7,6 @@ import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
-import akka.actor.typed.javadsl.TimerScheduler;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
@@ -129,24 +128,22 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
         .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
   }
 
-  private ActorRef<NodeMessage> newNode(long name) {
-    ActorRef<NodeMessage> node = spawnNode(name);
+  private ActorRef<NodeMessage> newNode(Object name) {
+    ActorRef<NodeMessage> node = getContext().spawn(newNode(), String.valueOf(name));
     getContext().watch(node);
     return node;
   }
 
-  private ActorRef<NodeMessage> spawnNode(long name) {
-    return getContext().spawn(Behaviors.withTimers(this::newNode), String.valueOf(name));
-  }
-
-  private Behavior<NodeMessage> newNode(TimerScheduler<NodeMessage> timers) {
-    return NodeBuilder.create()
-        .timers(timers)
-        .parameters(parameters)
-        .clock(clock)
-        .cache(cacheFactory.get())
-        .idleTimeout(nodeTimeout)
-        .build();
+  private Behavior<NodeMessage> newNode() {
+    return Behaviors.withTimers(
+        timers ->
+            NodeBuilder.create()
+                .timers(timers)
+                .parameters(parameters)
+                .clock(clock)
+                .cache(cacheFactory.get())
+                .idleTimeout(nodeTimeout)
+                .build());
   }
 
   private Behavior<AlgorithmMessage> onTerminate(Terminated terminated) {
