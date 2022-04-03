@@ -5,7 +5,20 @@ import akka.actor.typed.ActorRef;
 import java.time.Instant;
 import java.util.UUID;
 import org.immutables.value.Value;
+import org.sharetrace.RiskPropagation;
+import org.sharetrace.model.graph.ContactGraph;
+import org.sharetrace.model.graph.Node;
 
+/**
+ * A timestamped probability of infection. As a message, a risk score is propagated through the
+ * {@link ContactGraph}. When initially propagated from their source {@link Node}, a risk score is
+ * referred to as a <b>symptom score</b> since it is only based on the symptoms of a person. As the
+ * current value of a {@link Node}, a risk score is referred to as an <b>exposure score</b> since it
+ * also accounts for (in)direct forms of contact with other persons.
+ *
+ * <p><b>Note</b>: this class has a natural ordering that is inconsistent with equals. Risk scores
+ * are only compared by value (first) and timestamp (second).
+ */
 @Value.Immutable
 public abstract class RiskScore implements NodeMessage, Comparable<RiskScore> {
 
@@ -16,12 +29,27 @@ public abstract class RiskScore implements NodeMessage, Comparable<RiskScore> {
     return ImmutableRiskScore.builder();
   }
 
+  /**
+   * Returns the actor reference associated with the {@link Node} that propagates this risk score.
+   */
   public abstract ActorRef<NodeMessage> replyTo();
 
+  /**
+   * Returns the magnitude of this risk score, and is modified during an execution of {@link
+   * RiskPropagation}.
+   */
   public abstract double value();
 
+  /**
+   * Returns the time at which this risk score was first computed, and is never modified during an
+   * execution of {@link RiskPropagation}.
+   */
   public abstract Instant timestamp();
 
+  /**
+   * Returns a universally unique identifier that can be used to correlate risk scores as they
+   * propagate through the {@link ContactGraph} during an execution of {@link RiskPropagation}.
+   */
   @Value.Default
   public String uuid() {
     return UUID.randomUUID().toString();
