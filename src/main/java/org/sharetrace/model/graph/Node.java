@@ -84,12 +84,24 @@ public class Node extends AbstractBehavior<NodeMessage> {
         context -> new Node(context, timers, parameters, clock, cache, idleTimeout));
   }
 
+  private static Predicate<Entry<ActorRef<NodeMessage>, Instant>> isNotSender(RiskScore score) {
+    return Predicate.not(contact -> Objects.equals(contact.getKey(), score.replyTo()));
+  }
+
+  private static Behavior<NodeMessage> onTimeout(Timeout timeout) {
+    return Behaviors.stopped();
+  }
+
+  private static String name(ActorRef<NodeMessage> node) {
+    return node.path().name();
+  }
+
   @Override
   public Receive<NodeMessage> createReceive() {
     return newReceiveBuilder()
         .onMessage(Contact.class, this::onContact)
         .onMessage(RiskScore.class, this::onRiskScore)
-        .onMessage(Timeout.class, this::onTimeout)
+        .onMessage(Timeout.class, Node::onTimeout)
         .build();
   }
 
@@ -168,10 +180,6 @@ public class Node extends AbstractBehavior<NodeMessage> {
     return score.value() >= current.value() * parameters.sendTolerance();
   }
 
-  private Predicate<Entry<ActorRef<NodeMessage>, Instant>> isNotSender(RiskScore score) {
-    return Predicate.not(contact -> Objects.equals(contact.getKey(), score.replyTo()));
-  }
-
   private Predicate<Entry<ActorRef<NodeMessage>, Instant>> isContactNewEnough(RiskScore score) {
     return contact -> isTimeNewEnough(score, contact.getValue());
   }
@@ -196,10 +204,6 @@ public class Node extends AbstractBehavior<NodeMessage> {
   private void sendBroadcast(ActorRef<NodeMessage> contact, RiskScore score) {
     logBroadcast(contact, score);
     contact.tell(score);
-  }
-
-  private Behavior<NodeMessage> onTimeout(Timeout timeout) {
-    return Behaviors.stopped();
   }
 
   private void logContact(Contact contact) {
@@ -241,10 +245,6 @@ public class Node extends AbstractBehavior<NodeMessage> {
 
   private Logger log() {
     return getContext().getLog();
-  }
-
-  private String name(ActorRef<NodeMessage> node) {
-    return node.path().name();
   }
 
   private ActorRef<NodeMessage> self() {
