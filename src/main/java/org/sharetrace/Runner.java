@@ -19,9 +19,9 @@ public class Runner {
   private static Behavior<Void> runner(Behavior<AlgorithmMessage> algorithm) {
     return Behaviors.setup(
         context -> {
-          ActorRef<AlgorithmMessage> riskProp = context.spawn(algorithm, "Algorithm");
-          context.watch(riskProp);
-          riskProp.tell(Run.INSTANCE);
+          ActorRef<AlgorithmMessage> instance = context.spawn(algorithm, "Algorithm");
+          context.watch(instance);
+          instance.tell(Run.INSTANCE);
           return Behaviors.receive(Void.class)
               .onSignal(Terminated.class, signal -> Behaviors.stopped())
               .build();
