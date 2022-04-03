@@ -1,3 +1,5 @@
+package org.sharetrace;
+
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.ActorSystem;
 import akka.actor.typed.Behavior;
@@ -6,7 +8,6 @@ import akka.actor.typed.javadsl.Behaviors;
 import java.time.Duration;
 import java.time.Instant;
 import org.jgrapht.generate.BarabasiAlbertGraphGenerator;
-import org.sharetrace.RiskPropagationBuilder;
 import org.sharetrace.model.graph.ContactGraph;
 import org.sharetrace.model.message.NodeMessage;
 import org.sharetrace.model.message.Parameters;
@@ -15,36 +16,33 @@ import org.sharetrace.model.message.RiskScore;
 import org.sharetrace.model.message.Run;
 import org.sharetrace.util.IntervalCache;
 
-public class Main {
+public class Runner {
 
-  public static Behavior<Void> create() {
-    return Behaviors.setup(Main::run);
+  public static Behavior<Void> run() {
+    return Behaviors.setup(Runner::run);
   }
 
   public static void main(String[] args) {
-    ActorSystem.create(Main.create(), "Main");
+    ActorSystem.create(Runner.run(), "Runner");
   }
 
   private static Behavior<Void> run(ActorContext<Void> context) {
     Behavior<RiskPropagationMessage> riskPropagation =
         RiskPropagationBuilder.create()
-            .graph(graph())
+            .graph(newGraph())
             .parameters(parameters())
-            .clock(Main::time)
-            .scoreFactory(Main::initialScore)
-            .timeFactory(Main::contactTime)
-            .cacheFactory(Main::nodeCache)
+            .clock(Runner::time)
+            .scoreFactory(Runner::initialScore)
+            .timeFactory(Runner::contactTime)
+            .cacheFactory(Runner::nodeCache)
             .build();
     context.spawn(riskPropagation, "RiskPropagation").tell(Run.INSTANCE);
     // TODO How can we stop once activity has stopped?
     return Behaviors.receive(Void.class).build();
   }
 
-  private static ContactGraph graph() {
-    System.out.println("Building the graph...");
-    ContactGraph graph = ContactGraph.create(new BarabasiAlbertGraphGenerator<>(2, 1, 100));
-    System.out.println("Finished building the graph...");
-    return graph;
+  private static ContactGraph newGraph() {
+    return ContactGraph.create(new BarabasiAlbertGraphGenerator<>(2, 1, 100));
   }
 
   private static RiskScore initialScore(ActorRef<NodeMessage> node) {
@@ -81,8 +79,8 @@ public class Main {
         .nIntervals(14)
         .interval(Duration.ofDays(1L))
         .refreshRate(Duration.ofHours(1L))
-        .clock(Main::time)
-        .mergeStrategy(Main::merge)
+        .clock(Runner::time)
+        .mergeStrategy(Runner::merge)
         .build();
   }
 
