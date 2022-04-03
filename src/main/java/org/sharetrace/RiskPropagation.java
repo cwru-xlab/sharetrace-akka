@@ -56,7 +56,7 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
   private final BiFunction<ActorRef<NodeMessage>, ActorRef<NodeMessage>, Instant> timeFactory;
   private final Supplier<IntervalCache<RiskScore>> cacheFactory;
   private final Duration nodeTimeout;
-  private final Instant startedAt;
+  private Instant startedAt;
   private long nStopped;
 
   private RiskPropagation(
@@ -77,7 +77,6 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
     this.timeFactory = timeFactory;
     this.nodeTimeout = nodeTimeout;
     this.nNodes = graph.vertexSet().size();
-    this.startedAt = clock.get();
     this.nStopped = 0L;
   }
 
@@ -114,7 +113,8 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
   private Behavior<AlgorithmMessage> onRun(Run run) {
     Behavior<AlgorithmMessage> behavior = this;
     if (nNodes > 0) {
-      Map<Long, ActorRef<NodeMessage>> nodes = newNodes();
+      Map<?, ActorRef<NodeMessage>> nodes = newNodes();
+      startedAt = clock.get();
       setScores(nodes);
       setContacts(nodes);
     } else {
@@ -123,17 +123,20 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
     return behavior;
   }
 
-  private Map<Long, ActorRef<NodeMessage>> newNodes() {
+  private Map<?, ActorRef<NodeMessage>> newNodes() {
     return graph.vertexSet().stream()
         .map(name -> Map.entry(name, newNode(name)))
         .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
   }
 
   private ActorRef<NodeMessage> newNode(long name) {
-    ActorRef<NodeMessage> node =
-        getContext().spawn(Behaviors.withTimers(this::newNode), String.valueOf(name));
+    ActorRef<NodeMessage> node = spawnNode(name);
     getContext().watch(node);
     return node;
+  }
+
+  private ActorRef<NodeMessage> spawnNode(long name) {
+    return getContext().spawn(Behaviors.withTimers(this::newNode), String.valueOf(name));
   }
 
   private Behavior<NodeMessage> newNode(TimerScheduler<NodeMessage> timers) {
@@ -157,14 +160,14 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
     return behavior;
   }
 
-  private void setScores(Map<Long, ActorRef<NodeMessage>> nodes) {
+  private void setScores(Map<?, ActorRef<NodeMessage>> nodes) {
     nodes.values().forEach(node -> node.tell(scoreFactory.apply(node)));
   }
 
-  private void setContacts(Map<Long, ActorRef<NodeMessage>> nodes) {
+  private void setContacts(Map<?, ActorRef<NodeMessage>> nodes) {
     ActorRef<NodeMessage> source, target;
     Instant timestamp;
-    for (Edge<Long> edge : graph.edgeSet()) {
+    for (Edge<?> edge : graph.edgeSet()) {
       source = nodes.get(edge.source());
       target = nodes.get(edge.target());
       timestamp = timeFactory.apply(source, target);
