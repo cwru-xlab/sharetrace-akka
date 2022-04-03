@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 import org.immutables.builder.Builder;
 import org.sharetrace.model.graph.ContactGraph;
 import org.sharetrace.model.graph.Edge;
+import org.sharetrace.model.graph.Node;
 import org.sharetrace.model.graph.NodeBuilder;
 import org.sharetrace.model.message.Contact;
 import org.sharetrace.model.message.NodeMessage;
@@ -25,7 +26,23 @@ import org.sharetrace.model.message.RiskScore;
 import org.sharetrace.model.message.Run;
 import org.sharetrace.util.IntervalCache;
 
-/** A non-iterative, asynchronous implementation of the ShareTrace algorithm. */
+/**
+ * A non-iterative, asynchronous implementation of the ShareTrace algorithm. The objective is to
+ * estimate the marginal posterior probability of infection for all individuals in the specified
+ * {@link ContactGraph}. The main steps of the algorithm are as follows:
+ *
+ * <ol>
+ *   <li>Map the {@link ContactGraph} to a collection {@link Node} actors.
+ *   <li>For each {@link Node}, send it an initial {@link RiskScore} message.
+ *   <li>For each pair of {@link Node}s that correspond to an edge in the {@link ContactGraph}, send
+ *       each a complimentary {@link Contact} message that contains the {@link ActorRef} and time of
+ *       contact of the other {@link Node}.
+ *   <li>Terminate once the stopping condition is satisfied. Termination occurs when when all {@link
+ *       Node}s have stopped passing messages (default), or a certain amount of time has passed.
+ * </ol>
+ *
+ * @see Parameters
+ */
 public class RiskPropagation extends AbstractBehavior<RiskPropagationMessage> {
 
   private final Parameters parameters;
