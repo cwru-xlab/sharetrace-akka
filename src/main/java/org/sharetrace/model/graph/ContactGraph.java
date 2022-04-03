@@ -3,11 +3,16 @@ package org.sharetrace.model.graph;
 import java.util.function.Supplier;
 import org.jgrapht.generate.GraphGenerator;
 import org.jgrapht.graph.SimpleGraph;
+import org.sharetrace.RiskPropagation;
 
 /**
- * A simple graph in which a {@link Node} represents a person and an edge between two {@link Node}s
- * indicates that the associated person for each {@link Node} have come in contact. Nodes
- * identifiers are zero-based contiguous natural numbers.
+ * A simple graph in which a node represents a person and an edge between two nodes indicates that
+ * the associated persons of the incident nodes came in contact. Nodes identifiers are zero-based
+ * contiguous natural numbers. In an instance of {@link RiskPropagation}, the topology of this graph
+ * is mapped to a collection {@link Node} actors.
+ *
+ * @see Node
+ * @see Edge
  */
 public class ContactGraph extends SimpleGraph<Long, Edge<Long>> {
 
