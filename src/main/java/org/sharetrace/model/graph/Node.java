@@ -147,11 +147,11 @@ public class Node extends AbstractBehavior<NodeMessage> {
     logReceive(score);
     update(score);
     broadcast(score);
+    resetTimeout();
     return this;
   }
 
   private void update(RiskScore score) {
-    timers.startSingleTimer(Timeout.INSTANCE, idleTimeout);
     cache.put(score.timestamp(), score);
     if (score.value() > current.value()) {
       logUpdate(current, score);
@@ -206,6 +206,10 @@ public class Node extends AbstractBehavior<NodeMessage> {
 
   private void setSendThreshold() {
     sendThreshold = current.value() * parameters.transmissionRate();
+  }
+
+  private void resetTimeout() {
+    timers.startSingleTimer(Timeout.INSTANCE, idleTimeout);
   }
 
   private void sendBroadcast(ActorRef<NodeMessage> contact, RiskScore score) {
