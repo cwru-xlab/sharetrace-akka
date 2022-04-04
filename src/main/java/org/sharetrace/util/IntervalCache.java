@@ -153,7 +153,7 @@ public class IntervalCache<T> {
     if (cache.isEmpty()) {
       cache.putAll(toBuilder().build().cache);
     } else {
-      LongStream.rangeClosed(1, nIntervals)
+      LongStream.rangeClosed(1L, nIntervals)
           .mapToObj(i -> startOfRangeEnd.plus(interval.multipliedBy(i)))
           .forEach(timestamp -> cache.put(timestamp, null));
     }
