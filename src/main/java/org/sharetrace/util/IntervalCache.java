@@ -5,30 +5,25 @@ import static org.sharetrace.util.Preconditions.checkIsAtLeast;
 import static org.sharetrace.util.Preconditions.checkIsPositive;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Collection;
 import java.util.Comparator;
-import java.util.Map.Entry;
-import java.util.NavigableMap;
-import java.util.NavigableSet;
 import java.util.Objects;
+import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.function.BinaryOperator;
 import java.util.function.Supplier;
-import java.util.stream.LongStream;
 import javax.annotation.Nullable;
 
 /**
- * A cache that maintains a finite number of contiguous time intervals in which values are cached.
- * The timespan of the cache is defined as {@code nIntervals * intervalDuration}. This
+ * A cache that lazily maintains a finite number of contiguous time intervals in which values are
+ * cached. The timespan of the cache is defined as {@code nIntervals * intervalDuration}. This
  * implementation differs from a standard cache in that the time-to-live of a value is based on its
  * specified timestamp, and not how long it has existed in the cache.
  *
  * <p>On each call to {@link #get(Instant)} and {@link #put(Instant, Object)}, the cache checks to
  * see if it should synchronously refresh itself by shifting forward its time horizon and removing
- * expired time intervals and their associated values. The frequency with which this refresh
- * operation occurs is based on the specified {@code refreshRate} and {@code clock}. Note that if
- * all values have expired, the cache is reinitialized based on the current time, according to the
- * {@code clock}.
+ * expired values (based on their timestamp). The frequency with which this refresh operation occurs
+ * is based on the specified {@code refreshRate} and {@code clock}. Note that if all values have
+ * expired, the cache is reinitialized based on the current time, according to the {@code clock}.
  *
  * <p>A user-defined strategy can be provided that determines how values in a given time interval
  * are merged. By default, the new value unconditionally replaces the old value.
@@ -38,7 +33,7 @@ import javax.annotation.Nullable;
 public class IntervalCache<T> {
 
   private static final long MIN_INTERVALS = 1L;
-  private final NavigableMap<Instant, T> cache;
+  private final SortedMap<Instant, T> cache;
   private final BinaryOperator<T> mergeStrategy;
   private final Supplier<Instant> clock;
   private final Duration interval;
@@ -47,7 +42,6 @@ public class IntervalCache<T> {
   private final Duration refreshRate;
   private Instant lastRefresh;
   private Instant rangeStart;
-  private Instant startOfRangeEnd;
   private Instant rangeEnd;
 
   private IntervalCache(Builder<T> builder) {
@@ -66,26 +60,17 @@ public class IntervalCache<T> {
     return new Builder<>();
   }
 
-  public Builder<T> toBuilder() {
-    return new Builder<>(this);
-  }
-
   /**
    * Returns the cached value associated with the time interval that contains the specified
-   * timestamp . If the timestamp falls outside the timespan of the cache, {@code null} is returned.
-   * Prior to retrieving the value, the cache is possibly refreshed if it has been sufficiently long
-   * since its previous refresh.
+   * timestamp. If no value has been cached in the time interval or the timestamp falls outside the
+   * timespan of the cache, {@code null} is returned. Prior to retrieving the value, the cache is
+   * possibly refreshed if it has been sufficiently long since its previous refresh.
    */
   @Nullable
   public T get(Instant timestamp) {
     Objects.requireNonNull(timestamp);
     refresh();
-    T value = null;
-    if (timestamp.isBefore(rangeEnd)) {
-      Entry<Instant, T> entry = cache.floorEntry(timestamp);
-      value = entry == null ? null : entry.getValue();
-    }
-    return value;
+    return isInRange(timestamp) ? cache.get(floorKey(timestamp)) : null;
   }
 
   /**
@@ -99,14 +84,14 @@ public class IntervalCache<T> {
     Objects.requireNonNull(timestamp);
     Objects.requireNonNull(value);
     refresh();
-    Instant key = cache.floorKey(checkInRange(timestamp));
+    Instant key = floorKey(checkInRange(timestamp));
     cache.merge(key, value, mergeStrategy);
   }
 
   /**
-   * Returns the maximum value, according to the specified comparator, whose time interval contains
-   * or occurs before the specified timestamp. No maximum may be found if no value has been cached
-   * in the time intervals before or during the specified timestamp. In this case, {@code null} is
+   * Returns the maximum value, according to the specified comparator, whose time interval ends
+   * prior to specified timestamp. If the timestamp falls outside the timespan of the cache or no
+   * values have been cached in the time intervals that end prior to the timestamp, {@code null} is
    * returned. Prior to retrieving the value, the cache is possibly refreshed if it has been
    * sufficiently long since its previous refresh.
    */
@@ -115,18 +100,24 @@ public class IntervalCache<T> {
     Objects.requireNonNull(timestamp);
     Objects.requireNonNull(comparator);
     refresh();
-    T value = null;
-    if (timestamp.isBefore(rangeEnd)) {
-      Collection<T> values = cache.headMap(timestamp, true).values();
-      value = values.stream().filter(Objects::nonNull).max(comparator).orElse(null);
-    }
-    return value;
+    return timestamp.isBefore(rangeEnd)
+        ? cache.headMap(timestamp).values().stream().max(comparator).orElse(null)
+        : null;
+  }
+
+  private Instant floorKey(Instant timestamp) {
+    Duration sinceStart = Duration.between(rangeStart, timestamp);
+    long multiplier = (long) Math.floor(sinceStart.dividedBy(interval));
+    return rangeStart.plus(interval.multipliedBy(multiplier));
   }
 
   private Instant checkInRange(Instant timestamp) {
-    boolean inRange = rangeStart.isBefore(timestamp) && rangeEnd.isAfter(timestamp);
-    checkArgument(inRange, () -> rangeMessage(timestamp));
+    checkArgument(isInRange(timestamp), () -> rangeMessage(timestamp));
     return timestamp;
+  }
+
+  private boolean isInRange(Instant timestamp) {
+    return rangeStart.isBefore(timestamp) && rangeEnd.isAfter(timestamp);
   }
 
   private String rangeMessage(Instant timestamp) {
@@ -136,40 +127,26 @@ public class IntervalCache<T> {
   private void refresh() {
     Duration sinceRefresh = Duration.between(lastRefresh, clock.get());
     if (sinceRefresh.compareTo(refreshRate) > 0) {
-      long nExpired = removeExpired();
-      extend(nExpired);
+      removeExpired();
       updateRange();
       lastRefresh = clock.get();
     }
   }
 
-  private long removeExpired() {
+  private void removeExpired() {
     Instant expiredAt = clock.get().minus(span);
-    NavigableSet<Instant> expired = cache.navigableKeySet().headSet(expiredAt, true);
-    long nExpired = expired.size();
-    expired.clear();
-    return nExpired;
-  }
-
-  private void extend(long nIntervals) {
-    if (cache.isEmpty()) {
-      cache.putAll(toBuilder().build().cache);
-    } else {
-      LongStream.rangeClosed(1L, nIntervals)
-          .mapToObj(i -> startOfRangeEnd.plus(interval.multipliedBy(i)))
-          .forEach(timestamp -> cache.put(timestamp, null));
-    }
+    cache.headMap(expiredAt).clear();
   }
 
   private void updateRange() {
-    rangeStart = cache.firstKey();
-    startOfRangeEnd = cache.lastKey();
-    rangeEnd = startOfRangeEnd.plus(interval);
+    Instant startOfEnd = clock.get();
+    rangeEnd = startOfEnd.plus(interval);
+    rangeStart = startOfEnd.minus(interval.multipliedBy(nIntervals - 1));
   }
 
   public static final class Builder<T> {
 
-    private final NavigableMap<Instant, T> cache;
+    private final SortedMap<Instant, T> cache;
     private BinaryOperator<T> mergeStrategy;
     private Supplier<Instant> clock;
     private Duration interval;
@@ -184,16 +161,6 @@ public class IntervalCache<T> {
       this.interval = Duration.ofDays(1L);
       this.nIntervals = MIN_INTERVALS;
       this.refreshRate = Duration.ofMinutes(1L);
-    }
-
-    private Builder(IntervalCache<T> cache) {
-      this.cache = new TreeMap<>(cache.cache);
-      this.mergeStrategy = cache.mergeStrategy;
-      this.clock = cache.clock;
-      this.interval = cache.interval;
-      this.nIntervals = cache.nIntervals;
-      this.span = cache.span;
-      this.refreshRate = cache.refreshRate;
     }
 
     /** Sets duration of each contiguous time interval. */
@@ -230,7 +197,6 @@ public class IntervalCache<T> {
     public IntervalCache<T> build() {
       checkFields();
       setSpan();
-      initializeCache();
       return new IntervalCache<>(this);
     }
 
@@ -257,15 +223,6 @@ public class IntervalCache<T> {
 
     private void setSpan() {
       span = interval.multipliedBy(nIntervals);
-    }
-
-    private void initializeCache() {
-      if (cache.isEmpty()) {
-        Instant now = clock.get();
-        LongStream.range(0L, nIntervals)
-            .mapToObj(i -> now.minus(interval.multipliedBy(i)))
-            .forEach(timestamp -> cache.put(timestamp, null));
-      }
     }
   }
 }
