@@ -235,11 +235,12 @@ public class IntervalCache<T> {
     }
 
     private void checkFields() {
+      Objects.requireNonNull(cache);
       Objects.requireNonNull(mergeStrategy);
       Objects.requireNonNull(clock);
-      checkIsPositive(Objects.requireNonNull(refreshRate), this::refreshRateMessage);
       checkIsPositive(Objects.requireNonNull(interval), this::intervalMessage);
       checkIsAtLeast(nIntervals, MIN_INTERVALS, this::nIntervalsMessage);
+      checkIsPositive(Objects.requireNonNull(refreshRate), this::refreshRateMessage);
     }
 
     private String refreshRateMessage() {
