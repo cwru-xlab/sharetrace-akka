@@ -192,7 +192,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
   }
 
   private boolean isTimeNewEnough(RiskScore score, Instant timestamp) {
-    return score.timestamp().isBefore(buffered(timestamp));
+    return buffered(timestamp).isAfter(score.timestamp());
   }
 
   private Instant buffered(Instant timestamp) {
