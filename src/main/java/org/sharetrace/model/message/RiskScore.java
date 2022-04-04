@@ -34,21 +34,17 @@ public abstract class RiskScore implements NodeMessage, Comparable<RiskScore> {
    */
   public abstract ActorRef<NodeMessage> replyTo();
 
-  /**
-   * Returns the magnitude of this risk score, and is modified during an execution of {@link
-   * RiskPropagation}.
-   */
+  /** Returns the magnitude of this risk score; modified during {@link RiskPropagation}. */
   public abstract double value();
 
   /**
-   * Returns the time at which this risk score was first computed, and is never modified during an
-   * execution of {@link RiskPropagation}.
+   * Returns when this risk score was first computed; never modified during {@link RiskPropagation}.
    */
   public abstract Instant timestamp();
 
   /**
    * Returns a universally unique identifier that can be used to correlate risk scores as they
-   * propagate through the {@link ContactGraph} during an execution of {@link RiskPropagation}.
+   * propagate through the {@link ContactGraph} during {@link RiskPropagation}.
    */
   @Value.Default
   public String uuid() {
