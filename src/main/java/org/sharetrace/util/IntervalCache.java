@@ -1,6 +1,8 @@
 package org.sharetrace.util;
 
 import static org.sharetrace.util.Preconditions.checkArgument;
+import static org.sharetrace.util.Preconditions.checkIsAtLeast;
+import static org.sharetrace.util.Preconditions.checkIsPositive;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Collection;
@@ -235,14 +237,17 @@ public class IntervalCache<T> {
     private void checkFields() {
       Objects.requireNonNull(mergeStrategy);
       Objects.requireNonNull(clock);
-      Objects.requireNonNull(interval);
-      Objects.requireNonNull(refreshRate);
-      checkArgument(!refreshRate.isNegative() && !refreshRate.isZero(), this::refreshRateMessage);
-      checkArgument(nIntervals >= MIN_INTERVALS, this::nIntervalsMessage);
+      checkIsPositive(Objects.requireNonNull(refreshRate), this::refreshRateMessage);
+      checkIsPositive(Objects.requireNonNull(interval), this::intervalMessage);
+      checkIsAtLeast(nIntervals, MIN_INTERVALS, this::nIntervalsMessage);
     }
 
     private String refreshRateMessage() {
       return "'refreshRate' must be positive; got " + refreshRate;
+    }
+
+    private String intervalMessage() {
+      return "'interval' must be positive; got " + interval;
     }
 
     private String nIntervalsMessage() {

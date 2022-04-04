@@ -1,6 +1,6 @@
 package org.sharetrace.model.message;
 
-import static org.sharetrace.util.Preconditions.checkArgument;
+import static org.sharetrace.util.Preconditions.checkInClosedRange;
 import akka.actor.typed.ActorRef;
 import java.time.Instant;
 import java.util.UUID;
@@ -59,7 +59,7 @@ public abstract class RiskScore implements NodeMessage, Comparable<RiskScore> {
 
   @Value.Check
   protected void check() {
-    checkArgument(value() >= MIN_VALUE && value() <= MAX_VALUE, this::valueMessage);
+    checkInClosedRange(value(), MIN_VALUE, MAX_VALUE, this::valueMessage);
   }
 
   private String valueMessage() {

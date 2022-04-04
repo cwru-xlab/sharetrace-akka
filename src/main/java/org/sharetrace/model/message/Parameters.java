@@ -1,6 +1,9 @@
 package org.sharetrace.model.message;
 
-import static org.sharetrace.util.Preconditions.checkArgument;
+import static org.sharetrace.util.Preconditions.checkInClosedRange;
+import static org.sharetrace.util.Preconditions.checkIsAtLeast;
+import static org.sharetrace.util.Preconditions.checkIsNonNegative;
+import static org.sharetrace.util.Preconditions.checkIsPositive;
 import java.time.Duration;
 import org.immutables.value.Value;
 import org.sharetrace.RiskPropagation;
@@ -60,12 +63,14 @@ public abstract class Parameters implements NodeMessage {
 
   @Value.Check
   protected void check() {
-    checkArgument(
-        transmissionRate() >= MIN_TRANSMISSION_RATE || transmissionRate() <= MAX_TRANSMISSION_RATE,
+    checkInClosedRange(
+        transmissionRate(),
+        MIN_TRANSMISSION_RATE,
+        MAX_TRANSMISSION_RATE,
         this::transmissionRateMessage);
-    checkArgument(sendTolerance() >= MIN_SEND_TOLERANCE, this::sendToleranceMessage);
-    checkArgument(!timeBuffer().isNegative(), this::timeBufferMessage);
-    checkArgument(!scoreTtl().isZero() && !scoreTtl().isNegative(), this::scoreTtlMessage);
+    checkIsAtLeast(sendTolerance(), MIN_SEND_TOLERANCE, this::sendToleranceMessage);
+    checkIsNonNegative(timeBuffer(), this::timeBufferMessage);
+    checkIsPositive(scoreTtl(), this::scoreTtlMessage);
   }
 
   private String transmissionRateMessage() {
