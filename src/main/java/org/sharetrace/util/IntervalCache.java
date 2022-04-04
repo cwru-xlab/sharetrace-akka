@@ -146,22 +146,13 @@ public class IntervalCache<T> {
 
   public static final class Builder<T> {
 
-    private final SortedMap<Instant, T> cache;
+    private SortedMap<Instant, T> cache;
     private BinaryOperator<T> mergeStrategy;
     private Supplier<Instant> clock;
     private Duration interval;
-    private long nIntervals;
+    private long nIntervals = MIN_INTERVALS;
     private Duration span;
     private Duration refreshRate;
-
-    private Builder() {
-      this.cache = new TreeMap<>();
-      this.mergeStrategy = (oldValue, newValue) -> newValue;
-      this.clock = Instant::now;
-      this.interval = Duration.ofDays(1L);
-      this.nIntervals = MIN_INTERVALS;
-      this.refreshRate = Duration.ofMinutes(1L);
-    }
 
     /** Sets duration of each contiguous time interval. */
     public Builder<T> interval(Duration interval) {
@@ -195,18 +186,20 @@ public class IntervalCache<T> {
 
     /** Returns an initialized instance of the cache. */
     public IntervalCache<T> build() {
-      checkFields();
-      setSpan();
-      return new IntervalCache<>(this);
+      return new IntervalCache<>(checkFields());
     }
 
-    private void checkFields() {
-      Objects.requireNonNull(cache);
-      Objects.requireNonNull(mergeStrategy);
-      Objects.requireNonNull(clock);
-      checkIsPositive(Objects.requireNonNull(interval), this::intervalMessage);
+    private Builder<T> checkFields() {
+      cache = Objects.requireNonNullElse(cache, new TreeMap<>());
+      mergeStrategy = Objects.requireNonNullElse(mergeStrategy, (oldValue, newValue) -> newValue);
+      clock = Objects.requireNonNullElse(clock, Instant::now);
+      interval = Objects.requireNonNullElse(interval, Duration.ofDays(1L));
+      checkIsPositive(interval, this::intervalMessage);
       checkIsAtLeast(nIntervals, MIN_INTERVALS, this::nIntervalsMessage);
-      checkIsPositive(Objects.requireNonNull(refreshRate), this::refreshRateMessage);
+      span = interval.multipliedBy(nIntervals);
+      refreshRate = Objects.requireNonNullElse(refreshRate, Duration.ofMinutes(1L));
+      checkIsPositive(refreshRate, this::refreshRateMessage);
+      return this;
     }
 
     private String refreshRateMessage() {
@@ -219,10 +212,6 @@ public class IntervalCache<T> {
 
     private String nIntervalsMessage() {
       return "'nIntervals' must be at least " + MIN_INTERVALS + "; got " + nIntervals;
-    }
-
-    private void setSpan() {
-      span = interval.multipliedBy(nIntervals);
     }
   }
 }
