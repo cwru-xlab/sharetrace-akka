@@ -54,6 +54,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
   private final IntervalCache<RiskScore> cache;
   private final Duration idleTimeout;
   private RiskScore current;
+  private double sendThreshold;
 
   private Node(
       ActorContext<NodeMessage> context,
@@ -70,6 +71,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
     this.cache = cache;
     this.idleTimeout = idleTimeout;
     this.current = defaultScore();
+    setSendThreshold();
     cache.put(current.timestamp(), current);
   }
 
@@ -154,6 +156,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
     if (score.value() > current.value()) {
       logUpdate(current, score);
       current = score;
+      setSendThreshold();
     }
   }
 
@@ -177,7 +180,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
   }
 
   private boolean isScoreHighEnough(RiskScore score) {
-    return score.value() >= current.value() * parameters.sendTolerance();
+    return score.value() >= sendThreshold;
   }
 
   private Predicate<Entry<ActorRef<NodeMessage>, Instant>> isContactNewEnough(RiskScore score) {
@@ -199,6 +202,10 @@ public class Node extends AbstractBehavior<NodeMessage> {
   private boolean isScoreNewEnough(RiskScore score) {
     Duration sinceComputed = Duration.between(score.timestamp(), clock.get());
     return parameters.scoreTtl().compareTo(sinceComputed) > 0;
+  }
+
+  private void setSendThreshold() {
+    sendThreshold = current.value() * parameters.transmissionRate();
   }
 
   private void sendBroadcast(ActorRef<NodeMessage> contact, RiskScore score) {
