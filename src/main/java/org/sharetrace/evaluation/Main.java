@@ -47,7 +47,7 @@ public class Main {
   }
 
   private static Duration lookBack() {
-    return Duration.ofDays(Math.round(Math.random() * 13));
+    return Duration.ofDays(Math.round(Math.random() * 14));
   }
 
   private static Instant time() {
@@ -84,6 +84,6 @@ public class Main {
   }
 
   private static Duration nodeTimeout() {
-    return Duration.ofSeconds(10L);
+    return Duration.ofSeconds(5L);
   }
 }
