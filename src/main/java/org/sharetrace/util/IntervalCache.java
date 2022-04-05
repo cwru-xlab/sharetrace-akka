@@ -1,6 +1,7 @@
 package org.sharetrace.util;
 
 import static org.sharetrace.util.Preconditions.checkArgument;
+import static org.sharetrace.util.Preconditions.checkInClosedRange;
 import static org.sharetrace.util.Preconditions.checkIsAtLeast;
 import static org.sharetrace.util.Preconditions.checkIsPositive;
 import java.time.Duration;
@@ -33,26 +34,27 @@ import javax.annotation.Nullable;
 public class IntervalCache<T> {
 
   private static final long MIN_INTERVALS = 1L;
+  private static final long MIN_BUFFER = MIN_INTERVALS;
   private final SortedMap<Instant, T> cache;
   private final BinaryOperator<T> mergeStrategy;
   private final Supplier<Instant> clock;
   private final Duration interval;
   private final long nIntervals;
-  private final Duration span;
+  private final long nBuffer;
   private final Duration refreshRate;
   private Instant lastRefresh;
   private Instant rangeStart;
   private Instant rangeEnd;
 
   private IntervalCache(Builder<T> builder) {
-    this.cache = builder.cache;
-    this.mergeStrategy = builder.mergeStrategy;
-    this.clock = builder.clock;
-    this.interval = builder.interval;
-    this.nIntervals = builder.nIntervals;
-    this.span = builder.span;
-    this.refreshRate = builder.refreshRate;
-    this.lastRefresh = clock.get();
+    cache = builder.cache;
+    mergeStrategy = builder.mergeStrategy;
+    clock = builder.clock;
+    interval = builder.interval;
+    nIntervals = builder.nIntervals;
+    nBuffer = builder.nBuffer;
+    refreshRate = builder.refreshRate;
+    lastRefresh = clock.get();
     updateRange();
   }
 
@@ -127,21 +129,16 @@ public class IntervalCache<T> {
   private void refresh() {
     Duration sinceRefresh = Duration.between(lastRefresh, clock.get());
     if (sinceRefresh.compareTo(refreshRate) > 0) {
-      removeExpired();
       updateRange();
+      cache.headMap(rangeStart).clear();
       lastRefresh = clock.get();
     }
   }
 
-  private void removeExpired() {
-    Instant expiredAt = clock.get().minus(span);
-    cache.headMap(expiredAt).clear();
-  }
-
   private void updateRange() {
-    Instant startOfEnd = clock.get();
-    rangeEnd = startOfEnd.plus(interval);
-    rangeStart = startOfEnd.minus(interval.multipliedBy(nIntervals - 1));
+    Instant now = clock.get();
+    rangeStart = now.minus(interval.multipliedBy(nIntervals - nBuffer));
+    rangeEnd = now.plus(interval.multipliedBy(nBuffer));
   }
 
   public static final class Builder<T> {
@@ -151,34 +148,43 @@ public class IntervalCache<T> {
     private Supplier<Instant> clock;
     private Duration interval;
     private long nIntervals = MIN_INTERVALS;
-    private Duration span;
+    private long nBuffer = MIN_BUFFER;
     private Duration refreshRate;
 
-    /** Sets duration of each contiguous time interval. */
+    /** Sets duration of each contiguous time interval. Default: 1 hour. */
     public Builder<T> interval(Duration interval) {
       this.interval = interval;
       return this;
     }
 
-    /** Sets the number of contiguous time intervals. */
+    /** Sets the total number of contiguous time intervals. Default: 1. */
     public Builder<T> nIntervals(long nIntervals) {
       this.nIntervals = nIntervals;
       return this;
     }
 
-    /** Sets the duration after which the cache will refresh. */
+    /** Sets the number of "future" time intervals. Default: 1. */
+    public Builder<T> nBuffer(long nBuffer) {
+      this.nBuffer = nBuffer;
+      return this;
+    }
+
+    /** Sets the duration after which the cache will refresh. Default: 1 minute. */
     public Builder<T> refreshRate(Duration refreshRate) {
       this.refreshRate = refreshRate;
       return this;
     }
 
-    /** Sets the clock that the cache will use for its notion of time. */
+    /** Sets the clock that the cache will use for its notion of time. Default: Instant::now. */
     public Builder<T> clock(Supplier<Instant> clock) {
       this.clock = clock;
       return this;
     }
 
-    /** Sets the strategy that will be used when adding values to the cache. */
+    /**
+     * Sets the strategy that will be used when adding values to the cache. Default: (oldValue,
+     * newValue) -> newValue.
+     */
     public Builder<T> mergeStrategy(BinaryOperator<T> mergeStrategy) {
       this.mergeStrategy = mergeStrategy;
       return this;
@@ -196,7 +202,7 @@ public class IntervalCache<T> {
       interval = Objects.requireNonNullElse(interval, Duration.ofDays(1L));
       checkIsPositive(interval, this::intervalMessage);
       checkIsAtLeast(nIntervals, MIN_INTERVALS, this::nIntervalsMessage);
-      span = interval.multipliedBy(nIntervals);
+      checkInClosedRange(nBuffer, MIN_BUFFER, nIntervals, this::nBufferMessage);
       refreshRate = Objects.requireNonNullElse(refreshRate, Duration.ofMinutes(1L));
       checkIsPositive(refreshRate, this::refreshRateMessage);
       return this;
@@ -212,6 +218,16 @@ public class IntervalCache<T> {
 
     private String nIntervalsMessage() {
       return "'nIntervals' must be at least " + MIN_INTERVALS + "; got " + nIntervals;
+    }
+
+    private String nBufferMessage() {
+      return "'nBuffer' must be between "
+          + MIN_BUFFER
+          + " and 'nIntervals' ("
+          + nIntervals
+          + "), inclusive;"
+          + " got "
+          + nBuffer;
     }
   }
 }
