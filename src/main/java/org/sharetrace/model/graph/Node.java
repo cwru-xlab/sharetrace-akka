@@ -125,7 +125,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
   }
 
   private boolean sendCurrent(Contact contact) {
-    boolean sent = isContactNewEnough(contact, current) && isScoreNewEnough(current);
+    boolean sent = isScoreNewEnough(current) && isContactNewEnough(contact, current);
     if (sent) {
       RiskScore transmitted = transmitted(current);
       logSendCurrent(contact.replyTo(), transmitted);
@@ -136,7 +136,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
 
   private void sendCached(Contact contact) {
     RiskScore cached = cache.headMax(buffered(contact.timestamp()), RiskScore::compareTo);
-    if (cached != null && isScoreNewEnough(cached)) {
+    if (cached != null) {
       RiskScore transmitted = transmitted(cached);
       logSendCached(contact.replyTo(), transmitted);
       contact.replyTo().tell(transmitted);
@@ -218,12 +218,12 @@ public class Node extends AbstractBehavior<NodeMessage> {
   }
 
   private void logContact(Contact contact) {
-    log().info(CONTACT_PATTERN, name(self()), name(contact.replyTo()));
+    log().debug(CONTACT_PATTERN, name(self()), name(contact.replyTo()));
   }
 
   private void logUpdate(RiskScore previous, RiskScore current) {
     log()
-        .info(
+        .debug(
             UPDATE_PATTERN,
             name(current.replyTo()),
             name(self()),
@@ -251,7 +251,8 @@ public class Node extends AbstractBehavior<NodeMessage> {
 
   private void logMessageOp(
       String pattern, ActorRef<NodeMessage> source, ActorRef<NodeMessage> target, RiskScore score) {
-    log().info(pattern, name(source), name(target), score.value(), score.timestamp(), score.uuid());
+    log()
+        .debug(pattern, name(source), name(target), score.value(), score.timestamp(), score.uuid());
   }
 
   private Logger log() {
