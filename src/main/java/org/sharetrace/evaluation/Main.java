@@ -62,6 +62,7 @@ public class Main {
         .transmissionRate(0.8)
         .timeBuffer(Duration.ofDays(2))
         .scoreTtl(Duration.ofDays(14))
+        .contactTtl(Duration.ofDays(14))
         .build();
   }
 

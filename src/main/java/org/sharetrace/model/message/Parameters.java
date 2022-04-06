@@ -61,6 +61,14 @@ public abstract class Parameters implements NodeMessage {
    */
   public abstract Duration scoreTtl();
 
+  /**
+   * Returns the duration which determines how long a given {@link Contact} is considered relevant.
+   * Intuitively, {@link Contact}s that occurred further in the past are less likely to propagate
+   * any new {@link RiskScore} in the {@link ContactGraph} for which the complimentary {@link Node}
+   * has not already accounted.
+   */
+  public abstract Duration contactTtl();
+
   @Value.Check
   protected void check() {
     checkInClosedRange(
@@ -71,6 +79,7 @@ public abstract class Parameters implements NodeMessage {
     checkIsAtLeast(sendTolerance(), MIN_SEND_TOLERANCE, this::sendToleranceMessage);
     checkIsNonNegative(timeBuffer(), this::timeBufferMessage);
     checkIsPositive(scoreTtl(), this::scoreTtlMessage);
+    checkIsPositive(contactTtl(), this::contactTtlMessage);
   }
 
   private String transmissionRateMessage() {
@@ -94,6 +103,10 @@ public abstract class Parameters implements NodeMessage {
     return "'scoreTtl' must be positive; got " + scoreTtl();
   }
 
+  private String contactTtlMessage() {
+    return "'contactTtl' must be positive; got " + contactTtl();
+  }
+
   public interface Builder {
 
     Builder sendTolerance(double sendTolerance);
@@ -103,6 +116,8 @@ public abstract class Parameters implements NodeMessage {
     Builder timeBuffer(Duration timeBuffer);
 
     Builder scoreTtl(Duration scoreTtl);
+
+    Builder contactTtl(Duration contactTtl);
 
     Parameters build();
   }

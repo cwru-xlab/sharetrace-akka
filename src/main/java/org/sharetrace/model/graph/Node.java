@@ -10,8 +10,6 @@ import akka.actor.typed.javadsl.TimerScheduler;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
@@ -58,6 +56,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
   private final Supplier<Instant> clock;
   private final IntervalCache<RiskScore> cache;
   private final Duration idleTimeout;
+  private final Duration refreshRate;
   private RiskScore current;
   private double sendThreshold;
 
@@ -71,15 +70,15 @@ public class Node extends AbstractBehavior<NodeMessage> {
       Duration refreshRate) {
     super(context);
     this.timers = timers;
-    timers.startTimerWithFixedDelay(Refresh.INSTANCE, refreshRate);
     this.contacts = new Object2ObjectOpenHashMap<>();
     this.parameters = parameters;
     this.clock = clock;
     this.cache = cache;
     this.idleTimeout = idleTimeout;
-    this.current = defaultScore();
+    this.refreshRate = refreshRate;
+    this.current = cached(defaultScore());
     setSendThreshold();
-    cache.put(current.timestamp(), current);
+    startRefreshTimer();
   }
 
   @Builder.Factory
@@ -117,10 +116,10 @@ public class Node extends AbstractBehavior<NodeMessage> {
   }
 
   private Behavior<NodeMessage> onRefresh(Refresh refresh) {
-    Collection<Instant> expired = new ArrayList<>(contacts.values());
-    expired.removeIf(this::isNewEnough);
-    contacts.values().removeAll(expired);
-    logRefresh(expired.size());
+    int nContacts = contacts.values().size();
+    contacts.values().removeIf(Predicate.not(this::isContactAlive));
+    int nExpired = nContacts - contacts.size();
+    logRefresh(nExpired);
     return this;
   }
 
@@ -133,16 +132,26 @@ public class Node extends AbstractBehavior<NodeMessage> {
   }
 
   private Behavior<NodeMessage> onContact(Contact contact) {
-    logContact(contact);
-    contacts.put(contact.replyTo(), contact.timestamp());
-    if (!sendCurrent(contact)) {
-      sendCached(contact);
+    if (isContactAlive(contact)) {
+      logContact(contact);
+      addContact(contact);
+      sendToContact(contact);
     }
     return this;
   }
 
+  private void addContact(Contact contact) {
+    contacts.put(contact.replyTo(), contact.timestamp());
+  }
+
+  private void sendToContact(Contact contact) {
+    if (!sendCurrent(contact)) {
+      sendCached(contact);
+    }
+  }
+
   private boolean sendCurrent(Contact contact) {
-    boolean sent = isScoreNewEnough(current) && isContactNewEnough(contact, current);
+    boolean sent = isScoreAlive(current) && isContactNewEnough(contact, current);
     if (sent) {
       RiskScore transmitted = transmitted(current);
       logSendCurrent(contact.replyTo(), transmitted);
@@ -169,17 +178,21 @@ public class Node extends AbstractBehavior<NodeMessage> {
   }
 
   private void update(RiskScore score) {
-    cache.put(score.timestamp(), score);
-    if (score.value() > current.value()) {
+    if (cached(score).value() > current.value()) {
       logUpdate(current, score);
       current = score;
       setSendThreshold();
     }
   }
 
+  private RiskScore cached(RiskScore score) {
+    cache.put(score.timestamp(), score);
+    return score;
+  }
+
   private void broadcast(RiskScore score) {
     RiskScore transmitted = transmitted(score);
-    if (isScoreHighEnough(transmitted) && isScoreNewEnough(transmitted)) {
+    if (isScoreAlive(transmitted) && isScoreHighEnough(transmitted)) {
       contacts.entrySet().stream()
           .filter(isNotSender(score))
           .filter(isContactNewEnough(score))
@@ -201,14 +214,14 @@ public class Node extends AbstractBehavior<NodeMessage> {
   }
 
   private Predicate<Entry<ActorRef<NodeMessage>, Instant>> isContactNewEnough(RiskScore score) {
-    return contact -> isTimeNewEnough(score, contact.getValue());
+    return contact -> isTimestampNewEnough(contact.getValue(), score);
   }
 
   private boolean isContactNewEnough(Contact contact, RiskScore score) {
-    return isTimeNewEnough(score, contact.timestamp());
+    return isTimestampNewEnough(contact.timestamp(), score);
   }
 
-  private boolean isTimeNewEnough(RiskScore score, Instant timestamp) {
+  private boolean isTimestampNewEnough(Instant timestamp, RiskScore score) {
     return buffered(timestamp).isAfter(score.timestamp());
   }
 
@@ -216,13 +229,21 @@ public class Node extends AbstractBehavior<NodeMessage> {
     return timestamp.plus(parameters.timeBuffer());
   }
 
-  private boolean isScoreNewEnough(RiskScore score) {
-    return isNewEnough(score.timestamp());
+  private boolean isContactAlive(Contact contact) {
+    return isContactAlive(contact.timestamp());
   }
 
-  private boolean isNewEnough(Instant timestamp) {
+  private boolean isContactAlive(Instant timestamp) {
+    return isAlive(timestamp, parameters.contactTtl());
+  }
+
+  private boolean isScoreAlive(RiskScore score) {
+    return isAlive(score.timestamp(), parameters.scoreTtl());
+  }
+
+  private boolean isAlive(Instant timestamp, Duration timeToLive) {
     Duration sinceTimestamp = Duration.between(timestamp, clock.get());
-    return parameters.scoreTtl().compareTo(sinceTimestamp) >= 0;
+    return timeToLive.compareTo(sinceTimestamp) >= 0;
   }
 
   private void setSendThreshold() {
@@ -231,6 +252,10 @@ public class Node extends AbstractBehavior<NodeMessage> {
 
   private void resetTimeout() {
     timers.startSingleTimer(Timeout.INSTANCE, idleTimeout);
+  }
+
+  private void startRefreshTimer() {
+    timers.startTimerWithFixedDelay(Refresh.INSTANCE, refreshRate);
   }
 
   private void sendBroadcast(ActorRef<NodeMessage> contact, RiskScore score) {
