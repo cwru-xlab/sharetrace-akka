@@ -27,6 +27,7 @@ public class Main {
             .timeFactory(Main::contactTime)
             .cacheFactory(() -> nodeCache(parameters))
             .nodeTimeout(nodeTimeout())
+            .nodeRefreshRate(nodeRefreshRate())
             .build();
     Runner.run(riskPropagation);
   }
@@ -88,5 +89,9 @@ public class Main {
 
   private static Duration nodeTimeout() {
     return Duration.ofSeconds(5L);
+  }
+
+  private static Duration nodeRefreshRate() {
+    return Duration.ofHours(1L);
   }
 }

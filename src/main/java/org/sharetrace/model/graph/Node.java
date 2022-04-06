@@ -10,6 +10,8 @@ import akka.actor.typed.javadsl.TimerScheduler;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
@@ -20,6 +22,7 @@ import org.sharetrace.RiskPropagation;
 import org.sharetrace.model.message.Contact;
 import org.sharetrace.model.message.NodeMessage;
 import org.sharetrace.model.message.Parameters;
+import org.sharetrace.model.message.Refresh;
 import org.sharetrace.model.message.RiskScore;
 import org.sharetrace.model.message.Timeout;
 import org.sharetrace.util.IntervalCache;
@@ -46,6 +49,8 @@ public class Node extends AbstractBehavior<NodeMessage> {
       "{\"event\": \"sendCached\", \"source\": \"{}\", \"target\": \"{}\", \"value\": {}, \"timestamp\": \"{}\", \"uuid\": \"{}\"}";
   private static final String UPDATE_PATTERN =
       "{\"event\": \"update\", \"source\": \"{}\", \"target\": \"{}\", \"previous\": {}, \"current\": {}, \"timestamp\": \"{}\", \"uuid\": \"{}\"}";
+  private static final String REFRESH_PATTERN =
+      "{\"event\": \"refresh\", \"source\": \"{}\", \"expired\": {}}";
 
   private final TimerScheduler<NodeMessage> timers;
   private final Map<ActorRef<NodeMessage>, Instant> contacts;
@@ -62,9 +67,11 @@ public class Node extends AbstractBehavior<NodeMessage> {
       Parameters parameters,
       Supplier<Instant> clock,
       IntervalCache<RiskScore> cache,
-      Duration idleTimeout) {
+      Duration idleTimeout,
+      Duration refreshRate) {
     super(context);
     this.timers = timers;
+    timers.startTimerWithFixedDelay(Refresh.INSTANCE, refreshRate);
     this.contacts = new Object2ObjectOpenHashMap<>();
     this.parameters = parameters;
     this.clock = clock;
@@ -81,9 +88,10 @@ public class Node extends AbstractBehavior<NodeMessage> {
       Parameters parameters,
       Supplier<Instant> clock,
       IntervalCache<RiskScore> cache,
-      Duration idleTimeout) {
+      Duration idleTimeout,
+      Duration refreshRate) {
     return Behaviors.setup(
-        context -> new Node(context, timers, parameters, clock, cache, idleTimeout));
+        context -> new Node(context, timers, parameters, clock, cache, idleTimeout, refreshRate));
   }
 
   private static Predicate<Entry<ActorRef<NodeMessage>, Instant>> isNotSender(RiskScore score) {
@@ -104,7 +112,16 @@ public class Node extends AbstractBehavior<NodeMessage> {
         .onMessage(Contact.class, this::onContact)
         .onMessage(RiskScore.class, this::onRiskScore)
         .onMessage(Timeout.class, Node::onTimeout)
+        .onMessage(Refresh.class, this::onRefresh)
         .build();
+  }
+
+  private Behavior<NodeMessage> onRefresh(Refresh refresh) {
+    Collection<Instant> expired = new ArrayList<>(contacts.values());
+    expired.removeIf(this::isNewEnough);
+    contacts.values().removeAll(expired);
+    logRefresh(expired.size());
+    return this;
   }
 
   private RiskScore defaultScore() {
@@ -200,8 +217,12 @@ public class Node extends AbstractBehavior<NodeMessage> {
   }
 
   private boolean isScoreNewEnough(RiskScore score) {
-    Duration sinceComputed = Duration.between(score.timestamp(), clock.get());
-    return parameters.scoreTtl().compareTo(sinceComputed) > 0;
+    return isNewEnough(score.timestamp());
+  }
+
+  private boolean isNewEnough(Instant timestamp) {
+    Duration sinceTimestamp = Duration.between(timestamp, clock.get());
+    return parameters.scoreTtl().compareTo(sinceTimestamp) >= 0;
   }
 
   private void setSendThreshold() {
@@ -231,6 +252,10 @@ public class Node extends AbstractBehavior<NodeMessage> {
             current.value(),
             current.timestamp(),
             current.uuid());
+  }
+
+  private void logRefresh(int nExpired) {
+    log().debug(REFRESH_PATTERN, name(self()), nExpired);
   }
 
   private void logSendCurrent(ActorRef<NodeMessage> contact, RiskScore score) {

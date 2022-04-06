@@ -55,6 +55,7 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
   private final BiFunction<ActorRef<NodeMessage>, ActorRef<NodeMessage>, Instant> timeFactory;
   private final Supplier<IntervalCache<RiskScore>> cacheFactory;
   private final Duration nodeTimeout;
+  private final Duration nodeRefreshRate;
   private Instant startedAt;
   private long nStopped;
 
@@ -66,7 +67,8 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
       Supplier<IntervalCache<RiskScore>> cacheFactory,
       Function<ActorRef<NodeMessage>, RiskScore> scoreFactory,
       BiFunction<ActorRef<NodeMessage>, ActorRef<NodeMessage>, Instant> timeFactory,
-      Duration nodeTimeout) {
+      Duration nodeTimeout,
+      Duration nodeRefreshRate) {
     super(context);
     this.graph = graph;
     this.parameters = parameters;
@@ -75,6 +77,7 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
     this.scoreFactory = scoreFactory;
     this.timeFactory = timeFactory;
     this.nodeTimeout = nodeTimeout;
+    this.nodeRefreshRate = nodeRefreshRate;
     this.nNodes = graph.nNodes();
     this.nStopped = 0L;
   }
@@ -83,6 +86,7 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
   protected static Behavior<AlgorithmMessage> riskPropagation(
       ContactGraph graph,
       Duration nodeTimeout,
+      Duration nodeRefreshRate,
       Parameters parameters,
       Supplier<Instant> clock,
       Supplier<IntervalCache<RiskScore>> cacheFactory,
@@ -98,7 +102,8 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
                 cacheFactory,
                 scoreFactory,
                 timeFactory,
-                nodeTimeout));
+                nodeTimeout,
+                nodeRefreshRate));
   }
 
   @Override
@@ -144,6 +149,7 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
                 .clock(clock)
                 .cache(cacheFactory.get())
                 .idleTimeout(nodeTimeout)
+                .refreshRate(nodeRefreshRate)
                 .build());
   }
 
