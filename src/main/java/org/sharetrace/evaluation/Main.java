@@ -17,14 +17,15 @@ import org.sharetrace.util.IntervalCache;
 public class Main {
 
   public static void main(String[] args) {
+    Parameters parameters = parameters();
     Behavior<AlgorithmMessage> riskPropagation =
         RiskPropagationBuilder.create()
             .graph(newGraph())
-            .parameters(parameters())
+            .parameters(parameters)
             .clock(Main::time)
             .scoreFactory(Main::initialScore)
             .timeFactory(Main::contactTime)
-            .cacheFactory(Main::nodeCache)
+            .cacheFactory(() -> nodeCache(parameters))
             .nodeTimeout(nodeTimeout())
             .build();
     Runner.run(riskPropagation);
@@ -47,7 +48,7 @@ public class Main {
   }
 
   private static Duration lookBack() {
-    return Duration.ofDays(Math.round(Math.random() * 14));
+    return Duration.ofDays(Math.round(Math.random() * 13));
   }
 
   private static Instant time() {
@@ -63,9 +64,9 @@ public class Main {
         .build();
   }
 
-  private static IntervalCache<RiskScore> nodeCache() {
+  private static IntervalCache<RiskScore> nodeCache(Parameters parameters) {
     return IntervalCache.<RiskScore>builder()
-        .nIntervals(15L)
+        .nIntervals(parameters.scoreTtl().toDays() + 1)
         .nBuffer(1L)
         .interval(Duration.ofDays(1L))
         .refreshRate(Duration.ofHours(1L))
