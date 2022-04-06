@@ -14,7 +14,7 @@ import org.sharetrace.RiskPropagation;
  * @see Node
  * @see Edge
  */
-public class ContactGraph extends SimpleGraph<Long, Edge<Long>> {
+public class ContactGraph extends SimpleGraph<Number, Edge<Number>> {
 
   private ContactGraph() {
     super(new NodeIdSupplier(), Edge::new, false);
@@ -26,18 +26,18 @@ public class ContactGraph extends SimpleGraph<Long, Edge<Long>> {
   }
 
   /** Creates a contact graph that is generated from a {@link GraphGenerator}. */
-  public static ContactGraph create(GraphGenerator<Long, Edge<Long>, Long> generator) {
+  public static ContactGraph create(GraphGenerator<Number, Edge<Number>, ?> generator) {
     ContactGraph graph = create();
     generator.generateGraph(graph);
     return graph;
   }
 
-  private static final class NodeIdSupplier implements Supplier<Long> {
+  private static final class NodeIdSupplier implements Supplier<Number> {
 
-    private long id = 0L;
+    private int id = 0;
 
     @Override
-    public Long get() {
+    public Number get() {
       return id++;
     }
   }
