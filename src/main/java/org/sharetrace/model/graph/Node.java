@@ -7,9 +7,9 @@ import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import akka.actor.typed.javadsl.TimerScheduler;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
@@ -65,7 +65,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
       Duration idleTimeout) {
     super(context);
     this.timers = timers;
-    this.contacts = new HashMap<>();
+    this.contacts = new Object2ObjectOpenHashMap<>();
     this.parameters = parameters;
     this.clock = clock;
     this.cache = cache;

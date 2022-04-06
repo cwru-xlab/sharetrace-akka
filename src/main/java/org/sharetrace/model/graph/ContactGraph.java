@@ -1,8 +1,13 @@
 package org.sharetrace.model.graph;
 
+import it.unimi.dsi.fastutil.ints.IntIntPair;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
+import org.jgrapht.Graph;
 import org.jgrapht.generate.GraphGenerator;
-import org.jgrapht.graph.SimpleGraph;
+import org.jgrapht.graph.DefaultGraphType;
+import org.jgrapht.opt.graph.fastutil.FastutilMapIntVertexGraph;
+import org.jgrapht.sux4j.SuccinctUndirectedGraph;
 import org.sharetrace.RiskPropagation;
 
 /**
@@ -14,30 +19,66 @@ import org.sharetrace.RiskPropagation;
  * @see Node
  * @see Edge
  */
-public class ContactGraph extends SimpleGraph<Number, Edge<Number>> {
+public class ContactGraph implements TemporalGraph<Number, Edge<Number>> {
 
-  private ContactGraph() {
-    super(new NodeIdSupplier(), Edge::new, false);
-  }
+  private final Graph<? extends Number, ? extends IntIntPair> graph;
 
-  /** Creates an empty contact graph. */
-  public static ContactGraph create() {
-    return new ContactGraph();
+  private ContactGraph(Graph<? extends Number, ? extends IntIntPair> graph) {
+    this.graph = graph;
   }
 
   /** Creates a contact graph that is generated from a {@link GraphGenerator}. */
-  public static ContactGraph create(GraphGenerator<Number, Edge<Number>, ?> generator) {
-    ContactGraph graph = create();
+  public static ContactGraph create(GraphGenerator<Integer, Edge<Number>, ?> generator) {
+    Graph<Integer, Edge<Number>> graph = newGraph();
     generator.generateGraph(graph);
-    return graph;
+    return new ContactGraph(new SuccinctUndirectedGraph(graph));
   }
 
-  private static final class NodeIdSupplier implements Supplier<Number> {
+  private static Graph<Integer, Edge<Number>> newGraph() {
+    return new FastutilMapIntVertexGraph<>(
+        new NodeIdFactory(), Edge::new, DefaultGraphType.simple());
+  }
+
+  @Override
+  public Stream<Edge<Number>> edgeStream() {
+    return graph.edgeSet().stream().map(EdgeAdapter::new);
+  }
+
+  @Override
+  public Stream<Number> nodeStream() {
+    return graph.vertexSet().stream().map(node -> (Number) node);
+  }
+
+  @Override
+  public long nNodes() {
+    return graph.iterables().vertexCount();
+  }
+
+  private static final class EdgeAdapter extends Edge<Number> {
+
+    private final IntIntPair adapted;
+
+    public EdgeAdapter(IntIntPair adapted) {
+      this.adapted = adapted;
+    }
+
+    @Override
+    public Number source() {
+      return adapted.leftInt();
+    }
+
+    @Override
+    public Number target() {
+      return adapted.rightInt();
+    }
+  }
+
+  private static final class NodeIdFactory implements Supplier<Integer> {
 
     private int id = 0;
 
     @Override
-    public Number get() {
+    public Integer get() {
       return id++;
     }
   }

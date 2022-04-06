@@ -66,6 +66,7 @@ public class Main {
   private static IntervalCache<RiskScore> nodeCache() {
     return IntervalCache.<RiskScore>builder()
         .nIntervals(15L)
+        .nBuffer(1L)
         .interval(Duration.ofDays(1L))
         .refreshRate(Duration.ofHours(1L))
         .clock(Main::time)

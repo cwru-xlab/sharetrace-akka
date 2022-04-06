@@ -12,6 +12,7 @@ repositories {
 def versions = [
         akkaScala : "2.13",
         akka      : "2.6.19",
+        fastutil  : "8.5.8",
         immutables: "2.9.0",
         jgrapht   : "1.5.1",
         junit     : "5.8.2",
@@ -20,13 +21,16 @@ def versions = [
 ]
 
 dependencies {
+    implementation "ch.qos.logback:logback-classic:$versions.logback"
+    implementation "com.github.spotbugs:spotbugs-annotations:$versions.spotBugs"
+    implementation "it.unimi.dsi:fastutil:$versions.fastutil"
     annotationProcessor "org.immutables:value:$versions.immutables"
     implementation "org.immutables:value:$versions.immutables"
     implementation "org.immutables:builder:$versions.immutables"
     implementation "com.typesafe.akka:akka-actor-typed_$versions.akkaScala:$versions.akka"
-    implementation "ch.qos.logback:logback-classic:$versions.logback"
     implementation "org.jgrapht:jgrapht-core:$versions.jgrapht"
-    implementation "com.github.spotbugs:spotbugs-annotations:$versions.spotBugs"
+    implementation "org.jgrapht:jgrapht-unimi-dsi:$versions.jgrapht"
+    implementation "org.jgrapht:jgrapht-opt:$versions.jgrapht"
 
     testImplementation "org.junit.jupiter:junit-jupiter-api:$versions.junit"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$versions.junit"
