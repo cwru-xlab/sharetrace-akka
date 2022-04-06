@@ -4,12 +4,13 @@ import static org.sharetrace.util.Preconditions.checkArgument;
 import static org.sharetrace.util.Preconditions.checkInClosedRange;
 import static org.sharetrace.util.Preconditions.checkIsAtLeast;
 import static org.sharetrace.util.Preconditions.checkIsPositive;
+import it.unimi.dsi.fastutil.objects.Object2ObjectAVLTreeMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectRBTreeMap;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.Objects;
 import java.util.SortedMap;
-import java.util.TreeMap;
 import java.util.function.BinaryOperator;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
@@ -150,6 +151,7 @@ public class IntervalCache<T> {
     private long nIntervals = MIN_INTERVALS;
     private long nBuffer = MIN_BUFFER;
     private Duration refreshRate;
+    private boolean prioritizeReads = true;
 
     /** Sets duration of each contiguous time interval. Default: 1 hour. */
     public Builder<T> interval(Duration interval) {
@@ -190,13 +192,19 @@ public class IntervalCache<T> {
       return this;
     }
 
+    /** Sets whether read or write efficiency should be prioritized. Default: true. */
+    public Builder<T> prioritizeReads(boolean prioritizeReads) {
+      this.prioritizeReads = prioritizeReads;
+      return this;
+    }
+
     /** Returns an initialized instance of the cache. */
     public IntervalCache<T> build() {
       return new IntervalCache<>(checkFields());
     }
 
     private Builder<T> checkFields() {
-      cache = Objects.requireNonNullElse(cache, new TreeMap<>());
+      cache = Objects.requireNonNullElse(cache, newCache());
       mergeStrategy = Objects.requireNonNullElse(mergeStrategy, (oldValue, newValue) -> newValue);
       clock = Objects.requireNonNullElse(clock, Instant::now);
       interval = Objects.requireNonNullElse(interval, Duration.ofDays(1L));
@@ -206,6 +214,10 @@ public class IntervalCache<T> {
       refreshRate = Objects.requireNonNullElse(refreshRate, Duration.ofMinutes(1L));
       checkIsPositive(refreshRate, this::refreshRateMessage);
       return this;
+    }
+
+    private SortedMap<Instant, T> newCache() {
+      return prioritizeReads ? new Object2ObjectAVLTreeMap<>() : new Object2ObjectRBTreeMap<>();
     }
 
     private String refreshRateMessage() {

@@ -71,6 +71,7 @@ public class Main {
         .refreshRate(Duration.ofHours(1L))
         .clock(Main::time)
         .mergeStrategy(Main::merge)
+        .prioritizeReads(false)
         .build();
   }
 
