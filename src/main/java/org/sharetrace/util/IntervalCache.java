@@ -93,19 +93,16 @@ public class IntervalCache<T> {
 
   /**
    * Returns the maximum value, according to the specified comparator, whose time interval ends
-   * prior to specified timestamp. If the timestamp falls outside the timespan of the cache or no
-   * values have been cached in the time intervals that end prior to the timestamp, {@code null} is
-   * returned. Prior to retrieving the value, the cache is possibly refreshed if it has been
-   * sufficiently long since its previous refresh.
+   * prior to specified timestamp. If no values have been cached in the time intervals that end
+   * prior to the timestamp, {@code null} is returned. Prior to retrieving the value, the cache is
+   * possibly refreshed if it has been sufficiently long since its previous refresh.
    */
   @Nullable
   public T headMax(Instant timestamp, Comparator<T> comparator) {
     Objects.requireNonNull(timestamp);
     Objects.requireNonNull(comparator);
     refresh();
-    return timestamp.isBefore(rangeEnd)
-        ? cache.headMap(timestamp).values().stream().max(comparator).orElse(null)
-        : null;
+    return cache.headMap(timestamp).values().stream().max(comparator).orElse(null);
   }
 
   private Instant floorKey(Instant timestamp) {
@@ -151,7 +148,7 @@ public class IntervalCache<T> {
     private long nIntervals = MIN_INTERVALS;
     private long nBuffer = MIN_BUFFER;
     private Duration refreshRate;
-    private boolean prioritizeReads = true;
+    private boolean prioritizeReads = false;
 
     /** Sets duration of each contiguous time interval. Default: 1 hour. */
     public Builder<T> interval(Duration interval) {
@@ -192,7 +189,7 @@ public class IntervalCache<T> {
       return this;
     }
 
-    /** Sets whether read or write efficiency should be prioritized. Default: true. */
+    /** Sets whether read or write efficiency should be prioritized. Default: false. */
     public Builder<T> prioritizeReads(boolean prioritizeReads) {
       this.prioritizeReads = prioritizeReads;
       return this;
