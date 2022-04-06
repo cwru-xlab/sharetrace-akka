@@ -39,8 +39,8 @@ public class Node extends AbstractBehavior<NodeMessage> {
       "{\"event\": \"addContact\", \"nodes\": [\"{}\", \"{}\"]}";
   private static final String RECEIVE_PATTERN =
       "{\"event\": \"receive\", \"source\": \"{}\", \"target\": \"{}\", \"value\": {}, \"timestamp\": \"{}\", \"uuid\": \"{}\"}";
-  private static final String BROADCAST_PATTERN =
-      "{\"event\": \"broadcast\", \"source\": \"{}\", \"target\": \"{}\", \"value\": {}, \"timestamp\": \"{}\", \"uuid\": \"{}\"}";
+  private static final String PROPAGATE_PATTERN =
+      "{\"event\": \"propagate\", \"source\": \"{}\", \"target\": \"{}\", \"value\": {}, \"timestamp\": \"{}\", \"uuid\": \"{}\"}";
   private static final String SEND_CURRENT_PATTERN =
       "{\"event\": \"sendCurrent\", \"source\": \"{}\", \"target\": \"{}\", \"value\": {}, \"timestamp\": \"{}\", \"uuid\": \"{}\"}";
   private static final String SEND_CACHED_PATTERN =
@@ -172,7 +172,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
   private Behavior<NodeMessage> onRiskScore(RiskScore score) {
     logReceive(score);
     update(score);
-    broadcast(score);
+    propagate(score);
     resetTimeout();
     return this;
   }
@@ -190,13 +190,13 @@ public class Node extends AbstractBehavior<NodeMessage> {
     return score;
   }
 
-  private void broadcast(RiskScore score) {
+  private void propagate(RiskScore score) {
     RiskScore transmitted = transmitted(score);
     if (isScoreAlive(transmitted) && isScoreHighEnough(transmitted)) {
       contacts.entrySet().stream()
           .filter(isNotSender(score))
           .filter(isContactNewEnough(score))
-          .forEach(contact -> sendBroadcast(contact.getKey(), transmitted));
+          .forEach(contact -> propagate(contact.getKey(), transmitted));
     }
   }
 
@@ -258,8 +258,8 @@ public class Node extends AbstractBehavior<NodeMessage> {
     timers.startTimerWithFixedDelay(Refresh.INSTANCE, refreshRate);
   }
 
-  private void sendBroadcast(ActorRef<NodeMessage> contact, RiskScore score) {
-    logBroadcast(contact, score);
+  private void propagate(ActorRef<NodeMessage> contact, RiskScore score) {
+    logPropagate(contact, score);
     contact.tell(score);
   }
 
@@ -291,8 +291,8 @@ public class Node extends AbstractBehavior<NodeMessage> {
     logMessageOp(SEND_CACHED_PATTERN, self(), contact, score);
   }
 
-  private void logBroadcast(ActorRef<NodeMessage> contact, RiskScore score) {
-    logMessageOp(BROADCAST_PATTERN, self(), contact, score);
+  private void logPropagate(ActorRef<NodeMessage> contact, RiskScore score) {
+    logMessageOp(PROPAGATE_PATTERN, self(), contact, score);
   }
 
   private void logReceive(RiskScore score) {
