@@ -1,6 +1,7 @@
 package org.sharetrace.model.graph;
 
 import org.jgrapht.graph.DefaultEdge;
+import org.jgrapht.util.TypeUtil;
 
 /**
  * An edge which allows access to its endpoints. Whether {@link #source()} and {@link #target()}
@@ -8,16 +9,15 @@ import org.jgrapht.graph.DefaultEdge;
  *
  * @param <T> The type of the edge identifier.
  */
-@SuppressWarnings("unchecked")
 public class Edge<T> extends DefaultEdge {
 
   /** Returns an endpoint (if undirected) or starting point (if directed) of the edge. */
   public T source() {
-    return (T) getSource();
+    return TypeUtil.uncheckedCast(getSource());
   }
 
   /** Returns an endpoint (if undirected) or ending point (if directed) of the edge. */
   public T target() {
-    return (T) getTarget();
+    return TypeUtil.uncheckedCast(getTarget());
   }
 }
