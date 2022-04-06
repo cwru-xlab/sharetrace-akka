@@ -204,7 +204,7 @@ public class IntervalCache<T> {
     }
 
     private Builder<T> checkFields() {
-      cache = Objects.requireNonNullElse(cache, newCache());
+      cache = newCache();
       mergeStrategy = Objects.requireNonNullElse(mergeStrategy, (oldValue, newValue) -> newValue);
       clock = Objects.requireNonNullElse(clock, Instant::now);
       interval = Objects.requireNonNullElse(interval, Duration.ofDays(1L));
