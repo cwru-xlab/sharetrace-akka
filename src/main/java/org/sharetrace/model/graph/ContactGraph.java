@@ -1,13 +1,14 @@
 package org.sharetrace.model.graph;
 
-import it.unimi.dsi.fastutil.ints.IntIntPair;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.function.Supplier;
-import java.util.stream.Stream;
+import java.util.stream.Collectors;
 import org.jgrapht.Graph;
 import org.jgrapht.generate.GraphGenerator;
 import org.jgrapht.graph.DefaultGraphType;
-import org.jgrapht.opt.graph.fastutil.FastutilMapIntVertexGraph;
-import org.jgrapht.sux4j.SuccinctUndirectedGraph;
+import org.jgrapht.opt.graph.fastutil.FastutilMapGraph;
 import org.sharetrace.RiskPropagation;
 
 /**
@@ -19,58 +20,37 @@ import org.sharetrace.RiskPropagation;
  * @see Node
  * @see Edge
  */
-public class ContactGraph implements TemporalGraph<Number, Edge<Number>> {
+public class ContactGraph implements TemporalGraph<Integer> {
 
-  private final Graph<? extends Number, ? extends IntIntPair> graph;
+  private final Collection<Integer> nodes;
+  private final Collection<List<Integer>> edges;
 
-  private ContactGraph(Graph<? extends Number, ? extends IntIntPair> graph) {
-    this.graph = graph;
+  private ContactGraph(Graph<Integer, Edge<Integer>> graph) {
+    nodes = Collections.unmodifiableSet(graph.vertexSet());
+    edges =
+        graph.edgeSet().stream()
+            .map(edge -> List.of(edge.source(), edge.target()))
+            .collect(Collectors.toUnmodifiableList());
   }
 
-  /** Creates a contact graph that is generated from a {@link GraphGenerator}. */
-  public static ContactGraph create(GraphGenerator<Integer, Edge<Number>, ?> generator) {
-    Graph<Integer, Edge<Number>> graph = newGraph();
+  public static ContactGraph create(GraphGenerator<Integer, Edge<Integer>, ?> generator) {
+    Graph<Integer, Edge<Integer>> graph = newGraph();
     generator.generateGraph(graph);
-    return new ContactGraph(new SuccinctUndirectedGraph(graph));
+    return new ContactGraph(graph);
   }
 
-  private static Graph<Integer, Edge<Number>> newGraph() {
-    return new FastutilMapIntVertexGraph<>(
-        new NodeIdFactory(), Edge::new, DefaultGraphType.simple());
-  }
-
-  @Override
-  public Stream<Edge<Number>> edgeStream() {
-    return graph.edgeSet().stream().map(EdgeAdapter::new);
+  private static Graph<Integer, Edge<Integer>> newGraph() {
+    return new FastutilMapGraph<>(new NodeIdFactory(), Edge::new, DefaultGraphType.simple());
   }
 
   @Override
-  public Stream<Number> nodeStream() {
-    return graph.vertexSet().stream().map(node -> (Number) node);
+  public Collection<Integer> nodes() {
+    return nodes;
   }
 
   @Override
-  public long nNodes() {
-    return graph.iterables().vertexCount();
-  }
-
-  private static final class EdgeAdapter extends Edge<Number> {
-
-    private final IntIntPair adapted;
-
-    public EdgeAdapter(IntIntPair adapted) {
-      this.adapted = adapted;
-    }
-
-    @Override
-    public Number source() {
-      return adapted.leftInt();
-    }
-
-    @Override
-    public Number target() {
-      return adapted.rightInt();
-    }
+  public Collection<List<Integer>> edges() {
+    return edges;
   }
 
   private static final class NodeIdFactory implements Supplier<Integer> {

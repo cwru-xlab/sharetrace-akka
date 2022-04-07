@@ -1,15 +1,13 @@
 package org.sharetrace.evaluation;
 
-import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
 import java.time.Duration;
 import java.time.Instant;
-import org.jgrapht.generate.GnmRandomGraphGenerator;
 import org.sharetrace.RiskPropagationBuilder;
 import org.sharetrace.Runner;
-import org.sharetrace.model.graph.ContactGraph;
+import org.sharetrace.data.Dataset;
+import org.sharetrace.data.SocioPatternsDatasetFactory;
 import org.sharetrace.model.message.AlgorithmMessage;
-import org.sharetrace.model.message.NodeMessage;
 import org.sharetrace.model.message.Parameters;
 import org.sharetrace.model.message.RiskScore;
 import org.sharetrace.util.IntervalCache;
@@ -17,36 +15,20 @@ import org.sharetrace.util.IntervalCache;
 public class Main {
 
   public static void main(String[] args) {
+    Dataset<Integer> dataset = SocioPatternsDatasetFactory.newDataset(Main::time, null);
     Parameters parameters = parameters();
     Behavior<AlgorithmMessage> riskPropagation =
-        RiskPropagationBuilder.create()
-            .graph(newGraph())
+        RiskPropagationBuilder.<Integer>create()
+            .graph(dataset.graph())
             .parameters(parameters)
             .clock(Main::time)
-            .scoreFactory(Main::initialScore)
-            .timeFactory(Main::contactTime)
+            .scoreFactory(dataset::score)
+            .timeFactory(dataset::timestamp)
             .cacheFactory(() -> nodeCache(parameters))
             .nodeTimeout(Duration.ofSeconds(5L))
             .nodeRefreshRate(Duration.ofHours(1L))
             .build();
     Runner.run(riskPropagation);
-  }
-
-  private static ContactGraph newGraph() {
-    return ContactGraph.create(new GnmRandomGraphGenerator<>(100_000, 500_000));
-  }
-
-  private static RiskScore initialScore(ActorRef<NodeMessage> node) {
-    return RiskScore.builder().replyTo(node).value(Math.random()).timestamp(timestamp()).build();
-  }
-
-  private static Instant contactTime(ActorRef<NodeMessage> node1, ActorRef<NodeMessage> node2) {
-    return timestamp();
-  }
-
-  private static Instant timestamp() {
-    Duration lookBack = Duration.ofDays(Math.round(Math.random() * 13));
-    return time().minus(lookBack);
   }
 
   private static Instant time() {

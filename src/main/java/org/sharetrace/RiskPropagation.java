@@ -9,6 +9,7 @@ import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.BiFunction;
@@ -17,9 +18,9 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.immutables.builder.Builder;
 import org.sharetrace.model.graph.ContactGraph;
-import org.sharetrace.model.graph.Edge;
 import org.sharetrace.model.graph.Node;
 import org.sharetrace.model.graph.NodeBuilder;
+import org.sharetrace.model.graph.TemporalGraph;
 import org.sharetrace.model.message.AlgorithmMessage;
 import org.sharetrace.model.message.Contact;
 import org.sharetrace.model.message.NodeMessage;
@@ -28,6 +29,7 @@ import org.sharetrace.model.message.RiskScore;
 import org.sharetrace.model.message.Run;
 import org.sharetrace.util.IntervalCache;
 
+// TODO Update ContactGraph
 /**
  * A non-iterative, asynchronous implementation of the ShareTrace algorithm. The objective is to
  * estimate the marginal posterior probability of infection for all individuals in the specified
@@ -45,28 +47,28 @@ import org.sharetrace.util.IntervalCache;
  *
  * @see Parameters
  */
-public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
+public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
 
   private final Parameters parameters;
-  private final ContactGraph graph;
-  private final long nNodes;
+  private final TemporalGraph<T> graph;
+  private final int nNodes;
   private final Supplier<Instant> clock;
-  private final Function<ActorRef<NodeMessage>, RiskScore> scoreFactory;
-  private final BiFunction<ActorRef<NodeMessage>, ActorRef<NodeMessage>, Instant> timeFactory;
+  private final Function<T, RiskScore> scoreFactory;
+  private final BiFunction<T, T, Instant> timeFactory;
   private final Supplier<IntervalCache<RiskScore>> cacheFactory;
   private final Duration nodeTimeout;
   private final Duration nodeRefreshRate;
   private Instant startedAt;
-  private long nStopped;
+  private int nStopped;
 
   private RiskPropagation(
       ActorContext<AlgorithmMessage> context,
-      ContactGraph graph,
+      TemporalGraph<T> graph,
       Parameters parameters,
       Supplier<Instant> clock,
       Supplier<IntervalCache<RiskScore>> cacheFactory,
-      Function<ActorRef<NodeMessage>, RiskScore> scoreFactory,
-      BiFunction<ActorRef<NodeMessage>, ActorRef<NodeMessage>, Instant> timeFactory,
+      Function<T, RiskScore> scoreFactory,
+      BiFunction<T, T, Instant> timeFactory,
       Duration nodeTimeout,
       Duration nodeRefreshRate) {
     super(context);
@@ -78,23 +80,23 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
     this.timeFactory = timeFactory;
     this.nodeTimeout = nodeTimeout;
     this.nodeRefreshRate = nodeRefreshRate;
-    this.nNodes = graph.nNodes();
-    this.nStopped = 0L;
+    this.nNodes = graph.nodes().size();
+    this.nStopped = 0;
   }
 
   @Builder.Factory
-  protected static Behavior<AlgorithmMessage> riskPropagation(
-      ContactGraph graph,
+  protected static <T> Behavior<AlgorithmMessage> riskPropagation(
+      TemporalGraph<T> graph,
       Duration nodeTimeout,
       Duration nodeRefreshRate,
       Parameters parameters,
       Supplier<Instant> clock,
       Supplier<IntervalCache<RiskScore>> cacheFactory,
-      Function<ActorRef<NodeMessage>, RiskScore> scoreFactory,
-      BiFunction<ActorRef<NodeMessage>, ActorRef<NodeMessage>, Instant> timeFactory) {
+      Function<T, RiskScore> scoreFactory,
+      BiFunction<T, T, Instant> timeFactory) {
     return Behaviors.setup(
         context ->
-            new RiskPropagation(
+            new RiskPropagation<>(
                 context,
                 graph,
                 parameters,
@@ -117,7 +119,7 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
   private Behavior<AlgorithmMessage> onRun(Run run) {
     Behavior<AlgorithmMessage> behavior = this;
     if (nNodes > 0) {
-      Map<?, ActorRef<NodeMessage>> nodes = newNodes();
+      Map<T, ActorRef<NodeMessage>> nodes = newNodes();
       startedAt = clock.get();
       setScores(nodes);
       setContacts(nodes);
@@ -127,14 +129,13 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
     return behavior;
   }
 
-  private Map<?, ActorRef<NodeMessage>> newNodes() {
-    return graph
-        .nodeStream()
+  private Map<T, ActorRef<NodeMessage>> newNodes() {
+    return graph.nodes().stream()
         .map(name -> Map.entry(name, newNode(name)))
         .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
   }
 
-  private ActorRef<NodeMessage> newNode(Object name) {
+  private ActorRef<NodeMessage> newNode(T name) {
     ActorRef<NodeMessage> node = getContext().spawn(newNode(), String.valueOf(name));
     getContext().watch(node);
     return node;
@@ -164,19 +165,19 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
     return behavior;
   }
 
-  private void onEdge(Edge<?> edge, Map<?, ActorRef<NodeMessage>> nodes) {
-    ActorRef<NodeMessage> node1 = nodes.get(edge.source());
-    ActorRef<NodeMessage> node2 = nodes.get(edge.target());
-    Instant timestamp = timeFactory.apply(node1, node2);
+  private void onEdge(List<T> edge, Map<?, ActorRef<NodeMessage>> nodes) {
+    ActorRef<NodeMessage> node1 = nodes.get(edge.get(0));
+    ActorRef<NodeMessage> node2 = nodes.get(edge.get(1));
+    Instant timestamp = timeFactory.apply(edge.get(0), edge.get(1));
     node1.tell(Contact.builder().replyTo(node2).timestamp(timestamp).build());
     node2.tell(Contact.builder().replyTo(node1).timestamp(timestamp).build());
   }
 
-  private void setScores(Map<?, ActorRef<NodeMessage>> nodes) {
-    nodes.values().forEach(node -> node.tell(scoreFactory.apply(node)));
+  private void setScores(Map<T, ActorRef<NodeMessage>> nodes) {
+    nodes.forEach((name, node) -> node.tell(scoreFactory.apply(name)));
   }
 
   private void setContacts(Map<?, ActorRef<NodeMessage>> nodes) {
-    graph.edgeStream().forEach(edge -> onEdge(edge, nodes));
+    graph.edges().forEach(edge -> onEdge(edge, nodes));
   }
 }
