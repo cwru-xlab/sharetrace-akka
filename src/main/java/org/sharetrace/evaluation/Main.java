@@ -26,8 +26,8 @@ public class Main {
             .scoreFactory(Main::initialScore)
             .timeFactory(Main::contactTime)
             .cacheFactory(() -> nodeCache(parameters))
-            .nodeTimeout(nodeTimeout())
-            .nodeRefreshRate(nodeRefreshRate())
+            .nodeTimeout(Duration.ofSeconds(5L))
+            .nodeRefreshRate(Duration.ofHours(1L))
             .build();
     Runner.run(riskPropagation);
   }
@@ -45,11 +45,8 @@ public class Main {
   }
 
   private static Instant timestamp() {
-    return time().minus(lookBack());
-  }
-
-  private static Duration lookBack() {
-    return Duration.ofDays(Math.round(Math.random() * 13));
+    Duration lookBack = Duration.ofDays(Math.round(Math.random() * 13));
+    return time().minus(lookBack);
   }
 
   private static Instant time() {
@@ -86,13 +83,5 @@ public class Main {
     boolean isHigher = oldValue < newValue;
     boolean isOlder = oldValue == newValue && oldTimestamp.isAfter(newTimestamp);
     return isHigher || isOlder ? newScore : oldScore;
-  }
-
-  private static Duration nodeTimeout() {
-    return Duration.ofSeconds(5L);
-  }
-
-  private static Duration nodeRefreshRate() {
-    return Duration.ofHours(1L);
   }
 }
