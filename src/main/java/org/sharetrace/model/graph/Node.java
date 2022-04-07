@@ -35,19 +35,19 @@ import org.slf4j.Logger;
  */
 public class Node extends AbstractBehavior<NodeMessage> {
 
-  private static final String CONTACT_PATTERN =
+  private static final String CONTACT_FORMAT =
       "{\"event\": \"addContact\", \"nodes\": [\"{}\", \"{}\"]}";
-  private static final String RECEIVE_PATTERN =
+  private static final String RECEIVE_FORMAT =
       "{\"event\": \"receive\", \"source\": \"{}\", \"target\": \"{}\", \"value\": {}, \"timestamp\": \"{}\", \"uuid\": \"{}\"}";
-  private static final String PROPAGATE_PATTERN =
+  private static final String PROPAGATE_FORMAT =
       "{\"event\": \"propagate\", \"source\": \"{}\", \"target\": \"{}\", \"value\": {}, \"timestamp\": \"{}\", \"uuid\": \"{}\"}";
-  private static final String SEND_CURRENT_PATTERN =
+  private static final String SEND_CURRENT_FORMAT =
       "{\"event\": \"sendCurrent\", \"source\": \"{}\", \"target\": \"{}\", \"value\": {}, \"timestamp\": \"{}\", \"uuid\": \"{}\"}";
-  private static final String SEND_CACHED_PATTERN =
+  private static final String SEND_CACHED_FORMAT =
       "{\"event\": \"sendCached\", \"source\": \"{}\", \"target\": \"{}\", \"value\": {}, \"timestamp\": \"{}\", \"uuid\": \"{}\"}";
-  private static final String UPDATE_PATTERN =
+  private static final String UPDATE_FORMAT =
       "{\"event\": \"update\", \"source\": \"{}\", \"target\": \"{}\", \"previous\": {}, \"current\": {}, \"timestamp\": \"{}\", \"uuid\": \"{}\"}";
-  private static final String REFRESH_PATTERN =
+  private static final String REFRESH_FORMAT =
       "{\"event\": \"refresh\", \"source\": \"{}\", \"expired\": {}}";
 
   private final TimerScheduler<NodeMessage> timers;
@@ -264,13 +264,13 @@ public class Node extends AbstractBehavior<NodeMessage> {
   }
 
   private void logContact(Contact contact) {
-    log().debug(CONTACT_PATTERN, name(self()), name(contact.replyTo()));
+    log().debug(CONTACT_FORMAT, name(self()), name(contact.replyTo()));
   }
 
   private void logUpdate(RiskScore previous, RiskScore current) {
     log()
         .debug(
-            UPDATE_PATTERN,
+            UPDATE_FORMAT,
             name(current.replyTo()),
             name(self()),
             previous.value(),
@@ -280,29 +280,28 @@ public class Node extends AbstractBehavior<NodeMessage> {
   }
 
   private void logRefresh(int nExpired) {
-    log().debug(REFRESH_PATTERN, name(self()), nExpired);
+    log().debug(REFRESH_FORMAT, name(self()), nExpired);
   }
 
   private void logSendCurrent(ActorRef<NodeMessage> contact, RiskScore score) {
-    logMessageOp(SEND_CURRENT_PATTERN, self(), contact, score);
+    logMessageOp(SEND_CURRENT_FORMAT, self(), contact, score);
   }
 
   private void logSendCached(ActorRef<NodeMessage> contact, RiskScore score) {
-    logMessageOp(SEND_CACHED_PATTERN, self(), contact, score);
+    logMessageOp(SEND_CACHED_FORMAT, self(), contact, score);
   }
 
   private void logPropagate(ActorRef<NodeMessage> contact, RiskScore score) {
-    logMessageOp(PROPAGATE_PATTERN, self(), contact, score);
+    logMessageOp(PROPAGATE_FORMAT, self(), contact, score);
   }
 
   private void logReceive(RiskScore score) {
-    logMessageOp(RECEIVE_PATTERN, score.replyTo(), self(), score);
+    logMessageOp(RECEIVE_FORMAT, score.replyTo(), self(), score);
   }
 
   private void logMessageOp(
-      String pattern, ActorRef<NodeMessage> source, ActorRef<NodeMessage> target, RiskScore score) {
-    log()
-        .debug(pattern, name(source), name(target), score.value(), score.timestamp(), score.uuid());
+      String format, ActorRef<NodeMessage> source, ActorRef<NodeMessage> target, RiskScore score) {
+    log().debug(format, name(source), name(target), score.value(), score.timestamp(), score.uuid());
   }
 
   private Logger log() {
