@@ -13,7 +13,7 @@ import org.sharetrace.util.IntervalCache;
 
 public abstract class AbstractExperiment<T> implements Experiment {
 
-  protected static final Duration DEFAULT_TTL = Duration.ofDays(14);
+  protected static final Duration DEFAULT_TTL = Duration.ofDays(14L);
   protected static final long DEFAULT_SEED = 12345L;
 
   @Override
@@ -35,9 +35,9 @@ public abstract class AbstractExperiment<T> implements Experiment {
 
   protected Parameters parameters() {
     return Parameters.builder()
-        .sendTolerance(0.6)
-        .transmissionRate(0.8)
-        .timeBuffer(Duration.ofDays(2))
+        .sendTolerance(0.6d)
+        .transmissionRate(0.8d)
+        .timeBuffer(Duration.ofDays(2L))
         .scoreTtl(DEFAULT_TTL)
         .contactTtl(DEFAULT_TTL)
         .build();
@@ -46,7 +46,7 @@ public abstract class AbstractExperiment<T> implements Experiment {
   protected Supplier<IntervalCache<RiskScoreMessage>> cacheFactory() {
     return () ->
         IntervalCache.<RiskScoreMessage>builder()
-            .nIntervals(DEFAULT_TTL.toDays() + 1)
+            .nIntervals(DEFAULT_TTL.toDays() + 1L)
             .nBuffer(1L)
             .interval(Duration.ofDays(1L))
             .refreshRate(Duration.ofHours(1L))

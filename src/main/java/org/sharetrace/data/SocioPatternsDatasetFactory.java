@@ -1,5 +1,6 @@
 package org.sharetrace.data;
 
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -7,7 +8,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
@@ -30,7 +30,7 @@ class SocioPatternsDatasetFactory extends DatasetFactory {
 
   private SocioPatternsDatasetFactory(
       Path path, String delimiter, Supplier<Instant> clock, Duration scoreTtl, Random random) {
-    this.contacts = new HashMap<>();
+    this.contacts = new Object2ObjectOpenHashMap<>();
     this.path = path;
     this.delimiter = delimiter;
     this.clock = clock;

@@ -152,7 +152,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
   }
 
   private boolean sendCurrent(ContactMessage message) {
-    boolean sent = isScoreAlive(current) && isRecent(message, current);
+    boolean sent = isScoreAlive(current) && isContactRecent(message, current);
     if (sent) {
       ActorRef<NodeMessage> contact = message.replyTo();
       RiskScoreMessage transmitted = transmitted(current);
@@ -199,7 +199,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
     if (isScoreAlive(transmitted) && isHighEnough(transmitted)) {
       contacts.entrySet().stream()
           .filter(isNotFrom(message))
-          .filter(isRecent(message))
+          .filter(isContactRecent(message))
           .forEach(contact -> propagate(contact.getKey(), transmitted));
     }
   }
@@ -217,11 +217,12 @@ public class Node extends AbstractBehavior<NodeMessage> {
     return message.score().value() >= sendThreshold;
   }
 
-  private Predicate<Entry<ActorRef<NodeMessage>, Instant>> isRecent(RiskScoreMessage message) {
+  private Predicate<Entry<ActorRef<NodeMessage>, Instant>> isContactRecent(
+      RiskScoreMessage message) {
     return contact -> isRecent(contact.getValue(), message);
   }
 
-  private boolean isRecent(ContactMessage contact, RiskScoreMessage message) {
+  private boolean isContactRecent(ContactMessage contact, RiskScoreMessage message) {
     return isRecent(contact.timestamp(), message);
   }
 

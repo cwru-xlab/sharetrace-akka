@@ -22,14 +22,14 @@ public class ParametersExperiment extends AbstractExperiment<Integer> {
     Parameters parameters;
     Dataset<Integer> dataset;
     Behavior<AlgorithmMessage> algorithm;
-    for (double transmissionRate = 0.1; transmissionRate < 1; transmissionRate += 0.1) {
-      for (double sendTolerance = 0.1; sendTolerance <= 1; sendTolerance += 0.1) {
+    for (double transmissionRate = 0.1d; transmissionRate < 1d; transmissionRate += 0.1d) {
+      for (double sendTolerance = 0.1d; sendTolerance <= 1d; sendTolerance += 0.1d) {
         for (int repeat = 0; repeat < 10; repeat++) {
           parameters =
               Parameters.builder()
                   .sendTolerance(sendTolerance)
                   .transmissionRate(transmissionRate)
-                  .timeBuffer(Duration.ofDays(2))
+                  .timeBuffer(Duration.ofDays(2L))
                   .scoreTtl(DEFAULT_TTL)
                   .contactTtl(DEFAULT_TTL)
                   .build();
