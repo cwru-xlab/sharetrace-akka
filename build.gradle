@@ -29,7 +29,6 @@ dependencies {
     implementation "org.immutables:builder:$versions.immutables"
     implementation "com.typesafe.akka:akka-actor-typed_$versions.akkaScala:$versions.akka"
     implementation "org.jgrapht:jgrapht-core:$versions.jgrapht"
-    implementation "org.jgrapht:jgrapht-unimi-dsi:$versions.jgrapht"
     implementation "org.jgrapht:jgrapht-opt:$versions.jgrapht"
 
     testImplementation "org.junit.jupiter:junit-jupiter-api:$versions.junit"
