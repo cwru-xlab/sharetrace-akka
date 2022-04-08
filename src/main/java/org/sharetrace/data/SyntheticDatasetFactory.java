@@ -1,18 +1,36 @@
 package org.sharetrace.data;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
+import java.util.function.Supplier;
+import org.immutables.builder.Builder;
 import org.jgrapht.Graph;
 import org.jgrapht.generate.GraphGenerator;
 import org.sharetrace.model.graph.Edge;
 import org.sharetrace.model.message.RiskScore;
 
-public class SyntheticDatasetFactory extends DatasetFactory {
+class SyntheticDatasetFactory extends DatasetFactory {
 
   private final GraphGenerator<Integer, Edge<Integer>, ?> generator;
+  private final Supplier<Instant> clock;
+  private final long scoreTtlInSeconds;
 
-  public SyntheticDatasetFactory(GraphGenerator<Integer, Edge<Integer>, ?> generator) {
+  private SyntheticDatasetFactory(
+      GraphGenerator<Integer, Edge<Integer>, ?> generator,
+      Supplier<Instant> clock,
+      Duration scoreTtl) {
     this.generator = generator;
+    this.clock = clock;
+    this.scoreTtlInSeconds = scoreTtl.toSeconds();
+  }
+
+  @Builder.Factory
+  protected static Dataset<Integer> syntheticDataset(
+      GraphGenerator<Integer, Edge<Integer>, ?> generator,
+      Supplier<Instant> clock,
+      Duration scoreTtl) {
+    return new SyntheticDatasetFactory(generator, clock, scoreTtl).createDataset();
   }
 
   @Override
@@ -21,14 +39,17 @@ public class SyntheticDatasetFactory extends DatasetFactory {
   }
 
   @Override
-  protected RiskScore score(int node) {
-    // TODO Ttl
-    return RiskScore.builder().value(Math.random()).timestamp(Instant.now()).build();
+  protected RiskScore scoreOf(int node) {
+    return RiskScore.builder().value(Math.random()).timestamp(randomTimestamp()).build();
   }
 
   @Override
-  protected Instant timestamp(int node1, int node2) {
-    // TODO Ttl
-    return Instant.now();
+  protected Instant contactedAt(int node1, int node2) {
+    return randomTimestamp();
+  }
+
+  private Instant randomTimestamp() {
+    Duration lookBack = Duration.ofSeconds(Math.round(Math.random() * scoreTtlInSeconds));
+    return clock.get().minus(lookBack);
   }
 }

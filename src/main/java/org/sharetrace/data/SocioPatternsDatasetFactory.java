@@ -16,7 +16,7 @@ import org.jgrapht.Graph;
 import org.sharetrace.model.graph.Edge;
 import org.sharetrace.model.message.RiskScore;
 
-public class SocioPatternsDatasetFactory extends DatasetFactory {
+class SocioPatternsDatasetFactory extends DatasetFactory {
 
   private final Map<Set<Integer>, Instant> contacts;
   private final Path path;
@@ -57,13 +57,13 @@ public class SocioPatternsDatasetFactory extends DatasetFactory {
   }
 
   @Override
-  protected RiskScore score(int node) {
+  protected RiskScore scoreOf(int node) {
     Duration lookBack = Duration.ofSeconds(Math.round(Math.random() * scoreTtlInSeconds));
     return RiskScore.builder().value(Math.random()).timestamp(lastContact.minus(lookBack)).build();
   }
 
   @Override
-  protected Instant timestamp(int node1, int node2) {
+  protected Instant contactedAt(int node1, int node2) {
     return contacts.get(Set.of(node1, node2));
   }
 

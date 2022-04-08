@@ -1,13 +1,13 @@
 package org.sharetrace.evaluation;
 
 import akka.actor.typed.Behavior;
-import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
+import org.jgrapht.generate.GnmRandomGraphGenerator;
 import org.sharetrace.RiskPropagationBuilder;
 import org.sharetrace.Runner;
 import org.sharetrace.data.Dataset;
-import org.sharetrace.data.SocioPatternsDatasetBuilder;
+import org.sharetrace.data.SyntheticDatasetBuilder;
 import org.sharetrace.model.message.AlgorithmMessage;
 import org.sharetrace.model.message.Parameters;
 import org.sharetrace.model.message.RiskScoreMessage;
@@ -20,10 +20,9 @@ public class Main {
     Parameters parameters = parameters();
     Duration scoreTtl = parameters.scoreTtl();
     Dataset<Integer> dataset =
-        SocioPatternsDatasetBuilder.create()
+        SyntheticDatasetBuilder.create()
+            .generator(new GnmRandomGraphGenerator<>(10000, 50000))
             .clock(Main::time)
-            .path(Path.of("./src/main/resources/datasets/conference.txt"))
-            .delimiter(" ")
             .scoreTtl(scoreTtl)
             .build();
     Behavior<AlgorithmMessage> riskPropagation =
@@ -31,8 +30,8 @@ public class Main {
             .graph(dataset.graph())
             .parameters(parameters)
             .clock(Main::time)
-            .scoreFactory(dataset::score)
-            .timeFactory(dataset::timestamp)
+            .scoreFactory(dataset::scoreOf)
+            .timeFactory(dataset::contactedAt)
             .cacheFactory(() -> nodeCache(scoreTtl))
             .nodeTimeout(Duration.ofSeconds(5L))
             .nodeRefreshRate(Duration.ofHours(1L))

@@ -10,7 +10,7 @@ import org.sharetrace.model.graph.Edge;
 import org.sharetrace.model.graph.TemporalGraph;
 import org.sharetrace.model.message.RiskScore;
 
-public abstract class DatasetFactory implements GraphGenerator<Integer, Edge<Integer>, Integer> {
+abstract class DatasetFactory implements GraphGenerator<Integer, Edge<Integer>, Integer> {
 
   private static <T> Graph<T, Edge<T>> checkGraphType(Graph<T, Edge<T>> graph) {
     GraphType type = graph.getType();
@@ -29,13 +29,13 @@ public abstract class DatasetFactory implements GraphGenerator<Integer, Edge<Int
       private final TemporalGraph<Integer> graph = ContactGraph.create(DatasetFactory.this);
 
       @Override
-      public RiskScore score(Integer node) {
-        return DatasetFactory.this.score(node);
+      public RiskScore scoreOf(Integer node) {
+        return DatasetFactory.this.scoreOf(node);
       }
 
       @Override
-      public Instant timestamp(Integer node1, Integer node2) {
-        return DatasetFactory.this.timestamp(node1, node2);
+      public Instant contactedAt(Integer node1, Integer node2) {
+        return DatasetFactory.this.contactedAt(node1, node2);
       }
 
       @Override
@@ -45,7 +45,7 @@ public abstract class DatasetFactory implements GraphGenerator<Integer, Edge<Int
     };
   }
 
-  protected abstract RiskScore score(int node);
+  protected abstract RiskScore scoreOf(int node);
 
-  protected abstract Instant timestamp(int node1, int node2);
+  protected abstract Instant contactedAt(int node1, int node2);
 }

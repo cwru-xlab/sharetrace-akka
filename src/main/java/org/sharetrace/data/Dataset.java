@@ -6,9 +6,9 @@ import org.sharetrace.model.message.RiskScore;
 
 public interface Dataset<T> {
 
-  RiskScore score(T node);
+  RiskScore scoreOf(T node);
 
-  Instant timestamp(T node1, T node2);
+  Instant contactedAt(T node1, T node2);
 
   TemporalGraph<T> graph();
 }
