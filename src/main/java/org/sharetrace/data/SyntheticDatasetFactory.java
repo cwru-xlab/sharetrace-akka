@@ -3,6 +3,7 @@ package org.sharetrace.data;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
+import java.util.Random;
 import java.util.function.Supplier;
 import org.immutables.builder.Builder;
 import org.jgrapht.Graph;
@@ -15,22 +16,26 @@ class SyntheticDatasetFactory extends DatasetFactory {
   private final GraphGenerator<Integer, Edge<Integer>, ?> generator;
   private final Supplier<Instant> clock;
   private final long scoreTtlInSeconds;
+  private final Random random;
 
   private SyntheticDatasetFactory(
       GraphGenerator<Integer, Edge<Integer>, ?> generator,
       Supplier<Instant> clock,
-      Duration scoreTtl) {
+      Duration scoreTtl,
+      Random random) {
     this.generator = generator;
     this.clock = clock;
     this.scoreTtlInSeconds = scoreTtl.toSeconds();
+    this.random = random;
   }
 
   @Builder.Factory
   protected static Dataset<Integer> syntheticDataset(
       GraphGenerator<Integer, Edge<Integer>, ?> generator,
       Supplier<Instant> clock,
-      Duration scoreTtl) {
-    return new SyntheticDatasetFactory(generator, clock, scoreTtl).createDataset();
+      Duration scoreTtl,
+      Random random) {
+    return new SyntheticDatasetFactory(generator, clock, scoreTtl, random).createDataset();
   }
 
   @Override
@@ -40,7 +45,7 @@ class SyntheticDatasetFactory extends DatasetFactory {
 
   @Override
   protected RiskScore scoreOf(int node) {
-    return RiskScore.builder().value(Math.random()).timestamp(randomTimestamp()).build();
+    return RiskScore.builder().value(random.nextDouble()).timestamp(randomTimestamp()).build();
   }
 
   @Override
@@ -49,7 +54,7 @@ class SyntheticDatasetFactory extends DatasetFactory {
   }
 
   private Instant randomTimestamp() {
-    Duration lookBack = Duration.ofSeconds(Math.round(Math.random() * scoreTtlInSeconds));
+    Duration lookBack = Duration.ofSeconds(Math.round(random.nextDouble() * scoreTtlInSeconds));
     return clock.get().minus(lookBack);
   }
 }

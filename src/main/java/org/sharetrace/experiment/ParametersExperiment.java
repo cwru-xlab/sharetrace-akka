@@ -2,6 +2,7 @@ package org.sharetrace.experiment;
 
 import akka.actor.typed.Behavior;
 import java.time.Duration;
+import java.util.Random;
 import org.jgrapht.generate.GnmRandomGraphGenerator;
 import org.sharetrace.RiskPropagationBuilder;
 import org.sharetrace.Runner;
@@ -46,6 +47,7 @@ public class ParametersExperiment extends AbstractExperiment<Integer> {
         .generator(new GnmRandomGraphGenerator<>(10000, 50000))
         .clock(clock())
         .scoreTtl(parameters.scoreTtl())
+        .random(new Random(DEFAULT_SEED))
         .build();
   }
 

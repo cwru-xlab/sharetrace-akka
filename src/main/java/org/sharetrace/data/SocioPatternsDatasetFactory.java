@@ -9,6 +9,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.function.Supplier;
 import org.immutables.builder.Builder;
@@ -23,23 +24,26 @@ class SocioPatternsDatasetFactory extends DatasetFactory {
   private final String delimiter;
   private final Supplier<Instant> clock;
   private final long scoreTtlInSeconds;
+  private final Random random;
   private Instant lastContact;
   private Duration offset;
 
   private SocioPatternsDatasetFactory(
-      Path path, String delimiter, Supplier<Instant> clock, Duration scoreTtl) {
+      Path path, String delimiter, Supplier<Instant> clock, Duration scoreTtl, Random random) {
     this.contacts = new HashMap<>();
     this.path = path;
     this.delimiter = delimiter;
     this.clock = clock;
     this.scoreTtlInSeconds = scoreTtl.toSeconds();
+    this.random = random;
     this.lastContact = Instant.MIN;
   }
 
   @Builder.Factory
   protected static Dataset<Integer> socioPatternsDataset(
-      Path path, String delimiter, Supplier<Instant> clock, Duration scoreTtl) {
-    return new SocioPatternsDatasetFactory(path, delimiter, clock, scoreTtl).createDataset();
+      Path path, String delimiter, Supplier<Instant> clock, Duration scoreTtl, Random random) {
+    return new SocioPatternsDatasetFactory(path, delimiter, clock, scoreTtl, random)
+        .createDataset();
   }
 
   private static Instant merge(Instant oldValue, Instant newValue) {
@@ -58,13 +62,17 @@ class SocioPatternsDatasetFactory extends DatasetFactory {
 
   @Override
   protected RiskScore scoreOf(int node) {
-    Duration lookBack = Duration.ofSeconds(Math.round(Math.random() * scoreTtlInSeconds));
-    return RiskScore.builder().value(Math.random()).timestamp(lastContact.minus(lookBack)).build();
+    return RiskScore.builder().value(random.nextDouble()).timestamp(randomTimestamp()).build();
   }
 
   @Override
   protected Instant contactedAt(int node1, int node2) {
     return contacts.get(Set.of(node1, node2));
+  }
+
+  private Instant randomTimestamp() {
+    Duration lookBack = Duration.ofSeconds(Math.round(random.nextDouble() * scoreTtlInSeconds));
+    return clock.get().minus(lookBack);
   }
 
   private void onLine(String line, Graph<Integer, Edge<Integer>> target) {
