@@ -15,6 +15,7 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import javax.annotation.Nullable;
 import org.immutables.builder.Builder;
 import org.sharetrace.RiskPropagation;
 import org.sharetrace.model.message.ContactMessage;
@@ -47,9 +48,11 @@ public class Node extends AbstractBehavior<NodeMessage> {
   private static final String SEND_CACHED_FORMAT =
       "{\"event\": \"sendCached\", \"from\": \"{}\", \"to\": \"{}\", \"value\": {}, \"timestamp\": \"{}\", \"uuid\": \"{}\"}";
   private static final String UPDATE_FORMAT =
-      "{\"event\": \"update\", \"from\": \"{}\", \"to\": \"{}\", \"previous\": {}, \"current\": {}, \"timestamp\": \"{}\", \"uuid\": \"{}\"}";
-  private static final String REFRESH_FORMAT =
-      "{\"event\": \"refresh\", \"from\": \"{}\", \"expired\": {}}";
+      "{\"event\": \"update\", \"from\": \"{}\", \"to\": \"{}\", \"oldValue\": {}, \"newValue\": {}, \"oldTimestamp\": \"{}\", \"newTimestamp\": \"{}\", \"oldUuid\": \"{}\", \"newUuid\": \"{}\"}";
+  private static final String CONTACTS_REFRESH_FORMAT =
+      "{\"event\": \"contactsRefresh\", \"of\": \"{}\", \"nRemaining\": \"{}\", \"nExpired\": {}}";
+  private static final String CURRENT_REFRESH_FORMAT =
+      "{\"event\": \"currentRefresh\", \"of\": \"{}\", \"oldValue\": {}, \"newValue\": {}, \"oldTimestamp\": \"{}\", \"newTimestamp\": \"{}\", \"oldUuid\": \"{}\", \"newUuid\": \"{}\"}";
 
   private final TimerScheduler<NodeMessage> timers;
   private final Map<ActorRef<NodeMessage>, Instant> contacts;
@@ -118,11 +121,31 @@ public class Node extends AbstractBehavior<NodeMessage> {
   }
 
   private Behavior<NodeMessage> onRefresh(Refresh refresh) {
+    refreshContacts();
+    refreshCurrent();
+    return this;
+  }
+
+  private void refreshContacts() {
     int nContacts = contacts.values().size();
     contacts.values().removeIf(Predicate.not(this::isContactAlive));
-    int nExpired = nContacts - contacts.size();
-    logRefresh(nExpired);
-    return this;
+    int nRemaining = contacts.size();
+    int nExpired = nContacts - nRemaining;
+    logContactsRefresh(nRemaining, nExpired);
+  }
+
+  private void refreshCurrent() {
+    if (!isScoreAlive(current)) {
+      RiskScoreMessage cached = maxCached(clock.get());
+      RiskScoreMessage newValue = cached != null ? cached : defaultMessage();
+      logCurrentRefresh(current, newValue);
+      current = newValue;
+    }
+  }
+
+  @Nullable
+  private RiskScoreMessage maxCached(Instant timestamp) {
+    return cache.headMax(timestamp, RiskScoreMessage::compareTo);
   }
 
   private RiskScoreMessage defaultMessage() {
@@ -163,8 +186,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
   }
 
   private void sendCached(ContactMessage message) {
-    Instant buffered = buffered(message.timestamp());
-    RiskScoreMessage cached = cache.headMax(buffered, RiskScoreMessage::compareTo);
+    RiskScoreMessage cached = maxCached(buffered(message.timestamp()));
     if (cached != null) {
       ActorRef<NodeMessage> contact = message.replyTo();
       RiskScoreMessage transmitted = transmitted(cached);
@@ -282,12 +304,29 @@ public class Node extends AbstractBehavior<NodeMessage> {
             name(self()),
             prev.value(),
             curr.value(),
+            prev.timestamp(),
             curr.timestamp(),
+            previous.uuid(),
             current.uuid());
   }
 
-  private void logRefresh(int nExpired) {
-    log().debug(REFRESH_FORMAT, name(self()), nExpired);
+  private void logContactsRefresh(int nRemaining, int nExpired) {
+    log().debug(CONTACTS_REFRESH_FORMAT, name(self()), nRemaining, nExpired);
+  }
+
+  private void logCurrentRefresh(RiskScoreMessage previous, RiskScoreMessage current) {
+    RiskScore prev = previous.score();
+    RiskScore curr = current.score();
+    log()
+        .debug(
+            CURRENT_REFRESH_FORMAT,
+            name(self()),
+            prev.value(),
+            curr.value(),
+            prev.timestamp(),
+            curr.timestamp(),
+            previous.uuid(),
+            current.uuid());
   }
 
   private void logSendCurrent(ActorRef<NodeMessage> contact, RiskScoreMessage message) {
