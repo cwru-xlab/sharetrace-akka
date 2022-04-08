@@ -1,6 +1,6 @@
 package org.sharetrace.experiment;
 
-public class EfficiencyExperiment implements Experiment {
+public class SocioPatternsExperiment implements Experiment {
 
   @Override
   public void run() {}
