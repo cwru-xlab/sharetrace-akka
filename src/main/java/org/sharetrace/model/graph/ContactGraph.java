@@ -26,17 +26,24 @@ public class ContactGraph implements TemporalGraph<Integer> {
   private final Collection<List<Integer>> edges;
 
   private ContactGraph(Graph<Integer, Edge<Integer>> graph) {
-    nodes = Collections.unmodifiableSet(graph.vertexSet());
-    edges =
-        graph.edgeSet().stream()
-            .map(edge -> List.of(edge.source(), edge.target()))
-            .collect(Collectors.toUnmodifiableList());
+    this.nodes = mapNodes(graph.vertexSet());
+    this.edges = mapEdges(graph.edgeSet());
   }
 
   public static ContactGraph create(GraphGenerator<Integer, Edge<Integer>, ?> generator) {
     Graph<Integer, Edge<Integer>> graph = newGraph();
     generator.generateGraph(graph);
     return new ContactGraph(graph);
+  }
+
+  private static Collection<Integer> mapNodes(Collection<Integer> nodes) {
+    return Collections.unmodifiableCollection(nodes);
+  }
+
+  private static Collection<List<Integer>> mapEdges(Collection<Edge<Integer>> edges) {
+    return edges.stream()
+        .map(edge -> List.of(edge.source(), edge.target()))
+        .collect(Collectors.toUnmodifiableList());
   }
 
   private static Graph<Integer, Edge<Integer>> newGraph() {
