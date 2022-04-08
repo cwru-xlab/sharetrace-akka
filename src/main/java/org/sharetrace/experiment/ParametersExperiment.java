@@ -4,6 +4,7 @@ import akka.actor.typed.Behavior;
 import java.time.Duration;
 import org.jgrapht.generate.GnmRandomGraphGenerator;
 import org.sharetrace.RiskPropagationBuilder;
+import org.sharetrace.Runner;
 import org.sharetrace.data.Dataset;
 import org.sharetrace.data.SyntheticDatasetBuilder;
 import org.sharetrace.model.message.AlgorithmMessage;
@@ -13,6 +14,30 @@ public class ParametersExperiment extends AbstractExperiment<Integer> {
 
   public static void main(String[] args) {
     new ParametersExperiment().run();
+  }
+
+  @Override
+  public void run() {
+    Parameters parameters;
+    Dataset<Integer> dataset;
+    Behavior<AlgorithmMessage> algorithm;
+    for (double transmissionRate = 0.1; transmissionRate < 1; transmissionRate += 0.1) {
+      for (double sendTolerance = 0.1; sendTolerance <= 1; sendTolerance += 0.1) {
+        for (int repeat = 0; repeat < 10; repeat++) {
+          parameters =
+              Parameters.builder()
+                  .sendTolerance(sendTolerance)
+                  .transmissionRate(transmissionRate)
+                  .timeBuffer(Duration.ofDays(2))
+                  .scoreTtl(DEFAULT_TTL)
+                  .contactTtl(DEFAULT_TTL)
+                  .build();
+          dataset = newDataset(parameters);
+          algorithm = newAlgorithm(dataset, parameters);
+          Runner.run(algorithm);
+        }
+      }
+    }
   }
 
   @Override

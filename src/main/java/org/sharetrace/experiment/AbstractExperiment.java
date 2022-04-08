@@ -13,7 +13,7 @@ import org.sharetrace.util.IntervalCache;
 
 public abstract class AbstractExperiment<T> implements Experiment {
 
-  private static final Duration DEFAULT_TTL = Duration.ofDays(14);
+  protected static final Duration DEFAULT_TTL = Duration.ofDays(14);
 
   @Override
   public void run() {
