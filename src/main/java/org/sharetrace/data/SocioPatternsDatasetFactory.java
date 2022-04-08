@@ -20,10 +20,9 @@ public class SocioPatternsDatasetFactory extends DatasetFactory {
 
   private final Map<Set<Integer>, Instant> contacts;
   private final Path path;
+  private final String delimiter;
   private final Supplier<Instant> clock;
   private final long scoreTtlInSeconds;
-  private final String delimiter;
-  private Instant firstContact;
   private Instant lastContact;
   private Duration offset;
 
@@ -34,7 +33,6 @@ public class SocioPatternsDatasetFactory extends DatasetFactory {
     this.delimiter = delimiter;
     this.clock = clock;
     this.scoreTtlInSeconds = scoreTtl.toSeconds();
-    this.firstContact = Instant.MAX;
     this.lastContact = Instant.MIN;
   }
 
@@ -83,8 +81,6 @@ public class SocioPatternsDatasetFactory extends DatasetFactory {
 
   private void addContact(Parsed parsed) {
     Instant timestamp = parsed.timestamp;
-    // Encourage max propagation: the earliest contact timestamp > the latest risk score timestamp.
-    firstContact = timestamp.isBefore(firstContact) ? timestamp : firstContact;
     lastContact = timestamp.isAfter(lastContact) ? timestamp : lastContact;
     Set<Integer> nodes = Set.of(parsed.node1, parsed.node2);
     contacts.merge(nodes, timestamp, SocioPatternsDatasetFactory::merge);
@@ -93,7 +89,6 @@ public class SocioPatternsDatasetFactory extends DatasetFactory {
   private void calibrateTime() {
     offset = Duration.between(lastContact, clock.get());
     lastContact = lastContact.plus(offset);
-    firstContact = firstContact.plus(offset);
     contacts.forEach((nodes, timestamp) -> contacts.computeIfPresent(nodes, this::addOffset));
   }
 
@@ -109,9 +104,9 @@ public class SocioPatternsDatasetFactory extends DatasetFactory {
 
     private Parsed(String string, String delimiter) {
       String[] args = string.split(delimiter);
-      timestamp = Instant.ofEpochSecond(Long.parseLong(args[0]));
-      node1 = Integer.parseInt(args[1]);
-      node2 = Integer.parseInt(args[2]);
+      this.node1 = Integer.parseInt(args[1]);
+      this.node2 = Integer.parseInt(args[2]);
+      this.timestamp = Instant.ofEpochSecond(Long.parseLong(args[0]));
     }
   }
 }
