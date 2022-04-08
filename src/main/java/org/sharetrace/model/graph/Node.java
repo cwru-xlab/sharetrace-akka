@@ -119,7 +119,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
 
   private Behavior<NodeMessage> onRefresh(Refresh refresh) {
     int nContacts = contacts.values().size();
-    contacts.values().removeIf(Predicate.not(this::isAlive));
+    contacts.values().removeIf(Predicate.not(this::isContactAlive));
     int nExpired = nContacts - contacts.size();
     logRefresh(nExpired);
     return this;
@@ -133,7 +133,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
   }
 
   private Behavior<NodeMessage> onContactMessage(ContactMessage message) {
-    if (isAlive(message)) {
+    if (isContactAlive(message)) {
       logContact(message);
       addContact(message);
       sendToContact(message);
@@ -152,7 +152,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
   }
 
   private boolean sendCurrent(ContactMessage message) {
-    boolean sent = isAlive(current) && isRecent(message, current);
+    boolean sent = isScoreAlive(current) && isRecent(message, current);
     if (sent) {
       ActorRef<NodeMessage> contact = message.replyTo();
       RiskScoreMessage transmitted = transmitted(current);
@@ -196,7 +196,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
 
   private void propagate(RiskScoreMessage message) {
     RiskScoreMessage transmitted = transmitted(message);
-    if (isAlive(transmitted) && isHighEnough(transmitted)) {
+    if (isScoreAlive(transmitted) && isHighEnough(transmitted)) {
       contacts.entrySet().stream()
           .filter(isNotFrom(message))
           .filter(isRecent(message))
@@ -233,15 +233,15 @@ public class Node extends AbstractBehavior<NodeMessage> {
     return timestamp.plus(parameters.timeBuffer());
   }
 
-  private boolean isAlive(ContactMessage message) {
-    return isAlive(message.timestamp());
+  private boolean isContactAlive(ContactMessage message) {
+    return isContactAlive(message.timestamp());
   }
 
-  private boolean isAlive(Instant timestamp) {
+  private boolean isContactAlive(Instant timestamp) {
     return isAlive(timestamp, parameters.contactTtl());
   }
 
-  private boolean isAlive(RiskScoreMessage message) {
+  private boolean isScoreAlive(RiskScoreMessage message) {
     return isAlive(message.score().timestamp(), parameters.scoreTtl());
   }
 
