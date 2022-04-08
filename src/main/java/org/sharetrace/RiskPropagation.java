@@ -22,10 +22,11 @@ import org.sharetrace.model.graph.Node;
 import org.sharetrace.model.graph.NodeBuilder;
 import org.sharetrace.model.graph.TemporalGraph;
 import org.sharetrace.model.message.AlgorithmMessage;
-import org.sharetrace.model.message.Contact;
+import org.sharetrace.model.message.ContactMessage;
 import org.sharetrace.model.message.NodeMessage;
 import org.sharetrace.model.message.Parameters;
 import org.sharetrace.model.message.RiskScore;
+import org.sharetrace.model.message.RiskScoreMessage;
 import org.sharetrace.model.message.Run;
 import org.sharetrace.util.IntervalCache;
 
@@ -55,7 +56,7 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
   private final Supplier<Instant> clock;
   private final Function<T, RiskScore> scoreFactory;
   private final BiFunction<T, T, Instant> timeFactory;
-  private final Supplier<IntervalCache<RiskScore>> cacheFactory;
+  private final Supplier<IntervalCache<RiskScoreMessage>> cacheFactory;
   private final Duration nodeTimeout;
   private final Duration nodeRefreshRate;
   private Instant startedAt;
@@ -66,7 +67,7 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
       TemporalGraph<T> graph,
       Parameters parameters,
       Supplier<Instant> clock,
-      Supplier<IntervalCache<RiskScore>> cacheFactory,
+      Supplier<IntervalCache<RiskScoreMessage>> cacheFactory,
       Function<T, RiskScore> scoreFactory,
       BiFunction<T, T, Instant> timeFactory,
       Duration nodeTimeout,
@@ -91,7 +92,7 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
       Duration nodeRefreshRate,
       Parameters parameters,
       Supplier<Instant> clock,
-      Supplier<IntervalCache<RiskScore>> cacheFactory,
+      Supplier<IntervalCache<RiskScoreMessage>> cacheFactory,
       Function<T, RiskScore> scoreFactory,
       BiFunction<T, T, Instant> timeFactory) {
     return Behaviors.setup(
@@ -165,19 +166,23 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
     return behavior;
   }
 
-  private void onEdge(List<T> edge, Map<?, ActorRef<NodeMessage>> nodes) {
+  private void sendContact(List<T> edge, Map<?, ActorRef<NodeMessage>> nodes) {
     ActorRef<NodeMessage> node1 = nodes.get(edge.get(0));
     ActorRef<NodeMessage> node2 = nodes.get(edge.get(1));
     Instant timestamp = timeFactory.apply(edge.get(0), edge.get(1));
-    node1.tell(Contact.builder().replyTo(node2).timestamp(timestamp).build());
-    node2.tell(Contact.builder().replyTo(node1).timestamp(timestamp).build());
+    node1.tell(ContactMessage.builder().replyTo(node2).timestamp(timestamp).build());
+    node2.tell(ContactMessage.builder().replyTo(node1).timestamp(timestamp).build());
+  }
+
+  private void sendFirstScore(T name, ActorRef<NodeMessage> node) {
+    node.tell(RiskScoreMessage.builder().score(scoreFactory.apply(name)).replyTo(node).build());
   }
 
   private void setScores(Map<T, ActorRef<NodeMessage>> nodes) {
-    nodes.forEach((name, node) -> node.tell(scoreFactory.apply(name)));
+    nodes.forEach(this::sendFirstScore);
   }
 
   private void setContacts(Map<?, ActorRef<NodeMessage>> nodes) {
-    graph.edges().forEach(edge -> onEdge(edge, nodes));
+    graph.edges().forEach(edge -> sendContact(edge, nodes));
   }
 }

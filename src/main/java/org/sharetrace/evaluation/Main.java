@@ -1,22 +1,31 @@
 package org.sharetrace.evaluation;
 
 import akka.actor.typed.Behavior;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
 import org.sharetrace.RiskPropagationBuilder;
 import org.sharetrace.Runner;
 import org.sharetrace.data.Dataset;
-import org.sharetrace.data.SocioPatternsDatasetFactory;
+import org.sharetrace.data.SocioPatternsDatasetBuilder;
 import org.sharetrace.model.message.AlgorithmMessage;
 import org.sharetrace.model.message.Parameters;
-import org.sharetrace.model.message.RiskScore;
+import org.sharetrace.model.message.RiskScoreMessage;
 import org.sharetrace.util.IntervalCache;
 
 public class Main {
 
   public static void main(String[] args) {
-    Dataset<Integer> dataset = SocioPatternsDatasetFactory.newDataset(Main::time, null);
+    System.out.println(System.getProperty("user.dir"));
     Parameters parameters = parameters();
+    Duration scoreTtl = parameters.scoreTtl();
+    Dataset<Integer> dataset =
+        SocioPatternsDatasetBuilder.create()
+            .clock(Main::time)
+            .path(Path.of("./src/main/resources/datasets/conference.txt"))
+            .delimiter(" ")
+            .scoreTtl(scoreTtl)
+            .build();
     Behavior<AlgorithmMessage> riskPropagation =
         RiskPropagationBuilder.<Integer>create()
             .graph(dataset.graph())
@@ -24,7 +33,7 @@ public class Main {
             .clock(Main::time)
             .scoreFactory(dataset::score)
             .timeFactory(dataset::timestamp)
-            .cacheFactory(() -> nodeCache(parameters))
+            .cacheFactory(() -> nodeCache(scoreTtl))
             .nodeTimeout(Duration.ofSeconds(5L))
             .nodeRefreshRate(Duration.ofHours(1L))
             .build();
@@ -45,9 +54,9 @@ public class Main {
         .build();
   }
 
-  private static IntervalCache<RiskScore> nodeCache(Parameters parameters) {
-    return IntervalCache.<RiskScore>builder()
-        .nIntervals(parameters.scoreTtl().toDays() + 1)
+  private static IntervalCache<RiskScoreMessage> nodeCache(Duration scoreTtl) {
+    return IntervalCache.<RiskScoreMessage>builder()
+        .nIntervals(scoreTtl.toDays() + 1)
         .nBuffer(1L)
         .interval(Duration.ofDays(1L))
         .refreshRate(Duration.ofHours(1L))
@@ -57,11 +66,11 @@ public class Main {
         .build();
   }
 
-  private static RiskScore merge(RiskScore oldScore, RiskScore newScore) {
-    double oldValue = oldScore.value();
-    double newValue = newScore.value();
-    Instant oldTimestamp = oldScore.timestamp();
-    Instant newTimestamp = newScore.timestamp();
+  private static RiskScoreMessage merge(RiskScoreMessage oldScore, RiskScoreMessage newScore) {
+    double oldValue = oldScore.score().value();
+    double newValue = newScore.score().value();
+    Instant oldTimestamp = oldScore.score().timestamp();
+    Instant newTimestamp = newScore.score().timestamp();
     boolean isHigher = oldValue < newValue;
     boolean isOlder = oldValue == newValue && oldTimestamp.isAfter(newTimestamp);
     return isHigher || isOlder ? newScore : oldScore;

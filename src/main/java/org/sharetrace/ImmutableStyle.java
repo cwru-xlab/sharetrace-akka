@@ -17,5 +17,6 @@ import org.immutables.value.Value.Style.ImplementationVisibility;
     visibility = ImplementationVisibility.PACKAGE,
     newBuilder = "create",
     jdkOnly = true,
+    deepImmutablesDetection = true,
     defaults = @Value.Immutable(copy = false, lazyhash = true))
-@interface ImmutableStyle {}
+public @interface ImmutableStyle {}

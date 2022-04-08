@@ -1,9 +1,7 @@
 package org.sharetrace.model.message;
 
 import static org.sharetrace.util.Preconditions.checkInClosedRange;
-import akka.actor.typed.ActorRef;
 import java.time.Instant;
-import java.util.UUID;
 import org.immutables.value.Value;
 import org.sharetrace.RiskPropagation;
 import org.sharetrace.model.graph.ContactGraph;
@@ -20,7 +18,7 @@ import org.sharetrace.model.graph.Node;
  * are only compared by value (first) and timestamp (second).
  */
 @Value.Immutable
-public abstract class RiskScore implements NodeMessage, Comparable<RiskScore> {
+public abstract class RiskScore implements Comparable<RiskScore> {
 
   public static final double MIN_VALUE = 0d;
   public static final double MAX_VALUE = 1d;
@@ -29,27 +27,15 @@ public abstract class RiskScore implements NodeMessage, Comparable<RiskScore> {
     return ImmutableRiskScore.builder();
   }
 
-  /**
-   * Returns the actor reference associated with the {@link Node} that propagates this risk score.
-   */
-  public abstract ActorRef<NodeMessage> replyTo();
-
   /** Returns the magnitude of this risk score; modified during {@link RiskPropagation}. */
+  @Value.Parameter
   public abstract double value();
 
   /**
    * Returns when this risk score was first computed; never modified during {@link RiskPropagation}.
    */
+  @Value.Parameter
   public abstract Instant timestamp();
-
-  /**
-   * Returns a universally unique identifier that can be used to correlate risk scores as they
-   * propagate through the {@link ContactGraph} during {@link RiskPropagation}.
-   */
-  @Value.Default
-  public String uuid() {
-    return UUID.randomUUID().toString();
-  }
 
   @Override
   public int compareTo(RiskScore score) {
@@ -73,13 +59,9 @@ public abstract class RiskScore implements NodeMessage, Comparable<RiskScore> {
 
   public interface Builder {
 
-    Builder replyTo(ActorRef<NodeMessage> replyTo);
-
     Builder value(double value);
 
     Builder timestamp(Instant timestamp);
-
-    Builder uuid(String uuid);
 
     RiskScore build();
   }
