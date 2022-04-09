@@ -1,5 +1,7 @@
 package org.sharetrace.model.graph;
 
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -37,13 +39,16 @@ public class ContactGraph implements TemporalGraph<Integer> {
   }
 
   private static Collection<Integer> mapNodes(Collection<Integer> nodes) {
-    return Collections.unmodifiableCollection(nodes);
+    return Collections.unmodifiableCollection(new IntArrayList(nodes));
   }
 
   private static Collection<List<Integer>> mapEdges(Collection<Edge<Integer>> edges) {
     return edges.stream()
-        .map(edge -> List.of(edge.source(), edge.target()))
-        .collect(Collectors.toUnmodifiableList());
+        .map(edge -> new IntArrayList(new int[] {edge.source(), edge.target()}))
+        .collect(
+            Collectors.collectingAndThen(
+                Collectors.toCollection(ObjectArrayList::new),
+                Collections::unmodifiableCollection));
   }
 
   private static Graph<Integer, Edge<Integer>> newGraph() {
