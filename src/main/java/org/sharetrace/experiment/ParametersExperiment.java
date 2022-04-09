@@ -47,6 +47,7 @@ public class ParametersExperiment extends AbstractExperiment<Integer> {
         .generator(new GnmRandomGraphGenerator<>(10000, 50000))
         .clock(clock())
         .scoreTtl(parameters.scoreTtl())
+        .contactTtl(parameters.contactTtl())
         .random(new Random(DEFAULT_SEED))
         .build();
   }

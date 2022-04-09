@@ -62,17 +62,14 @@ class SocioPatternsDatasetFactory extends DatasetFactory {
 
   @Override
   protected RiskScore scoreOf(int node) {
-    return RiskScore.builder().value(random.nextDouble()).timestamp(randomTimestamp()).build();
+    Duration lookBack = Duration.ofSeconds(Math.round(random.nextDouble() * scoreTtlInSeconds));
+    Instant timestamp = clock.get().minus(lookBack);
+    return RiskScore.builder().value(random.nextDouble()).timestamp(timestamp).build();
   }
 
   @Override
   protected Instant contactedAt(int node1, int node2) {
     return contacts.get(Set.of(node1, node2));
-  }
-
-  private Instant randomTimestamp() {
-    Duration lookBack = Duration.ofSeconds(Math.round(random.nextDouble() * scoreTtlInSeconds));
-    return clock.get().minus(lookBack);
   }
 
   private void onLine(String line, Graph<Integer, Edge<Integer>> target) {

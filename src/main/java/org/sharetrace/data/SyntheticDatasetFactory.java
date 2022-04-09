@@ -15,17 +15,20 @@ class SyntheticDatasetFactory extends DatasetFactory {
 
   private final GraphGenerator<Integer, Edge<Integer>, ?> generator;
   private final Supplier<Instant> clock;
-  private final long scoreTtlInSeconds;
+  private final long scoreTtlSeconds;
+  private final long contactTtlSeconds;
   private final Random random;
 
   private SyntheticDatasetFactory(
       GraphGenerator<Integer, Edge<Integer>, ?> generator,
       Supplier<Instant> clock,
       Duration scoreTtl,
+      Duration contactTtl,
       Random random) {
     this.generator = generator;
     this.clock = clock;
-    this.scoreTtlInSeconds = scoreTtl.toSeconds();
+    this.scoreTtlSeconds = scoreTtl.toSeconds();
+    this.contactTtlSeconds = contactTtl.toSeconds();
     this.random = random;
   }
 
@@ -34,8 +37,10 @@ class SyntheticDatasetFactory extends DatasetFactory {
       GraphGenerator<Integer, Edge<Integer>, ?> generator,
       Supplier<Instant> clock,
       Duration scoreTtl,
+      Duration contactTtl,
       Random random) {
-    return new SyntheticDatasetFactory(generator, clock, scoreTtl, random).createDataset();
+    return new SyntheticDatasetFactory(generator, clock, scoreTtl, contactTtl, random)
+        .createDataset();
   }
 
   @Override
@@ -45,16 +50,19 @@ class SyntheticDatasetFactory extends DatasetFactory {
 
   @Override
   protected RiskScore scoreOf(int node) {
-    return RiskScore.builder().value(random.nextDouble()).timestamp(randomTimestamp()).build();
+    return RiskScore.builder()
+        .value(random.nextDouble())
+        .timestamp(randomTimestamp(scoreTtlSeconds))
+        .build();
   }
 
   @Override
   protected Instant contactedAt(int node1, int node2) {
-    return randomTimestamp();
+    return randomTimestamp(contactTtlSeconds);
   }
 
-  private Instant randomTimestamp() {
-    Duration lookBack = Duration.ofSeconds(Math.round(random.nextDouble() * scoreTtlInSeconds));
+  private Instant randomTimestamp(long ttlSeconds) {
+    Duration lookBack = Duration.ofSeconds(Math.round(random.nextDouble() * ttlSeconds));
     return clock.get().minus(lookBack);
   }
 }
