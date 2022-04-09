@@ -9,6 +9,10 @@ repositories {
     mavenCentral()
 }
 
+compileJava {
+    options.compilerArgs += ["-Aproject=${project.group}/${project.name}"]
+}
+
 def versions = [
         akkaScala : "2.13",
         akka      : "2.6.19",
@@ -17,6 +21,7 @@ def versions = [
         jgrapht   : "1.5.1",
         junit     : "5.8.2",
         logback   : "1.2.11",
+        picoli    : "4.6.3",
         spotBugs  : "4.6.0"
 ]
 
@@ -30,6 +35,8 @@ dependencies {
     implementation "com.typesafe.akka:akka-actor-typed_$versions.akkaScala:$versions.akka"
     implementation "org.jgrapht:jgrapht-core:$versions.jgrapht"
     implementation "org.jgrapht:jgrapht-opt:$versions.jgrapht"
+    implementation "info.picocli:picocli:$versions.picoli"
+    annotationProcessor "info.picocli:picocli-codegen:$versions.picoli"
 
     testImplementation "org.junit.jupiter:junit-jupiter-api:$versions.junit"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$versions.junit"
