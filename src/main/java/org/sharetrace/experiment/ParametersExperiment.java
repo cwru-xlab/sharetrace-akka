@@ -3,7 +3,6 @@ package org.sharetrace.experiment;
 import akka.actor.typed.Behavior;
 import java.time.Duration;
 import java.util.Random;
-import org.jgrapht.generate.GnmRandomGraphGenerator;
 import org.sharetrace.RiskPropagationBuilder;
 import org.sharetrace.Runner;
 import org.sharetrace.data.Dataset;
@@ -11,10 +10,37 @@ import org.sharetrace.data.SyntheticDatasetBuilder;
 import org.sharetrace.model.message.AlgorithmMessage;
 import org.sharetrace.model.message.Parameters;
 
-public class ParametersExperiment extends AbstractExperiment<Integer> {
+public class ParametersExperiment extends Experiment<Integer> {
 
-  public static void main(String[] args) {
-    new ParametersExperiment().run();
+  private final GraphType graphType;
+  private final double minTransmissionRate;
+  private final double maxTransmissionRate;
+  private final double stepTransmissionRate;
+  private final double minSendTolerance;
+  private final double maxSendTolerance;
+  private final double stepSendTolerance;
+  private final int nRepeats;
+  private final long seed;
+
+  public ParametersExperiment(
+      GraphType graphType,
+      double minTransmissionRate,
+      double maxTransmissionRate,
+      double stepTransmissionRate,
+      double minSendTolerance,
+      double maxSendTolerance,
+      double stepSendTolerance,
+      int nRepeats,
+      long seed) {
+    this.graphType = graphType;
+    this.minTransmissionRate = minTransmissionRate;
+    this.maxTransmissionRate = maxTransmissionRate;
+    this.stepTransmissionRate = stepTransmissionRate;
+    this.minSendTolerance = minSendTolerance;
+    this.maxSendTolerance = maxSendTolerance;
+    this.stepSendTolerance = stepSendTolerance;
+    this.nRepeats = nRepeats;
+    this.seed = seed;
   }
 
   @Override
@@ -22,14 +48,18 @@ public class ParametersExperiment extends AbstractExperiment<Integer> {
     Parameters parameters;
     Dataset<Integer> dataset;
     Behavior<AlgorithmMessage> algorithm;
-    for (double transmissionRate = 0.1d; transmissionRate < 1d; transmissionRate += 0.1d) {
-      for (double sendTolerance = 0.1d; sendTolerance <= 1d; sendTolerance += 0.1d) {
-        for (int repeat = 0; repeat < 10; repeat++) {
+    for (double transmissionRate = minTransmissionRate;
+        transmissionRate < maxTransmissionRate;
+        transmissionRate += stepTransmissionRate) {
+      for (double sendTolerance = minSendTolerance;
+          sendTolerance < maxSendTolerance;
+          sendTolerance += stepSendTolerance) {
+        for (int iRepeat = 0; iRepeat < nRepeats; iRepeat++) {
           parameters =
               Parameters.builder()
                   .sendTolerance(sendTolerance)
                   .transmissionRate(transmissionRate)
-                  .timeBuffer(Duration.ofDays(2L))
+                  .timeBuffer(DEFAULT_TIME_BUFFER)
                   .scoreTtl(DEFAULT_TTL)
                   .contactTtl(DEFAULT_TTL)
                   .build();
@@ -44,11 +74,11 @@ public class ParametersExperiment extends AbstractExperiment<Integer> {
   @Override
   protected Dataset<Integer> newDataset(Parameters parameters) {
     return SyntheticDatasetBuilder.create()
-        .generator(new GnmRandomGraphGenerator<>(10000, 50000))
+        .generator(GraphGeneratorFactory.create(graphType, new Random(seed)))
         .clock(clock())
         .scoreTtl(parameters.scoreTtl())
         .contactTtl(parameters.contactTtl())
-        .random(new Random(DEFAULT_SEED))
+        .random(new Random(seed))
         .build();
   }
 
