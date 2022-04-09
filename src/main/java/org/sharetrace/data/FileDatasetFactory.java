@@ -1,5 +1,6 @@
 package org.sharetrace.data;
 
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -68,7 +69,7 @@ class FileDatasetFactory extends DatasetFactory {
 
   @Override
   protected Instant contactedAt(int node1, int node2) {
-    return contacts.get(Set.of(node1, node2));
+    return contacts.get(nodes(node1, node2));
   }
 
   private void parseLine(String line, Graph<Integer, Edge<Integer>> target) {
@@ -86,8 +87,11 @@ class FileDatasetFactory extends DatasetFactory {
   private void addContact(Parsed parsed) {
     Instant timestamp = parsed.timestamp;
     lastContact = timestamp.isAfter(lastContact) ? timestamp : lastContact;
-    Set<Integer> nodes = Set.of(parsed.node1, parsed.node2);
-    contacts.merge(nodes, timestamp, FileDatasetFactory::merge);
+    contacts.merge(nodes(parsed.node1, parsed.node2), timestamp, FileDatasetFactory::merge);
+  }
+
+  private Set<Integer> nodes(int node1, int node2) {
+    return new IntOpenHashSet(new int[] {node1, node2});
   }
 
   private void calibrateTime() {

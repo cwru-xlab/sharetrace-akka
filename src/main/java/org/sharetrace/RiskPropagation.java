@@ -7,15 +7,14 @@ import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import org.immutables.builder.Builder;
 import org.sharetrace.model.graph.ContactGraph;
 import org.sharetrace.model.graph.Node;
@@ -131,9 +130,11 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
   }
 
   private Map<T, ActorRef<NodeMessage>> newNodes() {
-    return graph.nodes().stream()
-        .map(name -> Map.entry(name, newNode(name)))
-        .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+    Map<T, ActorRef<NodeMessage>> nodes = new Object2ObjectOpenHashMap<>();
+    for (T name : graph.nodes()) {
+      nodes.put(name, newNode(name));
+    }
+    return nodes;
   }
 
   private ActorRef<NodeMessage> newNode(T name) {
