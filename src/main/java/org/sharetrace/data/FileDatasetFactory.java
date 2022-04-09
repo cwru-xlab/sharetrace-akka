@@ -17,7 +17,7 @@ import org.jgrapht.Graph;
 import org.sharetrace.model.graph.Edge;
 import org.sharetrace.model.message.RiskScore;
 
-class SocioPatternsDatasetFactory extends DatasetFactory {
+class FileDatasetFactory extends DatasetFactory {
 
   private final Map<Set<Integer>, Instant> contacts;
   private final Path path;
@@ -28,7 +28,7 @@ class SocioPatternsDatasetFactory extends DatasetFactory {
   private Instant lastContact;
   private Duration offset;
 
-  private SocioPatternsDatasetFactory(
+  private FileDatasetFactory(
       Path path, String delimiter, Supplier<Instant> clock, Duration scoreTtl, Random random) {
     this.contacts = new Object2ObjectOpenHashMap<>();
     this.path = path;
@@ -40,10 +40,9 @@ class SocioPatternsDatasetFactory extends DatasetFactory {
   }
 
   @Builder.Factory
-  protected static Dataset<Integer> socioPatternsDataset(
+  protected static Dataset<Integer> fileDataset(
       Path path, String delimiter, Supplier<Instant> clock, Duration scoreTtl, Random random) {
-    return new SocioPatternsDatasetFactory(path, delimiter, clock, scoreTtl, random)
-        .createDataset();
+    return new FileDatasetFactory(path, delimiter, clock, scoreTtl, random).createDataset();
   }
 
   private static Instant merge(Instant oldValue, Instant newValue) {
@@ -53,7 +52,7 @@ class SocioPatternsDatasetFactory extends DatasetFactory {
   @Override
   public void generateGraph(Graph<Integer, Edge<Integer>> target, Map<String, Integer> resultMap) {
     try (BufferedReader reader = Files.newBufferedReader(path)) {
-      reader.lines().forEach(line -> onLine(line, target));
+      reader.lines().forEach(line -> parseLine(line, target));
       calibrateTime();
     } catch (IOException exception) {
       throw new UncheckedIOException(exception);
@@ -72,7 +71,7 @@ class SocioPatternsDatasetFactory extends DatasetFactory {
     return contacts.get(Set.of(node1, node2));
   }
 
-  private void onLine(String line, Graph<Integer, Edge<Integer>> target) {
+  private void parseLine(String line, Graph<Integer, Edge<Integer>> target) {
     Parsed parsed = new Parsed(line, delimiter);
     addToGraph(target, parsed);
     addContact(parsed);
@@ -88,12 +87,11 @@ class SocioPatternsDatasetFactory extends DatasetFactory {
     Instant timestamp = parsed.timestamp;
     lastContact = timestamp.isAfter(lastContact) ? timestamp : lastContact;
     Set<Integer> nodes = Set.of(parsed.node1, parsed.node2);
-    contacts.merge(nodes, timestamp, SocioPatternsDatasetFactory::merge);
+    contacts.merge(nodes, timestamp, FileDatasetFactory::merge);
   }
 
   private void calibrateTime() {
     offset = Duration.between(lastContact, clock.get());
-    lastContact = lastContact.plus(offset);
     contacts.forEach((nodes, timestamp) -> contacts.computeIfPresent(nodes, this::addOffset));
   }
 
