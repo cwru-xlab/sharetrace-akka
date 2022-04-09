@@ -45,11 +45,11 @@ public abstract class Parameters implements NodeMessage {
 
   /**
    * Returns the duration which determines to what extent a {@link RiskScore} is considered relevant
-   * to a given {@link Contact} after it occurred. A nonzero time buffer can account for delayed
-   * symptom onset since a symptom-based {@link RiskScore} of a person would not begin to reflect
-   * the fact that they are infected until after developing symptoms. Additionally, a nonzero time
-   * buffer can account for the delay between when two persons come in contact and when their
-   * respective actors begin to communicate.
+   * to a given contact after it occurred. A nonzero time buffer can account for delayed symptom
+   * onset since a symptom-based {@link RiskScore} of a person would not begin to reflect the fact
+   * that they are infected until after developing symptoms. Additionally, a nonzero time buffer can
+   * account for the delay between when two persons come in contact and when their respective actors
+   * begin to communicate.
    */
   public abstract Duration timeBuffer();
 
@@ -62,10 +62,10 @@ public abstract class Parameters implements NodeMessage {
   public abstract Duration scoreTtl();
 
   /**
-   * Returns the duration which determines how long a given {@link Contact} is considered relevant.
-   * Intuitively, {@link Contact}s that occurred further in the past are less likely to propagate
-   * any new {@link RiskScore} in the {@link ContactGraph} for which the complimentary {@link Node}
-   * has not already accounted.
+   * Returns the duration which determines how long a given contact is considered relevant.
+   * Intuitively, contacts that occurred further in the past are less likely to propagate any new
+   * {@link RiskScore} in the {@link ContactGraph} for which the complimentary {@link Node} has not
+   * already accounted.
    */
   public abstract Duration contactTtl();
 
