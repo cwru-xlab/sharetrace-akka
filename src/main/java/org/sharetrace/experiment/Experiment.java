@@ -72,12 +72,12 @@ public abstract class Experiment<T> implements Runnable {
             .interval(DEFAULT_CACHE_INTERVAL)
             .refreshRate(DEFAULT_CACHE_REFRESH_RATE)
             .clock(clock())
-            .mergeStrategy(this::mergeStrategy)
+            .mergeStrategy(this::cacheMerge)
             .prioritizeReads(false)
             .build();
   }
 
-  protected RiskScoreMessage mergeStrategy(RiskScoreMessage oldScore, RiskScoreMessage newScore) {
+  protected RiskScoreMessage cacheMerge(RiskScoreMessage oldScore, RiskScoreMessage newScore) {
     double oldValue = oldScore.score().value();
     double newValue = newScore.score().value();
     Instant oldTimestamp = oldScore.score().timestamp();
