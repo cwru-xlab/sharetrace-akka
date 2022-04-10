@@ -46,7 +46,7 @@ class FileDatasetFactory extends DatasetFactory {
     return new FileDatasetFactory(path, delimiter, clock, scoreTtl, random).createDataset();
   }
 
-  private static Instant merge(Instant oldValue, Instant newValue) {
+  private static Instant newer(Instant oldValue, Instant newValue) {
     return newValue.isAfter(oldValue) ? newValue : oldValue;
   }
 
@@ -54,7 +54,7 @@ class FileDatasetFactory extends DatasetFactory {
   public void generateGraph(Graph<Integer, Edge<Integer>> target, Map<String, Integer> resultMap) {
     try (BufferedReader reader = Files.newBufferedReader(path)) {
       reader.lines().forEach(line -> parseLine(line, target));
-      calibrateTime();
+      adjustTimestamps();
     } catch (IOException exception) {
       throw new UncheckedIOException(exception);
     }
@@ -86,20 +86,20 @@ class FileDatasetFactory extends DatasetFactory {
 
   private void addContact(Parsed parsed) {
     Instant timestamp = parsed.timestamp;
-    lastContact = timestamp.isAfter(lastContact) ? timestamp : lastContact;
-    contacts.merge(nodes(parsed.node1, parsed.node2), timestamp, FileDatasetFactory::merge);
+    lastContact = newer(lastContact, timestamp);
+    contacts.merge(nodes(parsed.node1, parsed.node2), timestamp, FileDatasetFactory::newer);
   }
 
   private Set<Integer> nodes(int node1, int node2) {
     return new IntOpenHashSet(new int[] {node1, node2});
   }
 
-  private void calibrateTime() {
+  private void adjustTimestamps() {
     offset = Duration.between(lastContact, clock.get());
-    contacts.forEach((nodes, timestamp) -> contacts.computeIfPresent(nodes, this::addOffset));
+    contacts.forEach((nodes, timestamp) -> contacts.computeIfPresent(nodes, this::adjustTimestamp));
   }
 
-  private Instant addOffset(Set<Integer> nodes, Instant timestamp) {
+  private Instant adjustTimestamp(Set<Integer> nodes, Instant timestamp) {
     return timestamp.plus(offset);
   }
 
@@ -114,6 +114,11 @@ class FileDatasetFactory extends DatasetFactory {
       this.node1 = Integer.parseInt(args[1]);
       this.node2 = Integer.parseInt(args[2]);
       this.timestamp = Instant.ofEpochSecond(Long.parseLong(args[0]));
+    }
+
+    @Override
+    public String toString() {
+      return "Parsed{" + "node1=" + node1 + ", node2=" + node2 + ", timestamp=" + timestamp + '}';
     }
   }
 }
