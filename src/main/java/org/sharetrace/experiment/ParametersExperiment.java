@@ -2,17 +2,14 @@ package org.sharetrace.experiment;
 
 import akka.actor.typed.Behavior;
 import java.time.Duration;
-import java.util.Random;
 import org.sharetrace.RiskPropagationBuilder;
 import org.sharetrace.Runner;
 import org.sharetrace.data.Dataset;
-import org.sharetrace.data.SyntheticDatasetBuilder;
 import org.sharetrace.model.message.AlgorithmMessage;
 import org.sharetrace.model.message.Parameters;
 
-public class ParametersExperiment extends Experiment<Integer> {
+public class ParametersExperiment extends SyntheticExperiment {
 
-  private final GraphType graphType;
   private final double minTransmissionRate;
   private final double maxTransmissionRate;
   private final double stepTransmissionRate;
@@ -20,10 +17,11 @@ public class ParametersExperiment extends Experiment<Integer> {
   private final double maxSendTolerance;
   private final double stepSendTolerance;
   private final int nRepeats;
-  private final long seed;
 
   public ParametersExperiment(
       GraphType graphType,
+      int nNodes,
+      int nEdges,
       double minTransmissionRate,
       double maxTransmissionRate,
       double stepTransmissionRate,
@@ -32,7 +30,7 @@ public class ParametersExperiment extends Experiment<Integer> {
       double stepSendTolerance,
       int nRepeats,
       long seed) {
-    this.graphType = graphType;
+    super(graphType, nNodes, nEdges, seed);
     this.minTransmissionRate = minTransmissionRate;
     this.maxTransmissionRate = maxTransmissionRate;
     this.stepTransmissionRate = stepTransmissionRate;
@@ -40,7 +38,6 @@ public class ParametersExperiment extends Experiment<Integer> {
     this.maxSendTolerance = maxSendTolerance;
     this.stepSendTolerance = stepSendTolerance;
     this.nRepeats = nRepeats;
-    this.seed = seed;
   }
 
   @Override
@@ -69,17 +66,6 @@ public class ParametersExperiment extends Experiment<Integer> {
         }
       }
     }
-  }
-
-  @Override
-  protected Dataset<Integer> newDataset(Parameters parameters) {
-    return SyntheticDatasetBuilder.create()
-        .generator(GraphGeneratorFactory.create(graphType, new Random(seed)))
-        .clock(clock())
-        .scoreTtl(parameters.scoreTtl())
-        .contactTtl(parameters.contactTtl())
-        .random(new Random(seed))
-        .build();
   }
 
   @Override

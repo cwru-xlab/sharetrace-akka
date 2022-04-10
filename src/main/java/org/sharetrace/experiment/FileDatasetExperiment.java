@@ -11,18 +11,33 @@ import org.sharetrace.data.FileDatasetBuilder;
 import org.sharetrace.model.message.AlgorithmMessage;
 import org.sharetrace.model.message.Parameters;
 
-public class SocioPatternsExperiment extends Experiment<Integer> {
+public class FileDatasetExperiment extends Experiment<Integer> {
 
+  private static final String TAB_DELIMITER = "\t";
+  private static final String SPACE_DELIMITER = " ";
+  private static final String COMMA_DELIMITER = ",";
   private final Path path;
   private final String delimiter;
   private final int nRepeats;
   private final long seed;
 
-  public SocioPatternsExperiment(Path path, String delimiter, int nRepeats, long seed) {
+  public FileDatasetExperiment(Path path, String delimiter, int nRepeats, long seed) {
     this.path = path;
     this.delimiter = delimiter;
     this.nRepeats = nRepeats;
     this.seed = seed;
+  }
+
+  public static void runTabDelimited(Path path, int nRepeats, long seed) {
+    new FileDatasetExperiment(path, TAB_DELIMITER, nRepeats, seed).run();
+  }
+
+  public static void runSpaceDelimited(Path path, int nRepeats, long seed) {
+    new FileDatasetExperiment(path, SPACE_DELIMITER, nRepeats, seed).run();
+  }
+
+  public static void runCommaDelimited(Path path, int nRepeats, long seed) {
+    new FileDatasetExperiment(path, COMMA_DELIMITER, nRepeats, seed).run();
   }
 
   @Override
