@@ -3,14 +3,13 @@ package org.sharetrace.experiment;
 import akka.actor.typed.Behavior;
 import java.nio.file.Path;
 import java.util.Random;
-import org.sharetrace.RiskPropagationBuilder;
 import org.sharetrace.Runner;
 import org.sharetrace.data.Dataset;
 import org.sharetrace.data.FileDatasetBuilder;
 import org.sharetrace.model.message.AlgorithmMessage;
 import org.sharetrace.model.message.Parameters;
 
-public class FileDatasetExperiment extends Experiment<Integer> {
+public class FileDatasetExperiment extends Experiment {
 
   private static final String TAB_DELIMITER = "\t";
   private static final String SPACE_DELIMITER = " ";
@@ -59,20 +58,6 @@ public class FileDatasetExperiment extends Experiment<Integer> {
         .random(new Random(seed))
         .delimiter(delimiter)
         .path(path)
-        .build();
-  }
-
-  @Override
-  protected Behavior<AlgorithmMessage> newAlgorithm(
-      Dataset<Integer> dataset, Parameters parameters) {
-    return RiskPropagationBuilder.<Integer>create()
-        .graph(dataset.graph())
-        .parameters(parameters)
-        .transmitter(transmitter())
-        .clock(clock())
-        .scoreFactory(dataset::scoreOf)
-        .timeFactory(dataset::contactedAt)
-        .cacheFactory(cacheFactory())
         .build();
   }
 }

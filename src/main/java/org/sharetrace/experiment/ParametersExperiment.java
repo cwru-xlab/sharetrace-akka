@@ -1,7 +1,6 @@
 package org.sharetrace.experiment;
 
 import akka.actor.typed.Behavior;
-import org.sharetrace.RiskPropagationBuilder;
 import org.sharetrace.Runner;
 import org.sharetrace.data.Dataset;
 import org.sharetrace.model.message.AlgorithmMessage;
@@ -67,19 +66,5 @@ public class ParametersExperiment extends SyntheticExperiment {
         }
       }
     }
-  }
-
-  @Override
-  protected Behavior<AlgorithmMessage> newAlgorithm(
-      Dataset<Integer> dataset, Parameters parameters) {
-    return RiskPropagationBuilder.<Integer>create()
-        .graph(dataset.graph())
-        .parameters(parameters)
-        .transmitter(transmitter())
-        .clock(clock())
-        .scoreFactory(dataset::scoreOf)
-        .timeFactory(dataset::contactedAt)
-        .cacheFactory(cacheFactory())
-        .build();
   }
 }

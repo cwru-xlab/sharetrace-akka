@@ -7,7 +7,7 @@ import org.sharetrace.data.SyntheticDatasetBuilder;
 import org.sharetrace.model.graph.Edge;
 import org.sharetrace.model.message.Parameters;
 
-abstract class SyntheticExperiment extends Experiment<Integer> {
+public abstract class SyntheticExperiment extends Experiment {
 
   protected final GraphType graphType;
   protected final long seed;
