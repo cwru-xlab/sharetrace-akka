@@ -45,16 +45,7 @@ public abstract class RiskScore implements Comparable<RiskScore> {
 
   @Value.Check
   protected void check() {
-    checkInClosedRange(value(), MIN_VALUE, MAX_VALUE, this::valueMessage);
-  }
-
-  private String valueMessage() {
-    return "'value' must be between "
-        + MIN_VALUE
-        + " and "
-        + MAX_VALUE
-        + ", inclusive; got "
-        + value();
+    checkInClosedRange(value(), MIN_VALUE, MAX_VALUE, "value");
   }
 
   public interface Builder {

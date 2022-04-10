@@ -1,7 +1,6 @@
 package org.sharetrace.experiment;
 
 import akka.actor.typed.Behavior;
-import java.time.Duration;
 import org.sharetrace.RiskPropagationBuilder;
 import org.sharetrace.Runner;
 import org.sharetrace.data.Dataset;
@@ -46,12 +45,11 @@ public class RuntimeExperiment extends SyntheticExperiment {
     return RiskPropagationBuilder.<Integer>create()
         .graph(dataset.graph())
         .parameters(parameters)
+        .transmitter(transmitter())
         .clock(clock())
         .scoreFactory(dataset::scoreOf)
         .timeFactory(dataset::contactedAt)
         .cacheFactory(cacheFactory())
-        .nodeTimeout(Duration.ofSeconds(5L)) // TODO Scale based on graph size
-        .nodeRefreshRate(Duration.ofHours(1L))
         .build();
   }
 }

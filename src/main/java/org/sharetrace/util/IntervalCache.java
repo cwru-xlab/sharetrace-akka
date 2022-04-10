@@ -205,38 +205,16 @@ public class IntervalCache<T> {
       mergeStrategy = Objects.requireNonNullElse(mergeStrategy, (oldValue, newValue) -> newValue);
       clock = Objects.requireNonNullElse(clock, Instant::now);
       interval = Objects.requireNonNullElse(interval, Duration.ofDays(1L));
-      checkIsPositive(interval, this::intervalMessage);
-      checkIsAtLeast(nIntervals, MIN_INTERVALS, this::nIntervalsMessage);
-      checkInClosedRange(nBuffer, MIN_BUFFER, nIntervals, this::nBufferMessage);
+      checkIsPositive(interval, "interval");
+      checkIsAtLeast(nIntervals, MIN_INTERVALS, "nIntervals");
+      checkInClosedRange(nBuffer, MIN_BUFFER, nIntervals, "nBuffer");
       refreshRate = Objects.requireNonNullElse(refreshRate, Duration.ofMinutes(1L));
-      checkIsPositive(refreshRate, this::refreshRateMessage);
+      checkIsPositive(refreshRate, "refreshRate");
       return this;
     }
 
     private SortedMap<Instant, T> newCache() {
       return prioritizeReads ? new Object2ObjectAVLTreeMap<>() : new Object2ObjectRBTreeMap<>();
-    }
-
-    private String refreshRateMessage() {
-      return "'refreshRate' must be positive; got " + refreshRate;
-    }
-
-    private String intervalMessage() {
-      return "'interval' must be positive; got " + interval;
-    }
-
-    private String nIntervalsMessage() {
-      return "'nIntervals' must be at least " + MIN_INTERVALS + "; got " + nIntervals;
-    }
-
-    private String nBufferMessage() {
-      return "'nBuffer' must be between "
-          + MIN_BUFFER
-          + " and 'nIntervals' ("
-          + nIntervals
-          + "), inclusive;"
-          + " got "
-          + nBuffer;
     }
   }
 }

@@ -13,6 +13,7 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
@@ -57,10 +58,9 @@ public class Node extends AbstractBehavior<NodeMessage> {
   private final TimerScheduler<NodeMessage> timers;
   private final Map<ActorRef<NodeMessage>, Instant> contacts;
   private final Parameters parameters;
+  private final BiFunction<RiskScore, Parameters, RiskScore> transmitter;
   private final Supplier<Instant> clock;
   private final IntervalCache<RiskScoreMessage> cache;
-  private final Duration idleTimeout;
-  private final Duration refreshRate;
   private RiskScoreMessage current;
   private double sendThreshold;
 
@@ -68,18 +68,16 @@ public class Node extends AbstractBehavior<NodeMessage> {
       ActorContext<NodeMessage> context,
       TimerScheduler<NodeMessage> timers,
       Parameters parameters,
+      BiFunction<RiskScore, Parameters, RiskScore> transmitter,
       Supplier<Instant> clock,
-      IntervalCache<RiskScoreMessage> cache,
-      Duration idleTimeout,
-      Duration refreshRate) {
+      IntervalCache<RiskScoreMessage> cache) {
     super(context);
     this.timers = timers;
     this.contacts = new Object2ObjectOpenHashMap<>();
     this.parameters = parameters;
+    this.transmitter = transmitter;
     this.clock = clock;
     this.cache = cache;
-    this.idleTimeout = idleTimeout;
-    this.refreshRate = refreshRate;
     this.current = cached(defaultMessage());
     setSendThreshold();
     startRefreshTimer();
@@ -89,12 +87,11 @@ public class Node extends AbstractBehavior<NodeMessage> {
   protected static Behavior<NodeMessage> node(
       TimerScheduler<NodeMessage> timers,
       Parameters parameters,
+      BiFunction<RiskScore, Parameters, RiskScore> transmitter,
       Supplier<Instant> clock,
-      IntervalCache<RiskScoreMessage> cache,
-      Duration idleTimeout,
-      Duration refreshRate) {
+      IntervalCache<RiskScoreMessage> cache) {
     return Behaviors.setup(
-        context -> new Node(context, timers, parameters, clock, cache, idleTimeout, refreshRate));
+        context -> new Node(context, timers, parameters, transmitter, clock, cache));
   }
 
   private static Predicate<Entry<ActorRef<NodeMessage>, Instant>> isNotFrom(
@@ -226,11 +223,11 @@ public class Node extends AbstractBehavior<NodeMessage> {
     }
   }
 
+  // TODO Add BiFunction<RiskScore, Parameters, RiskScore> as input to generalize
   private RiskScoreMessage transmitted(RiskScoreMessage received) {
-    RiskScore score = received.score();
     return RiskScoreMessage.builder()
         .replyTo(self())
-        .score(score.value() * parameters.transmissionRate(), score.timestamp())
+        .score(transmitter.apply(received.score(), parameters))
         .uuid(received.uuid())
         .build();
   }
@@ -273,16 +270,17 @@ public class Node extends AbstractBehavior<NodeMessage> {
     return timeToLive.compareTo(sinceTimestamp) >= 0;
   }
 
+  // TODO Add as input? Implicitly depends on transmitter
   private void setSendThreshold() {
     sendThreshold = current.score().value() * parameters.transmissionRate();
   }
 
   private void resetTimeout() {
-    timers.startSingleTimer(Timeout.INSTANCE, idleTimeout);
+    timers.startSingleTimer(Timeout.INSTANCE, parameters.idleTimeout());
   }
 
   private void startRefreshTimer() {
-    timers.startTimerWithFixedDelay(Refresh.INSTANCE, refreshRate);
+    timers.startTimerWithFixedDelay(Refresh.INSTANCE, parameters.refreshRate());
   }
 
   private void propagate(ActorRef<NodeMessage> contact, RiskScoreMessage message) {

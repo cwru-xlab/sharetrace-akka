@@ -2,7 +2,6 @@ package org.sharetrace.experiment;
 
 import akka.actor.typed.Behavior;
 import java.nio.file.Path;
-import java.time.Duration;
 import java.util.Random;
 import org.sharetrace.RiskPropagationBuilder;
 import org.sharetrace.Runner;
@@ -69,12 +68,11 @@ public class FileDatasetExperiment extends Experiment<Integer> {
     return RiskPropagationBuilder.<Integer>create()
         .graph(dataset.graph())
         .parameters(parameters)
+        .transmitter(transmitter())
         .clock(clock())
         .scoreFactory(dataset::scoreOf)
         .timeFactory(dataset::contactedAt)
         .cacheFactory(cacheFactory())
-        .nodeTimeout(Duration.ofSeconds(5L))
-        .nodeRefreshRate(Duration.ofHours(1L))
         .build();
   }
 }

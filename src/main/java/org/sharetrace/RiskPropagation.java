@@ -55,8 +55,7 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
   private final Function<T, RiskScore> scoreFactory;
   private final BiFunction<T, T, Instant> timeFactory;
   private final Supplier<IntervalCache<RiskScoreMessage>> cacheFactory;
-  private final Duration nodeTimeout;
-  private final Duration nodeRefreshRate;
+  private final BiFunction<RiskScore, Parameters, RiskScore> transmitter;
   private Instant startedAt;
   private int nStopped;
 
@@ -64,21 +63,19 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
       ActorContext<AlgorithmMessage> context,
       TemporalGraph<T> graph,
       Parameters parameters,
+      BiFunction<RiskScore, Parameters, RiskScore> transmitter,
       Supplier<Instant> clock,
       Supplier<IntervalCache<RiskScoreMessage>> cacheFactory,
       Function<T, RiskScore> scoreFactory,
-      BiFunction<T, T, Instant> timeFactory,
-      Duration nodeTimeout,
-      Duration nodeRefreshRate) {
+      BiFunction<T, T, Instant> timeFactory) {
     super(context);
     this.graph = graph;
     this.parameters = parameters;
+    this.transmitter = transmitter;
     this.clock = clock;
     this.cacheFactory = cacheFactory;
     this.scoreFactory = scoreFactory;
     this.timeFactory = timeFactory;
-    this.nodeTimeout = nodeTimeout;
-    this.nodeRefreshRate = nodeRefreshRate;
     this.nNodes = graph.nodes().size();
     this.nStopped = 0;
   }
@@ -86,9 +83,8 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
   @Builder.Factory
   protected static <T> Behavior<AlgorithmMessage> riskPropagation(
       TemporalGraph<T> graph,
-      Duration nodeTimeout,
-      Duration nodeRefreshRate,
       Parameters parameters,
+      BiFunction<RiskScore, Parameters, RiskScore> transmitter,
       Supplier<Instant> clock,
       Supplier<IntervalCache<RiskScoreMessage>> cacheFactory,
       Function<T, RiskScore> scoreFactory,
@@ -99,12 +95,11 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
                 context,
                 graph,
                 parameters,
+                transmitter,
                 clock,
                 cacheFactory,
                 scoreFactory,
-                timeFactory,
-                nodeTimeout,
-                nodeRefreshRate));
+                timeFactory));
   }
 
   @Override
@@ -148,10 +143,9 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
             NodeBuilder.create()
                 .timers(timers)
                 .parameters(parameters)
+                .transmitter(transmitter)
                 .clock(clock)
                 .cache(cacheFactory.get())
-                .idleTimeout(nodeTimeout)
-                .refreshRate(nodeRefreshRate)
                 .build());
   }
 

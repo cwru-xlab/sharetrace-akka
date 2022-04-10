@@ -69,42 +69,22 @@ public abstract class Parameters implements NodeMessage {
    */
   public abstract Duration contactTtl();
 
+  // TODO Add Javadoc
+  public abstract Duration idleTimeout();
+
+  // TODO Add Javadoc
+  public abstract Duration refreshRate();
+
   @Value.Check
   protected void check() {
     checkInClosedRange(
-        transmissionRate(),
-        MIN_TRANSMISSION_RATE,
-        MAX_TRANSMISSION_RATE,
-        this::transmissionRateMessage);
-    checkIsAtLeast(sendTolerance(), MIN_SEND_TOLERANCE, this::sendToleranceMessage);
-    checkIsNonNegative(timeBuffer(), this::timeBufferMessage);
-    checkIsPositive(scoreTtl(), this::scoreTtlMessage);
-    checkIsPositive(contactTtl(), this::contactTtlMessage);
-  }
-
-  private String transmissionRateMessage() {
-    return "'transmissionRate' must be between "
-        + MIN_TRANSMISSION_RATE
-        + " and "
-        + MAX_TRANSMISSION_RATE
-        + ", inclusive; got "
-        + transmissionRate();
-  }
-
-  private String sendToleranceMessage() {
-    return "'sendTolerance' must be at least " + MIN_SEND_TOLERANCE + "; got " + sendTolerance();
-  }
-
-  private String timeBufferMessage() {
-    return "'timeBuffer' must be non-negative; got " + timeBuffer();
-  }
-
-  private String scoreTtlMessage() {
-    return "'scoreTtl' must be positive; got " + scoreTtl();
-  }
-
-  private String contactTtlMessage() {
-    return "'contactTtl' must be positive; got " + contactTtl();
+        transmissionRate(), MIN_TRANSMISSION_RATE, MAX_TRANSMISSION_RATE, "transmissionRate");
+    checkIsAtLeast(sendTolerance(), MIN_SEND_TOLERANCE, "sendTolerance");
+    checkIsNonNegative(timeBuffer(), "timeBuffer");
+    checkIsPositive(scoreTtl(), "scoreTtl");
+    checkIsPositive(contactTtl(), "contactTtl");
+    checkIsPositive(idleTimeout(), "idleTimeout");
+    checkIsPositive(refreshRate(), "refreshRate");
   }
 
   public interface Builder {
@@ -118,6 +98,10 @@ public abstract class Parameters implements NodeMessage {
     Builder scoreTtl(Duration scoreTtl);
 
     Builder contactTtl(Duration contactTtl);
+
+    Builder idleTimeout(Duration idleTimeout);
+
+    Builder refreshRate(Duration refreshRate);
 
     Parameters build();
   }

@@ -1,7 +1,6 @@
 package org.sharetrace.experiment;
 
 import akka.actor.typed.Behavior;
-import java.time.Duration;
 import org.sharetrace.RiskPropagationBuilder;
 import org.sharetrace.Runner;
 import org.sharetrace.data.Dataset;
@@ -59,6 +58,8 @@ public class ParametersExperiment extends SyntheticExperiment {
                   .timeBuffer(DEFAULT_TIME_BUFFER)
                   .scoreTtl(DEFAULT_TTL)
                   .contactTtl(DEFAULT_TTL)
+                  .idleTimeout(DEFAULT_NODE_TIMEOUT)
+                  .refreshRate(DEFAULT_NODE_REFRESH_RATE)
                   .build();
           dataset = newDataset(parameters);
           algorithm = newAlgorithm(dataset, parameters);
@@ -74,12 +75,11 @@ public class ParametersExperiment extends SyntheticExperiment {
     return RiskPropagationBuilder.<Integer>create()
         .graph(dataset.graph())
         .parameters(parameters)
+        .transmitter(transmitter())
         .clock(clock())
         .scoreFactory(dataset::scoreOf)
         .timeFactory(dataset::contactedAt)
         .cacheFactory(cacheFactory())
-        .nodeTimeout(Duration.ofSeconds(5L))
-        .nodeRefreshRate(Duration.ofHours(1L))
         .build();
   }
 }
