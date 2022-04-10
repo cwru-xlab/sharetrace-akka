@@ -25,7 +25,6 @@ public abstract class Experiment<T> implements Runnable {
   protected static final Duration DEFAULT_CACHE_REFRESH_RATE = Duration.ofHours(1L);
   protected static final Duration DEFAULT_NODE_TIMEOUT = Duration.ofSeconds(5L);
   protected static final Duration DEFAULT_NODE_REFRESH_RATE = Duration.ofHours(1L);
-  protected static final long DEFAULT_SEED = 12345L;
 
   @Override
   public void run() {

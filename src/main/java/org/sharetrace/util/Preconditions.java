@@ -31,7 +31,7 @@ public final class Preconditions {
   }
 
   public static void checkIsNonNegative(Duration duration, Supplier<String> message) {
-    checkArgument(Objects.requireNonNull(duration).isNegative(), message);
+    checkArgument(!Objects.requireNonNull(duration).isNegative(), message);
   }
 
   public static void checkIsAtLeast(double value, double lowerBound, String name) {
