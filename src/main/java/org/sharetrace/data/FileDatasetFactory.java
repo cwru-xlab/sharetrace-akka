@@ -1,6 +1,5 @@
 package org.sharetrace.data;
 
-import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -91,7 +90,7 @@ class FileDatasetFactory extends DatasetFactory {
   }
 
   private Set<Integer> nodes(int node1, int node2) {
-    return new IntOpenHashSet(new int[] {node1, node2});
+    return Set.of(node1, node2);
   }
 
   private void adjustTimestamps() {
