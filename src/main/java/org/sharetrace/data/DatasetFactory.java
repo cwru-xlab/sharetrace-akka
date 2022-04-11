@@ -10,7 +10,7 @@ import org.sharetrace.model.graph.Edge;
 import org.sharetrace.model.graph.TemporalGraph;
 import org.sharetrace.model.message.RiskScore;
 
-abstract class DatasetFactory implements GraphGenerator<Integer, Edge<Integer>, Integer> {
+public abstract class DatasetFactory implements GraphGenerator<Integer, Edge<Integer>, Integer> {
 
   private static <T> Graph<T, Edge<T>> checkGraphType(Graph<T, Edge<T>> graph) {
     GraphType type = graph.getType();
@@ -19,11 +19,11 @@ abstract class DatasetFactory implements GraphGenerator<Integer, Edge<Integer>, 
   }
 
   @Override
-  public final void generateGraph(Graph<Integer, Edge<Integer>> target) {
+  public void generateGraph(Graph<Integer, Edge<Integer>> target) {
     generateGraph(checkGraphType(target), null);
   }
 
-  protected final Dataset<Integer> createDataset() {
+  protected Dataset<Integer> createDataset() {
     return new Dataset<>() {
 
       private final TemporalGraph<Integer> graph = ContactGraph.create(DatasetFactory.this);
@@ -41,6 +41,13 @@ abstract class DatasetFactory implements GraphGenerator<Integer, Edge<Integer>, 
       @Override
       public TemporalGraph<Integer> graph() {
         return graph;
+      }
+
+      @Override
+      public String toString() {
+        int nNodes = graph.nodes().size();
+        int nEdges = graph.edges().size();
+        return "Dataset{" + "nNodes=" + nNodes + ", " + "nEdges=" + nEdges + '}';
       }
     };
   }
