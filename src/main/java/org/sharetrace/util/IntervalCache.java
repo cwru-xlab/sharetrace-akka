@@ -34,8 +34,12 @@ import javax.annotation.Nullable;
  */
 public class IntervalCache<T> {
 
-  private static final long MIN_INTERVALS = 1L;
-  private static final long MIN_BUFFER = MIN_INTERVALS;
+  public static final long MIN_INTERVALS = 1L;
+  public static final long MIN_BUFFER = MIN_INTERVALS;
+  public static final Duration DEFAULT_REFRESH_RATE = Duration.ofMinutes(1L);
+  public static final Duration DEFAULT_INTERVAL = Duration.ofDays(1L);
+  public static final Supplier<Instant> DEFAULT_CLOCK = Instant::now;
+  public static final boolean DEFAULT_PRIORITIZE_READS = false;
   private final SortedMap<Instant, T> cache;
   private final BinaryOperator<T> mergeStrategy;
   private final Supplier<Instant> clock;
@@ -61,6 +65,10 @@ public class IntervalCache<T> {
 
   public static <T> Builder<T> builder() {
     return new Builder<>();
+  }
+
+  public static <T> BinaryOperator<T> defaultMergeStrategy() {
+    return (oldValue, newValue) -> newValue;
   }
 
   /**
@@ -141,55 +149,57 @@ public class IntervalCache<T> {
 
   public static final class Builder<T> {
 
-    private SortedMap<Instant, T> cache;
-    private BinaryOperator<T> mergeStrategy;
-    private Supplier<Instant> clock;
-    private Duration interval;
+    private BinaryOperator<T> mergeStrategy = defaultMergeStrategy();
+    private Supplier<Instant> clock = DEFAULT_CLOCK;
+    private Duration interval = DEFAULT_INTERVAL;
     private long nIntervals = MIN_INTERVALS;
     private long nBuffer = MIN_BUFFER;
-    private Duration refreshRate;
-    private boolean prioritizeReads = false;
+    private Duration refreshRate = DEFAULT_REFRESH_RATE;
+    private boolean prioritizeReads = DEFAULT_PRIORITIZE_READS;
+    private final SortedMap<Instant, T> cache = newCache();
 
-    /** Sets duration of each contiguous time interval. Default: 1 hour. */
+    /** Sets duration of each contiguous time interval. */
     public Builder<T> interval(Duration interval) {
+      Objects.requireNonNull(interval);
+      checkIsPositive(interval, "interval");
       this.interval = interval;
       return this;
     }
 
-    /** Sets the total number of contiguous time intervals. Default: 1. */
+    /** Sets the total number of contiguous time intervals. */
     public Builder<T> nIntervals(long nIntervals) {
+      checkIsAtLeast(nIntervals, MIN_INTERVALS, "nIntervals");
       this.nIntervals = nIntervals;
       return this;
     }
 
-    /** Sets the number of "future" time intervals. Default: 1. */
+    /** Sets the number of "future" time intervals. */
     public Builder<T> nBuffer(long nBuffer) {
       this.nBuffer = nBuffer;
       return this;
     }
 
-    /** Sets the duration after which the cache will refresh. Default: 1 minute. */
+    /** Sets the duration after which the cache will refresh. */
     public Builder<T> refreshRate(Duration refreshRate) {
+      Objects.requireNonNull(refreshRate);
+      checkIsPositive(refreshRate, "refreshRate");
       this.refreshRate = refreshRate;
       return this;
     }
 
-    /** Sets the clock that the cache will use for its notion of time. Default: Instant::now. */
+    /** Sets the clock that the cache will use for its notion of time. */
     public Builder<T> clock(Supplier<Instant> clock) {
-      this.clock = clock;
+      this.clock = Objects.requireNonNull(clock);
       return this;
     }
 
-    /**
-     * Sets the strategy that will be used when adding values to the cache. Default: (oldValue,
-     * newValue) -> newValue.
-     */
+    /** Sets the strategy that will be used when adding values to the cache. */
     public Builder<T> mergeStrategy(BinaryOperator<T> mergeStrategy) {
-      this.mergeStrategy = mergeStrategy;
+      this.mergeStrategy = Objects.requireNonNull(mergeStrategy);
       return this;
     }
 
-    /** Sets whether read or write efficiency should be prioritized. Default: false. */
+    /** Sets whether read or write efficiency should be prioritized. */
     public Builder<T> prioritizeReads(boolean prioritizeReads) {
       this.prioritizeReads = prioritizeReads;
       return this;
@@ -197,20 +207,8 @@ public class IntervalCache<T> {
 
     /** Returns an initialized instance of the cache. */
     public IntervalCache<T> build() {
-      return new IntervalCache<>(checkFields());
-    }
-
-    private Builder<T> checkFields() {
-      cache = newCache();
-      mergeStrategy = Objects.requireNonNullElse(mergeStrategy, (oldValue, newValue) -> newValue);
-      clock = Objects.requireNonNullElse(clock, Instant::now);
-      interval = Objects.requireNonNullElse(interval, Duration.ofDays(1L));
-      checkIsPositive(interval, "interval");
-      checkIsAtLeast(nIntervals, MIN_INTERVALS, "nIntervals");
       checkInClosedRange(nBuffer, MIN_BUFFER, nIntervals, "nBuffer");
-      refreshRate = Objects.requireNonNullElse(refreshRate, Duration.ofMinutes(1L));
-      checkIsPositive(refreshRate, "refreshRate");
-      return this;
+      return new IntervalCache<>(this);
     }
 
     private SortedMap<Instant, T> newCache() {
