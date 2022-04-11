@@ -49,6 +49,10 @@ class FileDatasetFactory extends DatasetFactory {
     return newValue.isAfter(oldValue) ? newValue : oldValue;
   }
 
+  private static Set<Integer> key(int node1, int node2) {
+    return Set.of(node1, node2);
+  }
+
   @Override
   public void generateGraph(Graph<Integer, Edge<Integer>> target, Map<String, Integer> resultMap) {
     try (BufferedReader reader = Files.newBufferedReader(path)) {
@@ -68,7 +72,7 @@ class FileDatasetFactory extends DatasetFactory {
 
   @Override
   protected Instant contactedAt(int node1, int node2) {
-    return contacts.get(nodes(node1, node2));
+    return contacts.get(key(node1, node2));
   }
 
   private void parseLine(String line, Graph<Integer, Edge<Integer>> target) {
@@ -86,11 +90,7 @@ class FileDatasetFactory extends DatasetFactory {
   private void addContact(Parsed parsed) {
     Instant timestamp = parsed.timestamp;
     lastContact = newer(lastContact, timestamp);
-    contacts.merge(nodes(parsed.node1, parsed.node2), timestamp, FileDatasetFactory::newer);
-  }
-
-  private Set<Integer> nodes(int node1, int node2) {
-    return Set.of(node1, node2);
+    contacts.merge(key(parsed.node1, parsed.node2), timestamp, FileDatasetFactory::newer);
   }
 
   private void adjustTimestamps() {
