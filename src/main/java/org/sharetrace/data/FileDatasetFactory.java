@@ -56,7 +56,7 @@ class FileDatasetFactory extends DatasetFactory {
   @Override
   public void generateGraph(Graph<Integer, Edge<Integer>> target, Map<String, Integer> resultMap) {
     try (BufferedReader reader = Files.newBufferedReader(path)) {
-      reader.lines().forEach(line -> parseLine(line, target));
+      reader.lines().forEach(line -> processLine(line, target));
       adjustTimestamps();
     } catch (IOException exception) {
       throw new UncheckedIOException(exception);
@@ -75,7 +75,7 @@ class FileDatasetFactory extends DatasetFactory {
     return contacts.get(key(node1, node2));
   }
 
-  private void parseLine(String line, Graph<Integer, Edge<Integer>> target) {
+  private void processLine(String line, Graph<Integer, Edge<Integer>> target) {
     Parsed parsed = new Parsed(line, delimiter);
     addToGraph(target, parsed);
     addContact(parsed);
@@ -88,9 +88,8 @@ class FileDatasetFactory extends DatasetFactory {
   }
 
   private void addContact(Parsed parsed) {
-    Instant timestamp = parsed.timestamp;
-    lastContact = newer(lastContact, timestamp);
-    contacts.merge(key(parsed.node1, parsed.node2), timestamp, FileDatasetFactory::newer);
+    lastContact = newer(lastContact, parsed.timestamp);
+    contacts.merge(key(parsed.node1, parsed.node2), parsed.timestamp, FileDatasetFactory::newer);
   }
 
   private void adjustTimestamps() {
