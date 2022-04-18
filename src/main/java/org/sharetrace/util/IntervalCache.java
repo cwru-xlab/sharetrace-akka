@@ -156,7 +156,7 @@ public class IntervalCache<T> {
     private long nBuffer = MIN_BUFFER;
     private Duration refreshRate = DEFAULT_REFRESH_RATE;
     private boolean prioritizeReads = DEFAULT_PRIORITIZE_READS;
-    private final SortedMap<Instant, T> cache = newCache();
+    private SortedMap<Instant, T> cache;
 
     /** Sets duration of each contiguous time interval. */
     public Builder<T> interval(Duration interval) {
@@ -208,6 +208,7 @@ public class IntervalCache<T> {
     /** Returns an initialized instance of the cache. */
     public IntervalCache<T> build() {
       checkInClosedRange(nBuffer, MIN_BUFFER, nIntervals, "nBuffer");
+      cache = newCache();
       return new IntervalCache<>(this);
     }
 
