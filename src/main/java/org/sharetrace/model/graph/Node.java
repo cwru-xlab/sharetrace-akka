@@ -223,7 +223,6 @@ public class Node extends AbstractBehavior<NodeMessage> {
     }
   }
 
-  // TODO Add BiFunction<RiskScore, Parameters, RiskScore> as input to generalize
   private RiskScoreMessage transmitted(RiskScoreMessage received) {
     return RiskScoreMessage.builder()
         .replyTo(self())
