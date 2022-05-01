@@ -17,6 +17,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import org.immutables.builder.Builder;
 import org.sharetrace.model.graph.ContactGraph;
+import org.sharetrace.model.graph.Log;
 import org.sharetrace.model.graph.Node;
 import org.sharetrace.model.graph.NodeBuilder;
 import org.sharetrace.model.graph.TemporalGraph;
@@ -48,6 +49,7 @@ import org.sharetrace.util.IntervalCache;
  */
 public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
 
+  private final Log log;
   private final Parameters parameters;
   private final TemporalGraph<T> graph;
   private final int nNodes;
@@ -61,6 +63,7 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
 
   private RiskPropagation(
       ActorContext<AlgorithmMessage> context,
+      Log log,
       TemporalGraph<T> graph,
       Parameters parameters,
       BiFunction<RiskScore, Parameters, RiskScore> transmitter,
@@ -69,6 +72,7 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
       Function<T, RiskScore> scoreFactory,
       BiFunction<T, T, Instant> timeFactory) {
     super(context);
+    this.log = log;
     this.graph = graph;
     this.parameters = parameters;
     this.transmitter = transmitter;
@@ -83,6 +87,7 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
   @Builder.Factory
   protected static <T> Behavior<AlgorithmMessage> riskPropagation(
       TemporalGraph<T> graph,
+      Log log,
       Parameters parameters,
       BiFunction<RiskScore, Parameters, RiskScore> transmitter,
       Supplier<Instant> clock,
@@ -93,6 +98,7 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
         context ->
             new RiskPropagation<>(
                 context,
+                log,
                 graph,
                 parameters,
                 transmitter,
@@ -140,6 +146,7 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
         timers ->
             NodeBuilder.create()
                 .timers(timers)
+                .log(log)
                 .parameters(parameters)
                 .transmitter(transmitter)
                 .clock(clock)

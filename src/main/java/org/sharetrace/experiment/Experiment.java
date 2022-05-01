@@ -8,6 +8,7 @@ import java.util.function.Supplier;
 import org.sharetrace.RiskPropagationBuilder;
 import org.sharetrace.Runner;
 import org.sharetrace.data.Dataset;
+import org.sharetrace.model.graph.Log;
 import org.sharetrace.model.message.AlgorithmMessage;
 import org.sharetrace.model.message.Parameters;
 import org.sharetrace.model.message.RiskScore;
@@ -18,21 +19,20 @@ public abstract class Experiment implements Runnable {
 
   @Override
   public void run() {
-    Parameters parameters = parameters();
-    Dataset<Integer> dataset = newDataset(parameters);
-    Behavior<AlgorithmMessage> algorithm = newAlgorithm(dataset, parameters);
-    Runner.run(algorithm);
-  }
-
-  protected Supplier<Instant> clock() {
-    return Instant::now;
+    Runner.run(newAlgorithm());
   }
 
   protected abstract Dataset<Integer> newDataset(Parameters parameters);
 
-  protected Behavior<AlgorithmMessage> newAlgorithm(
-      Dataset<Integer> dataset, Parameters parameters) {
+  protected Log log() {
+    return Log.enableAll();
+  }
+
+  protected Behavior<AlgorithmMessage> newAlgorithm() {
+    Parameters parameters = parameters();
+    Dataset<Integer> dataset = newDataset(parameters);
     return RiskPropagationBuilder.<Integer>create()
+        .log(log())
         .graph(dataset.graph())
         .parameters(parameters)
         .transmitter(transmitter())
@@ -41,6 +41,10 @@ public abstract class Experiment implements Runnable {
         .timeFactory(dataset::contactedAt)
         .cacheFactory(cacheFactory())
         .build();
+  }
+
+  protected Supplier<Instant> clock() {
+    return Instant::now;
   }
 
   protected BiFunction<RiskScore, Parameters, RiskScore> transmitter() {

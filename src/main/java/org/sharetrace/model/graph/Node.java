@@ -56,6 +56,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
       "{\"event\": \"currentRefresh\", \"of\": \"{}\", \"oldValue\": {}, \"newValue\": {}, \"oldTimestamp\": \"{}\", \"newTimestamp\": \"{}\", \"oldUuid\": \"{}\", \"newUuid\": \"{}\"}";
 
   private final TimerScheduler<NodeMessage> timers;
+  private final Log log;
   private final Map<ActorRef<NodeMessage>, Instant> contacts;
   private final Parameters parameters;
   private final BiFunction<RiskScore, Parameters, RiskScore> transmitter;
@@ -67,12 +68,14 @@ public class Node extends AbstractBehavior<NodeMessage> {
   private Node(
       ActorContext<NodeMessage> context,
       TimerScheduler<NodeMessage> timers,
+      Log log,
       Parameters parameters,
       BiFunction<RiskScore, Parameters, RiskScore> transmitter,
       Supplier<Instant> clock,
       IntervalCache<RiskScoreMessage> cache) {
     super(context);
     this.timers = timers;
+    this.log = log;
     this.contacts = new Object2ObjectOpenHashMap<>();
     this.parameters = parameters;
     this.transmitter = transmitter;
@@ -86,12 +89,13 @@ public class Node extends AbstractBehavior<NodeMessage> {
   @Builder.Factory
   protected static Behavior<NodeMessage> node(
       TimerScheduler<NodeMessage> timers,
+      Log log,
       Parameters parameters,
       BiFunction<RiskScore, Parameters, RiskScore> transmitter,
       Supplier<Instant> clock,
       IntervalCache<RiskScoreMessage> cache) {
     return Behaviors.setup(
-        context -> new Node(context, timers, parameters, transmitter, clock, cache));
+        context -> new Node(context, timers, log, parameters, transmitter, clock, cache));
   }
 
   private static Predicate<Entry<ActorRef<NodeMessage>, Instant>> isNotFrom(
@@ -283,63 +287,81 @@ public class Node extends AbstractBehavior<NodeMessage> {
   }
 
   private void propagate(ActorRef<NodeMessage> contact, RiskScoreMessage message) {
-    logPropagate(contact, message);
+    if (log.contains(Loggable.PROPAGATE)) {
+      logPropagate(contact, message);
+    }
     contact.tell(message);
   }
 
   private void logContact(ContactMessage message) {
-    log().debug(CONTACT_FORMAT, name(self()), name(message.replyTo()));
+    if (log.contains(Loggable.NEW_CONTACT)) {
+      log().debug(CONTACT_FORMAT, name(self()), name(message.replyTo()));
+    }
   }
 
   private void logUpdate(RiskScoreMessage previous, RiskScoreMessage current) {
-    RiskScore prev = previous.score();
-    RiskScore curr = current.score();
-    log()
-        .debug(
-            UPDATE_FORMAT,
-            name(current.replyTo()),
-            name(self()),
-            prev.value(),
-            curr.value(),
-            prev.timestamp(),
-            curr.timestamp(),
-            previous.uuid(),
-            current.uuid());
+    if (log.contains(Loggable.UPDATE)) {
+      RiskScore prev = previous.score();
+      RiskScore curr = current.score();
+      log()
+          .debug(
+              UPDATE_FORMAT,
+              name(current.replyTo()),
+              name(self()),
+              prev.value(),
+              curr.value(),
+              prev.timestamp(),
+              curr.timestamp(),
+              previous.uuid(),
+              current.uuid());
+    }
   }
 
   private void logContactsRefresh(int nRemaining, int nExpired) {
-    log().debug(CONTACTS_REFRESH_FORMAT, name(self()), nRemaining, nExpired);
+    if (log.contains(Loggable.CONTACTS_REFRESH)) {
+      log().debug(CONTACTS_REFRESH_FORMAT, name(self()), nRemaining, nExpired);
+    }
   }
 
   private void logCurrentRefresh(RiskScoreMessage previous, RiskScoreMessage current) {
-    RiskScore prev = previous.score();
-    RiskScore curr = current.score();
-    log()
-        .debug(
-            CURRENT_REFRESH_FORMAT,
-            name(self()),
-            prev.value(),
-            curr.value(),
-            prev.timestamp(),
-            curr.timestamp(),
-            previous.uuid(),
-            current.uuid());
+    if (log.contains(Loggable.CURRENT_REFRESH)) {
+      RiskScore prev = previous.score();
+      RiskScore curr = current.score();
+      log()
+          .debug(
+              CURRENT_REFRESH_FORMAT,
+              name(self()),
+              prev.value(),
+              curr.value(),
+              prev.timestamp(),
+              curr.timestamp(),
+              previous.uuid(),
+              current.uuid());
+    }
   }
 
   private void logSendCurrent(ActorRef<NodeMessage> contact, RiskScoreMessage message) {
-    logMessageOp(SEND_CURRENT_FORMAT, self(), contact, message);
+    if (log.contains(Loggable.SEND_CURRENT)) {
+      logMessageOp(SEND_CURRENT_FORMAT, self(), contact, message);
+    }
   }
 
   private void logSendCached(ActorRef<NodeMessage> contact, RiskScoreMessage message) {
-    logMessageOp(SEND_CACHED_FORMAT, self(), contact, message);
+    if (log.contains(Loggable.SEND_CACHED)) {
+      logMessageOp(SEND_CACHED_FORMAT, self(), contact, message);
+    }
   }
 
   private void logPropagate(ActorRef<NodeMessage> contact, RiskScoreMessage message) {
-    logMessageOp(PROPAGATE_FORMAT, self(), contact, message);
+    if (log.contains(Loggable.PROPAGATE)) {
+      logMessageOp(PROPAGATE_FORMAT, self(), contact, message);
+    }
   }
 
   private void logReceive(RiskScoreMessage message) {
-    logMessageOp(RECEIVE_FORMAT, message.replyTo(), self(), message);
+    if (log.contains(Loggable.RECEIVE)) {
+      logMessageOp(RECEIVE_FORMAT, message.replyTo(), self(), message);
+    }
   }
 
   private void logMessageOp(
