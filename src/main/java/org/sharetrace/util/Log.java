@@ -1,4 +1,4 @@
-package org.sharetrace.model.graph;
+package org.sharetrace.util;
 
 import java.util.EnumSet;
 import java.util.List;

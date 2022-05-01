@@ -1,4 +1,4 @@
-package org.sharetrace.model.graph;
+package org.sharetrace.util;
 
 public enum Loggable {
   SEND_CACHED,

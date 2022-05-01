@@ -27,6 +27,8 @@ import org.sharetrace.model.message.RiskScore;
 import org.sharetrace.model.message.RiskScoreMessage;
 import org.sharetrace.model.message.Timeout;
 import org.sharetrace.util.IntervalCache;
+import org.sharetrace.util.Log;
+import org.sharetrace.util.Loggable;
 import org.slf4j.Logger;
 
 /**

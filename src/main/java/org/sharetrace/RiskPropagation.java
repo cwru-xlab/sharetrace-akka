@@ -17,7 +17,6 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import org.immutables.builder.Builder;
 import org.sharetrace.model.graph.ContactGraph;
-import org.sharetrace.model.graph.Log;
 import org.sharetrace.model.graph.Node;
 import org.sharetrace.model.graph.NodeBuilder;
 import org.sharetrace.model.graph.TemporalGraph;
@@ -29,6 +28,7 @@ import org.sharetrace.model.message.RiskScore;
 import org.sharetrace.model.message.RiskScoreMessage;
 import org.sharetrace.model.message.Run;
 import org.sharetrace.util.IntervalCache;
+import org.sharetrace.util.Log;
 
 /**
  * A non-iterative, asynchronous implementation of the ShareTrace algorithm. The objective is to
