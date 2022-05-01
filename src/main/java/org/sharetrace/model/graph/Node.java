@@ -289,9 +289,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
   }
 
   private void propagate(ActorRef<NodeMessage> contact, RiskScoreMessage message) {
-    if (log.contains(NodeEvent.PROPAGATE)) {
-      logPropagate(contact, message);
-    }
+    logPropagate(contact, message);
     contact.tell(message);
   }
 
