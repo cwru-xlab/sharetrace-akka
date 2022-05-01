@@ -124,7 +124,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
   }
 
   private void refreshContacts() {
-    int nContacts = contacts.values().size();
+    int nContacts = contacts.size();
     contacts.values().removeIf(Predicate.not(this::isContactAlive));
     int nRemaining = contacts.size();
     int nExpired = nContacts - nRemaining;
