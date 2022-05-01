@@ -24,8 +24,8 @@ public final class EventLog<E extends Enum<E> & LoggableEvent> {
     return enable(EnumSet.copyOf(enable));
   }
 
-  public static <E extends Enum<E> & LoggableEvent> EventLog<E> enableAll(Class<E> cls) {
-    return enable(EnumSet.allOf(cls));
+  public static <E extends Enum<E> & LoggableEvent> EventLog<E> enableAll(Class<E> clazz) {
+    return enable(EnumSet.allOf(clazz));
   }
 
   public static <E extends Enum<E> & LoggableEvent> EventLog<E> disable(EnumSet<E> disable) {
@@ -41,11 +41,11 @@ public final class EventLog<E extends Enum<E> & LoggableEvent> {
     return disable(EnumSet.copyOf(disable));
   }
 
-  public static <E extends Enum<E> & LoggableEvent> EventLog<E> disableAll(Class<E> cls) {
-    return disable(EnumSet.noneOf(cls));
+  public static <E extends Enum<E> & LoggableEvent> EventLog<E> disableAll(Class<E> clazz) {
+    return disable(EnumSet.noneOf(clazz));
   }
 
-  public boolean contains(E loggable) {
-    return enabled.contains(loggable);
+  public boolean contains(E event) {
+    return enabled.contains(event);
   }
 }
