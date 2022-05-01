@@ -11,7 +11,6 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
-import java.util.function.Supplier;
 import org.immutables.builder.Builder;
 import org.jgrapht.Graph;
 import org.sharetrace.model.graph.Edge;
@@ -22,18 +21,18 @@ class FileDatasetFactory extends DatasetFactory {
   private final Map<Set<Integer>, Instant> contacts;
   private final Path path;
   private final String delimiter;
-  private final Supplier<Instant> clock;
+  private final Instant time;
   private final long scoreTtlInSeconds;
   private final Random random;
   private Instant lastContact;
   private Duration offset;
 
   private FileDatasetFactory(
-      Path path, String delimiter, Supplier<Instant> clock, Duration scoreTtl, Random random) {
+      Path path, String delimiter, Instant time, Duration scoreTtl, Random random) {
     this.contacts = new Object2ObjectOpenHashMap<>();
     this.path = path;
     this.delimiter = delimiter;
-    this.clock = clock;
+    this.time = time;
     this.scoreTtlInSeconds = scoreTtl.toSeconds();
     this.random = random;
     this.lastContact = Instant.MIN;
@@ -41,8 +40,8 @@ class FileDatasetFactory extends DatasetFactory {
 
   @Builder.Factory
   protected static Dataset<Integer> fileDataset(
-      Path path, String delimiter, Supplier<Instant> clock, Duration scoreTtl, Random random) {
-    return new FileDatasetFactory(path, delimiter, clock, scoreTtl, random).createDataset();
+      Path path, String delimiter, Instant time, Duration scoreTtl, Random random) {
+    return new FileDatasetFactory(path, delimiter, time, scoreTtl, random).createDataset();
   }
 
   private static Instant newer(Instant oldValue, Instant newValue) {
@@ -66,7 +65,7 @@ class FileDatasetFactory extends DatasetFactory {
   @Override
   protected RiskScore scoreOf(int node) {
     Duration lookBack = Duration.ofSeconds(Math.round(random.nextDouble() * scoreTtlInSeconds));
-    Instant timestamp = clock.get().minus(lookBack);
+    Instant timestamp = time.minus(lookBack);
     return RiskScore.builder().value(random.nextDouble()).timestamp(timestamp).build();
   }
 
@@ -93,7 +92,7 @@ class FileDatasetFactory extends DatasetFactory {
   }
 
   private void adjustTimestamps() {
-    offset = Duration.between(lastContact, clock.get());
+    offset = Duration.between(lastContact, time);
     contacts.forEach((nodes, timestamp) -> contacts.computeIfPresent(nodes, this::adjustTimestamp));
   }
 

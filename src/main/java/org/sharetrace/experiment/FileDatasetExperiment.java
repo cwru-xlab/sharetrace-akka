@@ -44,7 +44,7 @@ public class FileDatasetExperiment extends Experiment {
   @Override
   protected Dataset<Integer> newDataset(Parameters parameters) {
     return FileDatasetBuilder.create()
-        .clock(clock())
+        .time(clock().get())
         .scoreTtl(parameters.scoreTtl())
         .random(new Random(seed))
         .delimiter(delimiter)
