@@ -23,7 +23,7 @@ public abstract class DatasetFactory implements GraphGenerator<Integer, Edge<Int
     generateGraph(checkGraphType(target), null);
   }
 
-  protected Dataset<Integer> createDataset() {
+  public Dataset<Integer> createDataset() {
     return new Dataset<>() {
 
       private final TemporalGraph<Integer> graph = ContactGraph.create(DatasetFactory.this);
