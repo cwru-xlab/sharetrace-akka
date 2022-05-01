@@ -125,9 +125,7 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
 
   private Map<T, ActorRef<NodeMessage>> newNodes() {
     Map<T, ActorRef<NodeMessage>> nodes = new Object2ObjectOpenHashMap<>();
-    for (T name : graph.nodes()) {
-      nodes.put(name, newNode(name));
-    }
+    graph.nodes().forEach(name -> nodes.put(name, newNode(name)));
     return nodes;
   }
 
