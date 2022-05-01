@@ -16,17 +16,6 @@ import org.sharetrace.util.IntervalCache;
 
 public abstract class Experiment implements Runnable {
 
-  protected static final Duration DEFAULT_TTL = Duration.ofDays(14L);
-  protected static final double DEFAULT_SEND_TOLERANCE = 0.6d;
-  protected static final double DEFAULT_TRANSMISSION_RATE = 0.8d;
-  protected static final Duration DEFAULT_TIME_BUFFER = Duration.ofDays(2L);
-  protected static final long DEFAULT_CACHE_INTERVALS = DEFAULT_TTL.toDays() + 1L;
-  protected static final long DEFAULT_BUFFER = 1L;
-  protected static final Duration DEFAULT_CACHE_INTERVAL = Duration.ofDays(1L);
-  protected static final Duration DEFAULT_CACHE_REFRESH_RATE = Duration.ofHours(1L);
-  protected static final Duration DEFAULT_NODE_TIMEOUT = Duration.ofSeconds(5L);
-  protected static final Duration DEFAULT_NODE_REFRESH_RATE = Duration.ofHours(1L);
-
   @Override
   public void run() {
     Parameters parameters = parameters();
@@ -64,27 +53,79 @@ public abstract class Experiment implements Runnable {
 
   protected Parameters parameters() {
     return Parameters.builder()
-        .sendTolerance(DEFAULT_SEND_TOLERANCE)
-        .transmissionRate(DEFAULT_TRANSMISSION_RATE)
-        .timeBuffer(DEFAULT_TIME_BUFFER)
-        .scoreTtl(DEFAULT_TTL)
-        .contactTtl(DEFAULT_TTL)
-        .idleTimeout(DEFAULT_NODE_TIMEOUT) // TODO Scale based on graph size
-        .refreshRate(DEFAULT_NODE_REFRESH_RATE)
+        .sendTolerance(sendTolerance())
+        .transmissionRate(transmissionRate())
+        .timeBuffer(timeBuffer())
+        .scoreTtl(scoreTtl())
+        .contactTtl(contactTtl())
+        .idleTimeout(nodeTimeout())
+        .refreshRate(nodeRefreshRate())
         .build();
+  }
+
+  protected double sendTolerance() {
+    return 0.6d;
+  }
+
+  protected double transmissionRate() {
+    return 0.8d;
+  }
+
+  protected Duration scoreTtl() {
+    return defaultTtl();
+  }
+
+  protected Duration contactTtl() {
+    return defaultTtl();
+  }
+
+  protected Duration timeBuffer() {
+    return Duration.ofDays(2L);
+  }
+
+  protected Duration nodeTimeout() {
+    return Duration.ofSeconds(5L);
+  }
+
+  protected Duration nodeRefreshRate() {
+    return Duration.ofHours(1L);
   }
 
   protected Supplier<IntervalCache<RiskScoreMessage>> cacheFactory() {
     return () ->
         IntervalCache.<RiskScoreMessage>builder()
-            .nIntervals(DEFAULT_CACHE_INTERVALS)
-            .nBuffer(DEFAULT_BUFFER)
-            .interval(DEFAULT_CACHE_INTERVAL)
-            .refreshRate(DEFAULT_CACHE_REFRESH_RATE)
+            .nIntervals(cacheIntervals())
+            .nBuffer(cacheBuffer())
+            .interval(cacheInterval())
+            .refreshRate(cacheRefreshRate())
             .clock(clock())
             .mergeStrategy(this::cacheMerge)
-            .prioritizeReads(false)
+            .prioritizeReads(cachePrioritizeReads())
             .build();
+  }
+
+  protected long cacheIntervals() {
+    return 1L + defaultTtl().toDays();
+  }
+
+  protected long cacheBuffer() {
+    return 1L;
+  }
+
+  protected Duration cacheInterval() {
+    return Duration.ofDays(1L);
+  }
+
+  protected Duration cacheRefreshRate() {
+    return Duration.ofHours(1L);
+  }
+
+  protected boolean cachePrioritizeReads() {
+    return false;
+  }
+
+  protected Duration defaultTtl() {
+    return Duration.ofDays(14L);
   }
 
   protected RiskScoreMessage cacheMerge(RiskScoreMessage oldScore, RiskScoreMessage newScore) {

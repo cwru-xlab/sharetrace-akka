@@ -1,12 +1,10 @@
 package org.sharetrace.experiment;
 
-import akka.actor.typed.Behavior;
 import java.nio.file.Path;
 import java.util.Random;
-import org.sharetrace.Runner;
+import java.util.stream.IntStream;
 import org.sharetrace.data.Dataset;
 import org.sharetrace.data.FileDatasetBuilder;
-import org.sharetrace.model.message.AlgorithmMessage;
 import org.sharetrace.model.message.Parameters;
 
 public class FileDatasetExperiment extends Experiment {
@@ -40,14 +38,7 @@ public class FileDatasetExperiment extends Experiment {
 
   @Override
   public void run() {
-    Parameters parameters = parameters();
-    Dataset<Integer> dataset;
-    Behavior<AlgorithmMessage> algorithm;
-    for (int iRepeat = 0; iRepeat < nRepeats; iRepeat++) {
-      dataset = newDataset(parameters);
-      algorithm = newAlgorithm(dataset, parameters);
-      Runner.run(algorithm);
-    }
+    IntStream.range(0, nRepeats).forEach(x -> super.run());
   }
 
   @Override

@@ -1,10 +1,6 @@
 package org.sharetrace.experiment;
 
-import akka.actor.typed.Behavior;
-import org.sharetrace.Runner;
-import org.sharetrace.data.Dataset;
-import org.sharetrace.model.message.AlgorithmMessage;
-import org.sharetrace.model.message.Parameters;
+import java.util.stream.IntStream;
 
 public class ParametersExperiment extends SyntheticExperiment {
 
@@ -15,6 +11,8 @@ public class ParametersExperiment extends SyntheticExperiment {
   private final double maxSendTolerance;
   private final double stepSendTolerance;
   private final int nRepeats;
+  private double sendTolerance;
+  private double transmissionRate;
 
   public ParametersExperiment(
       GraphType graphType,
@@ -40,31 +38,22 @@ public class ParametersExperiment extends SyntheticExperiment {
 
   @Override
   public void run() {
-    Parameters parameters;
-    Dataset<Integer> dataset;
-    Behavior<AlgorithmMessage> algorithm;
-    for (double transmissionRate = minTransmissionRate;
-        transmissionRate < maxTransmissionRate;
-        transmissionRate += stepTransmissionRate) {
-      for (double sendTolerance = minSendTolerance;
-          sendTolerance < maxSendTolerance;
-          sendTolerance += stepSendTolerance) {
-        for (int iRepeat = 0; iRepeat < nRepeats; iRepeat++) {
-          parameters =
-              Parameters.builder()
-                  .sendTolerance(sendTolerance)
-                  .transmissionRate(transmissionRate)
-                  .timeBuffer(DEFAULT_TIME_BUFFER)
-                  .scoreTtl(DEFAULT_TTL)
-                  .contactTtl(DEFAULT_TTL)
-                  .idleTimeout(DEFAULT_NODE_TIMEOUT)
-                  .refreshRate(DEFAULT_NODE_REFRESH_RATE)
-                  .build();
-          dataset = newDataset(parameters);
-          algorithm = newAlgorithm(dataset, parameters);
-          Runner.run(algorithm);
-        }
+    for (double tr = minTransmissionRate; tr < maxTransmissionRate; tr += stepTransmissionRate) {
+      for (double st = minSendTolerance; st < maxSendTolerance; st += stepSendTolerance) {
+        sendTolerance = st;
+        transmissionRate = tr;
+        IntStream.range(0, nRepeats).forEach(x -> super.run());
       }
     }
+  }
+
+  @Override
+  protected double sendTolerance() {
+    return sendTolerance;
+  }
+
+  @Override
+  protected double transmissionRate() {
+    return transmissionRate;
   }
 }

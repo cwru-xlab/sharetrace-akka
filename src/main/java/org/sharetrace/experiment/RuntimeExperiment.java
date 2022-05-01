@@ -1,10 +1,6 @@
 package org.sharetrace.experiment;
 
-import akka.actor.typed.Behavior;
-import org.sharetrace.Runner;
-import org.sharetrace.data.Dataset;
-import org.sharetrace.model.message.AlgorithmMessage;
-import org.sharetrace.model.message.Parameters;
+import java.util.stream.IntStream;
 
 public class RuntimeExperiment extends SyntheticExperiment {
 
@@ -24,17 +20,10 @@ public class RuntimeExperiment extends SyntheticExperiment {
 
   @Override
   public void run() {
-    Parameters parameters = parameters();
-    Dataset<Integer> dataset;
-    Behavior<AlgorithmMessage> algorithm;
-    for (int iNodes = minNodes; iNodes < maxNodes; iNodes += stepNodes) {
-      nNodes = iNodes;
-      nEdges = iNodes * 2;
-      for (int iRepeat = 0; iRepeat < nRepeats; iRepeat++) {
-        dataset = newDataset(parameters);
-        algorithm = newAlgorithm(dataset, parameters);
-        Runner.run(algorithm);
-      }
+    for (int n = minNodes; n < maxNodes; n += stepNodes) {
+      nNodes = n;
+      nEdges = n * 2;
+      IntStream.range(0, nRepeats).forEach(x -> super.run());
     }
   }
 }
