@@ -26,9 +26,9 @@ import org.sharetrace.model.message.Refresh;
 import org.sharetrace.model.message.RiskScore;
 import org.sharetrace.model.message.RiskScoreMessage;
 import org.sharetrace.model.message.Timeout;
+import org.sharetrace.util.EventLog;
 import org.sharetrace.util.IntervalCache;
-import org.sharetrace.util.Log;
-import org.sharetrace.util.Loggable;
+import org.sharetrace.util.NodeEvent;
 import org.slf4j.Logger;
 
 /**
@@ -58,7 +58,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
       "{\"event\": \"currentRefresh\", \"of\": \"{}\", \"oldValue\": {}, \"newValue\": {}, \"oldTimestamp\": \"{}\", \"newTimestamp\": \"{}\", \"oldUuid\": \"{}\", \"newUuid\": \"{}\"}";
 
   private final TimerScheduler<NodeMessage> timers;
-  private final Log log;
+  private final EventLog<NodeEvent> log;
   private final Map<ActorRef<NodeMessage>, Instant> contacts;
   private final Parameters parameters;
   private final BiFunction<RiskScore, Parameters, RiskScore> transmitter;
@@ -70,7 +70,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
   private Node(
       ActorContext<NodeMessage> context,
       TimerScheduler<NodeMessage> timers,
-      Log log,
+      EventLog<NodeEvent> log,
       Parameters parameters,
       BiFunction<RiskScore, Parameters, RiskScore> transmitter,
       Supplier<Instant> clock,
@@ -91,7 +91,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
   @Builder.Factory
   protected static Behavior<NodeMessage> node(
       TimerScheduler<NodeMessage> timers,
-      Log log,
+      EventLog<NodeEvent> log,
       Parameters parameters,
       BiFunction<RiskScore, Parameters, RiskScore> transmitter,
       Supplier<Instant> clock,
@@ -289,20 +289,20 @@ public class Node extends AbstractBehavior<NodeMessage> {
   }
 
   private void propagate(ActorRef<NodeMessage> contact, RiskScoreMessage message) {
-    if (log.contains(Loggable.PROPAGATE)) {
+    if (log.contains(NodeEvent.PROPAGATE)) {
       logPropagate(contact, message);
     }
     contact.tell(message);
   }
 
   private void logContact(ContactMessage message) {
-    if (log.contains(Loggable.NEW_CONTACT)) {
+    if (log.contains(NodeEvent.NEW_CONTACT)) {
       log().debug(CONTACT_FORMAT, name(self()), name(message.replyTo()));
     }
   }
 
   private void logUpdate(RiskScoreMessage previous, RiskScoreMessage current) {
-    if (log.contains(Loggable.UPDATE)) {
+    if (log.contains(NodeEvent.UPDATE)) {
       RiskScore prev = previous.score();
       RiskScore curr = current.score();
       log()
@@ -320,13 +320,13 @@ public class Node extends AbstractBehavior<NodeMessage> {
   }
 
   private void logContactsRefresh(int nRemaining, int nExpired) {
-    if (log.contains(Loggable.CONTACTS_REFRESH)) {
+    if (log.contains(NodeEvent.CONTACTS_REFRESH)) {
       log().debug(CONTACTS_REFRESH_FORMAT, name(self()), nRemaining, nExpired);
     }
   }
 
   private void logCurrentRefresh(RiskScoreMessage previous, RiskScoreMessage current) {
-    if (log.contains(Loggable.CURRENT_REFRESH)) {
+    if (log.contains(NodeEvent.CURRENT_REFRESH)) {
       RiskScore prev = previous.score();
       RiskScore curr = current.score();
       log()
@@ -343,25 +343,25 @@ public class Node extends AbstractBehavior<NodeMessage> {
   }
 
   private void logSendCurrent(ActorRef<NodeMessage> contact, RiskScoreMessage message) {
-    if (log.contains(Loggable.SEND_CURRENT)) {
+    if (log.contains(NodeEvent.SEND_CURRENT)) {
       logMessageOp(SEND_CURRENT_FORMAT, self(), contact, message);
     }
   }
 
   private void logSendCached(ActorRef<NodeMessage> contact, RiskScoreMessage message) {
-    if (log.contains(Loggable.SEND_CACHED)) {
+    if (log.contains(NodeEvent.SEND_CACHED)) {
       logMessageOp(SEND_CACHED_FORMAT, self(), contact, message);
     }
   }
 
   private void logPropagate(ActorRef<NodeMessage> contact, RiskScoreMessage message) {
-    if (log.contains(Loggable.PROPAGATE)) {
+    if (log.contains(NodeEvent.PROPAGATE)) {
       logMessageOp(PROPAGATE_FORMAT, self(), contact, message);
     }
   }
 
   private void logReceive(RiskScoreMessage message) {
-    if (log.contains(Loggable.RECEIVE)) {
+    if (log.contains(NodeEvent.RECEIVE)) {
       logMessageOp(RECEIVE_FORMAT, message.replyTo(), self(), message);
     }
   }

@@ -27,8 +27,9 @@ import org.sharetrace.model.message.Parameters;
 import org.sharetrace.model.message.RiskScore;
 import org.sharetrace.model.message.RiskScoreMessage;
 import org.sharetrace.model.message.Run;
+import org.sharetrace.util.EventLog;
 import org.sharetrace.util.IntervalCache;
-import org.sharetrace.util.Log;
+import org.sharetrace.util.NodeEvent;
 
 /**
  * A non-iterative, asynchronous implementation of the ShareTrace algorithm. The objective is to
@@ -49,7 +50,7 @@ import org.sharetrace.util.Log;
  */
 public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
 
-  private final Log log;
+  private final EventLog<NodeEvent> log;
   private final Parameters parameters;
   private final TemporalGraph<T> graph;
   private final int nNodes;
@@ -63,7 +64,7 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
 
   private RiskPropagation(
       ActorContext<AlgorithmMessage> context,
-      Log log,
+      EventLog<NodeEvent> log,
       TemporalGraph<T> graph,
       Parameters parameters,
       BiFunction<RiskScore, Parameters, RiskScore> transmitter,
@@ -87,7 +88,7 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
   @Builder.Factory
   protected static <T> Behavior<AlgorithmMessage> riskPropagation(
       TemporalGraph<T> graph,
-      Log log,
+      EventLog<NodeEvent> log,
       Parameters parameters,
       BiFunction<RiskScore, Parameters, RiskScore> transmitter,
       Supplier<Instant> clock,

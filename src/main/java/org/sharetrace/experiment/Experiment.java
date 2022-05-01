@@ -12,8 +12,9 @@ import org.sharetrace.model.message.AlgorithmMessage;
 import org.sharetrace.model.message.Parameters;
 import org.sharetrace.model.message.RiskScore;
 import org.sharetrace.model.message.RiskScoreMessage;
+import org.sharetrace.util.EventLog;
 import org.sharetrace.util.IntervalCache;
-import org.sharetrace.util.Log;
+import org.sharetrace.util.NodeEvent;
 
 public abstract class Experiment implements Runnable {
 
@@ -24,8 +25,8 @@ public abstract class Experiment implements Runnable {
 
   protected abstract Dataset<Integer> newDataset(Parameters parameters);
 
-  protected Log log() {
-    return Log.enableAll();
+  protected EventLog<NodeEvent> log() {
+    return EventLog.enableAll(NodeEvent.class);
   }
 
   protected Behavior<AlgorithmMessage> newAlgorithm() {

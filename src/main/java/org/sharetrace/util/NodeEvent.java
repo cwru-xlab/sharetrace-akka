@@ -1,6 +1,6 @@
 package org.sharetrace.util;
 
-public enum Loggable {
+public enum NodeEvent implements LoggableEvent {
   SEND_CACHED,
   SEND_CURRENT,
   PROPAGATE,
