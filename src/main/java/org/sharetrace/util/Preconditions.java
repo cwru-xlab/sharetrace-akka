@@ -15,40 +15,44 @@ public final class Preconditions {
     }
   }
 
-  public static void checkInClosedRange(
+  public static double checkInClosedRange(
       double value, double lowerBound, double upperBound, String name) {
     Supplier<String> message = () -> closedRangeMessage(name, lowerBound, upperBound, value);
-    checkInClosedRange(value, lowerBound, upperBound, message);
+    return checkInClosedRange(value, lowerBound, upperBound, message);
   }
 
-  public static void checkInClosedRange(
+  public static double checkInClosedRange(
       double value, double lowerBound, double upperBound, Supplier<String> message) {
     checkArgument(value >= lowerBound && value <= upperBound, message);
+    return value;
   }
 
-  public static void checkIsNonNegative(Duration duration, String name) {
-    checkIsNonNegative(duration, () -> nonNegativeMessage(name, duration));
+  public static Duration checkIsNonNegative(Duration duration, String name) {
+    return checkIsNonNegative(duration, () -> nonNegativeMessage(name, duration));
   }
 
-  public static void checkIsNonNegative(Duration duration, Supplier<String> message) {
+  public static Duration checkIsNonNegative(Duration duration, Supplier<String> message) {
     checkArgument(!Objects.requireNonNull(duration).isNegative(), message);
+    return duration;
   }
 
-  public static void checkIsAtLeast(double value, double lowerBound, String name) {
-    checkIsAtLeast(value, lowerBound, () -> atLeastMessage(name, lowerBound, value));
+  public static double checkIsAtLeast(double value, double lowerBound, String name) {
+    return checkIsAtLeast(value, lowerBound, () -> atLeastMessage(name, lowerBound, value));
   }
 
-  public static void checkIsAtLeast(double value, double lowerBound, Supplier<String> message) {
+  public static double checkIsAtLeast(double value, double lowerBound, Supplier<String> message) {
     checkArgument(value >= lowerBound, message);
+    return value;
   }
 
-  public static void checkIsPositive(Duration duration, String name) {
-    checkIsPositive(duration, () -> positiveMessage(name, duration));
+  public static Duration checkIsPositive(Duration duration, String name) {
+    return checkIsPositive(duration, () -> positiveMessage(name, duration));
   }
 
-  public static void checkIsPositive(Duration duration, Supplier<String> message) {
+  public static Duration checkIsPositive(Duration duration, Supplier<String> message) {
     Objects.requireNonNull(duration);
     checkArgument(!duration.isNegative() && !duration.isZero(), message);
+    return duration;
   }
 
   private static <T> String closedRangeMessage(String name, T loweBound, T upperBound, T value) {

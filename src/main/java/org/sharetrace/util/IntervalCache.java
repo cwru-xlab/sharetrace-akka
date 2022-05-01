@@ -160,16 +160,13 @@ public class IntervalCache<T> {
 
     /** Sets duration of each contiguous time interval. */
     public Builder<T> interval(Duration interval) {
-      Objects.requireNonNull(interval);
-      checkIsPositive(interval, "interval");
-      this.interval = interval;
+      this.interval = checkIsPositive(interval, "interval");
       return this;
     }
 
     /** Sets the total number of contiguous time intervals. */
     public Builder<T> nIntervals(long nIntervals) {
-      checkIsAtLeast(nIntervals, MIN_INTERVALS, "nIntervals");
-      this.nIntervals = nIntervals;
+      this.nIntervals = (long) checkIsAtLeast(nIntervals, MIN_INTERVALS, "nIntervals");
       return this;
     }
 
@@ -181,9 +178,7 @@ public class IntervalCache<T> {
 
     /** Sets the duration after which the cache will refresh. */
     public Builder<T> refreshRate(Duration refreshRate) {
-      Objects.requireNonNull(refreshRate);
-      checkIsPositive(refreshRate, "refreshRate");
-      this.refreshRate = refreshRate;
+      this.refreshRate = checkIsPositive(refreshRate, "refreshRate");
       return this;
     }
 
