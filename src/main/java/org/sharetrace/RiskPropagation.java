@@ -53,7 +53,7 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
   private final EventLog<NodeEvent> log;
   private final Parameters parameters;
   private final TemporalGraph<T> graph;
-  private final int nNodes;
+  private final long nNodes;
   private final Supplier<Instant> clock;
   private final Function<T, RiskScore> scoreFactory;
   private final BiFunction<T, T, Instant> timeFactory;

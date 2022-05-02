@@ -47,13 +47,13 @@ public class ContactGraph implements TemporalGraph<Integer> {
   }
 
   @Override
-  public int nNodes() {
-    return graph.vertexSet().size();
+  public long nNodes() {
+    return graph.iterables().vertexCount();
   }
 
   @Override
-  public int nEdges() {
-    return graph.edgeSet().size();
+  public long nEdges() {
+    return graph.iterables().edgeCount();
   }
 
   private static final class NodeIdFactory implements Supplier<Integer> {

@@ -9,7 +9,7 @@ public interface TemporalGraph<T> {
 
   Stream<List<T>> edges();
 
-  int nNodes();
+  long nNodes();
 
-  int nEdges();
+  long nEdges();
 }
