@@ -12,9 +12,9 @@ import org.sharetrace.model.message.AlgorithmMessage;
 import org.sharetrace.model.message.Parameters;
 import org.sharetrace.model.message.RiskScore;
 import org.sharetrace.model.message.RiskScoreMessage;
-import org.sharetrace.util.EventLog;
 import org.sharetrace.util.IntervalCache;
-import org.sharetrace.util.NodeEvent;
+import org.sharetrace.util.logging.EventLog;
+import org.sharetrace.util.logging.NodeEvent;
 
 public abstract class Experiment implements Runnable {
 

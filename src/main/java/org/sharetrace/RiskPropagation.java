@@ -27,9 +27,9 @@ import org.sharetrace.model.message.Parameters;
 import org.sharetrace.model.message.RiskScore;
 import org.sharetrace.model.message.RiskScoreMessage;
 import org.sharetrace.model.message.Run;
-import org.sharetrace.util.EventLog;
 import org.sharetrace.util.IntervalCache;
-import org.sharetrace.util.NodeEvent;
+import org.sharetrace.util.logging.EventLog;
+import org.sharetrace.util.logging.NodeEvent;
 
 /**
  * A non-iterative, asynchronous implementation of the ShareTrace algorithm. The objective is to

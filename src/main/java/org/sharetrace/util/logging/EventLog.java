@@ -1,4 +1,4 @@
-package org.sharetrace.util;
+package org.sharetrace.util.logging;
 
 import java.util.Collection;
 import java.util.EnumSet;

@@ -1,8 +1,8 @@
 package org.sharetrace.experiment;
 
 import java.util.stream.IntStream;
-import org.sharetrace.util.EventLog;
-import org.sharetrace.util.NodeEvent;
+import org.sharetrace.util.logging.EventLog;
+import org.sharetrace.util.logging.NodeEvent;
 
 public class RuntimeExperiment extends SyntheticExperiment {
 

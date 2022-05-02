@@ -1,4 +1,4 @@
-package org.sharetrace.util;
+package org.sharetrace.util.logging;
 
 public enum NodeEvent implements LoggableEvent {
   SEND_CACHED,

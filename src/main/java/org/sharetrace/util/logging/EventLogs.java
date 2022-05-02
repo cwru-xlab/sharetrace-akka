@@ -1,4 +1,4 @@
-package org.sharetrace.util;
+package org.sharetrace.util.logging;
 
 import java.util.HashMap;
 import java.util.Map;

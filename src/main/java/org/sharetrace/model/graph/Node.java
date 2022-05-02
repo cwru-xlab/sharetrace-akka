@@ -26,9 +26,9 @@ import org.sharetrace.model.message.Refresh;
 import org.sharetrace.model.message.RiskScore;
 import org.sharetrace.model.message.RiskScoreMessage;
 import org.sharetrace.model.message.Timeout;
-import org.sharetrace.util.EventLog;
 import org.sharetrace.util.IntervalCache;
-import org.sharetrace.util.NodeEvent;
+import org.sharetrace.util.logging.EventLog;
+import org.sharetrace.util.logging.NodeEvent;
 import org.slf4j.Logger;
 
 /**
