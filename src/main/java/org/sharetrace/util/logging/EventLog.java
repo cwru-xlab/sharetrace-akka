@@ -1,6 +1,7 @@
 package org.sharetrace.util.logging;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Objects;
 import java.util.Set;
@@ -10,7 +11,7 @@ public final class EventLog<E extends Enum<E> & LoggableEvent> {
   private final Set<E> enabled;
 
   private EventLog(Set<E> enabled) {
-    this.enabled = enabled;
+    this.enabled = Collections.unmodifiableSet(enabled);
   }
 
   public static <E extends Enum<E> & LoggableEvent> EventLog<E> enable(EnumSet<E> enable) {
