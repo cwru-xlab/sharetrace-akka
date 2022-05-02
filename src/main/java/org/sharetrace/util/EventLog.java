@@ -1,6 +1,8 @@
 package org.sharetrace.util;
 
+import java.util.Collection;
 import java.util.EnumSet;
+import java.util.Objects;
 import java.util.Set;
 
 public final class EventLog<E extends Enum<E> & LoggableEvent> {
@@ -20,7 +22,7 @@ public final class EventLog<E extends Enum<E> & LoggableEvent> {
     return enable(EnumSet.of(first, rest));
   }
 
-  public static <E extends Enum<E> & LoggableEvent> EventLog<E> enable(Set<E> enable) {
+  public static <E extends Enum<E> & LoggableEvent> EventLog<E> enable(Collection<E> enable) {
     return enable(EnumSet.copyOf(enable));
   }
 
@@ -37,15 +39,41 @@ public final class EventLog<E extends Enum<E> & LoggableEvent> {
     return disable(EnumSet.of(first, rest));
   }
 
-  public static <E extends Enum<E> & LoggableEvent> EventLog<E> disable(Set<E> disable) {
+  public static <E extends Enum<E> & LoggableEvent> EventLog<E> disable(Collection<E> disable) {
     return disable(EnumSet.copyOf(disable));
   }
 
   public static <E extends Enum<E> & LoggableEvent> EventLog<E> disableAll(Class<E> clazz) {
-    return disable(EnumSet.noneOf(clazz));
+    return enable(EnumSet.noneOf(clazz));
   }
 
   public boolean contains(E event) {
     return enabled.contains(event);
+  }
+
+  public int size() {
+    return enabled.size();
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(enabled);
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    EventLog<?> eventLog = (EventLog<?>) o;
+    return Objects.equals(enabled, eventLog.enabled);
+  }
+
+  @Override
+  public String toString() {
+    return "EventLog{" + enabled + '}';
   }
 }
