@@ -4,17 +4,29 @@
       logging config, see the Akka docs: https://doc.akka.io/docs/akka/2.6/typed/logging.html#logback -->
   <appender class="ch.qos.logback.core.ConsoleAppender" name="STDOUT" target="System.out">
     <encoder>
-      <pattern>%msg%n</pattern>
+      <pattern>[%date{ISO8601}] [%level] - %msg%n</pattern>
     </encoder>
+  </appender>
+
+  <appender class="ch.qos.logback.core.rolling.RollingFileAppender" name="FILE">
+    <encoder>
+      <pattern>[%date{ISO8601}] [%level] [%logger] [%marker] [%thread] - %msg MDC: {%mdc}%n
+      </pattern>
+    </encoder>
+    <file>myapp.log</file>
+    <immediateFlush>false</immediateFlush>
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <fileNamePattern>myapp_%d{yyyy-MM-dd}.log</fileNamePattern>
+    </rollingPolicy>
   </appender>
 
   <appender class="ch.qos.logback.classic.AsyncAppender" name="ASYNC">
     <appender-ref ref="STDOUT"/>
     <neverBlock>true</neverBlock>
-    <queueSize>4096</queueSize>
+    <queueSize>8192</queueSize>
   </appender>
 
-  <root level="INFO">
+  <root level="DEBUG">
     <appender-ref ref="ASYNC"/>
   </root>
 
