@@ -65,8 +65,7 @@ class FileDatasetFactory extends DatasetFactory {
   @Override
   protected RiskScore scoreOf(int node) {
     Duration lookBack = Duration.ofSeconds(Math.round(random.nextDouble() * scoreTtlInSeconds));
-    Instant timestamp = time.minus(lookBack);
-    return RiskScore.builder().value(random.nextDouble()).timestamp(timestamp).build();
+    return RiskScore.builder().value(random.nextDouble()).timestamp(time.minus(lookBack)).build();
   }
 
   @Override
