@@ -81,7 +81,7 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
     this.cacheFactory = cacheFactory;
     this.scoreFactory = scoreFactory;
     this.timeFactory = timeFactory;
-    this.nNodes = graph.nodes().size();
+    this.nNodes = graph.nNodes();
     this.nStopped = 0;
   }
 

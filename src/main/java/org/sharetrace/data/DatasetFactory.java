@@ -45,9 +45,7 @@ public abstract class DatasetFactory implements GraphGenerator<Integer, Edge<Int
 
       @Override
       public String toString() {
-        int nNodes = graph.nodes().size();
-        int nEdges = graph.edges().size();
-        return "Dataset{" + "nNodes=" + nNodes + ", " + "nEdges=" + nEdges + '}';
+        return "Dataset{" + "nNodes=" + graph.nNodes() + ", " + "nEdges=" + graph.nEdges() + '}';
       }
     };
   }

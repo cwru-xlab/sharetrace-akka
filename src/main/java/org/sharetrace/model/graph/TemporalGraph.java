@@ -1,11 +1,15 @@
 package org.sharetrace.model.graph;
 
-import java.util.Collection;
 import java.util.List;
+import java.util.stream.Stream;
 
 public interface TemporalGraph<T> {
 
-  Collection<T> nodes();
+  Stream<T> nodes();
 
-  Collection<List<T>> edges();
+  Stream<List<T>> edges();
+
+  int nNodes();
+
+  int nEdges();
 }

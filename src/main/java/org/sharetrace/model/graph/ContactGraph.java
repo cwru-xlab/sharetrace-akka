@@ -1,11 +1,8 @@
 package org.sharetrace.model.graph;
 
-import it.unimi.dsi.fastutil.ints.IntArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.jgrapht.Graph;
 import org.jgrapht.generate.GraphGenerator;
 import org.jgrapht.graph.DefaultGraphType;
@@ -23,12 +20,10 @@ import org.sharetrace.RiskPropagation;
  */
 public class ContactGraph implements TemporalGraph<Integer> {
 
-  private final Collection<Integer> nodes;
-  private final Collection<List<Integer>> edges;
+  private final Graph<Integer, Edge<Integer>> graph;
 
   private ContactGraph(Graph<Integer, Edge<Integer>> graph) {
-    this.nodes = mapNodes(graph.vertexSet());
-    this.edges = mapEdges(graph.edgeSet());
+    this.graph = graph;
   }
 
   public static ContactGraph create(GraphGenerator<Integer, Edge<Integer>, ?> generator) {
@@ -37,28 +32,28 @@ public class ContactGraph implements TemporalGraph<Integer> {
     return new ContactGraph(graph);
   }
 
-  private static Collection<Integer> mapNodes(Collection<Integer> nodes) {
-    return Collections.unmodifiableCollection(new IntArrayList(nodes));
-  }
-
-  private static Collection<List<Integer>> mapEdges(Collection<Edge<Integer>> edges) {
-    return edges.stream()
-        .map(edge -> List.of(edge.source(), edge.target()))
-        .collect(Collectors.toUnmodifiableList());
-  }
-
   private static Graph<Integer, Edge<Integer>> newGraph() {
     return new FastutilMapGraph<>(new NodeIdFactory(), Edge::new, DefaultGraphType.simple());
   }
 
   @Override
-  public Collection<Integer> nodes() {
-    return nodes;
+  public Stream<Integer> nodes() {
+    return graph.vertexSet().stream();
   }
 
   @Override
-  public Collection<List<Integer>> edges() {
-    return edges;
+  public Stream<List<Integer>> edges() {
+    return graph.edgeSet().stream().map(edge -> List.of(edge.source(), edge.target()));
+  }
+
+  @Override
+  public int nNodes() {
+    return graph.vertexSet().size();
+  }
+
+  @Override
+  public int nEdges() {
+    return graph.edgeSet().size();
   }
 
   private static final class NodeIdFactory implements Supplier<Integer> {
