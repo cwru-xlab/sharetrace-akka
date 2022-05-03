@@ -17,6 +17,7 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
+import net.logstash.logback.argument.StructuredArguments;
 import org.immutables.builder.Builder;
 import org.sharetrace.RiskPropagation;
 import org.sharetrace.logging.ContactEvent;
@@ -37,7 +38,6 @@ import org.sharetrace.message.RiskScoreMessage;
 import org.sharetrace.message.Timeout;
 import org.sharetrace.util.IntervalCache;
 import org.slf4j.Logger;
-
 /**
  * An actor that corresponds to a {@link ContactGraph} node. Collectively, all {@link Node}s carry
  * out the execution of {@link RiskPropagation}.
@@ -283,10 +283,11 @@ public class Node extends AbstractBehavior<NodeMessage> {
     contact.tell(message);
   }
 
-  private <T extends LoggableEvent> void logEvent(Class<T> eventType, Supplier<T> supplier) {
-    Logger log = getContext().getLog();
-    if (log.isDebugEnabled() && loggable.contains(eventType)) {
-      log.debug("{}", supplier.get());
+  @SuppressWarnings("PlaceholderCountMatchesArgumentCount")
+  private <T extends LoggableEvent> void logEvent(Class<T> type, Supplier<T> event) {
+    Logger logger = getContext().getLog();
+    if (logger.isDebugEnabled() && loggable.contains(type)) {
+      logger.debug("NodeEvent", StructuredArguments.value("event", event.get()));
     }
   }
 

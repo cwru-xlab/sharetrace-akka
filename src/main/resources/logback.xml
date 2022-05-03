@@ -2,17 +2,21 @@
 <configuration>
   <!-- This is a development logging configuration that logs to standard out, for an example of a production
       logging config, see the Akka docs: https://doc.akka.io/docs/akka/2.6/typed/logging.html#logback -->
+
   <appender class="ch.qos.logback.core.ConsoleAppender" name="STDOUT" target="System.out">
-    <encoder>
-      <pattern>[%date{ISO8601}] [%level] - %msg%n</pattern>
+    <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+      <fieldNames class="net.logstash.logback.fieldnames.ShortenedFieldNames">
+        <logger>[ignore]</logger>
+        <thread>[ignore]</thread>
+        <timestamp>[ignore]</timestamp>
+        <version>[ignore]</version>
+      </fieldNames>
     </encoder>
   </appender>
 
   <appender class="ch.qos.logback.core.rolling.RollingFileAppender" name="FILE">
-    <encoder>
-      <pattern>[%date{ISO8601}] [%level] - %msg%n</pattern>
-    </encoder>
-    <file>myapp2.log</file>
+    <encoder-ref ref="ENCODER"/>
+    <file>myapp4.log</file>
     <immediateFlush>false</immediateFlush>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
       <fileNamePattern>myapp_%d{yyyy-MM-dd}.log</fileNamePattern>
@@ -27,9 +31,9 @@
 
   <appender
     class="net.logstash.logback.appender.LoggingEventAsyncDisruptorAppender" name="LOGSTASH_ASYNC">
-    <appender-ref ref="FILE"/>
-    <neverBlock>true</neverBlock>
-    <queueSize>8192</queueSize>
+    <appender-ref ref="STDOUT"/>
+    <minBufferSize>2048</minBufferSize>
+    <waitStrategyType>blocking</waitStrategyType>
   </appender>
 
   <root level="DEBUG">

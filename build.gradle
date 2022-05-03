@@ -30,14 +30,12 @@ def versions = [
 
 dependencies {
     // Logging
-    runtimeOnly "ch.qos.logback:logback-access:$versions.logback"
     runtimeOnly "ch.qos.logback:logback-classic:$versions.logback"
     runtimeOnly "org.slf4j:slf4j-api:$versions.slf4j"
-    runtimeOnly "net.logstash.logback:logstash-logback-encoder:$versions.logstash"
+    implementation "net.logstash.logback:logstash-logback-encoder:$versions.logstash"
     // Jackson
     implementation "com.fasterxml.jackson.core:jackson-databind:$versions.jackson"
     runtimeOnly "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:$versions.jackson"
-    runtimeOnly "com.fasterxml.jackson.core:jackson-annotations:$versions.jackson"
     runtimeOnly "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$versions.jackson"
     runtimeOnly "com.fasterxml.jackson.module:jackson-module-blackbird:$versions.jackson"
     // Immutables
@@ -54,7 +52,7 @@ dependencies {
     implementation "info.picocli:picocli:$versions.picoli"
     annotationProcessor "info.picocli:picocli-codegen:$versions.picoli"
     // Testing
-    implementation "com.github.spotbugs:spotbugs-annotations:$versions.spotBugs"
+    compileOnly "com.github.spotbugs:spotbugs-annotations:$versions.spotBugs"
     testImplementation "org.junit.jupiter:junit-jupiter-api:$versions.junit"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$versions.junit"
 }
