@@ -1,4 +1,4 @@
-package org.sharetrace.model.graph;
+package org.sharetrace.graph;
 
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
@@ -20,13 +20,13 @@ import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import org.immutables.builder.Builder;
 import org.sharetrace.RiskPropagation;
-import org.sharetrace.model.message.ContactMessage;
-import org.sharetrace.model.message.NodeMessage;
-import org.sharetrace.model.message.Parameters;
-import org.sharetrace.model.message.Refresh;
-import org.sharetrace.model.message.RiskScore;
-import org.sharetrace.model.message.RiskScoreMessage;
-import org.sharetrace.model.message.Timeout;
+import org.sharetrace.message.ContactMessage;
+import org.sharetrace.message.NodeMessage;
+import org.sharetrace.message.Parameters;
+import org.sharetrace.message.Refresh;
+import org.sharetrace.message.RiskScore;
+import org.sharetrace.message.RiskScoreMessage;
+import org.sharetrace.message.Timeout;
 import org.sharetrace.util.IntervalCache;
 import org.sharetrace.util.logging.ContactEvent;
 import org.sharetrace.util.logging.ContactsRefreshEvent;

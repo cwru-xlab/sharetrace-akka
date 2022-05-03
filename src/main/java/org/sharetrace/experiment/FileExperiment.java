@@ -5,7 +5,7 @@ import java.util.Random;
 import java.util.stream.IntStream;
 import org.sharetrace.data.Dataset;
 import org.sharetrace.data.FileDatasetBuilder;
-import org.sharetrace.model.message.Parameters;
+import org.sharetrace.message.Parameters;
 
 public class FileExperiment extends Experiment {
 

@@ -5,10 +5,10 @@ import java.time.Instant;
 import org.jgrapht.Graph;
 import org.jgrapht.GraphType;
 import org.jgrapht.generate.GraphGenerator;
-import org.sharetrace.model.graph.ContactGraph;
-import org.sharetrace.model.graph.Edge;
-import org.sharetrace.model.graph.TemporalGraph;
-import org.sharetrace.model.message.RiskScore;
+import org.sharetrace.graph.ContactGraph;
+import org.sharetrace.graph.Edge;
+import org.sharetrace.graph.TemporalGraph;
+import org.sharetrace.message.RiskScore;
 
 public abstract class DatasetFactory implements GraphGenerator<Integer, Edge<Integer>, Integer> {
 

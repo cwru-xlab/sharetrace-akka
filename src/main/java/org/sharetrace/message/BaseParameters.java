@@ -1,4 +1,4 @@
-package org.sharetrace.model.message;
+package org.sharetrace.message;
 
 import static org.sharetrace.util.Preconditions.checkInClosedRange;
 import static org.sharetrace.util.Preconditions.checkIsAtLeast;
@@ -7,8 +7,8 @@ import static org.sharetrace.util.Preconditions.checkIsPositive;
 import java.time.Duration;
 import org.immutables.value.Value;
 import org.sharetrace.RiskPropagation;
-import org.sharetrace.model.graph.ContactGraph;
-import org.sharetrace.model.graph.Node;
+import org.sharetrace.graph.ContactGraph;
+import org.sharetrace.graph.Node;
 
 /**
  * A collection of values that modify the behavior of a {@link Node} while passing messages during

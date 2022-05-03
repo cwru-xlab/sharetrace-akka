@@ -13,8 +13,8 @@ import java.util.Random;
 import java.util.Set;
 import org.immutables.builder.Builder;
 import org.jgrapht.Graph;
-import org.sharetrace.model.graph.Edge;
-import org.sharetrace.model.message.RiskScore;
+import org.sharetrace.graph.Edge;
+import org.sharetrace.message.RiskScore;
 
 class FileDatasetFactory extends DatasetFactory {
 

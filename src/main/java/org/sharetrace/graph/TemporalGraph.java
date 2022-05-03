@@ -1,4 +1,4 @@
-package org.sharetrace.model.graph;
+package org.sharetrace.graph;
 
 import java.util.List;
 import java.util.stream.Stream;

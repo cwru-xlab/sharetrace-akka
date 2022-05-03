@@ -1,8 +1,8 @@
 package org.sharetrace.data;
 
 import java.time.Instant;
-import org.sharetrace.model.graph.TemporalGraph;
-import org.sharetrace.model.message.RiskScore;
+import org.sharetrace.graph.TemporalGraph;
+import org.sharetrace.message.RiskScore;
 
 public interface Dataset<T> {
 

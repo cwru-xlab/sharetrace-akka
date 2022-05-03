@@ -4,8 +4,8 @@ import java.util.Random;
 import org.jgrapht.generate.GraphGenerator;
 import org.sharetrace.data.Dataset;
 import org.sharetrace.data.SyntheticDatasetBuilder;
-import org.sharetrace.model.graph.Edge;
-import org.sharetrace.model.message.Parameters;
+import org.sharetrace.graph.Edge;
+import org.sharetrace.message.Parameters;
 
 public abstract class SyntheticExperiment extends Experiment {
 

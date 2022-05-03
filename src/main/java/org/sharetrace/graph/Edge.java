@@ -1,4 +1,4 @@
-package org.sharetrace.model.graph;
+package org.sharetrace.graph;
 
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.util.TypeUtil;

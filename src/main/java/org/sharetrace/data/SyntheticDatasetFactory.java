@@ -8,8 +8,8 @@ import java.util.function.Supplier;
 import org.immutables.builder.Builder;
 import org.jgrapht.Graph;
 import org.jgrapht.generate.GraphGenerator;
-import org.sharetrace.model.graph.Edge;
-import org.sharetrace.model.message.RiskScore;
+import org.sharetrace.graph.Edge;
+import org.sharetrace.message.RiskScore;
 
 class SyntheticDatasetFactory extends DatasetFactory {
 

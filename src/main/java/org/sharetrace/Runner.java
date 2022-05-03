@@ -5,8 +5,8 @@ import akka.actor.typed.ActorSystem;
 import akka.actor.typed.Behavior;
 import akka.actor.typed.Terminated;
 import akka.actor.typed.javadsl.Behaviors;
-import org.sharetrace.model.message.AlgorithmMessage;
-import org.sharetrace.model.message.Run;
+import org.sharetrace.message.AlgorithmMessage;
+import org.sharetrace.message.Run;
 
 public class Runner {
 

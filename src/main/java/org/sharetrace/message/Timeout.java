@@ -1,4 +1,4 @@
-package org.sharetrace.model.message;
+package org.sharetrace.message;
 
 public enum Timeout implements NodeMessage {
   INSTANCE
