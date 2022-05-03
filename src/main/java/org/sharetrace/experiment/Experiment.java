@@ -102,7 +102,7 @@ public abstract class Experiment implements Runnable {
   protected IntervalCache<RiskScoreMessage> newCache() {
     return IntervalCache.<RiskScoreMessage>builder()
         .nIntervals(cacheIntervals())
-        .nBuffer(cacheBuffer())
+        .nLookAhead(cacheBuffer())
         .interval(cacheInterval())
         .refreshRate(cacheRefreshRate())
         .clock(clock())

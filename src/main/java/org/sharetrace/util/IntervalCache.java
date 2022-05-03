@@ -35,17 +35,18 @@ import javax.annotation.Nullable;
 public class IntervalCache<T> {
 
   public static final long MIN_INTERVALS = 1L;
-  public static final long MIN_BUFFER = MIN_INTERVALS;
+  public static final long MIN_LOOK_AHEAD = MIN_INTERVALS;
   public static final Duration DEFAULT_REFRESH_RATE = Duration.ofMinutes(1L);
   public static final Duration DEFAULT_INTERVAL = Duration.ofDays(1L);
   public static final Supplier<Instant> DEFAULT_CLOCK = Instant::now;
   public static final boolean DEFAULT_PRIORITIZE_READS = false;
+
   private final SortedMap<Instant, T> cache;
   private final BinaryOperator<T> mergeStrategy;
   private final Supplier<Instant> clock;
   private final Duration interval;
-  private final long nIntervals;
-  private final long nBuffer;
+  private final Duration lookBack;
+  private final Duration lookAhead;
   private final Duration refreshRate;
   private Instant lastRefresh;
   private Instant rangeStart;
@@ -56,8 +57,8 @@ public class IntervalCache<T> {
     mergeStrategy = builder.mergeStrategy;
     clock = builder.clock;
     interval = builder.interval;
-    nIntervals = builder.nIntervals;
-    nBuffer = builder.nBuffer;
+    lookBack = builder.lookBack;
+    lookAhead = builder.lookAhead;
     refreshRate = builder.refreshRate;
     lastRefresh = clock.get();
     updateRange();
@@ -143,8 +144,8 @@ public class IntervalCache<T> {
 
   private void updateRange() {
     Instant now = clock.get();
-    rangeStart = now.minus(interval.multipliedBy(nIntervals - nBuffer));
-    rangeEnd = now.plus(interval.multipliedBy(nBuffer));
+    rangeStart = now.minus(lookBack);
+    rangeEnd = now.plus(lookAhead);
   }
 
   public static final class Builder<T> {
@@ -153,7 +154,9 @@ public class IntervalCache<T> {
     private Supplier<Instant> clock = DEFAULT_CLOCK;
     private Duration interval = DEFAULT_INTERVAL;
     private long nIntervals = MIN_INTERVALS;
-    private long nBuffer = MIN_BUFFER;
+    private long nLookAhead = MIN_LOOK_AHEAD;
+    private Duration lookBack;
+    private Duration lookAhead;
     private Duration refreshRate = DEFAULT_REFRESH_RATE;
     private boolean prioritizeReads = DEFAULT_PRIORITIZE_READS;
     private SortedMap<Instant, T> cache;
@@ -171,8 +174,8 @@ public class IntervalCache<T> {
     }
 
     /** Sets the number of "future" time intervals. */
-    public Builder<T> nBuffer(long nBuffer) {
-      this.nBuffer = nBuffer;
+    public Builder<T> nLookAhead(long nLookAhead) {
+      this.nLookAhead = nLookAhead;
       return this;
     }
 
@@ -202,7 +205,9 @@ public class IntervalCache<T> {
 
     /** Returns an initialized instance of the cache. */
     public IntervalCache<T> build() {
-      checkInClosedRange(nBuffer, MIN_BUFFER, nIntervals, "nBuffer");
+      checkInClosedRange(nLookAhead, MIN_LOOK_AHEAD, nIntervals, "nLookHead");
+      lookBack = interval.multipliedBy(nIntervals - nLookAhead);
+      lookAhead = interval.multipliedBy(nLookAhead);
       cache = newCache();
       return new IntervalCache<>(this);
     }
