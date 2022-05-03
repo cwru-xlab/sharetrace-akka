@@ -64,6 +64,15 @@ public class IntervalCache<T> {
     updateRange();
   }
 
+  private void refresh() {
+    Duration sinceRefresh = Duration.between(lastRefresh, clock.get());
+    if (sinceRefresh.compareTo(refreshRate) > 0) {
+      updateRange();
+      cache.headMap(rangeStart).clear();
+      lastRefresh = clock.get();
+    }
+  }
+
   public static <T> Builder<T> builder() {
     return new Builder<>();
   }
@@ -85,6 +94,23 @@ public class IntervalCache<T> {
     return isInRange(timestamp) ? cache.get(floorKey(timestamp)) : null;
   }
 
+  private void updateRange() {
+    Instant now = clock.get();
+    rangeStart = now.minus(lookBack);
+    rangeEnd = now.plus(lookAhead);
+  }
+
+  private Instant floorKey(Instant timestamp) {
+    Duration sinceStart = Duration.between(rangeStart, timestamp);
+    long multiplier = (long) Math.floor(sinceStart.dividedBy(interval));
+    return rangeStart.plus(interval.multipliedBy(multiplier));
+  }
+
+  private Instant checkInRange(Instant timestamp) {
+    checkArgument(isInRange(timestamp), () -> rangeMessage(timestamp));
+    return timestamp;
+  }
+
   /**
    * Adds the specified value to the time interval that contains the specified timestamp according
    * merge strategy of this instance. Prior to adding the value, the cache is possibly refreshed if
@@ -100,6 +126,14 @@ public class IntervalCache<T> {
     cache.merge(key, value, mergeStrategy);
   }
 
+  private boolean isInRange(Instant timestamp) {
+    return rangeStart.isBefore(timestamp) && rangeEnd.isAfter(timestamp);
+  }
+
+  private String rangeMessage(Instant timestamp) {
+    return "'timestamp' must be between " + rangeStart + " and " + rangeEnd + "; got " + timestamp;
+  }
+
   /**
    * Returns the maximum value, according to the specified comparator, whose time interval ends
    * prior to specified timestamp. If no values have been cached in the time intervals that end
@@ -112,40 +146,6 @@ public class IntervalCache<T> {
     Objects.requireNonNull(comparator);
     refresh();
     return cache.headMap(timestamp).values().stream().max(comparator).orElse(null);
-  }
-
-  private Instant floorKey(Instant timestamp) {
-    Duration sinceStart = Duration.between(rangeStart, timestamp);
-    long multiplier = (long) Math.floor(sinceStart.dividedBy(interval));
-    return rangeStart.plus(interval.multipliedBy(multiplier));
-  }
-
-  private Instant checkInRange(Instant timestamp) {
-    checkArgument(isInRange(timestamp), () -> rangeMessage(timestamp));
-    return timestamp;
-  }
-
-  private boolean isInRange(Instant timestamp) {
-    return rangeStart.isBefore(timestamp) && rangeEnd.isAfter(timestamp);
-  }
-
-  private String rangeMessage(Instant timestamp) {
-    return "'timestamp' must be between " + rangeStart + " and " + rangeEnd + "; got " + timestamp;
-  }
-
-  private void refresh() {
-    Duration sinceRefresh = Duration.between(lastRefresh, clock.get());
-    if (sinceRefresh.compareTo(refreshRate) > 0) {
-      updateRange();
-      cache.headMap(rangeStart).clear();
-      lastRefresh = clock.get();
-    }
-  }
-
-  private void updateRange() {
-    Instant now = clock.get();
-    rangeStart = now.minus(lookBack);
-    rangeEnd = now.plus(lookAhead);
   }
 
   public static final class Builder<T> {

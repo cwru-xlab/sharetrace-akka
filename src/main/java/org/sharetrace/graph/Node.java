@@ -75,6 +75,30 @@ public class Node extends AbstractBehavior<NodeMessage> {
     startRefreshTimer();
   }
 
+  private RiskScoreMessage cached(RiskScoreMessage message) {
+    cache.put(message.score().timestamp(), message);
+    return message;
+  }
+
+  private RiskScoreMessage defaultMessage() {
+    return RiskScoreMessage.builder()
+        .score(RiskScore.of(RiskScore.MIN_VALUE, clock.get()))
+        .replyTo(self())
+        .build();
+  }
+
+  private ActorRef<NodeMessage> self() {
+    return getContext().getSelf();
+  }
+
+  private void setSendThreshold() {
+    sendThreshold = current.score().value() * parameters.transmissionRate();
+  }
+
+  private void startRefreshTimer() {
+    timers.startTimerWithFixedDelay(Refresh.INSTANCE, parameters.refreshRate());
+  }
+
   @Builder.Factory
   protected static Behavior<NodeMessage> node(
       TimerScheduler<NodeMessage> timers,
@@ -137,13 +161,6 @@ public class Node extends AbstractBehavior<NodeMessage> {
     return cache.headMax(timestamp, RiskScoreMessage::compareTo);
   }
 
-  private RiskScoreMessage defaultMessage() {
-    return RiskScoreMessage.builder()
-        .score(RiskScore.of(RiskScore.MIN_VALUE, clock.get()))
-        .replyTo(self())
-        .build();
-  }
-
   private Behavior<NodeMessage> onContactMessage(ContactMessage message) {
     if (isContactAlive(message)) {
       logContact(message);
@@ -198,11 +215,6 @@ public class Node extends AbstractBehavior<NodeMessage> {
       current = message;
       setSendThreshold();
     }
-  }
-
-  private RiskScoreMessage cached(RiskScoreMessage message) {
-    cache.put(message.score().timestamp(), message);
-    return message;
   }
 
   private void propagate(RiskScoreMessage message) {
@@ -266,16 +278,8 @@ public class Node extends AbstractBehavior<NodeMessage> {
     return timeToLive.compareTo(sinceTimestamp) >= 0;
   }
 
-  private void setSendThreshold() {
-    sendThreshold = current.score().value() * parameters.transmissionRate();
-  }
-
   private void resetTimeout() {
     timers.startSingleTimer(Timeout.INSTANCE, parameters.idleTimeout());
-  }
-
-  private void startRefreshTimer() {
-    timers.startTimerWithFixedDelay(Refresh.INSTANCE, parameters.refreshRate());
   }
 
   private void propagate(ActorRef<NodeMessage> contact, RiskScoreMessage message) {
@@ -381,10 +385,6 @@ public class Node extends AbstractBehavior<NodeMessage> {
                 .score(message.score())
                 .uuid(message.uuid())
                 .build());
-  }
-
-  private ActorRef<NodeMessage> self() {
-    return getContext().getSelf();
   }
 
   private String name() {

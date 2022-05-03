@@ -23,6 +23,12 @@ abstract class BaseRiskScore implements Comparable<BaseRiskScore> {
   public static final double MIN_VALUE = 0d;
   public static final double MAX_VALUE = 1d;
 
+  @Override
+  public int compareTo(BaseRiskScore score) {
+    int byValue = Double.compare(value(), score.value());
+    return byValue != 0 ? byValue : timestamp().compareTo(score.timestamp());
+  }
+
   /** Returns the magnitude of this risk score; modified during {@link RiskPropagation}. */
   @Value.Parameter
   public abstract double value();
@@ -32,12 +38,6 @@ abstract class BaseRiskScore implements Comparable<BaseRiskScore> {
    */
   @Value.Parameter
   public abstract Instant timestamp();
-
-  @Override
-  public int compareTo(BaseRiskScore score) {
-    int byValue = Double.compare(value(), score.value());
-    return byValue != 0 ? byValue : timestamp().compareTo(score.timestamp());
-  }
 
   @Value.Check
   protected void check() {

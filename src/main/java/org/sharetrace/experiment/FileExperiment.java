@@ -28,14 +28,6 @@ public class FileExperiment extends Experiment {
     new FileExperiment(path, TAB_DELIMITER, nRepeats, seed).run();
   }
 
-  public static void runSpaceDelimited(Path path, int nRepeats, long seed) {
-    new FileExperiment(path, SPACE_DELIMITER, nRepeats, seed).run();
-  }
-
-  public static void runCommaDelimited(Path path, int nRepeats, long seed) {
-    new FileExperiment(path, COMMA_DELIMITER, nRepeats, seed).run();
-  }
-
   @Override
   public void run() {
     IntStream.range(0, nRepeats).forEach(x -> super.run());
@@ -50,5 +42,13 @@ public class FileExperiment extends Experiment {
         .delimiter(delimiter)
         .path(path)
         .build();
+  }
+
+  public static void runSpaceDelimited(Path path, int nRepeats, long seed) {
+    new FileExperiment(path, SPACE_DELIMITER, nRepeats, seed).run();
+  }
+
+  public static void runCommaDelimited(Path path, int nRepeats, long seed) {
+    new FileExperiment(path, COMMA_DELIMITER, nRepeats, seed).run();
   }
 }

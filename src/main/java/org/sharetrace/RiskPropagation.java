@@ -125,10 +125,22 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
     return behavior;
   }
 
+  private void setScores(Map<T, ActorRef<NodeMessage>> nodes) {
+    nodes.forEach(this::sendFirstScore);
+  }
+
   private Map<T, ActorRef<NodeMessage>> newNodes() {
     Map<T, ActorRef<NodeMessage>> nodes = new Object2ObjectOpenHashMap<>();
     graph.nodes().forEach(name -> nodes.put(name, newNode(name)));
     return nodes;
+  }
+
+  private void setContacts(Map<?, ActorRef<NodeMessage>> nodes) {
+    graph.edges().forEach(edge -> sendContact(edge, nodes));
+  }
+
+  private void sendFirstScore(T name, ActorRef<NodeMessage> node) {
+    node.tell(RiskScoreMessage.builder().score(scoreFactory.apply(name)).replyTo(node).build());
   }
 
   private ActorRef<NodeMessage> newNode(T name) {
@@ -137,16 +149,12 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
     return node;
   }
 
-  private Behavior<NodeMessage> newNode() {
-    return Behaviors.withTimers(
-        timers ->
-            NodeBuilder.create()
-                .timers(timers)
-                .addAllLoggable(loggable)
-                .parameters(parameters)
-                .clock(clock)
-                .cache(cacheFactory.get())
-                .build());
+  private void sendContact(List<T> edge, Map<?, ActorRef<NodeMessage>> nodes) {
+    ActorRef<NodeMessage> node1 = nodes.get(edge.get(0));
+    ActorRef<NodeMessage> node2 = nodes.get(edge.get(1));
+    Instant timestamp = timeFactory.apply(edge.get(0), edge.get(1));
+    node1.tell(ContactMessage.builder().replyTo(node2).timestamp(timestamp).build());
+    node2.tell(ContactMessage.builder().replyTo(node1).timestamp(timestamp).build());
   }
 
   private Behavior<AlgorithmMessage> onTerminate(Terminated terminated) {
@@ -160,23 +168,15 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
     return behavior;
   }
 
-  private void sendContact(List<T> edge, Map<?, ActorRef<NodeMessage>> nodes) {
-    ActorRef<NodeMessage> node1 = nodes.get(edge.get(0));
-    ActorRef<NodeMessage> node2 = nodes.get(edge.get(1));
-    Instant timestamp = timeFactory.apply(edge.get(0), edge.get(1));
-    node1.tell(ContactMessage.builder().replyTo(node2).timestamp(timestamp).build());
-    node2.tell(ContactMessage.builder().replyTo(node1).timestamp(timestamp).build());
-  }
-
-  private void sendFirstScore(T name, ActorRef<NodeMessage> node) {
-    node.tell(RiskScoreMessage.builder().score(scoreFactory.apply(name)).replyTo(node).build());
-  }
-
-  private void setScores(Map<T, ActorRef<NodeMessage>> nodes) {
-    nodes.forEach(this::sendFirstScore);
-  }
-
-  private void setContacts(Map<?, ActorRef<NodeMessage>> nodes) {
-    graph.edges().forEach(edge -> sendContact(edge, nodes));
+  private Behavior<NodeMessage> newNode() {
+    return Behaviors.withTimers(
+        timers ->
+            NodeBuilder.create()
+                .timers(timers)
+                .addAllLoggable(loggable)
+                .parameters(parameters)
+                .clock(clock)
+                .cache(cacheFactory.get())
+                .build());
   }
 }

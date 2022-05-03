@@ -28,19 +28,6 @@ public abstract class Experiment implements Runnable {
     Runner.run(newAlgorithm(), "RiskPropagation");
   }
 
-  protected abstract Dataset<Integer> newDataset(Parameters parameters);
-
-  protected Set<Class<? extends LoggableEvent>> loggable() {
-    return Set.of(
-        ContactEvent.class,
-        CurrentRefreshEvent.class,
-        ContactsRefreshEvent.class,
-        ReceiveEvent.class,
-        PropagateEvent.class,
-        SendCurrentEvent.class,
-        SendCachedEvent.class);
-  }
-
   protected Behavior<AlgorithmMessage> newAlgorithm() {
     Parameters parameters = parameters();
     Dataset<Integer> dataset = newDataset(parameters);
@@ -55,10 +42,6 @@ public abstract class Experiment implements Runnable {
         .build();
   }
 
-  protected Supplier<Instant> clock() {
-    return Instant::now;
-  }
-
   protected Parameters parameters() {
     return Parameters.builder()
         .sendTolerance(sendTolerance())
@@ -71,32 +54,17 @@ public abstract class Experiment implements Runnable {
         .build();
   }
 
-  protected double sendTolerance() {
-    return 0.6d;
-  }
+  protected abstract Dataset<Integer> newDataset(Parameters parameters);
 
-  protected double transmissionRate() {
-    return 0.8d;
-  }
-
-  protected Duration scoreTtl() {
-    return defaultTtl();
-  }
-
-  protected Duration contactTtl() {
-    return defaultTtl();
-  }
-
-  protected Duration timeBuffer() {
-    return Duration.ofDays(2L);
-  }
-
-  protected Duration nodeTimeout() {
-    return Duration.ofSeconds(5L);
-  }
-
-  protected Duration nodeRefreshRate() {
-    return Duration.ofHours(1L);
+  protected Set<Class<? extends LoggableEvent>> loggable() {
+    return Set.of(
+        ContactEvent.class,
+        CurrentRefreshEvent.class,
+        ContactsRefreshEvent.class,
+        ReceiveEvent.class,
+        PropagateEvent.class,
+        SendCurrentEvent.class,
+        SendCachedEvent.class);
   }
 
   protected IntervalCache<RiskScoreMessage> newCache() {
@@ -109,6 +77,38 @@ public abstract class Experiment implements Runnable {
         .mergeStrategy(this::cacheMerge)
         .prioritizeReads(cachePrioritizeReads())
         .build();
+  }
+
+  protected Supplier<Instant> clock() {
+    return Instant::now;
+  }
+
+  protected double sendTolerance() {
+    return 0.6d;
+  }
+
+  protected double transmissionRate() {
+    return 0.8d;
+  }
+
+  protected boolean cachePrioritizeReads() {
+    return false;
+  }
+
+  protected Duration scoreTtl() {
+    return defaultTtl();
+  }
+
+  protected Duration contactTtl() {
+    return defaultTtl();
+  }
+
+  protected Duration nodeTimeout() {
+    return Duration.ofSeconds(5L);
+  }
+
+  protected Duration nodeRefreshRate() {
+    return Duration.ofHours(1L);
   }
 
   protected long cacheIntervals() {
@@ -127,14 +127,6 @@ public abstract class Experiment implements Runnable {
     return Duration.ofHours(1L);
   }
 
-  protected boolean cachePrioritizeReads() {
-    return false;
-  }
-
-  protected Duration defaultTtl() {
-    return Duration.ofDays(14L);
-  }
-
   protected RiskScoreMessage cacheMerge(RiskScoreMessage oldScore, RiskScoreMessage newScore) {
     double oldValue = oldScore.score().value();
     double newValue = newScore.score().value();
@@ -143,5 +135,13 @@ public abstract class Experiment implements Runnable {
     boolean isHigher = oldValue < newValue;
     boolean isOlder = oldValue == newValue && oldTimestamp.isAfter(newTimestamp);
     return isHigher || isOlder ? newScore : oldScore;
+  }
+
+  protected Duration timeBuffer() {
+    return Duration.ofDays(2L);
+  }
+
+  protected Duration defaultTtl() {
+    return Duration.ofDays(14L);
   }
 }

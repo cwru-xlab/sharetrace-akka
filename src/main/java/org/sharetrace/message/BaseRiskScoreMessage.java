@@ -10,8 +10,6 @@ import org.sharetrace.graph.Node;
 @Value.Immutable
 abstract class BaseRiskScoreMessage implements NodeMessage, Comparable<BaseRiskScoreMessage> {
 
-  public abstract RiskScore score();
-
   /**
    * Returns the actor reference associated with the {@link Node} that propagates this risk score.
    */
@@ -21,6 +19,8 @@ abstract class BaseRiskScoreMessage implements NodeMessage, Comparable<BaseRiskS
   public int compareTo(BaseRiskScoreMessage message) {
     return score().compareTo(message.score());
   }
+
+  public abstract RiskScore score();
 
   /**
    * Returns a universally unique identifier that can be used to correlate risk scores as they

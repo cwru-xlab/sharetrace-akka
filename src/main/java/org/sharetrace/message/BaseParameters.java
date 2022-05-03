@@ -21,6 +21,26 @@ abstract class BaseParameters implements NodeMessage {
   public static final double MAX_TRANSMISSION_RATE = 1d;
   public static final double MIN_SEND_TOLERANCE = 0d;
 
+  @Value.Check
+  protected void check() {
+    checkInClosedRange(
+        transmissionRate(), MIN_TRANSMISSION_RATE, MAX_TRANSMISSION_RATE, "transmissionRate");
+    checkIsAtLeast(sendTolerance(), MIN_SEND_TOLERANCE, "sendTolerance");
+    checkIsNonNegative(timeBuffer(), "timeBuffer");
+    checkIsPositive(scoreTtl(), "scoreTtl");
+    checkIsPositive(contactTtl(), "contactTtl");
+    checkIsPositive(idleTimeout(), "idleTimeout");
+    checkIsPositive(refreshRate(), "refreshRate");
+  }
+
+  /**
+   * Returns the value which determines at what rate the value of a {@link RiskScore} exponentially
+   * decreases as it propagates through the {@link ContactGraph}. A transmission rate of 0 results
+   * in no value decay, and so an execution of {@link RiskPropagation} must be terminated by other
+   * means than relying on a nonzero send tolerance.
+   */
+  public abstract double transmissionRate();
+
   /**
    * Returns the value which determines the threshold that the value of a {@link RiskScore} must
    * satisfy to be propagated by a {@link Node}. Specifically, a {@link RiskScore} is only eligible
@@ -30,14 +50,6 @@ abstract class BaseParameters implements NodeMessage {
    * RiskScore} exponentially decreases with a rate constant equal to the transmission rate.
    */
   public abstract double sendTolerance();
-
-  /**
-   * Returns the value which determines at what rate the value of a {@link RiskScore} exponentially
-   * decreases as it propagates through the {@link ContactGraph}. A transmission rate of 0 results
-   * in no value decay, and so an execution of {@link RiskPropagation} must be terminated by other
-   * means than relying on a nonzero send tolerance.
-   */
-  public abstract double transmissionRate();
 
   /**
    * Returns the duration which determines to what extent a {@link RiskScore} is considered relevant
@@ -70,16 +82,4 @@ abstract class BaseParameters implements NodeMessage {
 
   // TODO Add Javadoc
   public abstract Duration refreshRate();
-
-  @Value.Check
-  protected void check() {
-    checkInClosedRange(
-        transmissionRate(), MIN_TRANSMISSION_RATE, MAX_TRANSMISSION_RATE, "transmissionRate");
-    checkIsAtLeast(sendTolerance(), MIN_SEND_TOLERANCE, "sendTolerance");
-    checkIsNonNegative(timeBuffer(), "timeBuffer");
-    checkIsPositive(scoreTtl(), "scoreTtl");
-    checkIsPositive(contactTtl(), "contactTtl");
-    checkIsPositive(idleTimeout(), "idleTimeout");
-    checkIsPositive(refreshRate(), "refreshRate");
-  }
 }

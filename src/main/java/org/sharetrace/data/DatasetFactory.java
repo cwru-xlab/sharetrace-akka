@@ -12,15 +12,15 @@ import org.sharetrace.message.RiskScore;
 
 public abstract class DatasetFactory implements GraphGenerator<Integer, Edge<Integer>, Integer> {
 
+  @Override
+  public void generateGraph(Graph<Integer, Edge<Integer>> target) {
+    generateGraph(checkGraphType(target), null);
+  }
+
   private static <T> Graph<T, Edge<T>> checkGraphType(Graph<T, Edge<T>> graph) {
     GraphType type = graph.getType();
     checkArgument(type.isSimple(), () -> "Graph must be simple; got " + type);
     return graph;
-  }
-
-  @Override
-  public void generateGraph(Graph<Integer, Edge<Integer>> target) {
-    generateGraph(checkGraphType(target), null);
   }
 
   public Dataset<Integer> createDataset() {

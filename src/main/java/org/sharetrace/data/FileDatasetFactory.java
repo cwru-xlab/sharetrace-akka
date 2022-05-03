@@ -44,14 +44,6 @@ class FileDatasetFactory extends DatasetFactory {
     return new FileDatasetFactory(path, delimiter, time, scoreTtl, random).createDataset();
   }
 
-  private static Instant newer(Instant oldValue, Instant newValue) {
-    return newValue.isAfter(oldValue) ? newValue : oldValue;
-  }
-
-  private static Set<Integer> key(int node1, int node2) {
-    return Set.of(node1, node2);
-  }
-
   @Override
   public void generateGraph(Graph<Integer, Edge<Integer>> target, Map<String, Integer> resultMap) {
     try (BufferedReader reader = Files.newBufferedReader(path)) {
@@ -62,21 +54,14 @@ class FileDatasetFactory extends DatasetFactory {
     }
   }
 
-  @Override
-  protected RiskScore scoreOf(int node) {
-    Duration lookBack = Duration.ofSeconds(Math.round(random.nextDouble() * scoreTtlInSeconds));
-    return RiskScore.builder().value(random.nextDouble()).timestamp(time.minus(lookBack)).build();
-  }
-
-  @Override
-  protected Instant contactedAt(int node1, int node2) {
-    return contacts.get(key(node1, node2));
-  }
-
   private void processLine(String line, Graph<Integer, Edge<Integer>> target) {
     Parsed parsed = new Parsed(line, delimiter);
     addToGraph(target, parsed);
     addContact(parsed);
+  }
+
+  private static Instant newer(Instant oldValue, Instant newValue) {
+    return newValue.isAfter(oldValue) ? newValue : oldValue;
   }
 
   private void addToGraph(Graph<Integer, Edge<Integer>> target, Parsed parsed) {
@@ -90,13 +75,28 @@ class FileDatasetFactory extends DatasetFactory {
     contacts.merge(key(parsed.node1, parsed.node2), parsed.timestamp, FileDatasetFactory::newer);
   }
 
+  private Instant adjustTimestamp(Set<Integer> nodes, Instant timestamp) {
+    return timestamp.plus(offset);
+  }
+
+  @Override
+  protected RiskScore scoreOf(int node) {
+    Duration lookBack = Duration.ofSeconds(Math.round(random.nextDouble() * scoreTtlInSeconds));
+    return RiskScore.builder().value(random.nextDouble()).timestamp(time.minus(lookBack)).build();
+  }
+
+  @Override
+  protected Instant contactedAt(int node1, int node2) {
+    return contacts.get(key(node1, node2));
+  }
+
+  private static Set<Integer> key(int node1, int node2) {
+    return Set.of(node1, node2);
+  }
+
   private void adjustTimestamps() {
     offset = Duration.between(lastContact, time);
     contacts.forEach((nodes, timestamp) -> contacts.computeIfPresent(nodes, this::adjustTimestamp));
-  }
-
-  private Instant adjustTimestamp(Set<Integer> nodes, Instant timestamp) {
-    return timestamp.plus(offset);
   }
 
   private static final class Parsed {
