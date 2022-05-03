@@ -13,6 +13,8 @@
     class="net.logstash.logback.appender.LoggingEventAsyncDisruptorAppender" name="logstash">
     <appendRetryFrequency>5</appendRetryFrequency> <!--Default: 0-->
     <appendTimeout>-1</appendTimeout> <!--Default: 5ms-->
+    <ringBufferSize>8192</ringBufferSize> <!--Default: 8192-->
+    <waitStrategyType>blocking</waitStrategyType> <!--Default: blocking-->
     <appender class="ch.qos.logback.core.ConsoleAppender" target="System.out">
       <encoder class="net.logstash.logback.encoder.LogstashEncoder">
         <fieldNames class="net.logstash.logback.fieldnames.ShortenedFieldNames">
@@ -33,9 +35,7 @@
         </throwableConverter>
         <timestampPattern>[UNIX_TIMESTAMP_AS_NUMBER]</timestampPattern>
       </encoder>
-    </appender> <!--Default: 8192-->
-    <ringBufferSize>8192</ringBufferSize> <!--Default: blocking-->
-    <waitStrategyType>blocking</waitStrategyType>
+    </appender>
   </appender>
 
   <root level="debug">
