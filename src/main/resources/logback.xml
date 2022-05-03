@@ -1,43 +1,45 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-  <!-- This is a development logging configuration that logs to standard out, for an example of a production
-      logging config, see the Akka docs: https://doc.akka.io/docs/akka/2.6/typed/logging.html#logback -->
-
-  <appender class="ch.qos.logback.core.ConsoleAppender" name="STDOUT" target="System.out">
-    <encoder class="net.logstash.logback.encoder.LogstashEncoder">
-      <fieldNames class="net.logstash.logback.fieldnames.ShortenedFieldNames">
-        <logger>[ignore]</logger>
-        <thread>[ignore]</thread>
-        <timestamp>[ignore]</timestamp>
-        <version>[ignore]</version>
-      </fieldNames>
-    </encoder>
-  </appender>
-
-  <appender class="ch.qos.logback.core.rolling.RollingFileAppender" name="FILE">
-    <encoder-ref ref="ENCODER"/>
-    <file>myapp4.log</file>
+  <appender class="ch.qos.logback.core.rolling.RollingFileAppender" name="file">
+    <file>myapp.log</file>
     <immediateFlush>false</immediateFlush>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
       <fileNamePattern>myapp_%d{yyyy-MM-dd}.log</fileNamePattern>
     </rollingPolicy>
   </appender>
 
-  <appender class="ch.qos.logback.classic.AsyncAppender" name="LOGBACK_ASYNC">
-    <appender-ref ref="STDOUT"/>
-    <neverBlock>true</neverBlock>
-    <queueSize>8192</queueSize>
-  </appender>
-
+  <!--Ref: https://github.com/logfellow/logstash-logback-encoder#async-appenders-->
   <appender
-    class="net.logstash.logback.appender.LoggingEventAsyncDisruptorAppender" name="LOGSTASH_ASYNC">
-    <appender-ref ref="STDOUT"/>
-    <minBufferSize>2048</minBufferSize>
+    class="net.logstash.logback.appender.LoggingEventAsyncDisruptorAppender" name="logstash">
+    <appendRetryFrequency>5</appendRetryFrequency> <!--Default: 0-->
+    <appendTimeout>-1</appendTimeout> <!--Default: 5ms-->
+    <appender class="ch.qos.logback.core.ConsoleAppender" target="System.out">
+      <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+        <fieldNames class="net.logstash.logback.fieldnames.ShortenedFieldNames">
+          <levelValue>[ignore]</levelValue>
+          <logger>[ignore]</logger>
+          <thread>[ignore]</thread>
+          <version>[ignore]</version>
+        </fieldNames>
+        <includeMdcKeyName>dummyKeyToExcludeAkkaKeys</includeMdcKeyName>
+        <throwableConverter class="net.logstash.logback.stacktrace.ShortenedThrowableConverter">
+          <exclude>sun\.reflect\..*\.invoke.*</exclude>
+          <exclude>net\.sf\.cglib\.proxy\.MethodProxy\.invoke</exclude>
+          <inlineHash>true</inlineHash>
+          <maxDepthPerThrowable>30</maxDepthPerThrowable>
+          <maxLength>2048</maxLength>
+          <rootCauseFirst>true</rootCauseFirst>
+          <shortenedClassNameLength>20</shortenedClassNameLength>
+        </throwableConverter>
+        <timestampPattern>[UNIX_TIMESTAMP_AS_NUMBER]</timestampPattern>
+      </encoder>
+    </appender> <!--Default: 8192-->
+    <ringBufferSize>8192</ringBufferSize> <!--Default: blocking-->
     <waitStrategyType>blocking</waitStrategyType>
   </appender>
 
-  <root level="DEBUG">
-    <appender-ref ref="LOGSTASH_ASYNC"/>
+  <root level="debug">
+    <appender-ref ref="logstash"/>
   </root>
 
 </configuration>
