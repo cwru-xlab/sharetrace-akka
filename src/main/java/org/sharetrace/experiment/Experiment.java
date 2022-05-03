@@ -102,7 +102,7 @@ public abstract class Experiment implements Runnable {
   protected IntervalCache<RiskScoreMessage> newCache() {
     return IntervalCache.<RiskScoreMessage>builder()
         .nIntervals(cacheIntervals())
-        .nLookAhead(cacheBuffer())
+        .nLookAhead(cacheLookAhead())
         .interval(cacheInterval())
         .refreshRate(cacheRefreshRate())
         .clock(clock())
@@ -115,7 +115,7 @@ public abstract class Experiment implements Runnable {
     return 1L + defaultTtl().toDays();
   }
 
-  protected long cacheBuffer() {
+  protected long cacheLookAhead() {
     return 1L;
   }
 
