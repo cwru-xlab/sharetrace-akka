@@ -7,7 +7,7 @@ import org.sharetrace.data.Dataset;
 import org.sharetrace.data.FileDatasetBuilder;
 import org.sharetrace.model.message.Parameters;
 
-public class FileDatasetExperiment extends Experiment {
+public class FileExperiment extends Experiment {
 
   private static final String TAB_DELIMITER = "\t";
   private static final String SPACE_DELIMITER = " ";
@@ -17,7 +17,7 @@ public class FileDatasetExperiment extends Experiment {
   private final int nRepeats;
   private final long seed;
 
-  public FileDatasetExperiment(Path path, String delimiter, int nRepeats, long seed) {
+  public FileExperiment(Path path, String delimiter, int nRepeats, long seed) {
     this.path = path;
     this.delimiter = delimiter;
     this.nRepeats = nRepeats;
@@ -25,15 +25,15 @@ public class FileDatasetExperiment extends Experiment {
   }
 
   public static void runTabDelimited(Path path, int nRepeats, long seed) {
-    new FileDatasetExperiment(path, TAB_DELIMITER, nRepeats, seed).run();
+    new FileExperiment(path, TAB_DELIMITER, nRepeats, seed).run();
   }
 
   public static void runSpaceDelimited(Path path, int nRepeats, long seed) {
-    new FileDatasetExperiment(path, SPACE_DELIMITER, nRepeats, seed).run();
+    new FileExperiment(path, SPACE_DELIMITER, nRepeats, seed).run();
   }
 
   public static void runCommaDelimited(Path path, int nRepeats, long seed) {
-    new FileDatasetExperiment(path, COMMA_DELIMITER, nRepeats, seed).run();
+    new FileExperiment(path, COMMA_DELIMITER, nRepeats, seed).run();
   }
 
   @Override
