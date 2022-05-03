@@ -1,10 +1,9 @@
-package org.sharetrace.util.logging;
+package org.sharetrace.logging;
 
-import java.util.List;
 import org.immutables.value.Value;
 
 @Value.Immutable
-interface BaseContactEvent extends LoggableEvent {
+interface BaseContactsRefreshEvent extends LoggableEvent {
 
   @Override
   @Value.Derived
@@ -14,5 +13,7 @@ interface BaseContactEvent extends LoggableEvent {
 
   String of();
 
-  List<String> nodes();
+  int nRemaining();
+
+  int nExpired();
 }

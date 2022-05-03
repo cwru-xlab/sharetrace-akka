@@ -1,9 +1,9 @@
-package org.sharetrace.util.logging;
+package org.sharetrace.logging;
 
 import org.immutables.value.Value;
 
 @Value.Immutable
-interface BaseSendCurrentEvent extends MessageEvent {
+interface BaseSendCachedEvent extends MessageEvent {
 
   @Override
   @Value.Derived

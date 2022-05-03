@@ -1,13 +1,18 @@
-package org.sharetrace.util.logging;
+package org.sharetrace.logging;
 
+import java.util.List;
 import org.immutables.value.Value;
 
 @Value.Immutable
-interface BasePropagateEvent extends MessageEvent {
+interface BaseContactEvent extends LoggableEvent {
 
   @Override
   @Value.Derived
   default String name() {
     return getClass().getSimpleName();
   }
+
+  String of();
+
+  List<String> nodes();
 }

@@ -1,4 +1,4 @@
-package org.sharetrace.util.logging;
+package org.sharetrace.logging;
 
 public interface LoggableEvent {
 

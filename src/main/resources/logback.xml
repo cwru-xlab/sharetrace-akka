@@ -10,10 +10,9 @@
 
   <appender class="ch.qos.logback.core.rolling.RollingFileAppender" name="FILE">
     <encoder>
-      <pattern>[%date{ISO8601}] [%level] [%logger] [%marker] [%thread] - %msg MDC: {%mdc}%n
-      </pattern>
+      <pattern>[%date{ISO8601}] [%level] - %msg%n</pattern>
     </encoder>
-    <file>myapp.log</file>
+    <file>myapp2.log</file>
     <immediateFlush>false</immediateFlush>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
       <fileNamePattern>myapp_%d{yyyy-MM-dd}.log</fileNamePattern>
@@ -28,7 +27,7 @@
 
   <appender
     class="net.logstash.logback.appender.LoggingEventAsyncDisruptorAppender" name="LOGSTASH_ASYNC">
-    <appender-ref ref="STDOUT"/>
+    <appender-ref ref="FILE"/>
     <neverBlock>true</neverBlock>
     <queueSize>8192</queueSize>
   </appender>

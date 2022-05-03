@@ -21,6 +21,7 @@ import org.sharetrace.graph.ContactGraph;
 import org.sharetrace.graph.Node;
 import org.sharetrace.graph.NodeBuilder;
 import org.sharetrace.graph.TemporalGraph;
+import org.sharetrace.logging.LoggableEvent;
 import org.sharetrace.message.AlgorithmMessage;
 import org.sharetrace.message.ContactMessage;
 import org.sharetrace.message.NodeMessage;
@@ -29,7 +30,6 @@ import org.sharetrace.message.RiskScore;
 import org.sharetrace.message.RiskScoreMessage;
 import org.sharetrace.message.Run;
 import org.sharetrace.util.IntervalCache;
-import org.sharetrace.util.logging.LoggableEvent;
 
 /**
  * A non-iterative, asynchronous implementation of the ShareTrace algorithm. The objective is to

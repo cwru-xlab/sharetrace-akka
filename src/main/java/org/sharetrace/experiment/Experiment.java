@@ -9,19 +9,19 @@ import java.util.function.Supplier;
 import org.sharetrace.RiskPropagationBuilder;
 import org.sharetrace.Runner;
 import org.sharetrace.data.Dataset;
+import org.sharetrace.logging.ContactEvent;
+import org.sharetrace.logging.ContactsRefreshEvent;
+import org.sharetrace.logging.CurrentRefreshEvent;
+import org.sharetrace.logging.LoggableEvent;
+import org.sharetrace.logging.PropagateEvent;
+import org.sharetrace.logging.ReceiveEvent;
+import org.sharetrace.logging.SendCachedEvent;
+import org.sharetrace.logging.SendCurrentEvent;
 import org.sharetrace.message.AlgorithmMessage;
 import org.sharetrace.message.Parameters;
 import org.sharetrace.message.RiskScore;
 import org.sharetrace.message.RiskScoreMessage;
 import org.sharetrace.util.IntervalCache;
-import org.sharetrace.util.logging.ContactEvent;
-import org.sharetrace.util.logging.ContactsRefreshEvent;
-import org.sharetrace.util.logging.CurrentRefreshEvent;
-import org.sharetrace.util.logging.LoggableEvent;
-import org.sharetrace.util.logging.PropagateEvent;
-import org.sharetrace.util.logging.ReceiveEvent;
-import org.sharetrace.util.logging.SendCachedEvent;
-import org.sharetrace.util.logging.SendCurrentEvent;
 
 public abstract class Experiment implements Runnable {
 
