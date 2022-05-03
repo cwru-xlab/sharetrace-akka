@@ -294,7 +294,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
   private void logContact(ContactMessage message) {
     logEvent(
         ContactEvent.class,
-        () -> ContactEvent.builder().addNodes(name(self()), name(message.replyTo())).build());
+        () -> ContactEvent.builder().of(name()).addNodes(name(), name(message.replyTo())).build());
   }
 
   private void logUpdate(RiskScoreMessage previous, RiskScoreMessage current) {
@@ -303,7 +303,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
         () ->
             UpdateEvent.builder()
                 .from(name(current.replyTo()))
-                .to(name(self()))
+                .to(name())
                 .oldScore(previous.score())
                 .newScore(current.score())
                 .oldUuid(previous.uuid())
@@ -316,7 +316,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
         ContactsRefreshEvent.class,
         () ->
             ContactsRefreshEvent.builder()
-                .of(name(self()))
+                .of(name())
                 .nRemaining(nRemaining)
                 .nExpired(nExpired)
                 .build());
@@ -327,7 +327,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
         CurrentRefreshEvent.class,
         () ->
             CurrentRefreshEvent.builder()
-                .of(name(self()))
+                .of(name())
                 .oldScore(previous.score())
                 .newScore(current.score())
                 .oldUuid(previous.uuid())
@@ -377,7 +377,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
         () ->
             ReceiveEvent.builder()
                 .from(name(message.replyTo()))
-                .to(name(self()))
+                .to(name())
                 .score(message.score())
                 .uuid(message.uuid())
                 .build());
@@ -385,5 +385,9 @@ public class Node extends AbstractBehavior<NodeMessage> {
 
   private ActorRef<NodeMessage> self() {
     return getContext().getSelf();
+  }
+
+  private String name() {
+    return name(self());
   }
 }

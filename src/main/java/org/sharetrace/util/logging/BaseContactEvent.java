@@ -12,5 +12,7 @@ interface BaseContactEvent extends LoggableEvent {
     return getClass().getSimpleName();
   }
 
+  String of();
+
   List<String> nodes();
 }
