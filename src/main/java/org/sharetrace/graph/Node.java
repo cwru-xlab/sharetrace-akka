@@ -14,7 +14,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
@@ -52,7 +51,6 @@ public class Node extends AbstractBehavior<NodeMessage> {
   private final Set<Class<? extends LoggableEvent>> loggable;
   private final Map<ActorRef<NodeMessage>, Instant> contacts;
   private final Parameters parameters;
-  private final BiFunction<RiskScore, Parameters, RiskScore> transmitter;
   private final Supplier<Instant> clock;
   private final IntervalCache<RiskScoreMessage> cache;
   private RiskScoreMessage current;
@@ -63,7 +61,6 @@ public class Node extends AbstractBehavior<NodeMessage> {
       TimerScheduler<NodeMessage> timers,
       Set<Class<? extends LoggableEvent>> loggable,
       Parameters parameters,
-      BiFunction<RiskScore, Parameters, RiskScore> transmitter,
       Supplier<Instant> clock,
       IntervalCache<RiskScoreMessage> cache) {
     super(context);
@@ -71,7 +68,6 @@ public class Node extends AbstractBehavior<NodeMessage> {
     this.loggable = loggable;
     this.contacts = new Object2ObjectOpenHashMap<>();
     this.parameters = parameters;
-    this.transmitter = transmitter;
     this.clock = clock;
     this.cache = cache;
     this.current = cached(defaultMessage());
@@ -84,11 +80,10 @@ public class Node extends AbstractBehavior<NodeMessage> {
       TimerScheduler<NodeMessage> timers,
       Set<Class<? extends LoggableEvent>> loggable,
       Parameters parameters,
-      BiFunction<RiskScore, Parameters, RiskScore> transmitter,
       Supplier<Instant> clock,
       IntervalCache<RiskScoreMessage> cache) {
     return Behaviors.setup(
-        context -> new Node(context, timers, loggable, parameters, transmitter, clock, cache));
+        context -> new Node(context, timers, loggable, parameters, clock, cache));
   }
 
   private static Predicate<Entry<ActorRef<NodeMessage>, Instant>> isNotFrom(
@@ -221,9 +216,14 @@ public class Node extends AbstractBehavior<NodeMessage> {
   }
 
   private RiskScoreMessage transmitted(RiskScoreMessage received) {
+    RiskScore transmitted =
+        RiskScore.builder()
+            .value(received.score().value() * parameters.transmissionRate())
+            .timestamp(received.score().timestamp())
+            .build();
     return RiskScoreMessage.builder()
         .replyTo(self())
-        .score(transmitter.apply(received.score(), parameters))
+        .score(transmitted)
         .uuid(received.uuid())
         .build();
   }
@@ -266,7 +266,6 @@ public class Node extends AbstractBehavior<NodeMessage> {
     return timeToLive.compareTo(sinceTimestamp) >= 0;
   }
 
-  // TODO Add as input? Implicitly depends on transmitter
   private void setSendThreshold() {
     sendThreshold = current.score().value() * parameters.transmissionRate();
   }

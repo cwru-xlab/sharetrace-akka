@@ -58,7 +58,6 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
   private final Function<T, RiskScore> scoreFactory;
   private final BiFunction<T, T, Instant> timeFactory;
   private final Supplier<IntervalCache<RiskScoreMessage>> cacheFactory;
-  private final BiFunction<RiskScore, Parameters, RiskScore> transmitter;
   private Instant startedAt;
   private int nStopped;
 
@@ -67,7 +66,6 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
       Set<Class<? extends LoggableEvent>> loggable,
       TemporalGraph<T> graph,
       Parameters parameters,
-      BiFunction<RiskScore, Parameters, RiskScore> transmitter,
       Supplier<Instant> clock,
       Supplier<IntervalCache<RiskScoreMessage>> cacheFactory,
       Function<T, RiskScore> scoreFactory,
@@ -76,7 +74,6 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
     this.loggable = loggable;
     this.graph = graph;
     this.parameters = parameters;
-    this.transmitter = transmitter;
     this.clock = clock;
     this.cacheFactory = cacheFactory;
     this.scoreFactory = scoreFactory;
@@ -90,7 +87,6 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
       TemporalGraph<T> graph,
       Set<Class<? extends LoggableEvent>> loggable,
       Parameters parameters,
-      BiFunction<RiskScore, Parameters, RiskScore> transmitter,
       Supplier<Instant> clock,
       Supplier<IntervalCache<RiskScoreMessage>> cacheFactory,
       Function<T, RiskScore> scoreFactory,
@@ -102,7 +98,6 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
                 loggable,
                 graph,
                 parameters,
-                transmitter,
                 clock,
                 cacheFactory,
                 scoreFactory,
@@ -149,7 +144,6 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
                 .timers(timers)
                 .addAllLoggable(loggable)
                 .parameters(parameters)
-                .transmitter(transmitter)
                 .clock(clock)
                 .cache(cacheFactory.get())
                 .build());

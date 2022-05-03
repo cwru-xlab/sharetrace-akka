@@ -4,7 +4,6 @@ import akka.actor.typed.Behavior;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Set;
-import java.util.function.BiFunction;
 import java.util.function.Supplier;
 import org.sharetrace.RiskPropagationBuilder;
 import org.sharetrace.Runner;
@@ -19,7 +18,6 @@ import org.sharetrace.logging.SendCachedEvent;
 import org.sharetrace.logging.SendCurrentEvent;
 import org.sharetrace.message.AlgorithmMessage;
 import org.sharetrace.message.Parameters;
-import org.sharetrace.message.RiskScore;
 import org.sharetrace.message.RiskScoreMessage;
 import org.sharetrace.util.IntervalCache;
 
@@ -50,7 +48,6 @@ public abstract class Experiment implements Runnable {
         .addAllLoggable(loggable())
         .graph(dataset.graph())
         .parameters(parameters)
-        .transmitter(transmitter())
         .clock(clock())
         .scoreFactory(dataset::scoreOf)
         .timeFactory(dataset::contactedAt)
@@ -60,14 +57,6 @@ public abstract class Experiment implements Runnable {
 
   protected Supplier<Instant> clock() {
     return Instant::now;
-  }
-
-  protected BiFunction<RiskScore, Parameters, RiskScore> transmitter() {
-    return (received, parameters) ->
-        RiskScore.builder()
-            .value(received.value() * parameters.transmissionRate())
-            .timestamp(received.timestamp())
-            .build();
   }
 
   protected Parameters parameters() {
