@@ -12,14 +12,14 @@ public class Runner {
 
   private Runner() {}
 
-  public static void run(Behavior<AlgorithmMessage> algorithm) {
-    ActorSystem.create(runner(algorithm), "Runner");
+  public static void run(Behavior<AlgorithmMessage> algorithm, String name) {
+    ActorSystem.create(runner(algorithm, name), name + "Runner");
   }
 
-  private static Behavior<Void> runner(Behavior<AlgorithmMessage> algorithm) {
+  private static Behavior<Void> runner(Behavior<AlgorithmMessage> algorithm, String name) {
     return Behaviors.setup(
         context -> {
-          ActorRef<AlgorithmMessage> instance = context.spawn(algorithm, "Algorithm");
+          ActorRef<AlgorithmMessage> instance = context.spawn(algorithm, name);
           context.watch(instance);
           instance.tell(Run.INSTANCE);
           return Behaviors.receive(Void.class)

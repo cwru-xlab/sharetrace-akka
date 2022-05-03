@@ -25,7 +25,7 @@ public abstract class Experiment implements Runnable {
 
   @Override
   public void run() {
-    Runner.run(newAlgorithm());
+    Runner.run(newAlgorithm(), "RiskPropagation");
   }
 
   protected abstract Dataset<Integer> newDataset(Parameters parameters);
@@ -51,7 +51,7 @@ public abstract class Experiment implements Runnable {
         .clock(clock())
         .scoreFactory(dataset::scoreOf)
         .timeFactory(dataset::contactedAt)
-        .cacheFactory(cacheFactory())
+        .cacheFactory(this::newCache)
         .build();
   }
 
@@ -99,17 +99,16 @@ public abstract class Experiment implements Runnable {
     return Duration.ofHours(1L);
   }
 
-  protected Supplier<IntervalCache<RiskScoreMessage>> cacheFactory() {
-    return () ->
-        IntervalCache.<RiskScoreMessage>builder()
-            .nIntervals(cacheIntervals())
-            .nBuffer(cacheBuffer())
-            .interval(cacheInterval())
-            .refreshRate(cacheRefreshRate())
-            .clock(clock())
-            .mergeStrategy(this::cacheMerge)
-            .prioritizeReads(cachePrioritizeReads())
-            .build();
+  protected IntervalCache<RiskScoreMessage> newCache() {
+    return IntervalCache.<RiskScoreMessage>builder()
+        .nIntervals(cacheIntervals())
+        .nBuffer(cacheBuffer())
+        .interval(cacheInterval())
+        .refreshRate(cacheRefreshRate())
+        .clock(clock())
+        .mergeStrategy(this::cacheMerge)
+        .prioritizeReads(cachePrioritizeReads())
+        .build();
   }
 
   protected long cacheIntervals() {
