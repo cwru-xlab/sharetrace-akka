@@ -22,4 +22,4 @@ import org.immutables.value.Value.Style.ImplementationVisibility;
     jdkOnly = true,
     deepImmutablesDetection = true,
     defaults = @Value.Immutable(copy = false, lazyhash = true))
-public @interface ImmutableStyle {}
+@interface ImmutableStyle {}
