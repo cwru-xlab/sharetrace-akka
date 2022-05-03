@@ -20,14 +20,21 @@
     </rollingPolicy>
   </appender>
 
-  <appender class="ch.qos.logback.classic.AsyncAppender" name="ASYNC">
+  <appender class="ch.qos.logback.classic.AsyncAppender" name="LOGBACK_ASYNC">
+    <appender-ref ref="STDOUT"/>
+    <neverBlock>true</neverBlock>
+    <queueSize>8192</queueSize>
+  </appender>
+
+  <appender
+    class="net.logstash.logback.appender.LoggingEventAsyncDisruptorAppender" name="LOGSTASH_ASYNC">
     <appender-ref ref="STDOUT"/>
     <neverBlock>true</neverBlock>
     <queueSize>8192</queueSize>
   </appender>
 
   <root level="DEBUG">
-    <appender-ref ref="ASYNC"/>
+    <appender-ref ref="LOGSTASH_ASYNC"/>
   </root>
 
 </configuration>

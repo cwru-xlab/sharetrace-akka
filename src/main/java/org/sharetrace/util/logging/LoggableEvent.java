@@ -1,3 +1,6 @@
 package org.sharetrace.util.logging;
 
-public interface LoggableEvent {}
+public interface LoggableEvent {
+
+  String name();
+}

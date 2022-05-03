@@ -18,14 +18,10 @@ import org.sharetrace.model.graph.Node;
  * are only compared by value (first) and timestamp (second).
  */
 @Value.Immutable
-public abstract class RiskScore implements Comparable<RiskScore> {
+abstract class BaseRiskScore implements Comparable<BaseRiskScore> {
 
   public static final double MIN_VALUE = 0d;
   public static final double MAX_VALUE = 1d;
-
-  public static Builder builder() {
-    return ImmutableRiskScore.builder();
-  }
 
   /** Returns the magnitude of this risk score; modified during {@link RiskPropagation}. */
   @Value.Parameter
@@ -38,7 +34,7 @@ public abstract class RiskScore implements Comparable<RiskScore> {
   public abstract Instant timestamp();
 
   @Override
-  public int compareTo(RiskScore score) {
+  public int compareTo(BaseRiskScore score) {
     int byValue = Double.compare(value(), score.value());
     return byValue != 0 ? byValue : timestamp().compareTo(score.timestamp());
   }
@@ -46,14 +42,5 @@ public abstract class RiskScore implements Comparable<RiskScore> {
   @Value.Check
   protected void check() {
     checkInClosedRange(value(), MIN_VALUE, MAX_VALUE, "value");
-  }
-
-  public interface Builder {
-
-    Builder value(double value);
-
-    Builder timestamp(Instant timestamp);
-
-    RiskScore build();
   }
 }

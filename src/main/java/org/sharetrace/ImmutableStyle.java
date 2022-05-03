@@ -1,5 +1,6 @@
 package org.sharetrace;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -9,13 +10,15 @@ import org.immutables.value.Value.Style.ImplementationVisibility;
 
 @Target({ElementType.PACKAGE, ElementType.TYPE})
 @Retention(RetentionPolicy.CLASS)
+@JsonSerialize
 @Value.Style(
     get = {"is*", "has*", "get*", "*"},
     strictBuilder = true,
-    typeAbstract = "*",
     depluralize = true,
-    visibility = ImplementationVisibility.PACKAGE,
+    visibility = ImplementationVisibility.PUBLIC,
     newBuilder = "create",
+    typeAbstract = "Base*",
+    typeImmutable = "*",
     jdkOnly = true,
     deepImmutablesDetection = true,
     defaults = @Value.Immutable(copy = false, lazyhash = true))

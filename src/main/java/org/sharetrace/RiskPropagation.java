@@ -12,6 +12,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -28,8 +29,7 @@ import org.sharetrace.model.message.RiskScore;
 import org.sharetrace.model.message.RiskScoreMessage;
 import org.sharetrace.model.message.Run;
 import org.sharetrace.util.IntervalCache;
-import org.sharetrace.util.logging.EventLog;
-import org.sharetrace.util.logging.NodeEvent;
+import org.sharetrace.util.logging.LoggableEvent;
 
 /**
  * A non-iterative, asynchronous implementation of the ShareTrace algorithm. The objective is to
@@ -50,7 +50,7 @@ import org.sharetrace.util.logging.NodeEvent;
  */
 public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
 
-  private final EventLog<NodeEvent> log;
+  private final Set<Class<? extends LoggableEvent>> loggable;
   private final Parameters parameters;
   private final TemporalGraph<T> graph;
   private final long nNodes;
@@ -64,7 +64,7 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
 
   private RiskPropagation(
       ActorContext<AlgorithmMessage> context,
-      EventLog<NodeEvent> log,
+      Set<Class<? extends LoggableEvent>> loggable,
       TemporalGraph<T> graph,
       Parameters parameters,
       BiFunction<RiskScore, Parameters, RiskScore> transmitter,
@@ -73,7 +73,7 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
       Function<T, RiskScore> scoreFactory,
       BiFunction<T, T, Instant> timeFactory) {
     super(context);
-    this.log = log;
+    this.loggable = loggable;
     this.graph = graph;
     this.parameters = parameters;
     this.transmitter = transmitter;
@@ -88,7 +88,7 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
   @Builder.Factory
   protected static <T> Behavior<AlgorithmMessage> riskPropagation(
       TemporalGraph<T> graph,
-      EventLog<NodeEvent> log,
+      Set<Class<? extends LoggableEvent>> loggable,
       Parameters parameters,
       BiFunction<RiskScore, Parameters, RiskScore> transmitter,
       Supplier<Instant> clock,
@@ -99,7 +99,7 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
         context ->
             new RiskPropagation<>(
                 context,
-                log,
+                loggable,
                 graph,
                 parameters,
                 transmitter,
@@ -147,7 +147,7 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
         timers ->
             NodeBuilder.create()
                 .timers(timers)
-                .log(log)
+                .addAllLoggable(loggable)
                 .parameters(parameters)
                 .transmitter(transmitter)
                 .clock(clock)

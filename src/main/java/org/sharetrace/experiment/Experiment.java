@@ -3,6 +3,7 @@ package org.sharetrace.experiment;
 import akka.actor.typed.Behavior;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
 import org.sharetrace.RiskPropagationBuilder;
@@ -13,8 +14,14 @@ import org.sharetrace.model.message.Parameters;
 import org.sharetrace.model.message.RiskScore;
 import org.sharetrace.model.message.RiskScoreMessage;
 import org.sharetrace.util.IntervalCache;
-import org.sharetrace.util.logging.EventLog;
-import org.sharetrace.util.logging.NodeEvent;
+import org.sharetrace.util.logging.ContactEvent;
+import org.sharetrace.util.logging.ContactsRefreshEvent;
+import org.sharetrace.util.logging.CurrentRefreshEvent;
+import org.sharetrace.util.logging.LoggableEvent;
+import org.sharetrace.util.logging.PropagateEvent;
+import org.sharetrace.util.logging.ReceiveEvent;
+import org.sharetrace.util.logging.SendCachedEvent;
+import org.sharetrace.util.logging.SendCurrentEvent;
 
 public abstract class Experiment implements Runnable {
 
@@ -25,15 +32,22 @@ public abstract class Experiment implements Runnable {
 
   protected abstract Dataset<Integer> newDataset(Parameters parameters);
 
-  protected EventLog<NodeEvent> log() {
-    return EventLog.enableAll(NodeEvent.class);
+  protected Set<Class<? extends LoggableEvent>> loggable() {
+    return Set.of(
+        ContactEvent.class,
+        CurrentRefreshEvent.class,
+        ContactsRefreshEvent.class,
+        ReceiveEvent.class,
+        PropagateEvent.class,
+        SendCurrentEvent.class,
+        SendCachedEvent.class);
   }
 
   protected Behavior<AlgorithmMessage> newAlgorithm() {
     Parameters parameters = parameters();
     Dataset<Integer> dataset = newDataset(parameters);
     return RiskPropagationBuilder.<Integer>create()
-        .log(log())
+        .addAllLoggable(loggable())
         .graph(dataset.graph())
         .parameters(parameters)
         .transmitter(transmitter())

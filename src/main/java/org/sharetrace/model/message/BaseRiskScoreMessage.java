@@ -1,7 +1,6 @@
 package org.sharetrace.model.message;
 
 import akka.actor.typed.ActorRef;
-import java.time.Instant;
 import java.util.UUID;
 import org.immutables.value.Value;
 import org.sharetrace.RiskPropagation;
@@ -9,21 +8,17 @@ import org.sharetrace.model.graph.ContactGraph;
 import org.sharetrace.model.graph.Node;
 
 @Value.Immutable
-public interface RiskScoreMessage extends NodeMessage, Comparable<RiskScoreMessage> {
+abstract class BaseRiskScoreMessage implements NodeMessage, Comparable<BaseRiskScoreMessage> {
 
-  static Builder builder() {
-    return ImmutableRiskScoreMessage.builder();
-  }
-
-  RiskScore score();
+  public abstract RiskScore score();
 
   /**
    * Returns the actor reference associated with the {@link Node} that propagates this risk score.
    */
-  ActorRef<NodeMessage> replyTo();
+  public abstract ActorRef<NodeMessage> replyTo();
 
   @Override
-  default int compareTo(RiskScoreMessage message) {
+  public int compareTo(BaseRiskScoreMessage message) {
     return score().compareTo(message.score());
   }
 
@@ -32,20 +27,7 @@ public interface RiskScoreMessage extends NodeMessage, Comparable<RiskScoreMessa
    * propagate through the {@link ContactGraph} during {@link RiskPropagation}.
    */
   @Value.Default
-  default String uuid() {
+  public String uuid() {
     return UUID.randomUUID().toString();
-  }
-
-  interface Builder {
-
-    Builder score(RiskScore score);
-
-    Builder score(double value, Instant timestamp);
-
-    Builder replyTo(ActorRef<NodeMessage> replyTo);
-
-    Builder uuid(String uuid);
-
-    RiskScoreMessage build();
   }
 }

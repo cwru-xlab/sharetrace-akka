@@ -11,25 +11,11 @@ import org.immutables.value.Value;
  * their actors.
  */
 @Value.Immutable
-public interface ContactMessage extends NodeMessage {
-
-  /** Returns the time at which the two individuals came in contact. */
-  static Builder builder() {
-    return ImmutableContactMessage.builder();
-  }
+interface BaseContactMessage extends NodeMessage {
 
   /** Returns the time at which the two individuals came in contact. */
   Instant timestamp();
 
   /** Returns the actor reference associated with the complimentary person of the contact. */
   ActorRef<NodeMessage> replyTo();
-
-  interface Builder {
-
-    Builder timestamp(Instant timestamp);
-
-    Builder replyTo(ActorRef<NodeMessage> replyTo);
-
-    ContactMessage build();
-  }
 }

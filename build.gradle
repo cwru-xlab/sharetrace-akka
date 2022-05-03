@@ -18,26 +18,43 @@ def versions = [
         akka      : "2.6.19",
         fastutil  : "8.5.8",
         immutables: "2.9.0",
+        jackson   : "2.13.2",
         jgrapht   : "1.5.1",
         junit     : "5.8.2",
         logback   : "1.2.11",
+        logstash  : "7.1.1",
         picoli    : "4.6.3",
+        slf4j     : "1.7.36",
         spotBugs  : "4.6.0"
 ]
 
 dependencies {
-    implementation "ch.qos.logback:logback-classic:$versions.logback"
-    implementation "com.github.spotbugs:spotbugs-annotations:$versions.spotBugs"
-    implementation "it.unimi.dsi:fastutil:$versions.fastutil"
+    // Logging
+    runtimeOnly "ch.qos.logback:logback-access:$versions.logback"
+    runtimeOnly "ch.qos.logback:logback-classic:$versions.logback"
+    runtimeOnly "org.slf4j:slf4j-api:$versions.slf4j"
+    runtimeOnly "net.logstash.logback:logstash-logback-encoder:$versions.logstash"
+    // Jackson
+    implementation "com.fasterxml.jackson.core:jackson-databind:$versions.jackson"
+    runtimeOnly "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:$versions.jackson"
+    runtimeOnly "com.fasterxml.jackson.core:jackson-annotations:$versions.jackson"
+    runtimeOnly "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:$versions.jackson"
+    runtimeOnly "com.fasterxml.jackson.module:jackson-module-blackbird:$versions.jackson"
+    // Immutables
     annotationProcessor "org.immutables:value:$versions.immutables"
     implementation "org.immutables:value:$versions.immutables"
     implementation "org.immutables:builder:$versions.immutables"
-    implementation "com.typesafe.akka:akka-actor-typed_$versions.akkaScala:$versions.akka"
+    // Data structures
+    implementation "it.unimi.dsi:fastutil:$versions.fastutil"
     implementation "org.jgrapht:jgrapht-core:$versions.jgrapht"
     implementation "org.jgrapht:jgrapht-opt:$versions.jgrapht"
+    // Akka
+    implementation "com.typesafe.akka:akka-actor-typed_$versions.akkaScala:$versions.akka"
+    // CLI
     implementation "info.picocli:picocli:$versions.picoli"
     annotationProcessor "info.picocli:picocli-codegen:$versions.picoli"
-
+    // Testing
+    implementation "com.github.spotbugs:spotbugs-annotations:$versions.spotBugs"
     testImplementation "org.junit.jupiter:junit-jupiter-api:$versions.junit"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$versions.junit"
 }

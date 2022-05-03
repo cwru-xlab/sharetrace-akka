@@ -15,15 +15,11 @@ import org.sharetrace.model.graph.Node;
  * an execution of {@link RiskPropagation}.
  */
 @Value.Immutable
-public abstract class Parameters implements NodeMessage {
+abstract class BaseParameters implements NodeMessage {
 
   public static final double MIN_TRANSMISSION_RATE = 0d;
   public static final double MAX_TRANSMISSION_RATE = 1d;
   public static final double MIN_SEND_TOLERANCE = 0d;
-
-  public static Builder builder() {
-    return ImmutableParameters.builder();
-  }
 
   /**
    * Returns the value which determines the threshold that the value of a {@link RiskScore} must
@@ -85,24 +81,5 @@ public abstract class Parameters implements NodeMessage {
     checkIsPositive(contactTtl(), "contactTtl");
     checkIsPositive(idleTimeout(), "idleTimeout");
     checkIsPositive(refreshRate(), "refreshRate");
-  }
-
-  public interface Builder {
-
-    Builder sendTolerance(double sendTolerance);
-
-    Builder transmissionRate(double transmissionRate);
-
-    Builder timeBuffer(Duration timeBuffer);
-
-    Builder scoreTtl(Duration scoreTtl);
-
-    Builder contactTtl(Duration contactTtl);
-
-    Builder idleTimeout(Duration idleTimeout);
-
-    Builder refreshRate(Duration refreshRate);
-
-    Parameters build();
   }
 }

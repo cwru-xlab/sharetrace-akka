@@ -1,8 +1,6 @@
 package org.sharetrace.experiment;
 
 import java.util.stream.IntStream;
-import org.sharetrace.util.logging.EventLog;
-import org.sharetrace.util.logging.NodeEvent;
 
 public class RuntimeExperiment extends SyntheticExperiment {
 
@@ -27,10 +25,5 @@ public class RuntimeExperiment extends SyntheticExperiment {
       nEdges = n * 2;
       IntStream.range(0, nRepeats).forEach(x -> super.run());
     }
-  }
-
-  @Override
-  protected EventLog<NodeEvent> log() {
-    return EventLog.disableAll(NodeEvent.class);
   }
 }
