@@ -14,6 +14,11 @@ import java.util.Set;
 import org.immutables.builder.Builder;
 import org.jgrapht.Graph;
 import org.sharetrace.graph.Edge;
+import org.sharetrace.logging.Loggable;
+import org.sharetrace.logging.metrics.GraphCycleMetrics;
+import org.sharetrace.logging.metrics.GraphEccentricityMetrics;
+import org.sharetrace.logging.metrics.GraphScoringMetrics;
+import org.sharetrace.logging.metrics.GraphSizeMetrics;
 import org.sharetrace.message.RiskScore;
 
 class FileDatasetFactory extends DatasetFactory {
@@ -60,8 +65,9 @@ class FileDatasetFactory extends DatasetFactory {
     addContact(parsed);
   }
 
-  private static Instant newer(Instant oldValue, Instant newValue) {
-    return newValue.isAfter(oldValue) ? newValue : oldValue;
+  private void adjustTimestamps() {
+    offset = Duration.between(lastContact, time);
+    contacts.forEach((nodes, timestamp) -> contacts.computeIfPresent(nodes, this::adjustTimestamp));
   }
 
   private void addToGraph(Graph<Integer, Edge<Integer>> target, Parsed parsed) {
@@ -79,6 +85,23 @@ class FileDatasetFactory extends DatasetFactory {
     return timestamp.plus(offset);
   }
 
+  private static Instant newer(Instant oldValue, Instant newValue) {
+    return newValue.isAfter(oldValue) ? newValue : oldValue;
+  }
+
+  private static Set<Integer> key(int node1, int node2) {
+    return Set.of(node1, node2);
+  }
+
+  @Override
+  protected Set<Class<? extends Loggable>> loggable() {
+    return Set.of(
+        GraphSizeMetrics.class,
+        GraphCycleMetrics.class,
+        GraphScoringMetrics.class,
+        GraphEccentricityMetrics.class);
+  }
+
   @Override
   protected RiskScore scoreOf(int node) {
     Duration lookBack = Duration.ofSeconds(Math.round(random.nextDouble() * scoreTtlInSeconds));
@@ -88,15 +111,6 @@ class FileDatasetFactory extends DatasetFactory {
   @Override
   protected Instant contactedAt(int node1, int node2) {
     return contacts.get(key(node1, node2));
-  }
-
-  private static Set<Integer> key(int node1, int node2) {
-    return Set.of(node1, node2);
-  }
-
-  private void adjustTimestamps() {
-    offset = Duration.between(lastContact, time);
-    contacts.forEach((nodes, timestamp) -> contacts.computeIfPresent(nodes, this::adjustTimestamp));
   }
 
   private static final class Parsed {
