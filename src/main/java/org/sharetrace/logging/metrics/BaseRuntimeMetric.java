@@ -1,4 +1,4 @@
-package org.sharetrace.logging;
+package org.sharetrace.logging.metrics;
 
 import org.immutables.value.Value;
 

@@ -1,4 +1,4 @@
-package org.sharetrace.logging;
+package org.sharetrace.logging.events;
 
 import org.sharetrace.message.RiskScore;
 

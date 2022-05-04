@@ -1,4 +1,4 @@
-package org.sharetrace.logging;
+package org.sharetrace.logging.events;
 
 import java.util.List;
 import org.immutables.value.Value;
