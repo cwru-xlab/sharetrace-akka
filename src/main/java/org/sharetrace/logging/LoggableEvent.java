@@ -1,6 +1,6 @@
 package org.sharetrace.logging;
 
-public interface LoggableEvent {
+public interface LoggableEvent extends Loggable {
 
-  String name();
+  String KEY = "event";
 }

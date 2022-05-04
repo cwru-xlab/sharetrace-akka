@@ -1,5 +1,6 @@
 package org.sharetrace;
 
+import static net.logstash.logback.argument.StructuredArguments.value;
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
 import akka.actor.typed.Terminated;
@@ -22,6 +23,8 @@ import org.sharetrace.graph.Node;
 import org.sharetrace.graph.NodeBuilder;
 import org.sharetrace.graph.TemporalGraph;
 import org.sharetrace.logging.LoggableEvent;
+import org.sharetrace.logging.LoggableMetric;
+import org.sharetrace.logging.RuntimeMetric;
 import org.sharetrace.message.AlgorithmMessage;
 import org.sharetrace.message.ContactMessage;
 import org.sharetrace.message.NodeMessage;
@@ -50,6 +53,7 @@ import org.sharetrace.util.IntervalCache;
  */
 public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
 
+  private static final String LOG_MESSAGE = "Metric";
   private final Set<Class<? extends LoggableEvent>> loggable;
   private final Parameters parameters;
   private final TemporalGraph<T> graph;
@@ -125,8 +129,15 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
     return behavior;
   }
 
-  private void setScores(Map<T, ActorRef<NodeMessage>> nodes) {
-    nodes.forEach(this::sendFirstScore);
+  @SuppressWarnings("PlaceholderCountMatchesArgumentCount")
+  private Behavior<AlgorithmMessage> onTerminate(Terminated terminated) {
+    Behavior<AlgorithmMessage> behavior = this;
+    if (++nStopped == nNodes) {
+      double seconds = Duration.between(startedAt, clock.get()).toNanos() / 1e9;
+      getContext().getLog().info(LOG_MESSAGE, value(LoggableMetric.KEY, RuntimeMetric.of(seconds)));
+      behavior = Behaviors.stopped();
+    }
+    return behavior;
   }
 
   private Map<T, ActorRef<NodeMessage>> newNodes() {
@@ -135,12 +146,12 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
     return nodes;
   }
 
-  private void setContacts(Map<?, ActorRef<NodeMessage>> nodes) {
-    graph.edges().forEach(edge -> sendContact(edge, nodes));
+  private void setScores(Map<T, ActorRef<NodeMessage>> nodes) {
+    nodes.forEach(this::sendFirstScore);
   }
 
-  private void sendFirstScore(T name, ActorRef<NodeMessage> node) {
-    node.tell(RiskScoreMessage.builder().score(scoreFactory.apply(name)).replyTo(node).build());
+  private void setContacts(Map<?, ActorRef<NodeMessage>> nodes) {
+    graph.edges().forEach(edge -> sendContact(edge, nodes));
   }
 
   private ActorRef<NodeMessage> newNode(T name) {
@@ -149,23 +160,16 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
     return node;
   }
 
+  private void sendFirstScore(T name, ActorRef<NodeMessage> node) {
+    node.tell(RiskScoreMessage.builder().score(scoreFactory.apply(name)).replyTo(node).build());
+  }
+
   private void sendContact(List<T> edge, Map<?, ActorRef<NodeMessage>> nodes) {
     ActorRef<NodeMessage> node1 = nodes.get(edge.get(0));
     ActorRef<NodeMessage> node2 = nodes.get(edge.get(1));
     Instant timestamp = timeFactory.apply(edge.get(0), edge.get(1));
     node1.tell(ContactMessage.builder().replyTo(node2).timestamp(timestamp).build());
     node2.tell(ContactMessage.builder().replyTo(node1).timestamp(timestamp).build());
-  }
-
-  private Behavior<AlgorithmMessage> onTerminate(Terminated terminated) {
-    Behavior<AlgorithmMessage> behavior = this;
-    if (++nStopped == nNodes) {
-      // Do not include "PT" of Duration string.
-      String runtime = Duration.between(startedAt, clock.get()).toString().substring(2);
-      getContext().getLog().info("Runtime: {}", runtime);
-      behavior = Behaviors.stopped();
-    }
-    return behavior;
   }
 
   private Behavior<NodeMessage> newNode() {

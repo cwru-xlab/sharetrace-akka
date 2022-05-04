@@ -1,5 +1,6 @@
 package org.sharetrace.graph;
 
+import static net.logstash.logback.argument.StructuredArguments.value;
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
 import akka.actor.typed.javadsl.AbstractBehavior;
@@ -17,7 +18,6 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
-import net.logstash.logback.argument.StructuredArguments;
 import org.immutables.builder.Builder;
 import org.sharetrace.RiskPropagation;
 import org.sharetrace.logging.ContactEvent;
@@ -46,6 +46,7 @@ import org.sharetrace.util.IntervalCache;
  */
 public class Node extends AbstractBehavior<NodeMessage> {
 
+  private static final String LOG_MESSAGE = "Event";
   private final TimerScheduler<NodeMessage> timers;
   private final Set<Class<? extends LoggableEvent>> loggable;
   private final Map<ActorRef<NodeMessage>, Instant> contacts;
@@ -289,7 +290,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
   @SuppressWarnings("PlaceholderCountMatchesArgumentCount")
   private <T extends LoggableEvent> void logEvent(Class<T> type, Supplier<T> event) {
     if (loggable.contains(type)) {
-      getContext().getLog().debug("NodeEvent", StructuredArguments.value("event", event.get()));
+      getContext().getLog().debug(LOG_MESSAGE, value(LoggableEvent.KEY, event.get()));
     }
   }
 
