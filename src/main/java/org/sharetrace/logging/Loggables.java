@@ -75,7 +75,7 @@ public final class Loggables {
       String key,
       Class<? extends Loggable> clazz,
       Supplier<Loggable> supplier) {
-    if (loggable.contains(supplier.getClass())) {
+    if (loggable.contains(clazz)) {
       logger.debug(message, value(key, getValue(supplier, clazz)));
     }
   }
