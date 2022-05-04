@@ -1,6 +1,8 @@
 package org.sharetrace.logging;
 
 import static net.logstash.logback.argument.StructuredArguments.value;
+import java.io.InvalidClassException;
+import java.io.UncheckedIOException;
 import java.util.Collections;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -47,11 +49,12 @@ public final class Loggables {
     T value = supplier.get();
     Class<?> valueType = value.getClass();
     if (!valueType.equals(specifiedType)) {
-      throw new ClassCastException(
-          "Type of the supplied value "
-              + valueType
-              + " does not match the specified type "
-              + specifiedType);
+      throw new UncheckedIOException(
+          new InvalidClassException(
+              "Type of the supplied value "
+                  + valueType
+                  + " does not match the specified type "
+                  + specifiedType));
     }
     return value;
   }
