@@ -22,6 +22,7 @@ import org.sharetrace.graph.ContactGraph;
 import org.sharetrace.graph.Node;
 import org.sharetrace.graph.NodeBuilder;
 import org.sharetrace.graph.TemporalGraph;
+import org.sharetrace.logging.Loggable;
 import org.sharetrace.logging.LoggableEvent;
 import org.sharetrace.logging.LoggableMetric;
 import org.sharetrace.logging.RuntimeMetric;
@@ -129,12 +130,10 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
     return behavior;
   }
 
-  @SuppressWarnings("PlaceholderCountMatchesArgumentCount")
   private Behavior<AlgorithmMessage> onTerminate(Terminated terminated) {
     Behavior<AlgorithmMessage> behavior = this;
     if (++nStopped == nNodes) {
-      double seconds = Duration.between(startedAt, clock.get()).toNanos() / 1e9;
-      getContext().getLog().info(LOG_MESSAGE, value(LoggableMetric.KEY, RuntimeMetric.of(seconds)));
+      logMetrics();
       behavior = Behaviors.stopped();
     }
     return behavior;
@@ -154,6 +153,12 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
     graph.edges().forEach(edge -> sendContact(edge, nodes));
   }
 
+  @SuppressWarnings("PlaceholderCountMatchesArgumentCount")
+  private void logMetrics() {
+    Loggable runtime = RuntimeMetric.of(runtime());
+    getContext().getLog().info(LoggableMetric.KEY, value(LoggableMetric.KEY, runtime));
+  }
+
   private ActorRef<NodeMessage> newNode(T name) {
     ActorRef<NodeMessage> node = getContext().spawn(newNode(), String.valueOf(name));
     getContext().watch(node);
@@ -170,6 +175,10 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
     Instant timestamp = timeFactory.apply(edge.get(0), edge.get(1));
     node1.tell(ContactMessage.builder().replyTo(node2).timestamp(timestamp).build());
     node2.tell(ContactMessage.builder().replyTo(node1).timestamp(timestamp).build());
+  }
+
+  private double runtime() {
+    return Duration.between(startedAt, clock.get()).toNanos() / 1e9;
   }
 
   private Behavior<NodeMessage> newNode() {
