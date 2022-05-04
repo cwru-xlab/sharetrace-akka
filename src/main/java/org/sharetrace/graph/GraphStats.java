@@ -6,7 +6,6 @@ import org.jgrapht.Graph;
 import org.jgrapht.GraphMetrics;
 import org.jgrapht.alg.interfaces.ShortestPathAlgorithm;
 import org.jgrapht.alg.interfaces.ShortestPathAlgorithm.SingleSourcePaths;
-import org.jgrapht.alg.interfaces.VertexScoringAlgorithm;
 import org.jgrapht.alg.scoring.ClosenessCentrality;
 import org.jgrapht.alg.scoring.ClusteringCoefficient;
 import org.jgrapht.alg.scoring.Coreness;
@@ -92,7 +91,7 @@ public final class GraphStats<V, E> {
     return getHarmonicCentrality().getScores();
   }
 
-  private VertexScoringAlgorithm<V, Double> getHarmonicCentrality() {
+  private HarmonicCentrality<V, E> getHarmonicCentrality() {
     if (harmonicCentrality == null) {
       harmonicCentrality = new HarmonicCentrality<>(graph, shortestPathAlgorithm);
     }
