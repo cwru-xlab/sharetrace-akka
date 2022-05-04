@@ -31,10 +31,10 @@ public class ContactGraph implements TemporalGraph<Integer> {
 
   private static final Logger logger = LoggerFactory.getLogger(ContactGraph.class);
   private final Graph<Integer, Edge<Integer>> graph;
-  private final Loggables<LoggableMetric> loggables;
+  private final Loggables loggables;
 
   private ContactGraph(
-      Graph<Integer, Edge<Integer>> graph, Set<Class<? extends LoggableMetric>> loggable) {
+      Graph<Integer, Edge<Integer>> graph, Set<Class<? extends Loggable>> loggable) {
     this.graph = graph;
     this.loggables = Loggables.create(loggable, logger);
     logMetrics();
@@ -56,7 +56,7 @@ public class ContactGraph implements TemporalGraph<Integer> {
 
   public static ContactGraph create(
       GraphGenerator<Integer, Edge<Integer>, ?> generator,
-      Set<Class<? extends LoggableMetric>> loggable) {
+      Set<Class<? extends Loggable>> loggable) {
     Graph<Integer, Edge<Integer>> graph = newGraph();
     generator.generateGraph(graph);
     return new ContactGraph(graph, loggable);

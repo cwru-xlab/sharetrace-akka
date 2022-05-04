@@ -48,7 +48,7 @@ import org.sharetrace.util.IntervalCache;
 public class Node extends AbstractBehavior<NodeMessage> {
 
   private final TimerScheduler<NodeMessage> timers;
-  private final Loggables<LoggableEvent> loggables;
+  private final Loggables loggables;
   private final Map<ActorRef<NodeMessage>, Instant> contacts;
   private final Parameters parameters;
   private final Supplier<Instant> clock;
@@ -59,7 +59,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
   private Node(
       ActorContext<NodeMessage> context,
       TimerScheduler<NodeMessage> timers,
-      Set<Class<? extends LoggableEvent>> loggable,
+      Set<Class<? extends Loggable>> loggable,
       Parameters parameters,
       Supplier<Instant> clock,
       IntervalCache<RiskScoreMessage> cache) {
@@ -102,7 +102,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
   @Builder.Factory
   protected static Behavior<NodeMessage> node(
       TimerScheduler<NodeMessage> timers,
-      Set<Class<? extends LoggableEvent>> loggable,
+      Set<Class<? extends Loggable>> loggable,
       Parameters parameters,
       Supplier<Instant> clock,
       IntervalCache<RiskScoreMessage> cache) {

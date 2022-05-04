@@ -9,7 +9,7 @@ import org.jgrapht.generate.GraphGenerator;
 import org.sharetrace.graph.ContactGraph;
 import org.sharetrace.graph.Edge;
 import org.sharetrace.graph.TemporalGraph;
-import org.sharetrace.logging.metrics.LoggableMetric;
+import org.sharetrace.logging.Loggable;
 import org.sharetrace.message.RiskScore;
 
 public abstract class DatasetFactory implements GraphGenerator<Integer, Edge<Integer>, Integer> {
@@ -53,7 +53,7 @@ public abstract class DatasetFactory implements GraphGenerator<Integer, Edge<Int
     };
   }
 
-  protected Set<Class<? extends LoggableMetric>> loggable() {
+  protected Set<Class<? extends Loggable>> loggable() {
     return Set.of();
   }
 
