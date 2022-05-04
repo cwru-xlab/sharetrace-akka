@@ -2,12 +2,14 @@ package org.sharetrace.data;
 
 import static org.sharetrace.util.Preconditions.checkArgument;
 import java.time.Instant;
+import java.util.Set;
 import org.jgrapht.Graph;
 import org.jgrapht.GraphType;
 import org.jgrapht.generate.GraphGenerator;
 import org.sharetrace.graph.ContactGraph;
 import org.sharetrace.graph.Edge;
 import org.sharetrace.graph.TemporalGraph;
+import org.sharetrace.logging.metrics.LoggableMetric;
 import org.sharetrace.message.RiskScore;
 
 public abstract class DatasetFactory implements GraphGenerator<Integer, Edge<Integer>, Integer> {
@@ -26,7 +28,8 @@ public abstract class DatasetFactory implements GraphGenerator<Integer, Edge<Int
   public Dataset<Integer> createDataset() {
     return new Dataset<>() {
 
-      private final TemporalGraph<Integer> graph = ContactGraph.create(DatasetFactory.this);
+      private final TemporalGraph<Integer> graph =
+          ContactGraph.create(DatasetFactory.this, loggable());
 
       @Override
       public RiskScore scoreOf(Integer node) {
@@ -48,6 +51,10 @@ public abstract class DatasetFactory implements GraphGenerator<Integer, Edge<Int
         return "Dataset{" + "nNodes=" + graph.nNodes() + ", " + "nEdges=" + graph.nEdges() + '}';
       }
     };
+  }
+
+  protected Set<Class<? extends LoggableMetric>> loggable() {
+    return Set.of();
   }
 
   protected abstract RiskScore scoreOf(int node);
