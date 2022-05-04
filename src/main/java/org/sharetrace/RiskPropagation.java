@@ -1,6 +1,5 @@
 package org.sharetrace;
 
-import static net.logstash.logback.argument.StructuredArguments.value;
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
 import akka.actor.typed.Terminated;
@@ -23,7 +22,7 @@ import org.sharetrace.graph.Node;
 import org.sharetrace.graph.NodeBuilder;
 import org.sharetrace.graph.TemporalGraph;
 import org.sharetrace.logging.Loggable;
-import org.sharetrace.logging.events.LoggableEvent;
+import org.sharetrace.logging.Loggables;
 import org.sharetrace.logging.metrics.LoggableMetric;
 import org.sharetrace.logging.metrics.RuntimeMetric;
 import org.sharetrace.message.AlgorithmMessage;
@@ -54,8 +53,7 @@ import org.sharetrace.util.IntervalCache;
  */
 public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
 
-  private static final String LOG_MESSAGE = "Metric";
-  private final Set<Class<? extends LoggableEvent>> loggable;
+  private final Loggables loggables;
   private final Parameters parameters;
   private final TemporalGraph<T> graph;
   private final long nNodes;
@@ -68,7 +66,7 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
 
   private RiskPropagation(
       ActorContext<AlgorithmMessage> context,
-      Set<Class<? extends LoggableEvent>> loggable,
+      Set<Class<? extends Loggable>> loggable,
       TemporalGraph<T> graph,
       Parameters parameters,
       Supplier<Instant> clock,
@@ -76,7 +74,7 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
       Function<T, RiskScore> scoreFactory,
       BiFunction<T, T, Instant> timeFactory) {
     super(context);
-    this.loggable = loggable;
+    this.loggables = Loggables.create(loggable);
     this.graph = graph;
     this.parameters = parameters;
     this.clock = clock;
@@ -90,7 +88,7 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
   @Builder.Factory
   protected static <T> Behavior<AlgorithmMessage> riskPropagation(
       TemporalGraph<T> graph,
-      Set<Class<? extends LoggableEvent>> loggable,
+      Set<Class<? extends Loggable>> loggable,
       Parameters parameters,
       Supplier<Instant> clock,
       Supplier<IntervalCache<RiskScoreMessage>> cacheFactory,
@@ -153,10 +151,9 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
     graph.edges().forEach(edge -> sendContact(edge, nodes));
   }
 
-  @SuppressWarnings("PlaceholderCountMatchesArgumentCount")
   private void logMetrics() {
     Loggable runtime = RuntimeMetric.of(runtime());
-    getContext().getLog().info(LoggableMetric.KEY, value(LoggableMetric.KEY, runtime));
+    loggables.info(getContext().getLog(), LoggableMetric.KEY, LoggableMetric.KEY, runtime);
   }
 
   private ActorRef<NodeMessage> newNode(T name) {
@@ -186,7 +183,7 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
         timers ->
             NodeBuilder.create()
                 .timers(timers)
-                .addAllLoggable(loggable)
+                .addAllLoggable(loggables.loggable())
                 .parameters(parameters)
                 .clock(clock)
                 .cache(cacheFactory.get())

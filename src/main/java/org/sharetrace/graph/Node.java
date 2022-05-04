@@ -288,7 +288,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
   }
 
   private void logEvent(Loggable event) {
-    loggables.debug(LoggableEvent.KEY, LoggableEvent.KEY, event);
+    loggables.debug(getContext().getLog(), LoggableEvent.KEY, LoggableEvent.KEY, event);
   }
 
   private void logContact(ContactMessage message) {

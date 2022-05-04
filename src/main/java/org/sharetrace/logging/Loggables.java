@@ -1,6 +1,7 @@
 package org.sharetrace.logging;
 
 import static net.logstash.logback.argument.StructuredArguments.value;
+import java.util.Collections;
 import java.util.Set;
 import org.slf4j.Logger;
 
@@ -14,7 +15,7 @@ public final class Loggables {
   }
 
   private Loggables(Set<Class<? extends Loggable>> loggable, Logger logger) {
-    this.loggable = loggable;
+    this.loggable = Collections.unmodifiableSet(loggable);
     this.logger = logger;
   }
 
@@ -44,5 +45,9 @@ public final class Loggables {
     if (loggable.contains(value.getClass())) {
       logger.debug(message, value(key, value));
     }
+  }
+
+  public Set<Class<? extends Loggable>> loggable() {
+    return loggable;
   }
 }

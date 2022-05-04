@@ -8,10 +8,10 @@ import java.util.function.Supplier;
 import org.sharetrace.RiskPropagationBuilder;
 import org.sharetrace.Runner;
 import org.sharetrace.data.Dataset;
+import org.sharetrace.logging.Loggable;
 import org.sharetrace.logging.events.ContactEvent;
 import org.sharetrace.logging.events.ContactsRefreshEvent;
 import org.sharetrace.logging.events.CurrentRefreshEvent;
-import org.sharetrace.logging.events.LoggableEvent;
 import org.sharetrace.logging.events.PropagateEvent;
 import org.sharetrace.logging.events.ReceiveEvent;
 import org.sharetrace.logging.events.SendCachedEvent;
@@ -57,7 +57,7 @@ public abstract class Experiment implements Runnable {
 
   protected abstract Dataset<Integer> newDataset(Parameters parameters);
 
-  protected Set<Class<? extends LoggableEvent>> loggable() {
+  protected Set<Class<? extends Loggable>> loggable() {
     return Set.of(
         ContactEvent.class,
         ContactsRefreshEvent.class,
