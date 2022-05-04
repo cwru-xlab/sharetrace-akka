@@ -5,14 +5,15 @@ import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 import org.jgrapht.Graph;
-import org.jgrapht.alg.shortestpath.GraphMeasurer;
 import org.jgrapht.generate.GraphGenerator;
 import org.jgrapht.graph.DefaultGraphType;
 import org.jgrapht.opt.graph.fastutil.FastutilMapGraph;
 import org.sharetrace.RiskPropagation;
 import org.sharetrace.logging.Loggable;
 import org.sharetrace.logging.Loggables;
+import org.sharetrace.logging.metrics.GraphCycleMetrics;
 import org.sharetrace.logging.metrics.GraphEccentricityMetrics;
+import org.sharetrace.logging.metrics.GraphScoringMetrics;
 import org.sharetrace.logging.metrics.GraphSizeMetrics;
 import org.sharetrace.logging.metrics.LoggableMetric;
 import org.slf4j.Logger;
@@ -41,17 +42,43 @@ public class ContactGraph implements TemporalGraph<Integer> {
   }
 
   private void logMetrics() {
-    GraphMeasurer<?, ?> measurer = new GraphMeasurer<>(graph);
-    Loggable sizeMetrics = GraphSizeMetrics.builder().nNodes(nNodes()).nEdges(nEdges()).build();
-    Loggable eccentricityMetrics =
+    GraphStats<?, ?> stats = new GraphStats<>(graph);
+    String key = LoggableMetric.KEY;
+    loggables.info(key, key, GraphSizeMetrics.class, sizeMetrics(stats));
+    loggables.info(key, key, GraphCycleMetrics.class, cycleMetrics(stats));
+    loggables.info(key, key, GraphEccentricityMetrics.class, eccentricityMetrics(stats));
+    loggables.info(key, key, GraphScoringMetrics.class, scoringMetrics(stats));
+  }
+
+  private Supplier<Loggable> sizeMetrics(GraphStats<?, ?> stats) {
+    return () -> GraphSizeMetrics.builder().nNodes(stats.nNodes()).nEdges(stats.nEdges()).build();
+  }
+
+  private Supplier<Loggable> cycleMetrics(GraphStats<?, ?> stats) {
+    return () ->
+        GraphCycleMetrics.builder().nTriangles(stats.nTriangles()).girth(stats.girth()).build();
+  }
+
+  private Supplier<Loggable> eccentricityMetrics(GraphStats<?, ?> stats) {
+    return () ->
         GraphEccentricityMetrics.builder()
-            .radius(measurer.getRadius())
-            .diameter(measurer.getDiameter())
-            .center(measurer.getGraphCenter().size())
-            .periphery(measurer.getGraphPeriphery().size())
+            .radius(stats.radius())
+            .diameter(stats.diameter())
+            .center(stats.center())
+            .periphery(stats.periphery())
             .build();
-    loggables.info(LoggableMetric.KEY, LoggableMetric.KEY, sizeMetrics);
-    loggables.info(LoggableMetric.KEY, LoggableMetric.KEY, eccentricityMetrics);
+  }
+
+  private Supplier<Loggable> scoringMetrics(GraphStats<?, ?> stats) {
+    return () ->
+        GraphScoringMetrics.builder()
+            .degeneracy(stats.degeneracy())
+            .globalClusteringCoefficient(stats.globalClusteringCoefficient())
+            .localClusteringCoefficient(-1) // TODO
+            .harmonicCentrality(-1) // TODO
+            .katzCentrality(-1) // TODO
+            .eigenvectorCentrality(-1) // TODO
+            .build();
   }
 
   public static ContactGraph create(

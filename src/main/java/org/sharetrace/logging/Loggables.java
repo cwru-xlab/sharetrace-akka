@@ -3,6 +3,7 @@ package org.sharetrace.logging;
 import static net.logstash.logback.argument.StructuredArguments.value;
 import java.util.Collections;
 import java.util.Set;
+import java.util.function.Supplier;
 import org.slf4j.Logger;
 
 public final class Loggables {
@@ -28,23 +29,64 @@ public final class Loggables {
   }
 
   public void info(String message, String key, Loggable value) {
-    info(logger, message, key, value);
+    info(logger, message, key, value.getClass(), () -> value);
+  }
+
+  public void info(
+      Logger logger,
+      String message,
+      String key,
+      Class<? extends Loggable> clazz,
+      Supplier<Loggable> supplier) {
+    if (loggable.contains(clazz)) {
+      logger.info(message, value(key, getValue(supplier, clazz)));
+    }
+  }
+
+  private <T> T getValue(Supplier<T> supplier, Class<?> specifiedType) {
+    T value = supplier.get();
+    Class<?> valueType = value.getClass();
+    if (!valueType.equals(specifiedType)) {
+      throw new ClassCastException(
+          "Type of the supplied value "
+              + valueType
+              + " does not match the specified type "
+              + specifiedType);
+    }
+    return value;
+  }
+
+  public void info(
+      String message, String key, Class<? extends Loggable> clazz, Supplier<Loggable> supplier) {
+    info(logger, message, key, clazz, supplier);
   }
 
   public void info(Logger logger, String message, String key, Loggable value) {
-    if (loggable.contains(value.getClass())) {
-      logger.info(message, value(key, value));
-    }
-  }
-
-  public void debug(String message, String key, Loggable value) {
-    debug(logger, message, key, value);
+    info(logger, message, key, value.getClass(), () -> value);
   }
 
   public void debug(Logger logger, String message, String key, Loggable value) {
-    if (loggable.contains(value.getClass())) {
-      logger.debug(message, value(key, value));
+    debug(logger, message, key, value.getClass(), () -> value);
+  }
+
+  public void debug(
+      Logger logger,
+      String message,
+      String key,
+      Class<? extends Loggable> clazz,
+      Supplier<Loggable> supplier) {
+    if (loggable.contains(supplier.getClass())) {
+      logger.debug(message, value(key, getValue(supplier, clazz)));
     }
+  }
+
+  public void debug(
+      String message, String key, Class<? extends Loggable> clazz, Supplier<Loggable> supplier) {
+    debug(logger, message, key, clazz, supplier);
+  }
+
+  public void debug(String message, String key, Loggable value) {
+    debug(logger, message, key, value.getClass(), () -> value);
   }
 
   public Set<Class<? extends Loggable>> loggable() {
