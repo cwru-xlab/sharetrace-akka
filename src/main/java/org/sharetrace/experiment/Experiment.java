@@ -16,6 +16,7 @@ import org.sharetrace.logging.PropagateEvent;
 import org.sharetrace.logging.ReceiveEvent;
 import org.sharetrace.logging.SendCachedEvent;
 import org.sharetrace.logging.SendCurrentEvent;
+import org.sharetrace.logging.UpdateEvent;
 import org.sharetrace.message.AlgorithmMessage;
 import org.sharetrace.message.Parameters;
 import org.sharetrace.message.RiskScoreMessage;
@@ -59,12 +60,17 @@ public abstract class Experiment implements Runnable {
   protected Set<Class<? extends LoggableEvent>> loggable() {
     return Set.of(
         ContactEvent.class,
+        UpdateEvent.class,
         CurrentRefreshEvent.class,
         ContactsRefreshEvent.class,
         ReceiveEvent.class,
         PropagateEvent.class,
         SendCurrentEvent.class,
         SendCachedEvent.class);
+  }
+
+  protected Supplier<Instant> clock() {
+    return Instant::now;
   }
 
   protected IntervalCache<RiskScoreMessage> newCache() {
@@ -79,10 +85,6 @@ public abstract class Experiment implements Runnable {
         .build();
   }
 
-  protected Supplier<Instant> clock() {
-    return Instant::now;
-  }
-
   protected double sendTolerance() {
     return 0.6d;
   }
@@ -91,8 +93,8 @@ public abstract class Experiment implements Runnable {
     return 0.8d;
   }
 
-  protected boolean cachePrioritizeReads() {
-    return false;
+  protected Duration timeBuffer() {
+    return Duration.ofDays(2L);
   }
 
   protected Duration scoreTtl() {
@@ -137,8 +139,8 @@ public abstract class Experiment implements Runnable {
     return isHigher || isOlder ? newScore : oldScore;
   }
 
-  protected Duration timeBuffer() {
-    return Duration.ofDays(2L);
+  protected boolean cachePrioritizeReads() {
+    return false;
   }
 
   protected Duration defaultTtl() {
