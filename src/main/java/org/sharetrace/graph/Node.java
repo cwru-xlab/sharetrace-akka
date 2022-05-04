@@ -37,7 +37,6 @@ import org.sharetrace.message.RiskScore;
 import org.sharetrace.message.RiskScoreMessage;
 import org.sharetrace.message.Timeout;
 import org.sharetrace.util.IntervalCache;
-import org.slf4j.Logger;
 /**
  * An actor that corresponds to a {@link ContactGraph} node. Collectively, all {@link Node}s carry
  * out the execution of {@link RiskPropagation}.
@@ -87,16 +86,16 @@ public class Node extends AbstractBehavior<NodeMessage> {
         .build();
   }
 
-  private ActorRef<NodeMessage> self() {
-    return getContext().getSelf();
-  }
-
   private void setSendThreshold() {
     sendThreshold = current.score().value() * parameters.transmissionRate();
   }
 
   private void startRefreshTimer() {
     timers.startTimerWithFixedDelay(Refresh.INSTANCE, parameters.refreshRate());
+  }
+
+  private ActorRef<NodeMessage> self() {
+    return getContext().getSelf();
   }
 
   @Builder.Factory
@@ -289,9 +288,8 @@ public class Node extends AbstractBehavior<NodeMessage> {
 
   @SuppressWarnings("PlaceholderCountMatchesArgumentCount")
   private <T extends LoggableEvent> void logEvent(Class<T> type, Supplier<T> event) {
-    Logger logger = getContext().getLog();
-    if (logger.isDebugEnabled() && loggable.contains(type)) {
-      logger.debug("NodeEvent", StructuredArguments.value("event", event.get()));
+    if (loggable.contains(type)) {
+      getContext().getLog().debug("NodeEvent", StructuredArguments.value("event", event.get()));
     }
   }
 
