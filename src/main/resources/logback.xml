@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration debug="true">
+  <property name="logPath" value="logs"/>
+  <timestamp datePattern="yyyyMMddHHmmss" key="bySecond"/>
   <appender class="ch.qos.logback.core.rolling.RollingFileAppender" name="rolling">
     <encoder class="net.logstash.logback.encoder.LogstashEncoder">
       <fieldNames class="net.logstash.logback.fieldnames.ShortenedFieldNames">
@@ -50,6 +52,7 @@
       <timestampPattern>[UNIX_TIMESTAMP_AS_NUMBER]</timestampPattern>
     </encoder>
   </appender>
+  <!--Ref: https://github.com/logfellow/logstash-logback-encoder#async-appenders-->
   <appender class="net.logstash.logback.appender.LoggingEventAsyncDisruptorAppender"
     name="logstash">
     <appendRetryFrequency>5</appendRetryFrequency> <!--Default: 5ms-->
@@ -58,9 +61,6 @@
     <waitStrategyType>blocking</waitStrategyType> <!--Default: blocking-->
     <appender-ref ref="rolling"/>
   </appender>
-  <property name="logPath" value="logs"/>
-  <!--Ref: https://github.com/logfellow/logstash-logback-encoder#async-appenders-->
-  <timestamp datePattern="yyyyMMddHHmmss" key="bySecond"/>
   <root level="debug">
     <appender-ref ref="logstash"/>
   </root>
