@@ -117,7 +117,7 @@ public final class GraphStats<V, E> {
     return getKatzCentrality().getScores();
   }
 
-  public KatzCentrality<V, E> getKatzCentrality() {
+  private KatzCentrality<V, E> getKatzCentrality() {
     if (katzCentrality == null) {
       katzCentrality = new KatzCentrality<>(graph);
     }
@@ -128,7 +128,7 @@ public final class GraphStats<V, E> {
     return getEigenvectorCentrality().getScores();
   }
 
-  public EigenvectorCentrality<V, E> getEigenvectorCentrality() {
+  private EigenvectorCentrality<V, E> getEigenvectorCentrality() {
     if (eigenvectorCentrality == null) {
       eigenvectorCentrality = new EigenvectorCentrality<>(graph);
     }
