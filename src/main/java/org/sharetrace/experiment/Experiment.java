@@ -60,13 +60,13 @@ public abstract class Experiment implements Runnable {
   protected Set<Class<? extends LoggableEvent>> loggable() {
     return Set.of(
         ContactEvent.class,
-        UpdateEvent.class,
-        CurrentRefreshEvent.class,
         ContactsRefreshEvent.class,
-        ReceiveEvent.class,
+        CurrentRefreshEvent.class,
         PropagateEvent.class,
+        ReceiveEvent.class,
+        SendCachedEvent.class,
         SendCurrentEvent.class,
-        SendCachedEvent.class);
+        UpdateEvent.class);
   }
 
   protected Supplier<Instant> clock() {
