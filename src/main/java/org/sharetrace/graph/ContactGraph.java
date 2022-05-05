@@ -16,6 +16,7 @@ import org.sharetrace.logging.metrics.GraphEccentricityMetrics;
 import org.sharetrace.logging.metrics.GraphScoringMetrics;
 import org.sharetrace.logging.metrics.GraphSizeMetrics;
 import org.sharetrace.logging.metrics.LoggableMetric;
+import org.sharetrace.util.TypedSupplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,41 +45,53 @@ public class ContactGraph implements TemporalGraph<Integer> {
   private void logMetrics() {
     GraphStats<?, ?> stats = new GraphStats<>(graph);
     String key = LoggableMetric.KEY;
-    loggables.info(key, key, GraphSizeMetrics.class, sizeMetrics(stats));
-    loggables.info(key, key, GraphCycleMetrics.class, cycleMetrics(stats));
-    loggables.info(key, key, GraphEccentricityMetrics.class, eccentricityMetrics(stats));
-    loggables.info(key, key, GraphScoringMetrics.class, scoringMetrics(stats));
+    loggables.info(key, key, sizeMetrics(stats));
+    loggables.info(key, key, cycleMetrics(stats));
+    loggables.info(key, key, eccentricityMetrics(stats));
+    loggables.info(key, key, scoringMetrics(stats));
   }
 
-  private Supplier<Loggable> sizeMetrics(GraphStats<?, ?> stats) {
-    return () -> GraphSizeMetrics.builder().nNodes(stats.nNodes()).nEdges(stats.nEdges()).build();
+  // Use concrete type to get compile-time check.
+  private TypedSupplier<GraphSizeMetrics> sizeMetrics(GraphStats<?, ?> stats) {
+    return TypedSupplier.of(
+        GraphSizeMetrics.class,
+        () -> GraphSizeMetrics.builder().nNodes(stats.nNodes()).nEdges(stats.nEdges()).build());
   }
 
-  private Supplier<Loggable> cycleMetrics(GraphStats<?, ?> stats) {
-    return () ->
-        GraphCycleMetrics.builder().nTriangles(stats.nTriangles()).girth(stats.girth()).build();
+  private TypedSupplier<GraphCycleMetrics> cycleMetrics(GraphStats<?, ?> stats) {
+    return TypedSupplier.of(
+        GraphCycleMetrics.class,
+        () ->
+            GraphCycleMetrics.builder()
+                .nTriangles(stats.nTriangles())
+                .girth(stats.girth())
+                .build());
   }
 
-  private Supplier<Loggable> eccentricityMetrics(GraphStats<?, ?> stats) {
-    return () ->
-        GraphEccentricityMetrics.builder()
-            .radius(stats.radius())
-            .diameter(stats.diameter())
-            .center(stats.center())
-            .periphery(stats.periphery())
-            .build();
+  private TypedSupplier<GraphEccentricityMetrics> eccentricityMetrics(GraphStats<?, ?> stats) {
+    return TypedSupplier.of(
+        GraphEccentricityMetrics.class,
+        () ->
+            GraphEccentricityMetrics.builder()
+                .radius(stats.radius())
+                .diameter(stats.diameter())
+                .center(stats.center())
+                .periphery(stats.periphery())
+                .build());
   }
 
-  private Supplier<Loggable> scoringMetrics(GraphStats<?, ?> stats) {
-    return () ->
-        GraphScoringMetrics.builder()
-            .degeneracy(stats.degeneracy())
-            .globalClusteringCoefficient(stats.globalClusteringCoefficient())
-            .localClusteringCoefficient(-1) // TODO
-            .harmonicCentrality(-1) // TODO
-            .katzCentrality(-1) // TODO
-            .eigenvectorCentrality(-1) // TODO
-            .build();
+  private TypedSupplier<GraphScoringMetrics> scoringMetrics(GraphStats<?, ?> stats) {
+    return TypedSupplier.of(
+        GraphScoringMetrics.class,
+        () ->
+            GraphScoringMetrics.builder()
+                .degeneracy(stats.degeneracy())
+                .globalClusteringCoefficient(stats.globalClusteringCoefficient())
+                .localClusteringCoefficient(-1) // TODO
+                .harmonicCentrality(-1) // TODO
+                .katzCentrality(-1) // TODO
+                .eigenvectorCentrality(-1) // TODO
+                .build());
   }
 
   public static ContactGraph create(
