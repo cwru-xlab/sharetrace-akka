@@ -5,24 +5,24 @@ import org.slf4j.LoggerFactory;
 
 public final class Loggers {
 
-  private static final String METRICS = "MetricLogger";
-  private static final String EVENTS = "EventLogger";
+  private static final String METRIC_LOGGER_NAME = "MetricLogger";
+  private static final String EVENT_LOGGER_NAME = "EventLogger";
 
   private Loggers() {}
 
-  public static Logger eventsLogger() {
-    return LoggerFactory.getLogger(EVENTS);
+  public static Logger eventLogger() {
+    return LoggerFactory.getLogger(EVENT_LOGGER_NAME);
   }
 
-  public static String eventsLoggerName() {
-    return EVENTS;
+  public static String eventLoggerName() {
+    return EVENT_LOGGER_NAME;
   }
 
-  public static Logger metricsLogger() {
-    return LoggerFactory.getLogger(METRICS);
+  public static Logger metricLogger() {
+    return LoggerFactory.getLogger(METRIC_LOGGER_NAME);
   }
 
-  public static String metricsLoggerName() {
-    return METRICS;
+  public static String metricLoggerName() {
+    return METRIC_LOGGER_NAME;
   }
 }

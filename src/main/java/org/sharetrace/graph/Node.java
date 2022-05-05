@@ -110,7 +110,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
       IntervalCache<RiskScoreMessage> cache) {
     return Behaviors.setup(
         context -> {
-          context.setLoggerName(Loggers.eventsLoggerName());
+          context.setLoggerName(Loggers.eventLoggerName());
           return new Node(context, timers, loggable, parameters, clock, cache);
         });
   }
