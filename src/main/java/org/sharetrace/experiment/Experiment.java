@@ -74,11 +74,11 @@ public abstract class Experiment implements Runnable {
         SendCurrentEvent.class,
         UpdateEvent.class,
         // Metrics
-        RuntimeMetric.class,
-        GraphSizeMetrics.class,
         GraphCycleMetrics.class,
+        GraphEccentricityMetrics.class,
         GraphScoringMetrics.class,
-        GraphEccentricityMetrics.class);
+        GraphSizeMetrics.class,
+        RuntimeMetric.class);
   }
 
   protected Supplier<Instant> clock() {
