@@ -1,8 +1,8 @@
 package org.sharetrace.logging;
 
-import static net.logstash.logback.argument.StructuredArguments.value;
 import java.util.Collections;
 import java.util.Set;
+import net.logstash.logback.argument.StructuredArguments;
 import org.sharetrace.util.TypedSupplier;
 import org.slf4j.Logger;
 
@@ -35,7 +35,7 @@ public final class Loggables {
   public void info(
       Logger logger, String message, String key, TypedSupplier<? extends Loggable> supplier) {
     if (loggable.contains(supplier.getType())) {
-      logger.info(message, value(key, supplier.get()));
+      logger.info(message, StructuredArguments.value(key, supplier.get()));
     }
   }
 
@@ -54,7 +54,7 @@ public final class Loggables {
   public void debug(
       Logger logger, String message, String key, TypedSupplier<? extends Loggable> supplier) {
     if (loggable.contains(supplier.getType())) {
-      logger.debug(message, value(key, supplier.get()));
+      logger.debug(message, StructuredArguments.value(key, supplier.get()));
     }
   }
 
