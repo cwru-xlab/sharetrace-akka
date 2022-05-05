@@ -15,10 +15,6 @@ import org.immutables.builder.Builder;
 import org.jgrapht.Graph;
 import org.sharetrace.graph.Edge;
 import org.sharetrace.logging.Loggable;
-import org.sharetrace.logging.metrics.GraphCycleMetrics;
-import org.sharetrace.logging.metrics.GraphEccentricityMetrics;
-import org.sharetrace.logging.metrics.GraphScoringMetrics;
-import org.sharetrace.logging.metrics.GraphSizeMetrics;
 import org.sharetrace.message.RiskScore;
 
 class FileDatasetFactory extends DatasetFactory {
@@ -33,7 +29,13 @@ class FileDatasetFactory extends DatasetFactory {
   private Duration offset;
 
   private FileDatasetFactory(
-      Path path, String delimiter, Instant time, Duration scoreTtl, Random random) {
+      Set<Class<? extends Loggable>> loggable,
+      Path path,
+      String delimiter,
+      Instant time,
+      Duration scoreTtl,
+      Random random) {
+    super(loggable);
     this.contacts = new Object2ObjectOpenHashMap<>();
     this.path = path;
     this.delimiter = delimiter;
@@ -45,8 +47,14 @@ class FileDatasetFactory extends DatasetFactory {
 
   @Builder.Factory
   protected static Dataset<Integer> fileDataset(
-      Path path, String delimiter, Instant time, Duration scoreTtl, Random random) {
-    return new FileDatasetFactory(path, delimiter, time, scoreTtl, random).createDataset();
+      Set<Class<? extends Loggable>> loggable,
+      Path path,
+      String delimiter,
+      Instant time,
+      Duration scoreTtl,
+      Random random) {
+    return new FileDatasetFactory(loggable, path, delimiter, time, scoreTtl, random)
+        .createDataset();
   }
 
   @Override
@@ -91,15 +99,6 @@ class FileDatasetFactory extends DatasetFactory {
 
   private static Set<Integer> key(int node1, int node2) {
     return Set.of(node1, node2);
-  }
-
-  @Override
-  protected Set<Class<? extends Loggable>> loggable() {
-    return Set.of(
-        GraphSizeMetrics.class,
-        GraphCycleMetrics.class,
-        GraphScoringMetrics.class,
-        GraphEccentricityMetrics.class);
   }
 
   @Override

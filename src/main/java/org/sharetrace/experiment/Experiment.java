@@ -17,6 +17,11 @@ import org.sharetrace.logging.events.ReceiveEvent;
 import org.sharetrace.logging.events.SendCachedEvent;
 import org.sharetrace.logging.events.SendCurrentEvent;
 import org.sharetrace.logging.events.UpdateEvent;
+import org.sharetrace.logging.metrics.GraphCycleMetrics;
+import org.sharetrace.logging.metrics.GraphEccentricityMetrics;
+import org.sharetrace.logging.metrics.GraphScoringMetrics;
+import org.sharetrace.logging.metrics.GraphSizeMetrics;
+import org.sharetrace.logging.metrics.RuntimeMetric;
 import org.sharetrace.message.AlgorithmMessage;
 import org.sharetrace.message.Parameters;
 import org.sharetrace.message.RiskScoreMessage;
@@ -59,6 +64,7 @@ public abstract class Experiment implements Runnable {
 
   protected Set<Class<? extends Loggable>> loggable() {
     return Set.of(
+        // Events
         ContactEvent.class,
         ContactsRefreshEvent.class,
         CurrentRefreshEvent.class,
@@ -66,7 +72,13 @@ public abstract class Experiment implements Runnable {
         ReceiveEvent.class,
         SendCachedEvent.class,
         SendCurrentEvent.class,
-        UpdateEvent.class);
+        UpdateEvent.class,
+        // Metrics
+        RuntimeMetric.class,
+        GraphSizeMetrics.class,
+        GraphCycleMetrics.class,
+        GraphScoringMetrics.class,
+        GraphEccentricityMetrics.class);
   }
 
   protected Supplier<Instant> clock() {

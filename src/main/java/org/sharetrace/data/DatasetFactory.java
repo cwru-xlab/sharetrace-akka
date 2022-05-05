@@ -14,6 +14,12 @@ import org.sharetrace.message.RiskScore;
 
 public abstract class DatasetFactory implements GraphGenerator<Integer, Edge<Integer>, Integer> {
 
+  private final Set<Class<? extends Loggable>> loggable;
+
+  protected DatasetFactory(Set<Class<? extends Loggable>> loggable) {
+    this.loggable = loggable;
+  }
+
   @Override
   public void generateGraph(Graph<Integer, Edge<Integer>> target) {
     generateGraph(checkGraphType(target), null);
@@ -29,7 +35,7 @@ public abstract class DatasetFactory implements GraphGenerator<Integer, Edge<Int
     return new Dataset<>() {
 
       private final TemporalGraph<Integer> graph =
-          ContactGraph.create(DatasetFactory.this, loggable());
+          ContactGraph.create(DatasetFactory.this, loggable);
 
       @Override
       public RiskScore scoreOf(Integer node) {
@@ -51,10 +57,6 @@ public abstract class DatasetFactory implements GraphGenerator<Integer, Edge<Int
         return "Dataset{" + "nNodes=" + graph.nNodes() + ", " + "nEdges=" + graph.nEdges() + '}';
       }
     };
-  }
-
-  protected Set<Class<? extends Loggable>> loggable() {
-    return Set.of();
   }
 
   protected abstract RiskScore scoreOf(int node);

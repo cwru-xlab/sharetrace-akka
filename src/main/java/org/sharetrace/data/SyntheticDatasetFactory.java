@@ -4,11 +4,13 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.function.Supplier;
 import org.immutables.builder.Builder;
 import org.jgrapht.Graph;
 import org.jgrapht.generate.GraphGenerator;
 import org.sharetrace.graph.Edge;
+import org.sharetrace.logging.Loggable;
 import org.sharetrace.message.RiskScore;
 
 class SyntheticDatasetFactory extends DatasetFactory {
@@ -20,11 +22,13 @@ class SyntheticDatasetFactory extends DatasetFactory {
   private final Random random;
 
   private SyntheticDatasetFactory(
+      Set<Class<? extends Loggable>> loggable,
       GraphGenerator<Integer, Edge<Integer>, ?> generator,
       Supplier<Instant> clock,
       Duration scoreTtl,
       Duration contactTtl,
       Random random) {
+    super(loggable);
     this.generator = generator;
     this.clock = clock;
     this.scoreTtlSeconds = scoreTtl.toSeconds();
@@ -34,12 +38,13 @@ class SyntheticDatasetFactory extends DatasetFactory {
 
   @Builder.Factory
   protected static Dataset<Integer> syntheticDataset(
+      Set<Class<? extends Loggable>> loggable,
       GraphGenerator<Integer, Edge<Integer>, ?> generator,
       Supplier<Instant> clock,
       Duration scoreTtl,
       Duration contactTtl,
       Random random) {
-    return new SyntheticDatasetFactory(generator, clock, scoreTtl, contactTtl, random)
+    return new SyntheticDatasetFactory(loggable, generator, clock, scoreTtl, contactTtl, random)
         .createDataset();
   }
 
