@@ -97,7 +97,7 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
       BiFunction<T, T, Instant> timeFactory) {
     return Behaviors.setup(
         context -> {
-          context.setLoggerName(Loggers.metrics());
+          context.setLoggerName(Loggers.metricsLoggerName());
           return new RiskPropagation<>(
               context, loggable, graph, parameters, clock, cacheFactory, scoreFactory, timeFactory);
         });

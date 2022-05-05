@@ -1,5 +1,8 @@
 package org.sharetrace.logging;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public final class Loggers {
 
   private static final String METRICS = "MetricLogger";
@@ -7,11 +10,19 @@ public final class Loggers {
 
   private Loggers() {}
 
-  public static String events() {
+  public static Logger eventsLogger() {
+    return LoggerFactory.getLogger(EVENTS);
+  }
+
+  public static String eventsLoggerName() {
     return EVENTS;
   }
 
-  public static String metrics() {
+  public static Logger metricsLogger() {
+    return LoggerFactory.getLogger(METRICS);
+  }
+
+  public static String metricsLoggerName() {
     return METRICS;
   }
 }

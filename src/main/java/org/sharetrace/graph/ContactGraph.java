@@ -19,7 +19,6 @@ import org.sharetrace.logging.metrics.GraphSizeMetrics;
 import org.sharetrace.logging.metrics.LoggableMetric;
 import org.sharetrace.util.TypedSupplier;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * A simple graph in which a node represents a person and an edge between two nodes indicates that
@@ -32,7 +31,7 @@ import org.slf4j.LoggerFactory;
  */
 public class ContactGraph implements TemporalGraph<Integer> {
 
-  private static final Logger logger = LoggerFactory.getLogger(Loggers.metrics());
+  private static final Logger logger = Loggers.metricsLogger();
   private final Graph<Integer, Edge<Integer>> graph;
   private final Loggables loggables;
 
