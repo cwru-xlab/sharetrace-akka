@@ -43,7 +43,7 @@ public class ContactGraph implements TemporalGraph<Integer> {
   }
 
   private void logMetrics() {
-    GraphStats<?, ?> stats = new GraphStats<>(graph);
+    GraphStats<?, ?> stats = GraphStats.of(graph);
     String key = LoggableMetric.KEY;
     loggables.info(key, key, sizeMetrics(stats));
     loggables.info(key, key, cycleMetrics(stats));

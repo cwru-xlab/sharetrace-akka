@@ -31,9 +31,13 @@ public final class GraphStats<V, E> {
   private int girth = (int) NOT_COMPUTED;
   private int degeneracy = (int) NOT_COMPUTED;
 
-  public GraphStats(Graph<V, E> graph) {
+  private GraphStats(Graph<V, E> graph) {
     this.graph = graph;
     this.shortestPathAlgorithm = new FloydWarshallShortestPaths<>(graph);
+  }
+
+  public static <V, E> GraphStats<V, E> of(Graph<V, E> graph) {
+    return new GraphStats<>(graph);
   }
 
   public int girth() {
