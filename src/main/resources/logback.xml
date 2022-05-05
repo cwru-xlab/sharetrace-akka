@@ -2,106 +2,110 @@
 <configuration debug="true">
   <timestamp datePattern="yyyyMMddHHmmss" key="bySecond"/>
   <property name="logPath" value="logs/${bySecond}"/>
-  <appender class="ch.qos.logback.core.rolling.RollingFileAppender" name="eventRolling">
-    <encoder class="net.logstash.logback.encoder.LogstashEncoder">
-      <fieldNames class="net.logstash.logback.fieldnames.ShortenedFieldNames">
-        <levelValue>[ignore]</levelValue>
-        <logger>[ignore]</logger>
-        <thread>[ignore]</thread>
-        <version>[ignore]</version>
-      </fieldNames>
-      <includeMdcKeyName>akkaTimestamp</includeMdcKeyName>
-      <throwableConverter class="net.logstash.logback.stacktrace.ShortenedThrowableConverter">
-        <exclude>sun\.reflect\..*\.invoke.*</exclude>
-        <exclude>net\.sf\.cglib\.proxy\.MethodProxy\.invoke</exclude>
-        <inlineHash>true</inlineHash>
-        <maxDepthPerThrowable>30</maxDepthPerThrowable>
-        <maxLength>2048</maxLength>
-        <rootCauseFirst>true</rootCauseFirst>
-        <shortenedClassNameLength>20</shortenedClassNameLength>
-      </throwableConverter>
-      <timestampPattern>[UNIX_TIMESTAMP_AS_NUMBER]</timestampPattern>
-    </encoder>
-    <immediateFlush>false</immediateFlush>
-    <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-      <fileNamePattern>${logPath}/events/${bySecond}-%d{yyyyMMdd}-%i.log.zip</fileNamePattern>
-      <maxFileSize>10MB</maxFileSize>
-      <maxHistory>30</maxHistory>
-      <totalSizeCap>20GB</totalSizeCap>
-    </rollingPolicy>
-  </appender>
-  <appender class="ch.qos.logback.core.rolling.RollingFileAppender" name="metricRolling">
-    <encoder class="net.logstash.logback.encoder.LogstashEncoder">
-      <fieldNames class="net.logstash.logback.fieldnames.ShortenedFieldNames">
-        <levelValue>[ignore]</levelValue>
-        <logger>[ignore]</logger>
-        <thread>[ignore]</thread>
-        <version>[ignore]</version>
-      </fieldNames>
-      <includeMdcKeyName>akkaTimestamp</includeMdcKeyName>
-      <throwableConverter class="net.logstash.logback.stacktrace.ShortenedThrowableConverter">
-        <exclude>sun\.reflect\..*\.invoke.*</exclude>
-        <exclude>net\.sf\.cglib\.proxy\.MethodProxy\.invoke</exclude>
-        <inlineHash>true</inlineHash>
-        <maxDepthPerThrowable>30</maxDepthPerThrowable>
-        <maxLength>2048</maxLength>
-        <rootCauseFirst>true</rootCauseFirst>
-        <shortenedClassNameLength>20</shortenedClassNameLength>
-      </throwableConverter>
-      <timestampPattern>[UNIX_TIMESTAMP_AS_NUMBER]</timestampPattern>
-    </encoder>
-    <immediateFlush>false</immediateFlush>
-    <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-      <fileNamePattern>${logPath}/metrics/${bySecond}-%d{yyyyMMdd}-%i.log.zip</fileNamePattern>
-      <maxFileSize>10MB</maxFileSize>
-      <maxHistory>30</maxHistory>
-      <totalSizeCap>20GB</totalSizeCap>
-    </rollingPolicy>
-  </appender>
-  <appender class="ch.qos.logback.core.ConsoleAppender" name="console">
-    <encoder class="net.logstash.logback.encoder.LogstashEncoder">
-      <fieldNames class="net.logstash.logback.fieldnames.ShortenedFieldNames">
-        <levelValue>[ignore]</levelValue>
-        <logger>[ignore]</logger>
-        <thread>[ignore]</thread>
-        <version>[ignore]</version>
-      </fieldNames>
-      <includeMdcKeyName>akkaTimestamp</includeMdcKeyName>
-      <throwableConverter class="net.logstash.logback.stacktrace.ShortenedThrowableConverter">
-        <exclude>sun\.reflect\..*\.invoke.*</exclude>
-        <exclude>net\.sf\.cglib\.proxy\.MethodProxy\.invoke</exclude>
-        <inlineHash>true</inlineHash>
-        <maxDepthPerThrowable>30</maxDepthPerThrowable>
-        <maxLength>2048</maxLength>
-        <rootCauseFirst>true</rootCauseFirst>
-        <shortenedClassNameLength>20</shortenedClassNameLength>
-      </throwableConverter>
-      <timestampPattern>[UNIX_TIMESTAMP_AS_NUMBER]</timestampPattern>
-    </encoder>
-  </appender>
-  <!--Ref: https://github.com/logfellow/logstash-logback-encoder#async-appenders-->
-  <appender class="net.logstash.logback.appender.LoggingEventAsyncDisruptorAppender"
-    name="eventLogstash">
+  <appender class="net.logstash.logback.appender.LoggingEventAsyncDisruptorAppender" name="console">
     <appendRetryFrequency>5</appendRetryFrequency> <!--Default: 5ms-->
     <appendTimeout>-1</appendTimeout> <!--Default: 0-->
     <ringBufferSize>8192</ringBufferSize> <!--Default: 8192-->
     <waitStrategyType>blocking</waitStrategyType> <!--Default: blocking-->
-    <appender-ref ref="eventRolling"/>
+    <appender class="ch.qos.logback.core.ConsoleAppender">
+      <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+        <fieldNames class="net.logstash.logback.fieldnames.ShortenedFieldNames">
+          <levelValue>[ignore]</levelValue>
+          <logger>[ignore]</logger>
+          <thread>[ignore]</thread>
+          <version>[ignore]</version>
+        </fieldNames>
+        <includeMdcKeyName>akkaTimestamp</includeMdcKeyName>
+        <throwableConverter class="net.logstash.logback.stacktrace.ShortenedThrowableConverter">
+          <exclude>sun\.reflect\..*\.invoke.*</exclude>
+          <exclude>net\.sf\.cglib\.proxy\.MethodProxy\.invoke</exclude>
+          <inlineHash>true</inlineHash>
+          <maxDepthPerThrowable>30</maxDepthPerThrowable>
+          <maxLength>2048</maxLength>
+          <rootCauseFirst>true</rootCauseFirst>
+          <shortenedClassNameLength>20</shortenedClassNameLength>
+        </throwableConverter>
+        <timestampPattern>[UNIX_TIMESTAMP_AS_NUMBER]</timestampPattern>
+      </encoder>
+    </appender>
   </appender>
   <!--Ref: https://github.com/logfellow/logstash-logback-encoder#async-appenders-->
   <appender class="net.logstash.logback.appender.LoggingEventAsyncDisruptorAppender"
-    name="metricLogstash">
+    name="events">
     <appendRetryFrequency>5</appendRetryFrequency> <!--Default: 5ms-->
     <appendTimeout>-1</appendTimeout> <!--Default: 0-->
     <ringBufferSize>8192</ringBufferSize> <!--Default: 8192-->
     <waitStrategyType>blocking</waitStrategyType> <!--Default: blocking-->
-    <appender-ref ref="metricRolling"/>
+    <appender class="ch.qos.logback.core.rolling.RollingFileAppender">
+      <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+        <fieldNames class="net.logstash.logback.fieldnames.ShortenedFieldNames">
+          <levelValue>[ignore]</levelValue>
+          <logger>[ignore]</logger>
+          <thread>[ignore]</thread>
+          <version>[ignore]</version>
+        </fieldNames>
+        <includeMdcKeyName>akkaTimestamp</includeMdcKeyName>
+        <throwableConverter class="net.logstash.logback.stacktrace.ShortenedThrowableConverter">
+          <exclude>sun\.reflect\..*\.invoke.*</exclude>
+          <exclude>net\.sf\.cglib\.proxy\.MethodProxy\.invoke</exclude>
+          <inlineHash>true</inlineHash>
+          <maxDepthPerThrowable>30</maxDepthPerThrowable>
+          <maxLength>2048</maxLength>
+          <rootCauseFirst>true</rootCauseFirst>
+          <shortenedClassNameLength>20</shortenedClassNameLength>
+        </throwableConverter>
+        <timestampPattern>[UNIX_TIMESTAMP_AS_NUMBER]</timestampPattern>
+      </encoder>
+      <immediateFlush>false</immediateFlush>
+      <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+        <fileNamePattern>${logPath}/events/${bySecond}-%d{yyyyMMdd}-%i.log.zip</fileNamePattern>
+        <maxFileSize>10MB</maxFileSize>
+        <maxHistory>30</maxHistory>
+        <totalSizeCap>20GB</totalSizeCap>
+      </rollingPolicy>
+    </appender>
+  </appender>
+  <!--Ref: https://github.com/logfellow/logstash-logback-encoder#async-appenders-->
+  <appender class="net.logstash.logback.appender.LoggingEventAsyncDisruptorAppender"
+    name="metrics">
+    <appendRetryFrequency>5</appendRetryFrequency> <!--Default: 5ms-->
+    <appendTimeout>-1</appendTimeout> <!--Default: 0-->
+    <ringBufferSize>8192</ringBufferSize> <!--Default: 8192-->
+    <waitStrategyType>blocking</waitStrategyType> <!--Default: blocking-->
+    <appender class="ch.qos.logback.core.rolling.RollingFileAppender">
+      <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+        <fieldNames class="net.logstash.logback.fieldnames.ShortenedFieldNames">
+          <levelValue>[ignore]</levelValue>
+          <logger>[ignore]</logger>
+          <thread>[ignore]</thread>
+          <version>[ignore]</version>
+        </fieldNames>
+        <includeMdcKeyName>akkaTimestamp</includeMdcKeyName>
+        <throwableConverter class="net.logstash.logback.stacktrace.ShortenedThrowableConverter">
+          <exclude>sun\.reflect\..*\.invoke.*</exclude>
+          <exclude>net\.sf\.cglib\.proxy\.MethodProxy\.invoke</exclude>
+          <inlineHash>true</inlineHash>
+          <maxDepthPerThrowable>30</maxDepthPerThrowable>
+          <maxLength>2048</maxLength>
+          <rootCauseFirst>true</rootCauseFirst>
+          <shortenedClassNameLength>20</shortenedClassNameLength>
+        </throwableConverter>
+        <timestampPattern>[UNIX_TIMESTAMP_AS_NUMBER]</timestampPattern>
+      </encoder>
+      <immediateFlush>false</immediateFlush>
+      <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+        <fileNamePattern>${logPath}/metrics/${bySecond}-%d{yyyyMMdd}-%i.log.zip</fileNamePattern>
+        <maxFileSize>10MB</maxFileSize>
+        <maxHistory>30</maxHistory>
+        <totalSizeCap>20GB</totalSizeCap>
+      </rollingPolicy>
+    </appender>
   </appender>
   <logger name="EventLogger" level="info" additivity="false">
-    <appender-ref ref="eventLogstash"/>
+    <appender-ref ref="events"/>
   </logger>
   <logger name="MetricLogger" level="info" additivity="false">
-    <appender-ref ref="metricLogstash"/>
+    <appender-ref ref="metrics"/>
   </logger>
   <root level="info">
     <appender-ref ref="console"/>
