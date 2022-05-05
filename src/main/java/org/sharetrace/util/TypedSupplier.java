@@ -22,20 +22,15 @@ public class TypedSupplier<T> implements Supplier<T> {
   }
 
   /**
-   * Returns a result of the {@link Supplier} and checks that its type matches the expected type.
+   * Returns a result of the {@link Supplier} if it is an instance of the expected type.
    *
-   * @throws IllegalArgumentException when the result type differs from the expected type
+   * @throws ClassCastException when the result not assignable to the type T.
    * @throws NullPointerException when the result is null
    */
   @Override
   public T get() {
     T result = Objects.requireNonNull(supplier.get());
-    Class<?> resultType = result.getClass();
-    if (!resultType.equals(type)) {
-      throw new IllegalStateException(
-          "Result type " + resultType + " differs from the expected type " + type);
-    }
-    return result;
+    return type.cast(result);
   }
 
   /** Returns the expected class type of the return value of {@link Supplier#get()}. */
