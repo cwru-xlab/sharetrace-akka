@@ -21,6 +21,7 @@ import org.immutables.builder.Builder;
 import org.sharetrace.RiskPropagation;
 import org.sharetrace.logging.Loggable;
 import org.sharetrace.logging.Loggables;
+import org.sharetrace.logging.Loggers;
 import org.sharetrace.logging.events.ContactEvent;
 import org.sharetrace.logging.events.ContactsRefreshEvent;
 import org.sharetrace.logging.events.CurrentRefreshEvent;
@@ -38,6 +39,7 @@ import org.sharetrace.message.RiskScore;
 import org.sharetrace.message.RiskScoreMessage;
 import org.sharetrace.message.Timeout;
 import org.sharetrace.util.IntervalCache;
+
 /**
  * An actor that corresponds to a {@link ContactGraph} node. Collectively, all {@link Node}s carry
  * out the execution of {@link RiskPropagation}.
@@ -108,7 +110,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
       IntervalCache<RiskScoreMessage> cache) {
     return Behaviors.setup(
         context -> {
-          context.setLoggerName("EventLogger");
+          context.setLoggerName(Loggers.events());
           return new Node(context, timers, loggable, parameters, clock, cache);
         });
   }

@@ -23,6 +23,7 @@ import org.sharetrace.graph.NodeBuilder;
 import org.sharetrace.graph.TemporalGraph;
 import org.sharetrace.logging.Loggable;
 import org.sharetrace.logging.Loggables;
+import org.sharetrace.logging.Loggers;
 import org.sharetrace.logging.metrics.LoggableMetric;
 import org.sharetrace.logging.metrics.RuntimeMetric;
 import org.sharetrace.message.AlgorithmMessage;
@@ -96,7 +97,7 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
       BiFunction<T, T, Instant> timeFactory) {
     return Behaviors.setup(
         context -> {
-          context.setLoggerName("MetricLogger");
+          context.setLoggerName(Loggers.metrics());
           return new RiskPropagation<>(
               context, loggable, graph, parameters, clock, cacheFactory, scoreFactory, timeFactory);
         });
