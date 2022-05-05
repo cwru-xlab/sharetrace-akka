@@ -14,18 +14,19 @@ compileJava {
 }
 
 def versions = [
-        akkaScala : "2.13",
-        akka      : "2.6.19",
-        fastutil  : "8.5.8",
-        immutables: "2.9.0",
-        jackson   : "2.13.2",
-        jgrapht   : "1.5.1",
-        junit     : "5.8.2",
-        logback   : "1.2.11",
-        logstash  : "7.1.1",
-        picoli    : "4.6.3",
-        slf4j     : "1.7.36",
-        spotBugs  : "4.6.0"
+        akkaScala  : "2.13",
+        akka       : "2.6.19",
+        commonsMath: "3.6.1",
+        fastutil   : "8.5.8",
+        immutables : "2.9.0",
+        jackson    : "2.13.2",
+        jgrapht    : "1.5.1",
+        junit      : "5.8.2",
+        logback    : "1.2.11",
+        logstash   : "7.1.1",
+        picoli     : "4.6.3",
+        slf4j      : "1.7.36",
+        spotBugs   : "4.6.0"
 ]
 
 dependencies {
@@ -41,8 +42,9 @@ dependencies {
     annotationProcessor "org.immutables:value:$versions.immutables"
     implementation "org.immutables:value:$versions.immutables"
     implementation "org.immutables:builder:$versions.immutables"
-    // Data structures
+    // Datastructures and utilities
     implementation "it.unimi.dsi:fastutil:$versions.fastutil"
+    implementation "org.apache.commons:commons-math3:$versions.commonsMath"
     implementation "org.jgrapht:jgrapht-core:$versions.jgrapht"
     implementation "org.jgrapht:jgrapht-opt:$versions.jgrapht"
     // Akka
