@@ -95,16 +95,11 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
       Function<T, RiskScore> scoreFactory,
       BiFunction<T, T, Instant> timeFactory) {
     return Behaviors.setup(
-        context ->
-            new RiskPropagation<>(
-                context,
-                loggable,
-                graph,
-                parameters,
-                clock,
-                cacheFactory,
-                scoreFactory,
-                timeFactory));
+        context -> {
+          context.setLoggerName("MetricLogger");
+          return new RiskPropagation<>(
+              context, loggable, graph, parameters, clock, cacheFactory, scoreFactory, timeFactory);
+        });
   }
 
   @Override
@@ -152,8 +147,8 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
   }
 
   private void logMetrics() {
-    Loggable runtime = RuntimeMetric.of(runtime());
-    loggables.info(getContext().getLog(), LoggableMetric.KEY, LoggableMetric.KEY, runtime);
+    String key = LoggableMetric.KEY;
+    loggables.info(getContext().getLog(), key, key, RuntimeMetric.of(runtime()));
   }
 
   private ActorRef<NodeMessage> newNode(T name) {

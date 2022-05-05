@@ -107,7 +107,10 @@ public class Node extends AbstractBehavior<NodeMessage> {
       Supplier<Instant> clock,
       IntervalCache<RiskScoreMessage> cache) {
     return Behaviors.setup(
-        context -> new Node(context, timers, loggable, parameters, clock, cache));
+        context -> {
+          context.setLoggerName("EventLogger");
+          return new Node(context, timers, loggable, parameters, clock, cache);
+        });
   }
 
   private static Predicate<Entry<ActorRef<NodeMessage>, Instant>> isNotFrom(
@@ -288,7 +291,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
   }
 
   private void logEvent(Loggable event) {
-    loggables.debug(getContext().getLog(), LoggableEvent.KEY, LoggableEvent.KEY, event);
+    loggables.info(getContext().getLog(), LoggableEvent.KEY, LoggableEvent.KEY, event);
   }
 
   private void logContact(ContactMessage message) {

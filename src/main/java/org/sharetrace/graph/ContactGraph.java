@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
  */
 public class ContactGraph implements TemporalGraph<Integer> {
 
-  private static final Logger logger = LoggerFactory.getLogger(ContactGraph.class);
+  private static final Logger logger = LoggerFactory.getLogger("MetricLogger");
   private final Graph<Integer, Edge<Integer>> graph;
   private final Loggables loggables;
 
