@@ -18,13 +18,13 @@ public final class GraphStats<V, E> {
 
   private static final double NOT_COMPUTED = -1d;
   private final Graph<V, E> graph;
-  private final ShortestPathAlgorithm<V, E> shortestPathAlgorithm;
-  private GraphMeasurer<V, E> measurer;
+  private final ShortestPathAlgorithm<V, ?> shortestPathAlgorithm;
+  private GraphMeasurer<V, ?> measurer;
   private HarmonicCentrality<V, E> harmonicCentrality;
-  private KatzCentrality<V, E> katzCentrality;
-  private EigenvectorCentrality<V, E> eigenvectorCentrality;
-  private ClusteringCoefficient<V, E> clusteringCoefficient;
-  private Coreness<V, E> coreness;
+  private KatzCentrality<V, ?> katzCentrality;
+  private EigenvectorCentrality<V, ?> eigenvectorCentrality;
+  private ClusteringCoefficient<V, ?> clusteringCoefficient;
+  private Coreness<V, ?> coreness;
   private long nTriangles = (long) NOT_COMPUTED;
   private int center = (int) NOT_COMPUTED;
   private int periphery = (int) NOT_COMPUTED;
@@ -66,7 +66,7 @@ public final class GraphStats<V, E> {
     return getMeasurer().getRadius();
   }
 
-  private GraphMeasurer<V, E> getMeasurer() {
+  private GraphMeasurer<V, ?> getMeasurer() {
     if (measurer == null) {
       measurer = new GraphMeasurer<>(graph);
     }
@@ -95,7 +95,7 @@ public final class GraphStats<V, E> {
     return getHarmonicCentrality().getScores();
   }
 
-  private HarmonicCentrality<V, E> getHarmonicCentrality() {
+  private HarmonicCentrality<V, ?> getHarmonicCentrality() {
     if (harmonicCentrality == null) {
       harmonicCentrality = new HarmonicCentrality<>(graph, shortestPathAlgorithm);
     }
@@ -106,7 +106,7 @@ public final class GraphStats<V, E> {
     return getClusteringCoefficient().getGlobalClusteringCoefficient();
   }
 
-  private ClusteringCoefficient<V, E> getClusteringCoefficient() {
+  private ClusteringCoefficient<V, ?> getClusteringCoefficient() {
     if (clusteringCoefficient == null) {
       clusteringCoefficient = new ClusteringCoefficient<>(graph);
     }
@@ -121,7 +121,7 @@ public final class GraphStats<V, E> {
     return getKatzCentrality().getScores();
   }
 
-  private KatzCentrality<V, E> getKatzCentrality() {
+  private KatzCentrality<V, ?> getKatzCentrality() {
     if (katzCentrality == null) {
       katzCentrality = new KatzCentrality<>(graph);
     }
@@ -132,7 +132,7 @@ public final class GraphStats<V, E> {
     return getEigenvectorCentrality().getScores();
   }
 
-  private EigenvectorCentrality<V, E> getEigenvectorCentrality() {
+  private EigenvectorCentrality<V, ?> getEigenvectorCentrality() {
     if (eigenvectorCentrality == null) {
       eigenvectorCentrality = new EigenvectorCentrality<>(graph);
     }
@@ -146,7 +146,7 @@ public final class GraphStats<V, E> {
     return degeneracy;
   }
 
-  private Coreness<V, E> getCoreness() {
+  private Coreness<V, ?> getCoreness() {
     if (coreness == null) {
       coreness = new Coreness<>(graph);
     }
@@ -156,10 +156,10 @@ public final class GraphStats<V, E> {
   // Copied from JGraphT's implementation, but reuses a ShortestPathAlgorithm instance.
   private static final class HarmonicCentrality<V, E> extends ClosenessCentrality<V, E> {
 
-    private final ShortestPathAlgorithm<V, E> shortestPathAlgorithm;
+    private final ShortestPathAlgorithm<V, ?> shortestPathAlgorithm;
 
     public HarmonicCentrality(
-        Graph<V, E> graph, ShortestPathAlgorithm<V, E> shortestPathAlgorithm) {
+        Graph<V, E> graph, ShortestPathAlgorithm<V, ?> shortestPathAlgorithm) {
       super(graph);
       this.shortestPathAlgorithm = shortestPathAlgorithm;
     }
@@ -168,11 +168,10 @@ public final class GraphStats<V, E> {
     protected void compute() {
       // Modified from original to use fastutil Map.
       scores = new Object2DoubleOpenHashMap<>();
-      ShortestPathAlgorithm<V, E> alg = getShortestPathAlgorithm();
       int n = graph.vertexSet().size();
       for (V v : graph.vertexSet()) {
         double sum = 0d;
-        SingleSourcePaths<V, E> paths = alg.getPaths(v);
+        SingleSourcePaths<V, ?> paths = shortestPathAlgorithm.getPaths(v);
         for (V u : graph.vertexSet()) {
           if (!u.equals(v)) {
             sum += 1.0 / paths.getWeight(u);
@@ -184,11 +183,6 @@ public final class GraphStats<V, E> {
           scores.put(v, sum);
         }
       }
-    }
-
-    @Override
-    protected ShortestPathAlgorithm<V, E> getShortestPathAlgorithm() {
-      return shortestPathAlgorithm;
     }
   }
 }
