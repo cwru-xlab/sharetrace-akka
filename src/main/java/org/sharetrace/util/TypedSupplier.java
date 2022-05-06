@@ -5,20 +5,21 @@ import java.util.function.Supplier;
 
 public class TypedSupplier<T> implements Supplier<T> {
 
-  private final Class<? extends T> type;
-  private final Supplier<T> supplier;
+  private final Class<T> type;
+  private final Supplier<? super T> supplier;
 
-  private TypedSupplier(Class<? extends T> type, Supplier<T> supplier) {
+  private TypedSupplier(Class<T> type, Supplier<? super T> supplier) {
     this.type = Objects.requireNonNull(type);
     this.supplier = Objects.requireNonNull(supplier);
   }
 
-  public static <T> TypedSupplier<T> of(Class<? extends T> type, Supplier<T> supplier) {
-    return new TypedSupplier<>(type, supplier);
+  @SuppressWarnings("unchecked")
+  public static <T> TypedSupplier<T> of(T result) {
+    return new TypedSupplier<>((Class<T>) result.getClass(), () -> result);
   }
 
-  public static <T> TypedSupplier<T> of(Class<? extends T> type, T result) {
-    return new TypedSupplier<>(type, () -> result);
+  public static <T> TypedSupplier<T> of(Class<T> type, Supplier<? super T> supplier) {
+    return new TypedSupplier<>(type, supplier);
   }
 
   /**
@@ -29,12 +30,12 @@ public class TypedSupplier<T> implements Supplier<T> {
    */
   @Override
   public T get() {
-    T result = Objects.requireNonNull(supplier.get());
+    Object result = Objects.requireNonNull(supplier.get());
     return type.cast(result);
   }
 
   /** Returns the expected class type of the return value of {@link Supplier#get()}. */
-  public Class<? extends T> getType() {
+  public Class<T> getType() {
     return type;
   }
 }

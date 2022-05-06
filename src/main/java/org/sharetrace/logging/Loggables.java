@@ -29,7 +29,7 @@ public final class Loggables {
   }
 
   public void info(String message, String key, Loggable value) {
-    info(logger, message, key, TypedSupplier.of(value.getClass(), value));
+    info(logger, message, key, TypedSupplier.of(value));
   }
 
   public void info(
@@ -44,11 +44,11 @@ public final class Loggables {
   }
 
   public void info(Logger logger, String message, String key, Loggable value) {
-    info(logger, message, key, TypedSupplier.of(value.getClass(), value));
+    info(logger, message, key, TypedSupplier.of(value));
   }
 
   public void debug(Logger logger, String message, String key, Loggable value) {
-    debug(logger, message, key, TypedSupplier.of(value.getClass(), value));
+    debug(logger, message, key, TypedSupplier.of(value));
   }
 
   public void debug(
@@ -63,7 +63,7 @@ public final class Loggables {
   }
 
   public void debug(String message, String key, Loggable value) {
-    debug(logger, message, key, TypedSupplier.of(value.getClass(), value));
+    debug(logger, message, key, TypedSupplier.of(value));
   }
 
   public Set<Class<? extends Loggable>> loggable() {
