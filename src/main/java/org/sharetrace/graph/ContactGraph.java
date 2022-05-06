@@ -17,6 +17,7 @@ import org.sharetrace.logging.metrics.GraphEccentricityMetrics;
 import org.sharetrace.logging.metrics.GraphScoringMetrics;
 import org.sharetrace.logging.metrics.GraphSizeMetrics;
 import org.sharetrace.logging.metrics.LoggableMetric;
+import org.sharetrace.util.DescriptiveStats;
 import org.sharetrace.util.TypedSupplier;
 import org.slf4j.Logger;
 
@@ -86,10 +87,11 @@ public class ContactGraph implements TemporalGraph<Integer> {
             GraphScoringMetrics.builder()
                 .degeneracy(stats.degeneracy())
                 .globalClusteringCoefficient(stats.globalClusteringCoefficient())
-                .localClusteringCoefficient(-1) // TODO
-                .harmonicCentrality(-1) // TODO
-                .katzCentrality(-1) // TODO
-                .eigenvectorCentrality(-1) // TODO
+                .localClusteringCoefficient(
+                    DescriptiveStats.of(stats.localClusteringCoefficients()))
+                .harmonicCentrality(DescriptiveStats.of(stats.harmonicCentralities()))
+                .katzCentrality(DescriptiveStats.of(stats.katzCentralities()))
+                .eigenvectorCentrality(DescriptiveStats.of(stats.eigenvectorCentralities()))
                 .build());
   }
 

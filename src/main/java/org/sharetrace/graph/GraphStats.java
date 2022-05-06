@@ -18,13 +18,13 @@ public final class GraphStats<V, E> {
 
   private static final double NOT_COMPUTED = -1d;
   private final Graph<V, E> graph;
-  private final ShortestPathAlgorithm<V, ?> shortestPathAlgorithm;
+  private final ShortestPathAlgorithm<V, ?> shortestPath;
   private GraphMeasurer<V, ?> measurer;
-  private HarmonicCentrality<V, E> harmonicCentrality;
-  private KatzCentrality<V, ?> katzCentrality;
-  private EigenvectorCentrality<V, ?> eigenvectorCentrality;
-  private ClusteringCoefficient<V, ?> clusteringCoefficient;
-  private Coreness<V, ?> coreness;
+  private double[] harmonicCentralities;
+  private double[] katzCentralities;
+  private double[] eigenvectorCentralities;
+  private double[] localClusteringCoefficients;
+  private double globalClusteringCoefficient = NOT_COMPUTED;
   private long nTriangles = (long) NOT_COMPUTED;
   private int center = (int) NOT_COMPUTED;
   private int periphery = (int) NOT_COMPUTED;
@@ -33,7 +33,7 @@ public final class GraphStats<V, E> {
 
   private GraphStats(Graph<V, E> graph) {
     this.graph = graph;
-    this.shortestPathAlgorithm = new FloydWarshallShortestPaths<>(graph);
+    this.shortestPath = new FloydWarshallShortestPaths<>(graph);
   }
 
   public static <V, E> GraphStats<V, E> of(Graph<V, E> graph) {
@@ -62,8 +62,8 @@ public final class GraphStats<V, E> {
     return graph.iterables().edgeCount();
   }
 
-  public double radius() {
-    return getMeasurer().getRadius();
+  public long radius() {
+    return (long) getMeasurer().getRadius();
   }
 
   private GraphMeasurer<V, ?> getMeasurer() {
@@ -73,8 +73,8 @@ public final class GraphStats<V, E> {
     return measurer;
   }
 
-  public double diameter() {
-    return getMeasurer().getDiameter();
+  public long diameter() {
+    return (long) getMeasurer().getDiameter();
   }
 
   public int periphery() {
@@ -91,66 +91,52 @@ public final class GraphStats<V, E> {
     return center;
   }
 
-  public Map<V, Double> harmonicCentralityScores() {
-    return getHarmonicCentrality().getScores();
+  public double[] harmonicCentralities() {
+    if (harmonicCentralities == null) {
+      harmonicCentralities =
+          toDoubleArray(new HarmonicCentrality<>(graph, shortestPath).getScores());
+    }
+    return harmonicCentralities;
   }
 
-  private HarmonicCentrality<V, ?> getHarmonicCentrality() {
-    if (harmonicCentrality == null) {
-      harmonicCentrality = new HarmonicCentrality<>(graph, shortestPathAlgorithm);
-    }
-    return harmonicCentrality;
+  private static double[] toDoubleArray(Map<?, Double> map) {
+    return map.values().stream().mapToDouble(Number::doubleValue).toArray();
   }
 
   public double globalClusteringCoefficient() {
-    return getClusteringCoefficient().getGlobalClusteringCoefficient();
-  }
-
-  private ClusteringCoefficient<V, ?> getClusteringCoefficient() {
-    if (clusteringCoefficient == null) {
-      clusteringCoefficient = new ClusteringCoefficient<>(graph);
+    if (globalClusteringCoefficient == NOT_COMPUTED) {
+      globalClusteringCoefficient =
+          new ClusteringCoefficient<>(graph).getGlobalClusteringCoefficient();
     }
-    return clusteringCoefficient;
+    return globalClusteringCoefficient;
   }
 
-  public Map<V, Double> localClusteringCoefficients() {
-    return getClusteringCoefficient().getScores();
-  }
-
-  public Map<V, Double> katzCentralityScores() {
-    return getKatzCentrality().getScores();
-  }
-
-  private KatzCentrality<V, ?> getKatzCentrality() {
-    if (katzCentrality == null) {
-      katzCentrality = new KatzCentrality<>(graph);
+  public double[] localClusteringCoefficients() {
+    if (localClusteringCoefficients == null) {
+      localClusteringCoefficients = toDoubleArray(new ClusteringCoefficient<>(graph).getScores());
     }
-    return katzCentrality;
+    return localClusteringCoefficients;
   }
 
-  public Map<V, Double> eigenvectorCentralityScores() {
-    return getEigenvectorCentrality().getScores();
-  }
-
-  private EigenvectorCentrality<V, ?> getEigenvectorCentrality() {
-    if (eigenvectorCentrality == null) {
-      eigenvectorCentrality = new EigenvectorCentrality<>(graph);
+  public double[] katzCentralities() {
+    if (katzCentralities == null) {
+      katzCentralities = toDoubleArray(new KatzCentrality<>(graph).getScores());
     }
-    return eigenvectorCentrality;
+    return katzCentralities;
+  }
+
+  public double[] eigenvectorCentralities() {
+    if (eigenvectorCentralities == null) {
+      eigenvectorCentralities = toDoubleArray(new EigenvectorCentrality<>(graph).getScores());
+    }
+    return eigenvectorCentralities;
   }
 
   public int degeneracy() {
     if (degeneracy == NOT_COMPUTED) {
-      degeneracy = getCoreness().getDegeneracy();
+      degeneracy = new Coreness<>(graph).getDegeneracy();
     }
     return degeneracy;
-  }
-
-  private Coreness<V, ?> getCoreness() {
-    if (coreness == null) {
-      coreness = new Coreness<>(graph);
-    }
-    return coreness;
   }
 
   // Copied from JGraphT's implementation, but reuses a ShortestPathAlgorithm instance.
