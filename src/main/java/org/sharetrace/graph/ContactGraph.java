@@ -51,14 +51,13 @@ public class ContactGraph implements TemporalGraph<Integer> {
     loggables.info(key, key, scoringMetrics(stats));
   }
 
-  // Use concrete type to get compile-time check.
-  private TypedSupplier<GraphSizeMetrics> sizeMetrics(GraphStats<?, ?> stats) {
+  private TypedSupplier<LoggableMetric> sizeMetrics(GraphStats<?, ?> stats) {
     return TypedSupplier.of(
         GraphSizeMetrics.class,
         () -> GraphSizeMetrics.builder().nNodes(stats.nNodes()).nEdges(stats.nEdges()).build());
   }
 
-  private TypedSupplier<GraphCycleMetrics> cycleMetrics(GraphStats<?, ?> stats) {
+  private TypedSupplier<LoggableMetric> cycleMetrics(GraphStats<?, ?> stats) {
     return TypedSupplier.of(
         GraphCycleMetrics.class,
         () ->
@@ -68,7 +67,7 @@ public class ContactGraph implements TemporalGraph<Integer> {
                 .build());
   }
 
-  private TypedSupplier<GraphEccentricityMetrics> eccentricityMetrics(GraphStats<?, ?> stats) {
+  private TypedSupplier<LoggableMetric> eccentricityMetrics(GraphStats<?, ?> stats) {
     return TypedSupplier.of(
         GraphEccentricityMetrics.class,
         () ->
@@ -80,7 +79,7 @@ public class ContactGraph implements TemporalGraph<Integer> {
                 .build());
   }
 
-  private TypedSupplier<GraphScoringMetrics> scoringMetrics(GraphStats<?, ?> stats) {
+  private TypedSupplier<LoggableMetric> scoringMetrics(GraphStats<?, ?> stats) {
     return TypedSupplier.of(
         GraphScoringMetrics.class,
         () ->
