@@ -1,8 +1,6 @@
 package org.sharetrace.experiment;
 
 import akka.actor.typed.Behavior;
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Set;
@@ -11,7 +9,6 @@ import org.sharetrace.RiskPropagationBuilder;
 import org.sharetrace.Runner;
 import org.sharetrace.data.Dataset;
 import org.sharetrace.logging.Loggable;
-import org.sharetrace.logging.Loggers;
 import org.sharetrace.logging.events.ContactEvent;
 import org.sharetrace.logging.events.ContactsRefreshEvent;
 import org.sharetrace.logging.events.CurrentRefreshEvent;
@@ -29,11 +26,8 @@ import org.sharetrace.message.AlgorithmMessage;
 import org.sharetrace.message.Parameters;
 import org.sharetrace.message.RiskScoreMessage;
 import org.sharetrace.util.IntervalCache;
-import org.slf4j.Logger;
 
 public abstract class Experiment implements Runnable {
-
-  protected static final Logger logger = Loggers.rootLogger();
 
   @Override
   public void run() {
@@ -47,7 +41,6 @@ public abstract class Experiment implements Runnable {
         .addAllLoggable(loggable())
         .graph(dataset.graph())
         .parameters(parameters)
-        .mailboxCapacity(mailboxCapacity(dataset))
         .clock(clock())
         .scoreFactory(dataset::scoreOf)
         .timeFactory(dataset::contactedAt)
@@ -86,25 +79,6 @@ public abstract class Experiment implements Runnable {
         GraphScoringMetrics.class,
         GraphSizeMetrics.class,
         RuntimeMetric.class);
-  }
-
-  protected int mailboxCapacity(Dataset<?> dataset) {
-    Config config = ConfigFactory.load();
-    long threshold = config.getLong("akka.bounded-mailbox-threshold");
-    long nNodes = dataset.graph().nNodes();
-    int capacity = 0;
-    if (threshold < 1) {
-      String message = "Mailbox threshold {} is less than 1; using default unbounded mailbox";
-      logger.info(message, threshold);
-    } else if (nNodes < threshold) {
-      String message = "{} nodes is below threshold {}; using default unbounded mailbox";
-      logger.info(message, nNodes, threshold);
-    } else {
-      capacity = config.getInt("akka.mailbox-capacity");
-      String message = "{} nodes satisfies threshold {}; using bounded mailbox with capacity {}";
-      logger.info(message, nNodes, threshold, capacity);
-    }
-    return capacity;
   }
 
   protected Supplier<Instant> clock() {

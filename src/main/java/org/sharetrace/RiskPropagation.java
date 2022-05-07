@@ -2,7 +2,6 @@ package org.sharetrace;
 
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
-import akka.actor.typed.MailboxSelector;
 import akka.actor.typed.Terminated;
 import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
@@ -57,7 +56,6 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
 
   private final Loggables loggables;
   private final Parameters parameters;
-  private final int mailboxCapacity;
   private final TemporalGraph<T> graph;
   private final long nNodes;
   private final Supplier<Instant> clock;
@@ -72,7 +70,6 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
       Set<Class<? extends Loggable>> loggable,
       TemporalGraph<T> graph,
       Parameters parameters,
-      int mailboxCapacity,
       Supplier<Instant> clock,
       Supplier<IntervalCache<RiskScoreMessage>> cacheFactory,
       Function<T, RiskScore> scoreFactory,
@@ -81,7 +78,6 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
     this.loggables = Loggables.create(loggable);
     this.graph = graph;
     this.parameters = parameters;
-    this.mailboxCapacity = mailboxCapacity;
     this.clock = clock;
     this.cacheFactory = cacheFactory;
     this.scoreFactory = scoreFactory;
@@ -95,7 +91,6 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
       TemporalGraph<T> graph,
       Set<Class<? extends Loggable>> loggable,
       Parameters parameters,
-      int mailboxCapacity,
       Supplier<Instant> clock,
       Supplier<IntervalCache<RiskScoreMessage>> cacheFactory,
       Function<T, RiskScore> scoreFactory,
@@ -104,15 +99,7 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
         context -> {
           context.setLoggerName(Loggers.metricLoggerName());
           return new RiskPropagation<>(
-              context,
-              loggable,
-              graph,
-              parameters,
-              mailboxCapacity,
-              clock,
-              cacheFactory,
-              scoreFactory,
-              timeFactory);
+              context, loggable, graph, parameters, clock, cacheFactory, scoreFactory, timeFactory);
         });
   }
 
@@ -166,9 +153,8 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
   }
 
   private ActorRef<NodeMessage> newNode(T name) {
-    ActorContext<?> context = getContext();
-    ActorRef<NodeMessage> node = context.spawn(newNode(), String.valueOf(name), mailboxSelector());
-    context.watch(node);
+    ActorRef<NodeMessage> node = getContext().spawn(newNode(), String.valueOf(name));
+    getContext().watch(node);
     return node;
   }
 
@@ -198,11 +184,5 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
                 .clock(clock)
                 .cache(cacheFactory.get())
                 .build());
-  }
-
-  private MailboxSelector mailboxSelector() {
-    return mailboxCapacity < 1
-        ? MailboxSelector.defaultMailbox()
-        : MailboxSelector.bounded(mailboxCapacity);
   }
 }
