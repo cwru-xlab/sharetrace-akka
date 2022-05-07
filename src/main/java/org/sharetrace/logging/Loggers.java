@@ -10,6 +10,10 @@ public final class Loggers {
 
   private Loggers() {}
 
+  public static Logger rootLogger() {
+    return LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
+  }
+
   public static Logger eventLogger() {
     return LoggerFactory.getLogger(EVENT_LOGGER_NAME);
   }
