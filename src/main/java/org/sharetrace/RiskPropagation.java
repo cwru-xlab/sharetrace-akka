@@ -127,7 +127,6 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
 
   private Behavior<AlgorithmMessage> onTerminate(Terminated terminated) {
     Behavior<AlgorithmMessage> behavior = this;
-    System.out.println(nStopped);
     if (++nStopped == nNodes) {
       logMetrics();
       behavior = Behaviors.stopped();
