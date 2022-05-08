@@ -68,7 +68,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
       IntervalCache<RiskScoreMessage> cache) {
     super(context);
     this.timers = timers;
-    this.loggables = Loggables.create(loggable);
+    this.loggables = Loggables.create(loggable, () -> getContext().getLog());
     this.contacts = new Object2ObjectOpenHashMap<>();
     this.parameters = parameters;
     this.clock = clock;
@@ -323,7 +323,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
 
   private <T extends Loggable> void logEvent(Class<T> type, Supplier<T> supplier) {
     String key = LoggableEvent.KEY;
-    loggables.info(getContext().getLog(), key, key, TypedSupplier.of(type, supplier));
+    loggables.info(key, key, TypedSupplier.of(type, supplier));
   }
 
   private ContactEvent contactEvent(ContactMessage message) {

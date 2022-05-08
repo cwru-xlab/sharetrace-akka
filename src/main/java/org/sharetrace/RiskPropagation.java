@@ -34,6 +34,7 @@ import org.sharetrace.message.RiskScore;
 import org.sharetrace.message.RiskScoreMessage;
 import org.sharetrace.message.Run;
 import org.sharetrace.util.IntervalCache;
+import org.sharetrace.util.TypedSupplier;
 
 /**
  * A non-iterative, asynchronous implementation of the ShareTrace algorithm. The objective is to
@@ -75,7 +76,7 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
       Function<T, RiskScore> scoreFactory,
       BiFunction<T, T, Instant> timeFactory) {
     super(context);
-    this.loggables = Loggables.create(loggable);
+    this.loggables = Loggables.create(loggable, () -> getContext().getLog());
     this.graph = graph;
     this.parameters = parameters;
     this.clock = clock;
@@ -126,6 +127,7 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
 
   private Behavior<AlgorithmMessage> onTerminate(Terminated terminated) {
     Behavior<AlgorithmMessage> behavior = this;
+    System.out.println(nStopped);
     if (++nStopped == nNodes) {
       logMetrics();
       behavior = Behaviors.stopped();
@@ -149,7 +151,9 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
 
   private void logMetrics() {
     String key = LoggableMetric.KEY;
-    loggables.info(getContext().getLog(), key, key, RuntimeMetric.of(runtime()));
+    TypedSupplier<Loggable> runtime =
+        TypedSupplier.of(RuntimeMetric.class, () -> RuntimeMetric.of(runtime()));
+    loggables.info(key, key, runtime);
   }
 
   private ActorRef<NodeMessage> newNode(T name) {
