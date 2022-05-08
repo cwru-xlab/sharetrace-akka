@@ -2,6 +2,7 @@ package org.sharetrace.data;
 
 import static org.sharetrace.util.Preconditions.checkArgument;
 import java.time.Instant;
+import java.util.Map;
 import java.util.Set;
 import org.jgrapht.Graph;
 import org.jgrapht.GraphType;
@@ -21,9 +22,17 @@ public abstract class DatasetFactory implements GraphGenerator<Integer, Edge<Int
   }
 
   @Override
-  public void generateGraph(Graph<Integer, Edge<Integer>> target) {
-    generateGraph(checkGraphType(target), null);
+  public final void generateGraph(
+      Graph<Integer, Edge<Integer>> target, Map<String, Integer> resultMap) {
+    createTemporalGraph(checkGraphType(target));
   }
+
+  @Override
+  public final void generateGraph(Graph<Integer, Edge<Integer>> target) {
+    createTemporalGraph(checkGraphType(target));
+  }
+
+  protected abstract void createTemporalGraph(Graph<Integer, Edge<Integer>> target);
 
   private static <T> Graph<T, Edge<T>> checkGraphType(Graph<T, Edge<T>> graph) {
     GraphType type = graph.getType();

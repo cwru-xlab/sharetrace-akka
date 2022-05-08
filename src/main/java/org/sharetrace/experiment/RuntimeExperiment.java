@@ -4,8 +4,6 @@ import java.util.Set;
 import java.util.stream.IntStream;
 import org.sharetrace.logging.Loggable;
 import org.sharetrace.logging.metrics.GraphCycleMetrics;
-import org.sharetrace.logging.metrics.GraphEccentricityMetrics;
-import org.sharetrace.logging.metrics.GraphScoringMetrics;
 import org.sharetrace.logging.metrics.GraphSizeMetrics;
 import org.sharetrace.logging.metrics.RuntimeMetric;
 
@@ -40,12 +38,7 @@ public class RuntimeExperiment extends SyntheticExperiment {
 
   @Override
   protected Set<Class<? extends Loggable>> loggable() {
-    // Logging node events becomes too expensive for large graphs
-    return Set.of(
-        GraphCycleMetrics.class,
-        GraphEccentricityMetrics.class,
-        GraphScoringMetrics.class,
-        GraphSizeMetrics.class,
-        RuntimeMetric.class);
+    // Events and path-based graph metrics becomes too expensive for large graphs
+    return Set.of(GraphCycleMetrics.class, GraphSizeMetrics.class, RuntimeMetric.class);
   }
 }

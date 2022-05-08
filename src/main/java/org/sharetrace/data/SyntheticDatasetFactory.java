@@ -2,7 +2,6 @@ package org.sharetrace.data;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -49,7 +48,7 @@ class SyntheticDatasetFactory extends DatasetFactory {
   }
 
   @Override
-  public void generateGraph(Graph<Integer, Edge<Integer>> target, Map<String, Integer> resultMap) {
+  public void createTemporalGraph(Graph<Integer, Edge<Integer>> target) {
     generator.generateGraph(target);
   }
 

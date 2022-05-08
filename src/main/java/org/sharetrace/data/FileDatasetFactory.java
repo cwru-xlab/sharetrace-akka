@@ -58,7 +58,7 @@ class FileDatasetFactory extends DatasetFactory {
   }
 
   @Override
-  public void generateGraph(Graph<Integer, Edge<Integer>> target, Map<String, Integer> resultMap) {
+  protected void createTemporalGraph(Graph<Integer, Edge<Integer>> target) {
     try (BufferedReader reader = Files.newBufferedReader(path)) {
       reader.lines().forEach(line -> processLine(line, target));
       adjustTimestamps();

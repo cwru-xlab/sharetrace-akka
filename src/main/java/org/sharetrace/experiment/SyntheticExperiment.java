@@ -24,6 +24,7 @@ public abstract class SyntheticExperiment extends Experiment {
   @Override
   protected Dataset<Integer> newDataset(Parameters parameters) {
     return SyntheticDatasetBuilder.create()
+        .addAllLoggable(loggable())
         .generator(newGenerator())
         .clock(clock())
         .scoreTtl(parameters.scoreTtl())
