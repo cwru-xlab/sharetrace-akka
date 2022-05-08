@@ -13,10 +13,10 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-import javax.annotation.Nullable;
 import org.immutables.builder.Builder;
 import org.sharetrace.RiskPropagation;
 import org.sharetrace.logging.Loggable;
@@ -56,6 +56,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
   private final Parameters parameters;
   private final Supplier<Instant> clock;
   private final IntervalCache<RiskScoreMessage> cache;
+  private RiskScoreMessage previous;
   private RiskScoreMessage current;
   private double sendThreshold;
 
@@ -73,7 +74,8 @@ public class Node extends AbstractBehavior<NodeMessage> {
     this.parameters = parameters;
     this.clock = clock;
     this.cache = cache;
-    this.current = cached(defaultMessage());
+    this.previous = cached(defaultMessage());
+    this.current = previous;
     setSendThreshold();
     startRefreshTimer();
   }
@@ -96,6 +98,10 @@ public class Node extends AbstractBehavior<NodeMessage> {
 
   private void startRefreshTimer() {
     timers.startTimerWithFixedDelay(Refresh.INSTANCE, parameters.refreshRate());
+  }
+
+  private void resetTimeout() {
+    timers.startSingleTimer(Timeout.INSTANCE, parameters.idleTimeout());
   }
 
   @Builder.Factory
@@ -181,15 +187,13 @@ public class Node extends AbstractBehavior<NodeMessage> {
 
   private void refreshCurrent() {
     if (!isScoreAlive(current)) {
-      RiskScoreMessage cached = maxCached(clock.get());
-      RiskScoreMessage newValue = cached != null ? cached : defaultMessage();
-      logCurrentRefresh(current, newValue);
-      current = newValue;
+      RiskScoreMessage newCurrent = maxCached(clock.get()).orElseGet(this::defaultMessage);
+      updatePreviousAndCurrent(newCurrent);
+      logCurrentRefresh();
     }
   }
 
-  @Nullable
-  private RiskScoreMessage maxCached(Instant timestamp) {
+  private Optional<RiskScoreMessage> maxCached(Instant timestamp) {
     return cache.headMax(timestamp, RiskScoreMessage::compareTo);
   }
 
@@ -224,13 +228,15 @@ public class Node extends AbstractBehavior<NodeMessage> {
   }
 
   private void sendCached(ContactMessage message) {
-    RiskScoreMessage cached = maxCached(buffered(message.timestamp()));
-    if (cached != null) {
-      ActorRef<NodeMessage> contact = message.replyTo();
-      RiskScoreMessage transmitted = transmitted(cached);
-      logSendCached(contact, transmitted);
-      contact.tell(transmitted);
-    }
+    Instant buffered = buffered(message.timestamp());
+    maxCached(buffered).ifPresent(cached -> sendCached(message, cached));
+  }
+
+  private void sendCached(ContactMessage message, RiskScoreMessage cached) {
+    ActorRef<NodeMessage> contact = message.replyTo();
+    RiskScoreMessage transmitted = transmitted(cached);
+    contact.tell(transmitted);
+    logSendCached(contact, transmitted);
   }
 
   private Behavior<NodeMessage> onRiskScoreMessage(RiskScoreMessage message) {
@@ -243,10 +249,15 @@ public class Node extends AbstractBehavior<NodeMessage> {
 
   private void update(RiskScoreMessage message) {
     if (cached(message).score().value() > current.score().value()) {
-      logUpdate(current, message);
-      current = message;
+      updatePreviousAndCurrent(message);
       setSendThreshold();
+      logUpdate();
     }
+  }
+
+  private void updatePreviousAndCurrent(RiskScoreMessage newCurrent) {
+    previous = current;
+    current = newCurrent;
   }
 
   private void propagate(RiskScoreMessage message) {
@@ -312,13 +323,9 @@ public class Node extends AbstractBehavior<NodeMessage> {
     return timeToLive.compareTo(sinceTimestamp) >= 0;
   }
 
-  private void resetTimeout() {
-    timers.startSingleTimer(Timeout.INSTANCE, parameters.idleTimeout());
-  }
-
   private void propagate(ActorRef<NodeMessage> contact, RiskScoreMessage message) {
-    logPropagate(contact, message);
     contact.tell(message);
+    logPropagate(contact, message);
   }
 
   private <T extends Loggable> void logEvent(Class<T> type, Supplier<T> supplier) {
@@ -334,11 +341,11 @@ public class Node extends AbstractBehavior<NodeMessage> {
     logEvent(ContactEvent.class, () -> contactEvent(message));
   }
 
-  private void logUpdate(RiskScoreMessage previous, RiskScoreMessage current) {
-    logEvent(UpdateEvent.class, () -> updateEvent(previous, current));
+  private void logUpdate() {
+    logEvent(UpdateEvent.class, this::updateEvent);
   }
 
-  private UpdateEvent updateEvent(RiskScoreMessage previous, RiskScoreMessage current) {
+  private UpdateEvent updateEvent() {
     return UpdateEvent.builder()
         .from(name(current.replyTo()))
         .to(name())
@@ -361,12 +368,11 @@ public class Node extends AbstractBehavior<NodeMessage> {
         .build();
   }
 
-  private void logCurrentRefresh(RiskScoreMessage previous, RiskScoreMessage current) {
-    logEvent(CurrentRefreshEvent.class, () -> currentRefreshEvent(previous, current));
+  private void logCurrentRefresh() {
+    logEvent(CurrentRefreshEvent.class, this::currentRefreshEvent);
   }
 
-  private CurrentRefreshEvent currentRefreshEvent(
-      RiskScoreMessage previous, RiskScoreMessage current) {
+  private CurrentRefreshEvent currentRefreshEvent() {
     return CurrentRefreshEvent.builder()
         .of(name())
         .oldScore(previous.score())

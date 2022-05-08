@@ -10,6 +10,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.SortedMap;
 import java.util.function.BinaryOperator;
 import java.util.function.Supplier;
@@ -64,13 +65,10 @@ public class IntervalCache<T> {
     updateRange();
   }
 
-  private void refresh() {
-    Duration sinceRefresh = Duration.between(lastRefresh, clock.get());
-    if (sinceRefresh.compareTo(refreshRate) > 0) {
-      updateRange();
-      cache.headMap(rangeStart).clear();
-      lastRefresh = clock.get();
-    }
+  private void updateRange() {
+    Instant now = clock.get();
+    rangeStart = now.minus(lookBack);
+    rangeEnd = now.plus(lookAhead);
   }
 
   public static <T> Builder<T> builder() {
@@ -94,21 +92,23 @@ public class IntervalCache<T> {
     return isInRange(timestamp) ? cache.get(floorKey(timestamp)) : null;
   }
 
-  private void updateRange() {
-    Instant now = clock.get();
-    rangeStart = now.minus(lookBack);
-    rangeEnd = now.plus(lookAhead);
+  private void refresh() {
+    Duration sinceRefresh = Duration.between(lastRefresh, clock.get());
+    if (sinceRefresh.compareTo(refreshRate) > 0) {
+      updateRange();
+      cache.headMap(rangeStart).clear();
+      lastRefresh = clock.get();
+    }
+  }
+
+  private boolean isInRange(Instant timestamp) {
+    return rangeStart.isBefore(timestamp) && rangeEnd.isAfter(timestamp);
   }
 
   private Instant floorKey(Instant timestamp) {
     Duration sinceStart = Duration.between(rangeStart, timestamp);
     long multiplier = (long) Math.floor(sinceStart.dividedBy(interval));
     return rangeStart.plus(interval.multipliedBy(multiplier));
-  }
-
-  private Instant checkInRange(Instant timestamp) {
-    checkArgument(isInRange(timestamp), () -> rangeMessage(timestamp));
-    return timestamp;
   }
 
   /**
@@ -126,8 +126,9 @@ public class IntervalCache<T> {
     cache.merge(key, value, mergeStrategy);
   }
 
-  private boolean isInRange(Instant timestamp) {
-    return rangeStart.isBefore(timestamp) && rangeEnd.isAfter(timestamp);
+  private Instant checkInRange(Instant timestamp) {
+    checkArgument(isInRange(timestamp), () -> rangeMessage(timestamp));
+    return timestamp;
   }
 
   private String rangeMessage(Instant timestamp) {
@@ -135,17 +136,17 @@ public class IntervalCache<T> {
   }
 
   /**
-   * Returns the maximum value, according to the specified comparator, whose time interval ends
-   * prior to specified timestamp. If no values have been cached in the time intervals that end
-   * prior to the timestamp, {@code null} is returned. Prior to retrieving the value, the cache is
-   * possibly refreshed if it has been sufficiently long since its previous refresh.
+   * Returns an {@link Optional} containing the maximum value, according to the specified
+   * comparator, whose time interval ends prior to specified timestamp. If no values have been
+   * cached in the time intervals that end prior to the timestamp, an empty {@link Optional} is
+   * returned. Prior to retrieving the value, the cache is possibly refreshed if it has been
+   * sufficiently long since its previous refresh.
    */
-  @Nullable
-  public T headMax(Instant timestamp, Comparator<T> comparator) {
+  public Optional<T> headMax(Instant timestamp, Comparator<T> comparator) {
     Objects.requireNonNull(timestamp);
     Objects.requireNonNull(comparator);
     refresh();
-    return cache.headMap(timestamp).values().stream().max(comparator).orElse(null);
+    return cache.headMap(timestamp).values().stream().max(comparator);
   }
 
   public static final class Builder<T> {
