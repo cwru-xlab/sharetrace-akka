@@ -52,47 +52,48 @@ public class ContactGraph implements TemporalGraph<Integer> {
     loggables.info(key, key, scoringMetrics(stats));
   }
 
-  private TypedSupplier<LoggableMetric> sizeMetrics(GraphStats<?, ?> stats) {
-    return TypedSupplier.of(
-        GraphSizeMetrics.class,
-        () -> GraphSizeMetrics.builder().nNodes(stats.nNodes()).nEdges(stats.nEdges()).build());
+  private static TypedSupplier<LoggableMetric> sizeMetrics(GraphStats<?, ?> stats) {
+    return TypedSupplier.of(GraphSizeMetrics.class, () -> graphSizeMetrics(stats));
   }
 
-  private TypedSupplier<LoggableMetric> cycleMetrics(GraphStats<?, ?> stats) {
-    return TypedSupplier.of(
-        GraphCycleMetrics.class,
-        () ->
-            GraphCycleMetrics.builder()
-                .nTriangles(stats.nTriangles())
-                .girth(stats.girth())
-                .build());
+  private static TypedSupplier<LoggableMetric> cycleMetrics(GraphStats<?, ?> stats) {
+    return TypedSupplier.of(GraphCycleMetrics.class, () -> graphCycleMetrics(stats));
   }
 
-  private TypedSupplier<LoggableMetric> eccentricityMetrics(GraphStats<?, ?> stats) {
-    return TypedSupplier.of(
-        GraphEccentricityMetrics.class,
-        () ->
-            GraphEccentricityMetrics.builder()
-                .radius(stats.radius())
-                .diameter(stats.diameter())
-                .center(stats.center())
-                .periphery(stats.periphery())
-                .build());
+  private static TypedSupplier<LoggableMetric> eccentricityMetrics(GraphStats<?, ?> stats) {
+    return TypedSupplier.of(GraphEccentricityMetrics.class, () -> graphEccentricityMetrics(stats));
   }
 
-  private TypedSupplier<LoggableMetric> scoringMetrics(GraphStats<?, ?> stats) {
-    return TypedSupplier.of(
-        GraphScoringMetrics.class,
-        () ->
-            GraphScoringMetrics.builder()
-                .degeneracy(stats.degeneracy())
-                .globalClusteringCoefficient(stats.globalClusteringCoefficient())
-                .localClusteringCoefficient(
-                    DescriptiveStats.of(stats.localClusteringCoefficients()))
-                .harmonicCentrality(DescriptiveStats.of(stats.harmonicCentralities()))
-                .katzCentrality(DescriptiveStats.of(stats.katzCentralities()))
-                .eigenvectorCentrality(DescriptiveStats.of(stats.eigenvectorCentralities()))
-                .build());
+  private static TypedSupplier<LoggableMetric> scoringMetrics(GraphStats<?, ?> stats) {
+    return TypedSupplier.of(GraphScoringMetrics.class, () -> graphScoringMetrics(stats));
+  }
+
+  private static GraphSizeMetrics graphSizeMetrics(GraphStats<?, ?> stats) {
+    return GraphSizeMetrics.builder().nNodes(stats.nNodes()).nEdges(stats.nEdges()).build();
+  }
+
+  private static GraphCycleMetrics graphCycleMetrics(GraphStats<?, ?> stats) {
+    return GraphCycleMetrics.builder().nTriangles(stats.nTriangles()).girth(stats.girth()).build();
+  }
+
+  private static GraphEccentricityMetrics graphEccentricityMetrics(GraphStats<?, ?> stats) {
+    return GraphEccentricityMetrics.builder()
+        .radius(stats.radius())
+        .diameter(stats.diameter())
+        .center(stats.center())
+        .periphery(stats.periphery())
+        .build();
+  }
+
+  private static GraphScoringMetrics graphScoringMetrics(GraphStats<?, ?> stats) {
+    return GraphScoringMetrics.builder()
+        .degeneracy(stats.degeneracy())
+        .globalClusteringCoefficient(stats.globalClusteringCoefficient())
+        .localClusteringCoefficient(DescriptiveStats.of(stats.localClusteringCoefficients()))
+        .harmonicCentrality(DescriptiveStats.of(stats.harmonicCentralities()))
+        .katzCentrality(DescriptiveStats.of(stats.katzCentralities()))
+        .eigenvectorCentrality(DescriptiveStats.of(stats.eigenvectorCentralities()))
+        .build();
   }
 
   public static ContactGraph create(
