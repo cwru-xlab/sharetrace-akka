@@ -39,9 +39,9 @@ public class ParametersExperiment extends SyntheticExperiment {
   @Override
   public void run() {
     for (double tr = minTransmissionRate; tr < maxTransmissionRate; tr += stepTransmissionRate) {
+      transmissionRate = tr;
       for (double st = minSendTolerance; st < maxSendTolerance; st += stepSendTolerance) {
         sendTolerance = st;
-        transmissionRate = tr;
         IntStream.range(0, nRepeats).forEach(x -> super.run());
       }
     }
