@@ -39,6 +39,7 @@ import org.sharetrace.message.RiskScore;
 import org.sharetrace.message.RiskScoreMessage;
 import org.sharetrace.message.Timeout;
 import org.sharetrace.util.IntervalCache;
+import org.sharetrace.util.TypedSupplier;
 
 /**
  * An actor that corresponds to a {@link ContactGraph} node. Collectively, all {@link Node}s carry
@@ -124,8 +125,38 @@ public class Node extends AbstractBehavior<NodeMessage> {
     return Behaviors.stopped();
   }
 
+  private static SendCurrentEvent sendCurrentEvent(
+      ActorRef<NodeMessage> contact, RiskScoreMessage message) {
+    return SendCurrentEvent.builder()
+        .from(name(message.replyTo()))
+        .to(name(contact))
+        .score(message.score())
+        .uuid(message.uuid())
+        .build();
+  }
+
+  private static SendCachedEvent sendCachedEvent(
+      ActorRef<NodeMessage> contact, RiskScoreMessage message) {
+    return SendCachedEvent.builder()
+        .from(name(message.replyTo()))
+        .to(name(contact))
+        .score(message.score())
+        .uuid(message.uuid())
+        .build();
+  }
+
   private static String name(ActorRef<NodeMessage> node) {
     return node.path().name();
+  }
+
+  private static PropagateEvent propagateEvent(
+      ActorRef<NodeMessage> contact, RiskScoreMessage message) {
+    return PropagateEvent.builder()
+        .from(name(message.replyTo()))
+        .to(name(contact))
+        .score(message.score())
+        .uuid(message.uuid())
+        .build();
   }
 
   @Override
@@ -233,15 +264,17 @@ public class Node extends AbstractBehavior<NodeMessage> {
   }
 
   private RiskScoreMessage transmitted(RiskScoreMessage received) {
-    RiskScore transmitted =
-        RiskScore.builder()
-            .value(received.score().value() * parameters.transmissionRate())
-            .timestamp(received.score().timestamp())
-            .build();
     return RiskScoreMessage.builder()
         .replyTo(self())
-        .score(transmitted)
+        .score(transmittedScore(received))
         .uuid(received.uuid())
+        .build();
+  }
+
+  private RiskScore transmittedScore(RiskScoreMessage received) {
+    return RiskScore.builder()
+        .value(received.score().value() * parameters.transmissionRate())
+        .timestamp(received.score().timestamp())
         .build();
   }
 
@@ -292,87 +325,87 @@ public class Node extends AbstractBehavior<NodeMessage> {
     contact.tell(message);
   }
 
-  private void logEvent(Loggable event) {
-    loggables.info(getContext().getLog(), LoggableEvent.KEY, LoggableEvent.KEY, event);
+  private <T extends Loggable> void logEvent(Class<T> type, Supplier<T> supplier) {
+    String key = LoggableEvent.KEY;
+    loggables.info(getContext().getLog(), key, key, TypedSupplier.of(type, supplier));
+  }
+
+  private ContactEvent contactEvent(ContactMessage message) {
+    return ContactEvent.builder().of(name()).addNodes(name(), name(message.replyTo())).build();
   }
 
   private void logContact(ContactMessage message) {
-    logEvent(ContactEvent.builder().of(name()).addNodes(name(), name(message.replyTo())).build());
+    logEvent(ContactEvent.class, () -> contactEvent(message));
   }
 
   private void logUpdate(RiskScoreMessage previous, RiskScoreMessage current) {
-    logEvent(
-        UpdateEvent.builder()
-            .from(name(current.replyTo()))
-            .to(name())
-            .oldScore(previous.score())
-            .newScore(current.score())
-            .oldUuid(previous.uuid())
-            .newUuid(current.uuid())
-            .build());
+    logEvent(UpdateEvent.class, () -> updateEvent(previous, current));
+  }
+
+  private UpdateEvent updateEvent(RiskScoreMessage previous, RiskScoreMessage current) {
+    return UpdateEvent.builder()
+        .from(name(current.replyTo()))
+        .to(name())
+        .oldScore(previous.score())
+        .newScore(current.score())
+        .oldUuid(previous.uuid())
+        .newUuid(current.uuid())
+        .build();
   }
 
   private void logContactsRefresh(int nRemaining, int nExpired) {
-    logEvent(
-        ContactsRefreshEvent.builder()
-            .of(name())
-            .nRemaining(nRemaining)
-            .nExpired(nExpired)
-            .build());
+    logEvent(ContactsRefreshEvent.class, () -> contactsRefreshEvent(nRemaining, nExpired));
+  }
+
+  private ContactsRefreshEvent contactsRefreshEvent(int nRemaining, int nExpired) {
+    return ContactsRefreshEvent.builder()
+        .of(name())
+        .nRemaining(nRemaining)
+        .nExpired(nExpired)
+        .build();
   }
 
   private void logCurrentRefresh(RiskScoreMessage previous, RiskScoreMessage current) {
-    logEvent(
-        CurrentRefreshEvent.builder()
-            .of(name())
-            .oldScore(previous.score())
-            .newScore(current.score())
-            .oldUuid(previous.uuid())
-            .newUuid(current.uuid())
-            .build());
+    logEvent(CurrentRefreshEvent.class, () -> currentRefreshEvent(previous, current));
   }
 
-  private void logSendCurrent(ActorRef<NodeMessage> contact, RiskScoreMessage message) {
-    logEvent(
-        SendCurrentEvent.builder()
-            .from(name(message.replyTo()))
-            .to(name(contact))
-            .score(message.score())
-            .uuid(message.uuid())
-            .build());
-  }
-
-  private void logSendCached(ActorRef<NodeMessage> contact, RiskScoreMessage message) {
-    logEvent(
-        SendCachedEvent.builder()
-            .from(name(message.replyTo()))
-            .to(name(contact))
-            .score(message.score())
-            .uuid(message.uuid())
-            .build());
-  }
-
-  private void logPropagate(ActorRef<NodeMessage> contact, RiskScoreMessage message) {
-    logEvent(
-        PropagateEvent.builder()
-            .from(name(message.replyTo()))
-            .to(name(contact))
-            .score(message.score())
-            .uuid(message.uuid())
-            .build());
-  }
-
-  private void logReceive(RiskScoreMessage message) {
-    logEvent(
-        ReceiveEvent.builder()
-            .from(name(message.replyTo()))
-            .to(name())
-            .score(message.score())
-            .uuid(message.uuid())
-            .build());
+  private CurrentRefreshEvent currentRefreshEvent(
+      RiskScoreMessage previous, RiskScoreMessage current) {
+    return CurrentRefreshEvent.builder()
+        .of(name())
+        .oldScore(previous.score())
+        .newScore(current.score())
+        .oldUuid(previous.uuid())
+        .newUuid(current.uuid())
+        .build();
   }
 
   private String name() {
     return name(self());
+  }
+
+  private void logSendCurrent(ActorRef<NodeMessage> contact, RiskScoreMessage message) {
+    logEvent(SendCurrentEvent.class, () -> sendCurrentEvent(contact, message));
+  }
+
+  private void logSendCached(ActorRef<NodeMessage> contact, RiskScoreMessage message) {
+    logEvent(SendCachedEvent.class, () -> sendCachedEvent(contact, message));
+  }
+
+  private void logPropagate(ActorRef<NodeMessage> contact, RiskScoreMessage message) {
+    logEvent(PropagateEvent.class, () -> propagateEvent(contact, message));
+  }
+
+  private void logReceive(RiskScoreMessage message) {
+    logEvent(ReceiveEvent.class, () -> receiveEvent(message));
+  }
+
+  private ReceiveEvent receiveEvent(RiskScoreMessage message) {
+    return ReceiveEvent.builder()
+        .from(name(message.replyTo()))
+        .to(name())
+        .score(message.score())
+        .uuid(message.uuid())
+        .build();
   }
 }
