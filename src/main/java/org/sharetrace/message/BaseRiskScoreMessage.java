@@ -8,7 +8,7 @@ import org.sharetrace.graph.ContactGraph;
 import org.sharetrace.graph.Node;
 
 @Value.Immutable
-abstract class BaseRiskScoreMessage implements NodeMessage, Comparable<BaseRiskScoreMessage> {
+abstract class BaseRiskScoreMessage implements NodeMessage, Comparable<RiskScoreMessage> {
 
   /**
    * Returns the actor reference associated with the {@link Node} that propagates this risk score.
@@ -16,7 +16,7 @@ abstract class BaseRiskScoreMessage implements NodeMessage, Comparable<BaseRiskS
   public abstract ActorRef<NodeMessage> replyTo();
 
   @Override
-  public int compareTo(BaseRiskScoreMessage message) {
+  public int compareTo(RiskScoreMessage message) {
     return score().compareTo(message.score());
   }
 
