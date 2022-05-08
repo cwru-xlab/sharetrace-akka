@@ -86,7 +86,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
   private RiskScoreMessage defaultMessage() {
     return RiskScoreMessage.builder()
         .score(RiskScore.of(RiskScore.MIN_VALUE, clock.get()))
-        .replyTo(self())
+        .replyTo(getContext().getSelf())
         .build();
   }
 
@@ -96,10 +96,6 @@ public class Node extends AbstractBehavior<NodeMessage> {
 
   private void startRefreshTimer() {
     timers.startTimerWithFixedDelay(Refresh.INSTANCE, parameters.refreshRate());
-  }
-
-  private ActorRef<NodeMessage> self() {
-    return getContext().getSelf();
   }
 
   @Builder.Factory
@@ -265,7 +261,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
 
   private RiskScoreMessage transmitted(RiskScoreMessage received) {
     return RiskScoreMessage.builder()
-        .replyTo(self())
+        .replyTo(getContext().getSelf())
         .score(transmittedScore(received))
         .uuid(received.uuid())
         .build();
@@ -381,7 +377,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
   }
 
   private String name() {
-    return name(self());
+    return name(getContext().getSelf());
   }
 
   private void logSendCurrent(ActorRef<NodeMessage> contact, RiskScoreMessage message) {
