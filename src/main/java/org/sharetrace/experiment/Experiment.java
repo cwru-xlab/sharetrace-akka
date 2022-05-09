@@ -4,18 +4,10 @@ import akka.actor.typed.Behavior;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Random;
 import java.util.Set;
-import org.apache.commons.math3.distribution.RealDistribution;
-import org.apache.commons.math3.distribution.UniformRealDistribution;
-import org.apache.commons.math3.random.RandomGenerator;
-import org.apache.commons.math3.random.RandomGeneratorFactory;
 import org.sharetrace.RiskPropagationBuilder;
 import org.sharetrace.Runner;
 import org.sharetrace.data.Dataset;
-import org.sharetrace.data.SampledData;
-import org.sharetrace.data.factory.ContactTimeFactory;
-import org.sharetrace.data.factory.ScoreFactory;
 import org.sharetrace.logging.Loggable;
 import org.sharetrace.logging.events.ContactEvent;
 import org.sharetrace.logging.events.ContactsRefreshEvent;
@@ -173,26 +165,5 @@ public abstract class Experiment implements Runnable {
 
   protected Duration defaultTtl() {
     return Duration.ofDays(14L);
-  }
-
-  protected ScoreFactory scoreFactory() {
-    return x ->
-        SampledData.riskScore(valueDistribution(), ttlDistribution(), referenceTime, scoreTtl());
-  }
-
-  protected RealDistribution valueDistribution() {
-    return new UniformRealDistribution(randomGenerator(), 0d, 1d);
-  }
-
-  protected RealDistribution ttlDistribution() {
-    return new UniformRealDistribution(randomGenerator(), 0d, 1d);
-  }
-
-  protected RandomGenerator randomGenerator() {
-    return RandomGeneratorFactory.createRandomGenerator(new Random(seed));
-  }
-
-  protected ContactTimeFactory contactTimeFactory() {
-    return (x, xx) -> SampledData.contactTime(referenceTime, ttlDistribution(), contactTtl());
   }
 }

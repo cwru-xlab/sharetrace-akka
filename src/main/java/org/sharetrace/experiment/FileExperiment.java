@@ -1,10 +1,15 @@
 package org.sharetrace.experiment;
 
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.stream.IntStream;
 import org.sharetrace.data.Dataset;
 import org.sharetrace.data.factory.FileDatasetBuilder;
+import org.sharetrace.data.sampling.Sampler;
+import org.sharetrace.data.sampling.ScoreSampler;
+import org.sharetrace.data.sampling.TimestampSampler;
 import org.sharetrace.message.Parameters;
+import org.sharetrace.message.RiskScore;
 
 public final class FileExperiment extends Experiment {
 
@@ -14,12 +19,26 @@ public final class FileExperiment extends Experiment {
   private final Path path;
   private final String delimiter;
   private final int nRepeats;
+  private final Sampler<RiskScore> scoreSampler;
 
   public FileExperiment(Path path, String delimiter, int nRepeats, long seed) {
     super(seed);
     this.path = path;
     this.delimiter = delimiter;
     this.nRepeats = nRepeats;
+    this.scoreSampler = newScoreSampler();
+  }
+
+  private Sampler<RiskScore> newScoreSampler() {
+    return ScoreSampler.builder().timestampSampler(newTimestampSampler()).seed(seed).build();
+  }
+
+  private Sampler<Instant> newTimestampSampler() {
+    return TimestampSampler.builder()
+        .seed(seed)
+        .referenceTime(referenceTime)
+        .ttl(scoreTtl())
+        .build();
   }
 
   public static void runTabDelimited(Path path, int nRepeats, long seed) {
@@ -38,7 +57,7 @@ public final class FileExperiment extends Experiment {
         .path(path)
         .addAllLoggable(loggable())
         .referenceTime(referenceTime)
-        .scoreFactory(scoreFactory())
+        .scoreFactory(x -> scoreSampler.sample())
         .build();
   }
 
