@@ -1,4 +1,4 @@
-package org.sharetrace.data;
+package org.sharetrace.data.factory;
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import java.io.BufferedReader;
@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Set;
 import org.immutables.builder.Builder;
 import org.jgrapht.Graph;
+import org.sharetrace.data.Dataset;
 import org.sharetrace.graph.Edge;
 import org.sharetrace.logging.Loggable;
 

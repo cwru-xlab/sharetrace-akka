@@ -3,7 +3,7 @@ package org.sharetrace.experiment;
 import java.nio.file.Path;
 import java.util.stream.IntStream;
 import org.sharetrace.data.Dataset;
-import org.sharetrace.data.FileDatasetBuilder;
+import org.sharetrace.data.factory.FileDatasetBuilder;
 import org.sharetrace.message.Parameters;
 
 public final class FileExperiment extends Experiment {

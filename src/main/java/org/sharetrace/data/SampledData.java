@@ -5,9 +5,9 @@ import java.time.Instant;
 import org.apache.commons.math3.distribution.RealDistribution;
 import org.sharetrace.message.RiskScore;
 
-public final class DataSamplers {
+public class SampledData {
 
-  private DataSamplers() {}
+  private SampledData() {}
 
   public static Instant contactTime(
       Instant referenceTime, RealDistribution ttlDistribution, Duration ttl) {

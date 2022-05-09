@@ -1,4 +1,4 @@
-package org.sharetrace.data;
+package org.sharetrace.data.factory;
 
 import static org.sharetrace.util.Preconditions.checkArgument;
 import java.time.Instant;
@@ -7,6 +7,7 @@ import java.util.Set;
 import org.jgrapht.Graph;
 import org.jgrapht.GraphType;
 import org.jgrapht.generate.GraphGenerator;
+import org.sharetrace.data.Dataset;
 import org.sharetrace.graph.ContactGraph;
 import org.sharetrace.graph.Edge;
 import org.sharetrace.graph.TemporalGraph;

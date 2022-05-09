@@ -12,10 +12,10 @@ import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.random.RandomGeneratorFactory;
 import org.sharetrace.RiskPropagationBuilder;
 import org.sharetrace.Runner;
-import org.sharetrace.data.ContactTimeFactory;
-import org.sharetrace.data.DataSamplers;
 import org.sharetrace.data.Dataset;
-import org.sharetrace.data.ScoreFactory;
+import org.sharetrace.data.SampledData;
+import org.sharetrace.data.factory.ContactTimeFactory;
+import org.sharetrace.data.factory.ScoreFactory;
 import org.sharetrace.logging.Loggable;
 import org.sharetrace.logging.events.ContactEvent;
 import org.sharetrace.logging.events.ContactsRefreshEvent;
@@ -177,7 +177,7 @@ public abstract class Experiment implements Runnable {
 
   protected ScoreFactory scoreFactory() {
     return x ->
-        DataSamplers.riskScore(valueDistribution(), ttlDistribution(), referenceTime, scoreTtl());
+        SampledData.riskScore(valueDistribution(), ttlDistribution(), referenceTime, scoreTtl());
   }
 
   protected RealDistribution valueDistribution() {
@@ -193,6 +193,6 @@ public abstract class Experiment implements Runnable {
   }
 
   protected ContactTimeFactory contactTimeFactory() {
-    return (x, xx) -> DataSamplers.contactTime(referenceTime, ttlDistribution(), contactTtl());
+    return (x, xx) -> SampledData.contactTime(referenceTime, ttlDistribution(), contactTtl());
   }
 }

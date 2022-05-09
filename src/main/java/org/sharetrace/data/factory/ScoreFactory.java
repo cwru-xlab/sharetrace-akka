@@ -1,4 +1,4 @@
-package org.sharetrace.data;
+package org.sharetrace.data.factory;
 
 import org.sharetrace.message.RiskScore;
 
