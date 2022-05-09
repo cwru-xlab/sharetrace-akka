@@ -8,15 +8,16 @@ import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.BiFunction;
-import java.util.function.Function;
-import java.util.function.Supplier;
 import org.immutables.builder.Builder;
+import org.sharetrace.data.CacheFactory;
+import org.sharetrace.data.ContactTimeFactory;
+import org.sharetrace.data.ScoreFactory;
 import org.sharetrace.graph.ContactGraph;
 import org.sharetrace.graph.Node;
 import org.sharetrace.graph.NodeBuilder;
@@ -30,10 +31,8 @@ import org.sharetrace.message.AlgorithmMessage;
 import org.sharetrace.message.ContactMessage;
 import org.sharetrace.message.NodeMessage;
 import org.sharetrace.message.Parameters;
-import org.sharetrace.message.RiskScore;
 import org.sharetrace.message.RiskScoreMessage;
 import org.sharetrace.message.Run;
-import org.sharetrace.util.IntervalCache;
 import org.sharetrace.util.TypedSupplier;
 
 /**
@@ -53,28 +52,28 @@ import org.sharetrace.util.TypedSupplier;
  *
  * @see Parameters
  */
-public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
+public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
 
   private final Loggables loggables;
   private final Parameters parameters;
-  private final TemporalGraph<T> graph;
+  private final TemporalGraph graph;
   private final long nNodes;
-  private final Supplier<Instant> clock;
-  private final Function<T, RiskScore> scoreFactory;
-  private final BiFunction<T, T, Instant> timeFactory;
-  private final Supplier<IntervalCache<RiskScoreMessage>> cacheFactory;
+  private final Clock clock;
+  private final ScoreFactory scoreFactory;
+  private final ContactTimeFactory contactTimeFactory;
+  private final CacheFactory<RiskScoreMessage> cacheFactory;
   private Instant startedAt;
   private int nStopped;
 
   private RiskPropagation(
       ActorContext<AlgorithmMessage> context,
       Set<Class<? extends Loggable>> loggable,
-      TemporalGraph<T> graph,
+      TemporalGraph graph,
       Parameters parameters,
-      Supplier<Instant> clock,
-      Supplier<IntervalCache<RiskScoreMessage>> cacheFactory,
-      Function<T, RiskScore> scoreFactory,
-      BiFunction<T, T, Instant> timeFactory) {
+      Clock clock,
+      CacheFactory<RiskScoreMessage> cacheFactory,
+      ScoreFactory scoreFactory,
+      ContactTimeFactory contactTimeFactory) {
     super(context);
     this.loggables = Loggables.create(loggable, () -> getContext().getLog());
     this.graph = graph;
@@ -82,25 +81,32 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
     this.clock = clock;
     this.cacheFactory = cacheFactory;
     this.scoreFactory = scoreFactory;
-    this.timeFactory = timeFactory;
+    this.contactTimeFactory = contactTimeFactory;
     this.nNodes = graph.nNodes();
     this.nStopped = 0;
   }
 
   @Builder.Factory
-  protected static <T> Behavior<AlgorithmMessage> riskPropagation(
-      TemporalGraph<T> graph,
+  static Behavior<AlgorithmMessage> riskPropagation(
+      TemporalGraph graph,
       Set<Class<? extends Loggable>> loggable,
       Parameters parameters,
-      Supplier<Instant> clock,
-      Supplier<IntervalCache<RiskScoreMessage>> cacheFactory,
-      Function<T, RiskScore> scoreFactory,
-      BiFunction<T, T, Instant> timeFactory) {
+      Clock clock,
+      CacheFactory<RiskScoreMessage> cacheFactory,
+      ScoreFactory scoreFactory,
+      ContactTimeFactory contactTimeFactory) {
     return Behaviors.setup(
         context -> {
           context.setLoggerName(Loggers.metricLoggerName());
-          return new RiskPropagation<>(
-              context, loggable, graph, parameters, clock, cacheFactory, scoreFactory, timeFactory);
+          return new RiskPropagation(
+              context,
+              loggable,
+              graph,
+              parameters,
+              clock,
+              cacheFactory,
+              scoreFactory,
+              contactTimeFactory);
         });
   }
 
@@ -115,8 +121,8 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
   private Behavior<AlgorithmMessage> onRun(Run run) {
     Behavior<AlgorithmMessage> behavior = this;
     if (nNodes > 0) {
-      Map<T, ActorRef<NodeMessage>> nodes = newNodes();
-      startedAt = clock.get();
+      Map<Integer, ActorRef<NodeMessage>> nodes = newNodes();
+      startedAt = clock.instant();
       setScores(nodes);
       setContacts(nodes);
     } else {
@@ -134,13 +140,13 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
     return behavior;
   }
 
-  private Map<T, ActorRef<NodeMessage>> newNodes() {
-    Map<T, ActorRef<NodeMessage>> nodes = new Object2ObjectOpenHashMap<>();
+  private Map<Integer, ActorRef<NodeMessage>> newNodes() {
+    Map<Integer, ActorRef<NodeMessage>> nodes = new Object2ObjectOpenHashMap<>();
     graph.nodes().forEach(name -> nodes.put(name, newNode(name)));
     return nodes;
   }
 
-  private void setScores(Map<T, ActorRef<NodeMessage>> nodes) {
+  private void setScores(Map<Integer, ActorRef<NodeMessage>> nodes) {
     nodes.forEach(this::sendFirstScore);
   }
 
@@ -155,26 +161,26 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
     loggables.info(key, key, runtime);
   }
 
-  private ActorRef<NodeMessage> newNode(T name) {
+  private ActorRef<NodeMessage> newNode(int name) {
     ActorRef<NodeMessage> node = getContext().spawn(newNode(), String.valueOf(name));
     getContext().watch(node);
     return node;
   }
 
-  private void sendFirstScore(T name, ActorRef<NodeMessage> node) {
-    node.tell(RiskScoreMessage.builder().score(scoreFactory.apply(name)).replyTo(node).build());
+  private void sendFirstScore(int name, ActorRef<NodeMessage> node) {
+    node.tell(RiskScoreMessage.builder().score(scoreFactory.create(name)).replyTo(node).build());
   }
 
-  private void sendContact(List<T> edge, Map<?, ActorRef<NodeMessage>> nodes) {
+  private void sendContact(List<Integer> edge, Map<?, ActorRef<NodeMessage>> nodes) {
     ActorRef<NodeMessage> node1 = nodes.get(edge.get(0));
     ActorRef<NodeMessage> node2 = nodes.get(edge.get(1));
-    Instant timestamp = timeFactory.apply(edge.get(0), edge.get(1));
+    Instant timestamp = contactTimeFactory.create(edge.get(0), edge.get(1));
     node1.tell(ContactMessage.builder().replyTo(node2).timestamp(timestamp).build());
     node2.tell(ContactMessage.builder().replyTo(node1).timestamp(timestamp).build());
   }
 
   private double runtime() {
-    return Duration.between(startedAt, clock.get()).toNanos() / 1e9;
+    return Duration.between(startedAt, clock.instant()).toNanos() / 1e9;
   }
 
   private Behavior<NodeMessage> newNode() {
@@ -185,7 +191,7 @@ public class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
                 .addAllLoggable(loggables.loggable())
                 .parameters(parameters)
                 .clock(clock)
-                .cache(cacheFactory.get())
+                .cache(cacheFactory.create())
                 .build());
   }
 }

@@ -6,6 +6,7 @@ import static org.sharetrace.util.Preconditions.checkIsAtLeast;
 import static org.sharetrace.util.Preconditions.checkIsPositive;
 import it.unimi.dsi.fastutil.objects.Object2ObjectAVLTreeMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectRBTreeMap;
+import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Comparator;
@@ -13,7 +14,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.SortedMap;
 import java.util.function.BinaryOperator;
-import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /**
@@ -39,12 +39,12 @@ public class IntervalCache<T> {
   public static final long MIN_LOOK_AHEAD = MIN_INTERVALS;
   public static final Duration DEFAULT_REFRESH_RATE = Duration.ofMinutes(1L);
   public static final Duration DEFAULT_INTERVAL = Duration.ofDays(1L);
-  public static final Supplier<Instant> DEFAULT_CLOCK = Instant::now;
+  public static final Clock DEFAULT_CLOCK = Clock.systemUTC();
   public static final boolean DEFAULT_PRIORITIZE_READS = false;
 
   private final SortedMap<Instant, T> cache;
   private final BinaryOperator<T> mergeStrategy;
-  private final Supplier<Instant> clock;
+  private final Clock clock;
   private final Duration interval;
   private final Duration lookBack;
   private final Duration lookAhead;
@@ -61,12 +61,12 @@ public class IntervalCache<T> {
     lookBack = builder.lookBack;
     lookAhead = builder.lookAhead;
     refreshRate = builder.refreshRate;
-    lastRefresh = clock.get();
+    lastRefresh = clock.instant();
     updateRange();
   }
 
   private void updateRange() {
-    Instant now = clock.get();
+    Instant now = clock.instant();
     rangeStart = now.minus(lookBack);
     rangeEnd = now.plus(lookAhead);
   }
@@ -93,11 +93,11 @@ public class IntervalCache<T> {
   }
 
   private void refresh() {
-    Duration sinceRefresh = Duration.between(lastRefresh, clock.get());
+    Duration sinceRefresh = Duration.between(lastRefresh, clock.instant());
     if (sinceRefresh.compareTo(refreshRate) > 0) {
       updateRange();
       cache.headMap(rangeStart).clear();
-      lastRefresh = clock.get();
+      lastRefresh = clock.instant();
     }
   }
 
@@ -152,7 +152,7 @@ public class IntervalCache<T> {
   public static final class Builder<T> {
 
     private BinaryOperator<T> mergeStrategy = defaultMergeStrategy();
-    private Supplier<Instant> clock = DEFAULT_CLOCK;
+    private Clock clock = DEFAULT_CLOCK;
     private Duration interval = DEFAULT_INTERVAL;
     private long nIntervals = MIN_INTERVALS;
     private long nLookAhead = MIN_LOOK_AHEAD;
@@ -187,7 +187,7 @@ public class IntervalCache<T> {
     }
 
     /** Sets the clock that the cache will use for its notion of time. */
-    public Builder<T> clock(Supplier<Instant> clock) {
+    public Builder<T> clock(Clock clock) {
       this.clock = Objects.requireNonNull(clock);
       return this;
     }

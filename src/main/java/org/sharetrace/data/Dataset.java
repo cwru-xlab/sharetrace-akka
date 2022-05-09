@@ -4,11 +4,11 @@ import java.time.Instant;
 import org.sharetrace.graph.TemporalGraph;
 import org.sharetrace.message.RiskScore;
 
-public interface Dataset<T> {
+public interface Dataset {
 
-  RiskScore scoreOf(T node);
+  RiskScore getScore(int node);
 
-  Instant contactedAt(T node1, T node2);
+  Instant getContactTime(int node1, int node2);
 
-  TemporalGraph<T> graph();
+  TemporalGraph graph();
 }

@@ -8,6 +8,7 @@ import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import akka.actor.typed.javadsl.TimerScheduler;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
@@ -54,7 +55,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
   private final Loggables loggables;
   private final Map<ActorRef<NodeMessage>, Instant> contacts;
   private final Parameters parameters;
-  private final Supplier<Instant> clock;
+  private final Clock clock;
   private final IntervalCache<RiskScoreMessage> cache;
   private RiskScoreMessage previous;
   private RiskScoreMessage current;
@@ -65,7 +66,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
       TimerScheduler<NodeMessage> timers,
       Set<Class<? extends Loggable>> loggable,
       Parameters parameters,
-      Supplier<Instant> clock,
+      Clock clock,
       IntervalCache<RiskScoreMessage> cache) {
     super(context);
     this.timers = timers;
@@ -87,7 +88,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
 
   private RiskScoreMessage defaultMessage() {
     return RiskScoreMessage.builder()
-        .score(RiskScore.of(RiskScore.MIN_VALUE, clock.get()))
+        .score(RiskScore.of(RiskScore.MIN_VALUE, clock.instant()))
         .replyTo(getContext().getSelf())
         .build();
   }
@@ -100,16 +101,12 @@ public class Node extends AbstractBehavior<NodeMessage> {
     timers.startTimerWithFixedDelay(Refresh.INSTANCE, parameters.refreshRate());
   }
 
-  private void resetTimeout() {
-    timers.startSingleTimer(Timeout.INSTANCE, parameters.idleTimeout());
-  }
-
   @Builder.Factory
-  protected static Behavior<NodeMessage> node(
+  static Behavior<NodeMessage> node(
       TimerScheduler<NodeMessage> timers,
       Set<Class<? extends Loggable>> loggable,
       Parameters parameters,
-      Supplier<Instant> clock,
+      Clock clock,
       IntervalCache<RiskScoreMessage> cache) {
     return Behaviors.setup(
         context -> {
@@ -171,6 +168,10 @@ public class Node extends AbstractBehavior<NodeMessage> {
         .build();
   }
 
+  private void resetTimeout() {
+    timers.startSingleTimer(Timeout.INSTANCE, parameters.idleTimeout());
+  }
+
   private Behavior<NodeMessage> onRefresh(Refresh refresh) {
     refreshContacts();
     refreshCurrent();
@@ -187,7 +188,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
 
   private void refreshCurrent() {
     if (!isScoreAlive(current)) {
-      RiskScoreMessage newCurrent = maxCached(clock.get()).orElseGet(this::defaultMessage);
+      RiskScoreMessage newCurrent = maxCached(clock.instant()).orElseGet(this::defaultMessage);
       updatePreviousAndCurrent(newCurrent);
       logCurrentRefresh();
     }
@@ -319,7 +320,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
   }
 
   private boolean isAlive(Instant timestamp, Duration timeToLive) {
-    Duration sinceTimestamp = Duration.between(timestamp, clock.get());
+    Duration sinceTimestamp = Duration.between(timestamp, clock.instant());
     return timeToLive.compareTo(sinceTimestamp) >= 0;
   }
 

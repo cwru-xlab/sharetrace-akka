@@ -1,13 +1,21 @@
 package org.sharetrace.experiment;
 
 import akka.actor.typed.Behavior;
+import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Random;
 import java.util.Set;
-import java.util.function.Supplier;
+import org.apache.commons.math3.distribution.RealDistribution;
+import org.apache.commons.math3.distribution.UniformRealDistribution;
+import org.apache.commons.math3.random.RandomGenerator;
+import org.apache.commons.math3.random.RandomGeneratorFactory;
 import org.sharetrace.RiskPropagationBuilder;
 import org.sharetrace.Runner;
+import org.sharetrace.data.ContactTimeFactory;
+import org.sharetrace.data.DataSamplers;
 import org.sharetrace.data.Dataset;
+import org.sharetrace.data.ScoreFactory;
 import org.sharetrace.logging.Loggable;
 import org.sharetrace.logging.events.ContactEvent;
 import org.sharetrace.logging.events.ContactsRefreshEvent;
@@ -29,6 +37,18 @@ import org.sharetrace.util.IntervalCache;
 
 public abstract class Experiment implements Runnable {
 
+  protected final long seed;
+  protected final Instant referenceTime;
+
+  protected Experiment(long seed) {
+    this.seed = seed;
+    this.referenceTime = clock().instant();
+  }
+
+  protected Clock clock() {
+    return Clock.systemUTC();
+  }
+
   @Override
   public void run() {
     Runner.run(newAlgorithm(), "RiskPropagation");
@@ -36,14 +56,14 @@ public abstract class Experiment implements Runnable {
 
   protected Behavior<AlgorithmMessage> newAlgorithm() {
     Parameters parameters = parameters();
-    Dataset<Integer> dataset = newDataset(parameters);
+    Dataset dataset = newDataset(parameters);
     return RiskPropagationBuilder.<Integer>create()
         .addAllLoggable(loggable())
         .graph(dataset.graph())
         .parameters(parameters)
         .clock(clock())
-        .scoreFactory(dataset::scoreOf)
-        .timeFactory(dataset::contactedAt)
+        .scoreFactory(dataset::getScore)
+        .contactTimeFactory(dataset::getContactTime)
         .cacheFactory(this::newCache)
         .build();
   }
@@ -60,7 +80,7 @@ public abstract class Experiment implements Runnable {
         .build();
   }
 
-  protected abstract Dataset<Integer> newDataset(Parameters parameters);
+  protected abstract Dataset newDataset(Parameters parameters);
 
   protected Set<Class<? extends Loggable>> loggable() {
     return Set.of(
@@ -79,10 +99,6 @@ public abstract class Experiment implements Runnable {
         GraphScoringMetrics.class,
         GraphSizeMetrics.class,
         RuntimeMetric.class);
-  }
-
-  protected Supplier<Instant> clock() {
-    return Instant::now;
   }
 
   protected IntervalCache<RiskScoreMessage> newCache() {
@@ -157,5 +173,26 @@ public abstract class Experiment implements Runnable {
 
   protected Duration defaultTtl() {
     return Duration.ofDays(14L);
+  }
+
+  protected ScoreFactory scoreFactory() {
+    return x ->
+        DataSamplers.riskScore(valueDistribution(), ttlDistribution(), referenceTime, scoreTtl());
+  }
+
+  protected RealDistribution valueDistribution() {
+    return new UniformRealDistribution(randomGenerator(), 0d, 1d);
+  }
+
+  protected RealDistribution ttlDistribution() {
+    return new UniformRealDistribution(randomGenerator(), 0d, 1d);
+  }
+
+  protected RandomGenerator randomGenerator() {
+    return RandomGeneratorFactory.createRandomGenerator(new Random(seed));
+  }
+
+  protected ContactTimeFactory contactTimeFactory() {
+    return (x, xx) -> DataSamplers.contactTime(referenceTime, ttlDistribution(), contactTtl());
   }
 }

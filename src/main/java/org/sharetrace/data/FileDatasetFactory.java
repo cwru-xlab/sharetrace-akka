@@ -8,53 +8,45 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
 import org.immutables.builder.Builder;
 import org.jgrapht.Graph;
 import org.sharetrace.graph.Edge;
 import org.sharetrace.logging.Loggable;
-import org.sharetrace.message.RiskScore;
 
 class FileDatasetFactory extends DatasetFactory {
 
   private final Map<Set<Integer>, Instant> contacts;
   private final Path path;
   private final String delimiter;
-  private final Instant time;
-  private final long scoreTtlInSeconds;
-  private final Random random;
+  private final Instant referenceTime;
   private Instant lastContact;
   private Duration offset;
 
   private FileDatasetFactory(
       Set<Class<? extends Loggable>> loggable,
+      ScoreFactory scoreFactory,
       Path path,
       String delimiter,
-      Instant time,
-      Duration scoreTtl,
-      Random random) {
-    super(loggable);
+      Instant referenceTime) {
+    super(loggable, scoreFactory, new MutableContactFactory());
     this.contacts = new Object2ObjectOpenHashMap<>();
     this.path = path;
     this.delimiter = delimiter;
-    this.time = time;
-    this.scoreTtlInSeconds = scoreTtl.toSeconds();
-    this.random = random;
+    this.referenceTime = referenceTime;
     this.lastContact = Instant.MIN;
   }
 
   @Builder.Factory
-  protected static Dataset<Integer> fileDataset(
+  public static Dataset fileDataset(
       Set<Class<? extends Loggable>> loggable,
+      ScoreFactory scoreFactory,
       Path path,
       String delimiter,
-      Instant time,
-      Duration scoreTtl,
-      Random random) {
-    return new FileDatasetFactory(loggable, path, delimiter, time, scoreTtl, random)
-        .createDataset();
+      Instant referenceTime) {
+    return new FileDatasetFactory(loggable, scoreFactory, path, delimiter, referenceTime).create();
   }
 
   @Override
@@ -62,6 +54,7 @@ class FileDatasetFactory extends DatasetFactory {
     try (BufferedReader reader = Files.newBufferedReader(path)) {
       reader.lines().forEach(line -> processLine(line, target));
       adjustTimestamps();
+      setContacts();
     } catch (IOException exception) {
       throw new UncheckedIOException(exception);
     }
@@ -74,8 +67,12 @@ class FileDatasetFactory extends DatasetFactory {
   }
 
   private void adjustTimestamps() {
-    offset = Duration.between(lastContact, time);
+    offset = Duration.between(lastContact, referenceTime);
     contacts.forEach((nodes, timestamp) -> contacts.computeIfPresent(nodes, this::adjustTimestamp));
+  }
+
+  private void setContacts() {
+    ((MutableContactFactory) contactTimeFactory).setContacts(Collections.unmodifiableMap(contacts));
   }
 
   private void addToGraph(Graph<Integer, Edge<Integer>> target, Parsed parsed) {
@@ -101,15 +98,18 @@ class FileDatasetFactory extends DatasetFactory {
     return Set.of(node1, node2);
   }
 
-  @Override
-  protected RiskScore scoreOf(int node) {
-    Duration lookBack = Duration.ofSeconds(Math.round(random.nextDouble() * scoreTtlInSeconds));
-    return RiskScore.builder().value(random.nextDouble()).timestamp(time.minus(lookBack)).build();
-  }
+  private static final class MutableContactFactory implements ContactTimeFactory {
 
-  @Override
-  protected Instant contactedAt(int node1, int node2) {
-    return contacts.get(key(node1, node2));
+    private Map<Set<Integer>, Instant> contacts;
+
+    @Override
+    public Instant create(int node1, int node2) {
+      return contacts.get(key(node1, node2));
+    }
+
+    public void setContacts(Map<Set<Integer>, Instant> contacts) {
+      this.contacts = contacts;
+    }
   }
 
   private static final class Parsed {

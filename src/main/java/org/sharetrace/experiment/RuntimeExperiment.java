@@ -7,7 +7,7 @@ import org.sharetrace.logging.metrics.GraphCycleMetrics;
 import org.sharetrace.logging.metrics.GraphSizeMetrics;
 import org.sharetrace.logging.metrics.RuntimeMetric;
 
-public class RuntimeExperiment extends SyntheticExperiment {
+public final class RuntimeExperiment extends SyntheticExperiment {
 
   private final int minNodes;
   private final int maxNodes;

@@ -2,7 +2,7 @@ package org.sharetrace.experiment;
 
 import java.util.stream.IntStream;
 
-public class ParametersExperiment extends SyntheticExperiment {
+public final class ParametersExperiment extends SyntheticExperiment {
 
   private final double minTransmissionRate;
   private final double maxTransmissionRate;

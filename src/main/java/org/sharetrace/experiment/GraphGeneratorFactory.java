@@ -12,7 +12,7 @@ class GraphGeneratorFactory {
   private GraphGeneratorFactory() {}
 
   @Builder.Factory
-  protected static <V, E> GraphGenerator<V, E, ?> graphGenerator(
+  public static <V, E> GraphGenerator<V, E, ?> graphGenerator(
       @Builder.Parameter GraphType graphType, int nNodes, int nEdges, Random random) {
     switch (graphType) {
       case GEOMETRIC -> {

@@ -15,10 +15,17 @@ import org.sharetrace.message.RiskScore;
 
 public abstract class DatasetFactory implements GraphGenerator<Integer, Edge<Integer>, Integer> {
 
-  private final Set<Class<? extends Loggable>> loggable;
+  protected final Set<Class<? extends Loggable>> loggable;
+  protected final ScoreFactory scoreFactory;
+  protected final ContactTimeFactory contactTimeFactory;
 
-  protected DatasetFactory(Set<Class<? extends Loggable>> loggable) {
+  protected DatasetFactory(
+      Set<Class<? extends Loggable>> loggable,
+      ScoreFactory scoreFactory,
+      ContactTimeFactory contactTimeFactory) {
     this.loggable = loggable;
+    this.scoreFactory = scoreFactory;
+    this.contactTimeFactory = contactTimeFactory;
   }
 
   @Override
@@ -40,24 +47,23 @@ public abstract class DatasetFactory implements GraphGenerator<Integer, Edge<Int
     return graph;
   }
 
-  public Dataset<Integer> createDataset() {
-    return new Dataset<>() {
+  public Dataset create() {
+    return new Dataset() {
 
-      private final TemporalGraph<Integer> graph =
-          ContactGraph.create(DatasetFactory.this, loggable);
+      private final TemporalGraph graph = ContactGraph.create(DatasetFactory.this, loggable);
 
       @Override
-      public RiskScore scoreOf(Integer node) {
-        return DatasetFactory.this.scoreOf(node);
+      public RiskScore getScore(int node) {
+        return scoreFactory.create(node);
       }
 
       @Override
-      public Instant contactedAt(Integer node1, Integer node2) {
-        return DatasetFactory.this.contactedAt(node1, node2);
+      public Instant getContactTime(int node1, int node2) {
+        return contactTimeFactory.create(node1, node2);
       }
 
       @Override
-      public TemporalGraph<Integer> graph() {
+      public TemporalGraph graph() {
         return graph;
       }
 
@@ -67,8 +73,4 @@ public abstract class DatasetFactory implements GraphGenerator<Integer, Edge<Int
       }
     };
   }
-
-  protected abstract RiskScore scoreOf(int node);
-
-  protected abstract Instant contactedAt(int node1, int node2);
 }

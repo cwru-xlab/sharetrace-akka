@@ -3,6 +3,7 @@ package org.sharetrace.graph;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import org.jgrapht.Graph;
 import org.jgrapht.generate.GraphGenerator;
@@ -30,7 +31,7 @@ import org.slf4j.Logger;
  * @see Node
  * @see Edge
  */
-public class ContactGraph implements TemporalGraph<Integer> {
+public class ContactGraph implements TemporalGraph {
 
   private static final Logger logger = Loggers.metricLogger();
   private final Loggables loggables;
@@ -109,8 +110,8 @@ public class ContactGraph implements TemporalGraph<Integer> {
   }
 
   @Override
-  public Stream<Integer> nodes() {
-    return graph.vertexSet().stream();
+  public IntStream nodes() {
+    return graph.vertexSet().stream().mapToInt(Integer::intValue);
   }
 
   @Override
