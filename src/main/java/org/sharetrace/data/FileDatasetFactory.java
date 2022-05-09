@@ -19,6 +19,8 @@ import org.sharetrace.logging.Loggable;
 class FileDatasetFactory extends DatasetFactory {
 
   private final Map<Set<Integer>, Instant> contacts;
+  private final Set<Class<? extends Loggable>> loggable;
+  private final ScoreFactory scoreFactory;
   private final Path path;
   private final String delimiter;
   private final Instant referenceTime;
@@ -31,8 +33,9 @@ class FileDatasetFactory extends DatasetFactory {
       Path path,
       String delimiter,
       Instant referenceTime) {
-    super(loggable, scoreFactory, new MutableContactFactory());
     this.contacts = new Object2ObjectOpenHashMap<>();
+    this.loggable = Collections.unmodifiableSet(loggable);
+    this.scoreFactory = scoreFactory;
     this.path = path;
     this.delimiter = delimiter;
     this.referenceTime = referenceTime;
@@ -54,10 +57,24 @@ class FileDatasetFactory extends DatasetFactory {
     try (BufferedReader reader = Files.newBufferedReader(path)) {
       reader.lines().forEach(line -> processLine(line, target));
       adjustTimestamps();
-      setContacts();
     } catch (IOException exception) {
       throw new UncheckedIOException(exception);
     }
+  }
+
+  @Override
+  protected Set<Class<? extends Loggable>> loggable() {
+    return loggable;
+  }
+
+  @Override
+  protected ScoreFactory scoreFactory() {
+    return scoreFactory;
+  }
+
+  @Override
+  protected ContactTimeFactory contactTimeFactory() {
+    return (node1, node2) -> contacts.get(key(node1, node2));
   }
 
   private void processLine(String line, Graph<Integer, Edge<Integer>> target) {
@@ -69,10 +86,6 @@ class FileDatasetFactory extends DatasetFactory {
   private void adjustTimestamps() {
     offset = Duration.between(lastContact, referenceTime);
     contacts.forEach((nodes, timestamp) -> contacts.computeIfPresent(nodes, this::adjustTimestamp));
-  }
-
-  private void setContacts() {
-    ((MutableContactFactory) contactTimeFactory).setContacts(Collections.unmodifiableMap(contacts));
   }
 
   private void addToGraph(Graph<Integer, Edge<Integer>> target, Parsed parsed) {
@@ -96,20 +109,6 @@ class FileDatasetFactory extends DatasetFactory {
 
   private static Set<Integer> key(int node1, int node2) {
     return Set.of(node1, node2);
-  }
-
-  private static final class MutableContactFactory implements ContactTimeFactory {
-
-    private Map<Set<Integer>, Instant> contacts;
-
-    @Override
-    public Instant create(int node1, int node2) {
-      return contacts.get(key(node1, node2));
-    }
-
-    public void setContacts(Map<Set<Integer>, Instant> contacts) {
-      this.contacts = contacts;
-    }
   }
 
   private static final class Parsed {

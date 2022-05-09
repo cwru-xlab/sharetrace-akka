@@ -168,13 +168,13 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
   }
 
   private void sendFirstScore(int name, ActorRef<NodeMessage> node) {
-    node.tell(RiskScoreMessage.builder().score(scoreFactory.create(name)).replyTo(node).build());
+    node.tell(RiskScoreMessage.builder().score(scoreFactory.getScore(name)).replyTo(node).build());
   }
 
   private void sendContact(List<Integer> edge, Map<?, ActorRef<NodeMessage>> nodes) {
     ActorRef<NodeMessage> node1 = nodes.get(edge.get(0));
     ActorRef<NodeMessage> node2 = nodes.get(edge.get(1));
-    Instant timestamp = contactTimeFactory.create(edge.get(0), edge.get(1));
+    Instant timestamp = contactTimeFactory.getContactTime(edge.get(0), edge.get(1));
     node1.tell(ContactMessage.builder().replyTo(node2).timestamp(timestamp).build());
     node2.tell(ContactMessage.builder().replyTo(node1).timestamp(timestamp).build());
   }

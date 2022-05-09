@@ -57,13 +57,13 @@ public abstract class Experiment implements Runnable {
   protected Behavior<AlgorithmMessage> newAlgorithm() {
     Parameters parameters = parameters();
     Dataset dataset = newDataset(parameters);
-    return RiskPropagationBuilder.<Integer>create()
+    return RiskPropagationBuilder.create()
         .addAllLoggable(loggable())
         .graph(dataset.graph())
         .parameters(parameters)
         .clock(clock())
-        .scoreFactory(dataset::getScore)
-        .contactTimeFactory(dataset::getContactTime)
+        .scoreFactory(dataset)
+        .contactTimeFactory(dataset)
         .cacheFactory(this::newCache)
         .build();
   }

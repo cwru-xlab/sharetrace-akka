@@ -1,5 +1,6 @@
 package org.sharetrace.data;
 
+import java.util.Collections;
 import java.util.Set;
 import org.immutables.builder.Builder;
 import org.jgrapht.Graph;
@@ -9,6 +10,9 @@ import org.sharetrace.logging.Loggable;
 
 class SyntheticDatasetFactory extends DatasetFactory {
 
+  private final Set<Class<? extends Loggable>> loggable;
+  private final ScoreFactory scoreFactory;
+  private final ContactTimeFactory contactTimeFactory;
   private final GraphGenerator<Integer, Edge<Integer>, ?> generator;
 
   private SyntheticDatasetFactory(
@@ -16,7 +20,9 @@ class SyntheticDatasetFactory extends DatasetFactory {
       ScoreFactory scoreFactory,
       ContactTimeFactory contactTimeFactory,
       GraphGenerator<Integer, Edge<Integer>, ?> generator) {
-    super(loggable, scoreFactory, contactTimeFactory);
+    this.loggable = Collections.unmodifiableSet(loggable);
+    this.scoreFactory = scoreFactory;
+    this.contactTimeFactory = contactTimeFactory;
     this.generator = generator;
   }
 
@@ -33,5 +39,20 @@ class SyntheticDatasetFactory extends DatasetFactory {
   @Override
   public void createTemporalGraph(Graph<Integer, Edge<Integer>> target) {
     generator.generateGraph(target);
+  }
+
+  @Override
+  protected Set<Class<? extends Loggable>> loggable() {
+    return loggable;
+  }
+
+  @Override
+  protected ScoreFactory scoreFactory() {
+    return scoreFactory;
+  }
+
+  @Override
+  protected ContactTimeFactory contactTimeFactory() {
+    return contactTimeFactory;
   }
 }
