@@ -1,6 +1,10 @@
 package org.sharetrace.experiment;
 
 import java.util.Random;
+import org.apache.commons.math3.distribution.RealDistribution;
+import org.apache.commons.math3.distribution.UniformRealDistribution;
+import org.apache.commons.math3.random.RandomGenerator;
+import org.apache.commons.math3.random.RandomGeneratorFactory;
 import org.jgrapht.generate.GraphGenerator;
 import org.sharetrace.data.Dataset;
 import org.sharetrace.data.SyntheticDatasetBuilder;
@@ -26,10 +30,11 @@ public abstract class SyntheticExperiment extends Experiment {
     return SyntheticDatasetBuilder.create()
         .addAllLoggable(loggable())
         .generator(newGenerator())
+        .scoreValueDistribution(scoreValueDistribution())
+        .lookBackDistribution(lookBackDistribution())
         .clock(clock())
         .scoreTtl(parameters.scoreTtl())
         .contactTtl(parameters.contactTtl())
-        .random(new Random(seed))
         .build();
   }
 
@@ -39,5 +44,17 @@ public abstract class SyntheticExperiment extends Experiment {
         .nEdges(nEdges)
         .random(new Random(seed))
         .build();
+  }
+
+  protected RealDistribution scoreValueDistribution() {
+    return new UniformRealDistribution(randomGenerator(), 0d, 1d);
+  }
+
+  protected RealDistribution lookBackDistribution() {
+    return new UniformRealDistribution(randomGenerator(), 0d, 1d);
+  }
+
+  protected RandomGenerator randomGenerator() {
+    return RandomGeneratorFactory.createRandomGenerator(new Random(seed));
   }
 }

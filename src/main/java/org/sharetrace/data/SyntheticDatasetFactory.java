@@ -2,9 +2,9 @@ package org.sharetrace.data;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Random;
 import java.util.Set;
 import java.util.function.Supplier;
+import org.apache.commons.math3.distribution.RealDistribution;
 import org.immutables.builder.Builder;
 import org.jgrapht.Graph;
 import org.jgrapht.generate.GraphGenerator;
@@ -18,7 +18,8 @@ class SyntheticDatasetFactory extends DatasetFactory {
   private final Supplier<Instant> clock;
   private final long scoreTtlSeconds;
   private final long contactTtlSeconds;
-  private final Random random;
+  private final RealDistribution scoreValueDistribution;
+  private final RealDistribution lookBackDistribution;
 
   private SyntheticDatasetFactory(
       Set<Class<? extends Loggable>> loggable,
@@ -26,13 +27,15 @@ class SyntheticDatasetFactory extends DatasetFactory {
       Supplier<Instant> clock,
       Duration scoreTtl,
       Duration contactTtl,
-      Random random) {
+      RealDistribution scoreValueDistribution,
+      RealDistribution lookBackDistribution) {
     super(loggable);
     this.generator = generator;
     this.clock = clock;
     this.scoreTtlSeconds = scoreTtl.toSeconds();
     this.contactTtlSeconds = contactTtl.toSeconds();
-    this.random = random;
+    this.scoreValueDistribution = scoreValueDistribution;
+    this.lookBackDistribution = lookBackDistribution;
   }
 
   @Builder.Factory
@@ -42,8 +45,16 @@ class SyntheticDatasetFactory extends DatasetFactory {
       Supplier<Instant> clock,
       Duration scoreTtl,
       Duration contactTtl,
-      Random random) {
-    return new SyntheticDatasetFactory(loggable, generator, clock, scoreTtl, contactTtl, random)
+      RealDistribution scoreValueDistribution,
+      RealDistribution lookBackDistribution) {
+    return new SyntheticDatasetFactory(
+            loggable,
+            generator,
+            clock,
+            scoreTtl,
+            contactTtl,
+            scoreValueDistribution,
+            lookBackDistribution)
         .createDataset();
   }
 
@@ -55,7 +66,7 @@ class SyntheticDatasetFactory extends DatasetFactory {
   @Override
   protected RiskScore scoreOf(int node) {
     return RiskScore.builder()
-        .value(random.nextDouble())
+        .value(scoreValueDistribution.sample())
         .timestamp(randomTimestamp(scoreTtlSeconds))
         .build();
   }
@@ -66,7 +77,13 @@ class SyntheticDatasetFactory extends DatasetFactory {
   }
 
   private Instant randomTimestamp(long ttlSeconds) {
-    Duration lookBack = Duration.ofSeconds(Math.round(random.nextDouble() * ttlSeconds));
+    Duration lookBack = Duration.ofSeconds(Math.round(normalizedLookBackSample() * ttlSeconds));
     return clock.get().minus(lookBack);
+  }
+
+  public double normalizedLookBackSample() {
+    double max = lookBackDistribution.getSupportUpperBound();
+    double min = lookBackDistribution.getSupportLowerBound();
+    return (lookBackDistribution.sample() - min) / (max - min);
   }
 }
