@@ -134,11 +134,11 @@ public abstract class Experiment implements Runnable {
   }
 
   protected long cacheIntervals() {
-    return 1L + defaultTtl().toDays();
+    return 2L * defaultTtl().toDays();
   }
 
   protected long cacheLookAhead() {
-    return 1L;
+    return IntervalCache.MIN_LOOK_AHEAD;
   }
 
   protected Duration cacheInterval() {
