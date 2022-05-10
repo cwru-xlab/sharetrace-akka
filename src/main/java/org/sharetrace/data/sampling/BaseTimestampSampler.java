@@ -8,7 +8,7 @@ import org.apache.commons.math3.distribution.UniformRealDistribution;
 import org.immutables.value.Value;
 
 @Value.Immutable
-abstract class BaseTimestampSampler extends BaseSampler implements Sampler<Instant> {
+abstract class BaseTimestampSampler extends BaseSampler<Instant> {
 
   @Override
   public Instant sample() {
@@ -22,7 +22,7 @@ abstract class BaseTimestampSampler extends BaseSampler implements Sampler<Insta
    */
   @Value.Default
   protected RealDistribution ttlDistribution() {
-    return new UniformRealDistribution(randomGenerator(), 0d, 1d);
+    return new UniformRealDistribution(generator(), 0d, 1d);
   }
 
   /** Returns the duration for which a timestamp is valid. */

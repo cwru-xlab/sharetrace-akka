@@ -7,7 +7,7 @@ import org.immutables.value.Value;
 import org.sharetrace.message.RiskScore;
 
 @Value.Immutable
-abstract class BaseScoreSampler extends BaseSampler implements Sampler<RiskScore> {
+abstract class BaseScoreSampler extends BaseSampler<RiskScore> {
 
   @Override
   public RiskScore sample() {
@@ -20,7 +20,7 @@ abstract class BaseScoreSampler extends BaseSampler implements Sampler<RiskScore
    */
   @Value.Default
   protected RealDistribution valueDistribution() {
-    return new UniformRealDistribution(randomGenerator(), 0d, 1d);
+    return new UniformRealDistribution(generator(), 0d, 1d);
   }
 
   /** Returns a timestamp sampler to generate {@link RiskScore} timestamps. */
