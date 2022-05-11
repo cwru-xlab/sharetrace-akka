@@ -2,7 +2,6 @@ package org.sharetrace.experiment;
 
 import java.nio.file.Path;
 import java.time.Instant;
-import java.util.stream.IntStream;
 import org.sharetrace.data.Dataset;
 import org.sharetrace.data.factory.FileDatasetBuilder;
 import org.sharetrace.data.sampling.Sampler;
@@ -17,22 +16,20 @@ public class FileExperiment extends Experiment {
   private static final String COMMA_DELIMITER = ",";
   private final Path path;
   private final String delimiter;
-  private final int nRepeats;
   private final Sampler<RiskScore> scoreSampler;
 
   public FileExperiment(Path path, String delimiter, int nRepeats, long seed) {
-    super(seed);
+    super(nRepeats, seed);
     this.path = path;
     this.delimiter = delimiter;
-    this.nRepeats = nRepeats;
     this.scoreSampler = newScoreSampler();
   }
 
-  private Sampler<RiskScore> newScoreSampler() {
+  protected Sampler<RiskScore> newScoreSampler() {
     return ScoreSampler.builder().timestampSampler(newTimestampSampler()).seed(seed).build();
   }
 
-  private Sampler<Instant> newTimestampSampler() {
+  protected Sampler<Instant> newTimestampSampler() {
     return TimestampSampler.builder()
         .seed(seed)
         .referenceTime(referenceTime)
@@ -44,13 +41,12 @@ public class FileExperiment extends Experiment {
     new FileExperiment(path, WHITESPACE_DELIMITER, nRepeats, seed).run();
   }
 
-  @Override
-  public void run() {
-    IntStream.range(0, nRepeats).forEach(x -> super.run());
+  public static void runCommaDelimited(Path path, int nRepeats, long seed) {
+    new FileExperiment(path, COMMA_DELIMITER, nRepeats, seed).run();
   }
 
   @Override
-  protected Dataset newDataset(Parameters parameters) {
+  protected Dataset dataset(Parameters parameters) {
     return FileDatasetBuilder.create()
         .delimiter(delimiter)
         .path(path)
@@ -58,9 +54,5 @@ public class FileExperiment extends Experiment {
         .referenceTime(referenceTime)
         .scoreFactory(x -> scoreSampler.sample())
         .build();
-  }
-
-  public static void runCommaDelimited(Path path, int nRepeats, long seed) {
-    new FileExperiment(path, COMMA_DELIMITER, nRepeats, seed).run();
   }
 }

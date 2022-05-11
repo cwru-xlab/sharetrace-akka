@@ -41,13 +41,6 @@ public final class RuntimeExperiment extends SyntheticExperiment {
   }
 
   @Override
-  protected Dataset newDataset(Parameters parameters) {
-    Dataset dataset = super.newDataset(parameters);
-    nodeTimeout = computeNodeTimeout(dataset.graph());
-    return dataset;
-  }
-
-  @Override
   protected Set<Class<? extends Loggable>> loggable() {
     // Events and path-based graph metrics becomes too expensive for large graphs
     return Set.of(GraphCycleMetrics.class, GraphSizeMetrics.class, RuntimeMetric.class);
@@ -56,5 +49,12 @@ public final class RuntimeExperiment extends SyntheticExperiment {
   @Override
   protected Duration nodeTimeout() {
     return nodeTimeout;
+  }
+
+  @Override
+  protected Dataset dataset(Parameters parameters) {
+    Dataset dataset = super.dataset(parameters);
+    nodeTimeout = computeNodeTimeout(dataset.graph());
+    return dataset;
   }
 }

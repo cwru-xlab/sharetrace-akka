@@ -4,7 +4,9 @@ import akka.actor.typed.Behavior;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Random;
 import java.util.Set;
+import java.util.stream.IntStream;
 import org.sharetrace.RiskPropagationBuilder;
 import org.sharetrace.Runner;
 import org.sharetrace.data.Dataset;
@@ -31,9 +33,15 @@ import org.sharetrace.util.IntervalCache;
 public abstract class Experiment implements Runnable {
 
   protected final long seed;
+  protected final int nIterations;
   protected final Instant referenceTime;
 
   protected Experiment(long seed) {
+    this(1, seed);
+  }
+
+  protected Experiment(int nIterations, long seed) {
+    this.nIterations = nIterations;
     this.seed = seed;
     this.referenceTime = clock().instant();
   }
@@ -42,14 +50,22 @@ public abstract class Experiment implements Runnable {
     return Clock.systemUTC();
   }
 
+  protected Experiment() {
+    this(1, new Random().nextLong());
+  }
+
   @Override
   public void run() {
+    IntStream.range(0, nIterations).forEach(this::onIteration);
+  }
+
+  protected void onIteration(int iteration) {
     Runner.run(newAlgorithm(), "RiskPropagation");
   }
 
   protected Behavior<AlgorithmMessage> newAlgorithm() {
     Parameters parameters = parameters();
-    Dataset dataset = newDataset(parameters);
+    Dataset dataset = dataset(parameters);
     return RiskPropagationBuilder.create()
         .addAllLoggable(loggable())
         .graph(dataset.graph())
@@ -73,7 +89,7 @@ public abstract class Experiment implements Runnable {
         .build();
   }
 
-  protected abstract Dataset newDataset(Parameters parameters);
+  protected abstract Dataset dataset(Parameters parameters);
 
   protected Set<Class<? extends Loggable>> loggable() {
     return Set.of(
