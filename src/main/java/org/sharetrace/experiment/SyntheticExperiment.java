@@ -67,11 +67,11 @@ public abstract class SyntheticExperiment extends Experiment {
   protected GraphGenerator<Integer, Edge<Integer>, ?> generator() {
     return GraphGeneratorBuilder.<Integer, Edge<Integer>>create(graphType, getNumNodes(), seed)
         .nEdges(getNumNodes() * 2)
-        .degree(5)
-        .kNearestNeighbors(3)
+        .degree(4)
+        .kNearestNeighbors(2)
         .nInitialNodes(2)
         .nNewEdges(2)
-        .rewiringProbability(0.5)
+        .rewiringProbability(0.3)
         .build();
   }
 
