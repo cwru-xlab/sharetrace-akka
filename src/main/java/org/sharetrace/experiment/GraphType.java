@@ -2,10 +2,8 @@ package org.sharetrace.experiment;
 
 public enum GraphType {
   BARABASI_ALBERT,
-  GEOMETRIC,
-  SCALE_FREE;
-
-  public GraphType match(String string) {
-    return valueOf(string.strip().toUpperCase());
-  }
+  GNM_RANDOM,
+  RANDOM_REGULAR,
+  SCALE_FREE,
+  WATTS_STROGATZ
 }
