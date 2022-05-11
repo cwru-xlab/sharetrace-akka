@@ -13,8 +13,7 @@ import org.sharetrace.message.RiskScore;
 
 public class FileExperiment extends Experiment {
 
-  private static final String TAB_DELIMITER = "\t";
-  private static final String SPACE_DELIMITER = " ";
+  private static final String WHITESPACE_DELIMITER = "\\s+";
   private static final String COMMA_DELIMITER = ",";
   private final Path path;
   private final String delimiter;
@@ -41,8 +40,8 @@ public class FileExperiment extends Experiment {
         .build();
   }
 
-  public static void runTabDelimited(Path path, int nRepeats, long seed) {
-    new FileExperiment(path, TAB_DELIMITER, nRepeats, seed).run();
+  public static void runWhitespaceDelimited(Path path, int nRepeats, long seed) {
+    new FileExperiment(path, WHITESPACE_DELIMITER, nRepeats, seed).run();
   }
 
   @Override
@@ -59,10 +58,6 @@ public class FileExperiment extends Experiment {
         .referenceTime(referenceTime)
         .scoreFactory(x -> scoreSampler.sample())
         .build();
-  }
-
-  public static void runSpaceDelimited(Path path, int nRepeats, long seed) {
-    new FileExperiment(path, SPACE_DELIMITER, nRepeats, seed).run();
   }
 
   public static void runCommaDelimited(Path path, int nRepeats, long seed) {

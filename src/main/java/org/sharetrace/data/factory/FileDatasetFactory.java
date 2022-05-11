@@ -119,9 +119,9 @@ class FileDatasetFactory extends DatasetFactory {
 
     private Parsed(String string, String delimiter) {
       String[] args = string.split(delimiter);
-      this.node1 = Integer.parseInt(args[1]);
-      this.node2 = Integer.parseInt(args[2]);
-      this.timestamp = Instant.ofEpochSecond(Long.parseLong(args[0]));
+      this.node1 = Integer.parseInt(args[1].strip());
+      this.node2 = Integer.parseInt(args[2].strip());
+      this.timestamp = Instant.ofEpochSecond(Long.parseLong(args[0].strip()));
     }
 
     @Override
