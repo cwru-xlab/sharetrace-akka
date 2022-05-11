@@ -1,6 +1,5 @@
 package org.sharetrace.data.factory;
 
-import java.util.Collections;
 import java.util.Set;
 import org.immutables.builder.Builder;
 import org.jgrapht.Graph;
@@ -21,7 +20,7 @@ class SyntheticDatasetFactory extends DatasetFactory {
       ScoreFactory scoreFactory,
       ContactTimeFactory contactTimeFactory,
       GraphGenerator<Integer, Edge<Integer>, ?> generator) {
-    this.loggable = Collections.unmodifiableSet(loggable);
+    this.loggable = loggable;
     this.scoreFactory = scoreFactory;
     this.contactTimeFactory = contactTimeFactory;
     this.generator = generator;

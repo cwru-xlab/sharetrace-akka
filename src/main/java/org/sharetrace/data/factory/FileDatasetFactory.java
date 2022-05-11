@@ -8,7 +8,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import org.immutables.builder.Builder;
@@ -35,7 +34,7 @@ class FileDatasetFactory extends DatasetFactory {
       String delimiter,
       Instant referenceTime) {
     this.contacts = new Object2ObjectOpenHashMap<>();
-    this.loggable = Collections.unmodifiableSet(loggable);
+    this.loggable = loggable;
     this.scoreFactory = scoreFactory;
     this.path = path;
     this.delimiter = delimiter;
