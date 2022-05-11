@@ -11,7 +11,7 @@ import org.sharetrace.data.sampling.TimestampSampler;
 import org.sharetrace.message.Parameters;
 import org.sharetrace.message.RiskScore;
 
-public final class FileExperiment extends Experiment {
+public class FileExperiment extends Experiment {
 
   private static final String TAB_DELIMITER = "\t";
   private static final String SPACE_DELIMITER = " ";
