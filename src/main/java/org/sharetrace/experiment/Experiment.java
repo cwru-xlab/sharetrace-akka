@@ -4,7 +4,6 @@ import akka.actor.typed.Behavior;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Random;
 import java.util.Set;
 import java.util.stream.IntStream;
 import org.sharetrace.RiskPropagationBuilder;
@@ -36,10 +35,6 @@ public abstract class Experiment implements Runnable {
   protected final int nIterations;
   protected final Instant referenceTime;
 
-  protected Experiment(long seed) {
-    this(1, seed);
-  }
-
   protected Experiment(int nIterations, long seed) {
     this.nIterations = nIterations;
     this.seed = seed;
@@ -48,10 +43,6 @@ public abstract class Experiment implements Runnable {
 
   protected Clock clock() {
     return Clock.systemUTC();
-  }
-
-  protected Experiment() {
-    this(1, new Random().nextLong());
   }
 
   @Override
