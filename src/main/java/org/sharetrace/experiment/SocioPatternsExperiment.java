@@ -10,7 +10,7 @@ public final class SocioPatternsExperiment extends FileExperiment {
   }
 
   public static void main(String[] args) {
-    runInVs13(Path.of("src/main/resources/datasets/InVS13.txt"), 1, 12345);
+    runWhitespaceDelimited(Path.of("src/main/resources/datasets/InVS15.txt"), 1, 12345);
   }
 
   /**
