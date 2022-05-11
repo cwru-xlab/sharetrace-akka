@@ -8,6 +8,7 @@ import java.util.Set;
 import org.sharetrace.RiskPropagationBuilder;
 import org.sharetrace.Runner;
 import org.sharetrace.data.Dataset;
+import org.sharetrace.graph.TemporalGraph;
 import org.sharetrace.logging.Loggable;
 import org.sharetrace.logging.events.ContactEvent;
 import org.sharetrace.logging.events.ContactsRefreshEvent;
@@ -165,5 +166,9 @@ public abstract class Experiment implements Runnable {
 
   protected Duration defaultTtl() {
     return Duration.ofDays(14L);
+  }
+
+  protected Duration computeNodeTimeout(TemporalGraph graph) {
+    return Duration.ofSeconds((long) Math.ceil(Math.log(graph.nEdges())));
   }
 }
