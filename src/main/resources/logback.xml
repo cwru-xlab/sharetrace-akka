@@ -72,7 +72,9 @@
     <appendTimeout>-1</appendTimeout> <!--Default: 0-->
     <ringBufferSize>8192</ringBufferSize> <!--Default: 8192-->
     <waitStrategyType>blocking</waitStrategyType> <!--Default: blocking-->
-    <appender class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <appender class="ch.qos.logback.core.FileAppender">
+      <append>true</append>
+      <file>${logPath}/metrics.log</file>
       <encoder class="net.logstash.logback.encoder.LogstashEncoder">
         <fieldNames class="net.logstash.logback.fieldnames.ShortenedFieldNames">
           <levelValue>[ignore]</levelValue>
@@ -93,19 +95,48 @@
         <timestampPattern>[UNIX_TIMESTAMP_AS_NUMBER]</timestampPattern>
       </encoder>
       <immediateFlush>false</immediateFlush>
-      <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-        <fileNamePattern>${logPath}/metrics/${bySecond}-%d{yyyyMMdd}-%i.log.zip</fileNamePattern>
-        <maxFileSize>10MB</maxFileSize>
-        <maxHistory>30</maxHistory>
-        <totalSizeCap>20GB</totalSizeCap>
-      </rollingPolicy>
     </appender>
+  </appender>
+  <!--Ref: https://github.com/logfellow/logstash-logback-encoder#async-appenders-->
+  <appender class="net.logstash.logback.appender.LoggingEventAsyncDisruptorAppender"
+    name="settings">
+    <appendRetryFrequency>5</appendRetryFrequency> <!--Default: 5ms-->
+    <appendTimeout>-1</appendTimeout> <!--Default: 0-->
+    <appender class="ch.qos.logback.core.FileAppender">
+      <append>true</append>
+      <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+        <fieldNames class="net.logstash.logback.fieldnames.ShortenedFieldNames">
+          <levelValue>[ignore]</levelValue>
+          <logger>[ignore]</logger>
+          <thread>[ignore]</thread>
+          <version>[ignore]</version>
+        </fieldNames>
+        <includeMdcKeyName>akkaTimestamp</includeMdcKeyName>
+        <throwableConverter class="net.logstash.logback.stacktrace.ShortenedThrowableConverter">
+          <exclude>sun\.reflect\..*\.invoke.*</exclude>
+          <exclude>net\.sf\.cglib\.proxy\.MethodProxy\.invoke</exclude>
+          <inlineHash>true</inlineHash>
+          <maxDepthPerThrowable>30</maxDepthPerThrowable>
+          <maxLength>2048</maxLength>
+          <rootCauseFirst>true</rootCauseFirst>
+          <shortenedClassNameLength>20</shortenedClassNameLength>
+        </throwableConverter>
+        <timestampPattern>[UNIX_TIMESTAMP_AS_NUMBER]</timestampPattern>
+      </encoder>
+      <file>${logPath}/settings.log</file>
+      <immediateFlush>false</immediateFlush>
+    </appender> <!--Default: 8192-->
+    <ringBufferSize>8192</ringBufferSize> <!--Default: blocking-->
+    <waitStrategyType>blocking</waitStrategyType>
   </appender>
   <logger name="EventLogger" level="info" additivity="false">
     <appender-ref ref="events"/>
   </logger>
   <logger name="MetricLogger" level="info" additivity="false">
     <appender-ref ref="metrics"/>
+  </logger>
+  <logger additivity="false" level="info" name="SettingLogger">
+    <appender-ref ref="settings"/>
   </logger>
   <root level="info">
     <appender-ref ref="console"/>
