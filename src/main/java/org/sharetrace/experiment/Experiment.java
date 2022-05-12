@@ -99,7 +99,17 @@ public abstract class Experiment implements Runnable {
     Runner.run(newAlgorithm(), "RiskPropagation");
   }
 
-  protected abstract Dataset newDataset();
+  protected void setUpIteration(int i) {
+    iteration = i;
+    dataset = newDataset();
+    nodeParameters = newNodeParameters();
+    cacheParameters = newCacheParameters();
+    ExperimentSettings newSettings = newSettings();
+    if (!newSettings.equals(settings)) {
+      loggables.info(LoggableSetting.KEY, newSettings);
+      settings = newSettings;
+    }
+  }
 
   protected Behavior<AlgorithmMessage> newAlgorithm() {
     return RiskPropagationBuilder.create()
@@ -110,6 +120,41 @@ public abstract class Experiment implements Runnable {
         .scoreFactory(dataset)
         .contactTimeFactory(dataset)
         .cacheFactory(cacheFactory())
+        .build();
+  }
+
+  protected abstract Dataset newDataset();
+
+  protected NodeParameters newNodeParameters() {
+    return NodeParameters.builder()
+        .sendTolerance(sendTolerance())
+        .transmissionRate(transmissionRate())
+        .timeBuffer(timeBuffer())
+        .scoreTtl(scoreTtl())
+        .contactTtl(contactTtl())
+        .idleTimeout(nodeTimeout())
+        .refreshRate(nodeRefreshRate())
+        .build();
+  }
+
+  protected CacheParameters newCacheParameters() {
+    return CacheParameters.builder()
+        .prioritizeReads(cachePrioritizeReads())
+        .interval(cacheInterval())
+        .nIntervals(cacheIntervals())
+        .refreshRate(cacheRefreshRate())
+        .nLookAhead(cacheLookAhead())
+        .build();
+  }
+
+  private ExperimentSettings newSettings() {
+    return ExperimentSettings.builder()
+        .graphType(graphType)
+        .nIterations(nIterations)
+        .iteration(iteration)
+        .seed(seed)
+        .nodeParameters(nodeParameters)
+        .cacheParameters(cacheParameters)
         .build();
   }
 
@@ -146,36 +191,35 @@ public abstract class Experiment implements Runnable {
     return defaultTtl();
   }
 
-  protected NodeParameters newNodeParameters() {
-    return NodeParameters.builder()
-        .sendTolerance(sendTolerance())
-        .transmissionRate(transmissionRate())
-        .timeBuffer(timeBuffer())
-        .scoreTtl(scoreTtl())
-        .contactTtl(contactTtl())
-        .idleTimeout(nodeTimeout())
-        .refreshRate(nodeRefreshRate())
-        .build();
+  protected Duration nodeTimeout() {
+    double nEdges = dataset.graph().nEdges();
+    double targetBase = Math.max(MIN_BASE, LOG10 - DECAY_RATE * nEdges);
+    long timeout = (long) Math.ceil(1000d * Math.log(nEdges) / targetBase);
+    return Duration.ofMillis(timeout);
   }
 
   protected Duration nodeRefreshRate() {
     return Duration.ofHours(1L);
   }
 
-  protected long cacheIntervals() {
-    return 2L * defaultTtl().toDays();
-  }
-
-  protected long cacheLookAhead() {
-    return IntervalCache.MIN_LOOK_AHEAD;
+  protected boolean cachePrioritizeReads() {
+    return false;
   }
 
   protected Duration cacheInterval() {
     return Duration.ofDays(1L);
   }
 
+  protected long cacheIntervals() {
+    return 2L * defaultTtl().toDays();
+  }
+
   protected Duration cacheRefreshRate() {
     return Duration.ofHours(1L);
+  }
+
+  protected long cacheLookAhead() {
+    return IntervalCache.MIN_LOOK_AHEAD;
   }
 
   protected RiskScoreMessage cacheMerge(RiskScoreMessage oldScore, RiskScoreMessage newScore) {
@@ -188,51 +232,7 @@ public abstract class Experiment implements Runnable {
     return isHigher || isOlder ? newScore : oldScore;
   }
 
-  protected boolean cachePrioritizeReads() {
-    return false;
-  }
-
   protected Duration defaultTtl() {
     return Duration.ofDays(14L);
-  }
-
-  protected CacheParameters newCacheParameters() {
-    return CacheParameters.builder()
-        .prioritizeReads(cachePrioritizeReads())
-        .interval(cacheInterval())
-        .nIntervals(cacheIntervals())
-        .refreshRate(cacheRefreshRate())
-        .nLookAhead(cacheLookAhead())
-        .build();
-  }
-
-  protected Duration nodeTimeout() {
-    double nEdges = dataset.graph().nEdges();
-    double targetBase = Math.max(MIN_BASE, LOG10 - DECAY_RATE * nEdges);
-    long timeout = (long) Math.ceil(1000d * Math.log(nEdges) / targetBase);
-    return Duration.ofMillis(timeout);
-  }
-
-  private ExperimentSettings newSettings() {
-    return ExperimentSettings.builder()
-        .graphType(graphType)
-        .nIterations(nIterations)
-        .iteration(iteration)
-        .seed(seed)
-        .nodeParameters(nodeParameters)
-        .cacheParameters(cacheParameters)
-        .build();
-  }
-
-  protected void setUpIteration(int i) {
-    iteration = i;
-    dataset = newDataset();
-    nodeParameters = newNodeParameters();
-    cacheParameters = newCacheParameters();
-    ExperimentSettings newSettings = newSettings();
-    if (!newSettings.equals(settings)) {
-      loggables.info(LoggableSetting.KEY, newSettings);
-      settings = newSettings;
-    }
   }
 }
