@@ -155,10 +155,7 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
   }
 
   private void logMetrics() {
-    String key = LoggableMetric.KEY;
-    TypedSupplier<Loggable> runtime =
-        TypedSupplier.of(RuntimeMetric.class, () -> RuntimeMetric.of(runtime()));
-    loggables.info(key, key, runtime);
+    loggables.info(LoggableMetric.KEY, runtimeMetric());
   }
 
   private ActorRef<NodeMessage> newNode(int name) {
@@ -179,8 +176,8 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
     node2.tell(ContactMessage.builder().replyTo(node1).timestamp(timestamp).build());
   }
 
-  private double runtime() {
-    return Duration.between(startedAt, clock.instant()).toNanos() / 1e9;
+  private TypedSupplier<LoggableMetric> runtimeMetric() {
+    return TypedSupplier.of(RuntimeMetric.class, () -> RuntimeMetric.of(runtime()));
   }
 
   private Behavior<NodeMessage> newNode() {
@@ -193,5 +190,9 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
                 .clock(clock)
                 .cache(cacheFactory.create())
                 .build());
+  }
+
+  private double runtime() {
+    return Duration.between(startedAt, clock.instant()).toNanos() / 1e9;
   }
 }
