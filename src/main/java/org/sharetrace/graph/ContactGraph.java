@@ -46,11 +46,10 @@ public class ContactGraph implements TemporalGraph {
 
   private void logMetrics() {
     GraphStats<?, ?> stats = GraphStats.of(graph);
-    String key = LoggableMetric.KEY;
-    loggables.info(key, key, sizeMetrics(stats));
-    loggables.info(key, key, cycleMetrics(stats));
-    loggables.info(key, key, eccentricityMetrics(stats));
-    loggables.info(key, key, scoringMetrics(stats));
+    loggables.info(LoggableMetric.KEY, sizeMetrics(stats));
+    loggables.info(LoggableMetric.KEY, cycleMetrics(stats));
+    loggables.info(LoggableMetric.KEY, eccentricityMetrics(stats));
+    loggables.info(LoggableMetric.KEY, scoringMetrics(stats));
   }
 
   private static TypedSupplier<LoggableMetric> sizeMetrics(GraphStats<?, ?> stats) {
