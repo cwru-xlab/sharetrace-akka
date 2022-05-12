@@ -116,13 +116,13 @@ public abstract class Experiment implements Runnable {
   protected CacheFactory<RiskScoreMessage> cacheFactory() {
     return () ->
         IntervalCache.<RiskScoreMessage>builder()
-            .nIntervals(cacheIntervals())
-            .nLookAhead(cacheLookAhead())
-            .interval(cacheInterval())
-            .refreshRate(cacheRefreshRate())
+            .nIntervals(cacheParameters.nIntervals())
+            .nLookAhead(cacheParameters.nLookAhead())
+            .interval(cacheParameters.interval())
+            .refreshRate(cacheParameters.refreshRate())
             .clock(clock())
             .mergeStrategy(this::cacheMerge)
-            .prioritizeReads(cachePrioritizeReads())
+            .prioritizeReads(cacheParameters.prioritizeReads())
             .build();
   }
 
