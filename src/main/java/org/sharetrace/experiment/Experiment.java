@@ -10,7 +10,6 @@ import org.sharetrace.RiskPropagationBuilder;
 import org.sharetrace.Runner;
 import org.sharetrace.data.Dataset;
 import org.sharetrace.data.factory.CacheFactory;
-import org.sharetrace.graph.TemporalGraph;
 import org.sharetrace.logging.Loggable;
 import org.sharetrace.logging.Loggables;
 import org.sharetrace.logging.Loggers;
@@ -38,21 +37,28 @@ import org.slf4j.Logger;
 
 public abstract class Experiment implements Runnable {
 
-  private static final Logger logger = Loggers.settingLogger();
-  protected final Loggables loggables;
+  protected static final Logger logger = Loggers.settingLogger();
   protected final GraphType graphType;
   protected final long seed;
   protected final int nIterations;
+  protected final Loggables loggables;
   protected final Instant referenceTime;
+  protected Dataset dataset;
   protected NodeParameters nodeParameters;
-  private ExperimentSettings previousSettings;
+  protected CacheParameters cacheParameters;
+  protected ExperimentSettings settings;
+  protected int iteration;
 
   protected Experiment(GraphType graphType, int nIterations, long seed) {
-    this.loggables = Loggables.create(loggable(), logger);
     this.graphType = graphType;
     this.nIterations = nIterations;
     this.seed = seed;
-    this.referenceTime = clock().instant();
+    this.referenceTime = newReferenceTime();
+    this.loggables = Loggables.create(loggable(), logger);
+  }
+
+  protected Instant newReferenceTime() {
+    return clock().instant();
   }
 
   protected Set<Class<? extends Loggable>> loggable() {
@@ -85,47 +91,35 @@ public abstract class Experiment implements Runnable {
     IntStream.range(0, nIterations).forEach(this::onIteration);
   }
 
-  protected void onIteration(int iteration) {
-    Behavior<AlgorithmMessage> algorithm = newAlgorithm();
-    logSettings(iteration);
-    Runner.run(algorithm, "RiskPropagation");
+  protected void onIteration(int i) {
+    setUpIteration(i);
+    Runner.run(newAlgorithm(), "RiskPropagation");
   }
 
-  protected Behavior<AlgorithmMessage> newAlgorithm() {
-    Dataset dataset = newDataset();
-    return RiskPropagationBuilder.create()
-        .addAllLoggable(loggable())
-        .graph(dataset.graph())
-        .parameters(newNodeParameters(dataset))
-        .clock(clock())
-        .scoreFactory(dataset)
-        .contactTimeFactory(dataset)
-        .cacheFactory(cacheFactory())
-        .build();
-  }
-
-  protected void logSettings(int iteration) {
-    ExperimentSettings settings = settings(iteration);
-    if (!settings.equals(previousSettings)) {
-      loggables.info(LoggableSetting.KEY, LoggableSetting.KEY, settings);
-      previousSettings = settings;
+  protected void setUpIteration(int i) {
+    iteration = i;
+    dataset = newDataset();
+    nodeParameters = newNodeParameters();
+    cacheParameters = newCacheParameters();
+    ExperimentSettings newSettings = newSettings();
+    if (!newSettings.equals(settings)) {
+      loggables.info(LoggableSetting.KEY, newSettings);
+      settings = newSettings;
     }
   }
 
   protected abstract Dataset newDataset();
 
-  protected NodeParameters newNodeParameters(Dataset dataset) {
-    nodeParameters =
-        NodeParameters.builder()
-            .sendTolerance(sendTolerance())
-            .transmissionRate(transmissionRate())
-            .timeBuffer(timeBuffer())
-            .scoreTtl(scoreTtl())
-            .contactTtl(contactTtl())
-            .idleTimeout(computeNodeTimeout(dataset.graph()))
-            .refreshRate(nodeRefreshRate())
-            .build();
-    return nodeParameters;
+  protected Behavior<AlgorithmMessage> newAlgorithm() {
+    return RiskPropagationBuilder.create()
+        .addAllLoggable(loggable())
+        .graph(dataset.graph())
+        .parameters(nodeParameters)
+        .clock(clock())
+        .scoreFactory(dataset)
+        .contactTimeFactory(dataset)
+        .cacheFactory(cacheFactory())
+        .build();
   }
 
   protected CacheFactory<RiskScoreMessage> cacheFactory() {
@@ -161,8 +155,16 @@ public abstract class Experiment implements Runnable {
     return defaultTtl();
   }
 
-  protected Duration nodeTimeout() {
-    return Duration.ofSeconds(5L);
+  protected NodeParameters newNodeParameters() {
+    return NodeParameters.builder()
+        .sendTolerance(sendTolerance())
+        .transmissionRate(transmissionRate())
+        .timeBuffer(timeBuffer())
+        .scoreTtl(scoreTtl())
+        .contactTtl(contactTtl())
+        .idleTimeout(nodeTimeout())
+        .refreshRate(nodeRefreshRate())
+        .build();
   }
 
   protected Duration nodeRefreshRate() {
@@ -203,23 +205,7 @@ public abstract class Experiment implements Runnable {
     return Duration.ofDays(14L);
   }
 
-  private ExperimentSettings settings(int iteration) {
-    return ExperimentSettings.builder()
-        .nIterations(nIterations)
-        .iteration(iteration)
-        .seed(seed)
-        .nodeParameters(nodeParameters)
-        .cacheParameters(cacheParameters())
-        .graphType(graphType)
-        .build();
-  }
-
-  protected Duration computeNodeTimeout(TemporalGraph graph) {
-    long timeout = (long) Math.ceil(Math.log(graph.nEdges()) / Math.log(2));
-    return Duration.ofSeconds(timeout);
-  }
-
-  private CacheParameters cacheParameters() {
+  protected CacheParameters newCacheParameters() {
     return CacheParameters.builder()
         .prioritizeReads(cachePrioritizeReads())
         .interval(cacheInterval())
@@ -227,5 +213,22 @@ public abstract class Experiment implements Runnable {
         .refreshRate(cacheRefreshRate())
         .nLookAhead(cacheLookAhead())
         .build();
+  }
+
+  private ExperimentSettings newSettings() {
+    return ExperimentSettings.builder()
+        .graphType(graphType)
+        .nIterations(nIterations)
+        .iteration(iteration)
+        .seed(seed)
+        .nodeParameters(nodeParameters)
+        .cacheParameters(cacheParameters)
+        .build();
+  }
+
+  protected Duration nodeTimeout() {
+    long nEdges = dataset.graph().nEdges();
+    long timeout = (long) Math.ceil(Math.log(nEdges) / Math.log(2));
+    return Duration.ofSeconds(timeout);
   }
 }
