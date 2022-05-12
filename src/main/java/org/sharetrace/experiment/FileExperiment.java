@@ -7,19 +7,17 @@ import org.sharetrace.data.factory.FileDatasetBuilder;
 import org.sharetrace.data.sampling.Sampler;
 import org.sharetrace.data.sampling.ScoreSampler;
 import org.sharetrace.data.sampling.TimestampSampler;
-import org.sharetrace.message.Parameters;
 import org.sharetrace.message.RiskScore;
 
 public class FileExperiment extends Experiment {
 
   private static final String WHITESPACE_DELIMITER = "\\s+";
-  private static final String COMMA_DELIMITER = ",";
   private final Path path;
   private final String delimiter;
   private final Sampler<RiskScore> scoreSampler;
 
-  public FileExperiment(Path path, String delimiter, int nRepeats, long seed) {
-    super(nRepeats, seed);
+  public FileExperiment(GraphType graphType, Path path, String delimiter, int nRepeats, long seed) {
+    super(graphType, nRepeats, seed);
     this.path = path;
     this.delimiter = delimiter;
     this.scoreSampler = newScoreSampler();
@@ -37,16 +35,13 @@ public class FileExperiment extends Experiment {
         .build();
   }
 
-  public static void runWhitespaceDelimited(Path path, int nRepeats, long seed) {
-    new FileExperiment(path, WHITESPACE_DELIMITER, nRepeats, seed).run();
-  }
-
-  public static void runCommaDelimited(Path path, int nRepeats, long seed) {
-    new FileExperiment(path, COMMA_DELIMITER, nRepeats, seed).run();
+  public static void runWhitespaceDelimited(
+      GraphType graphType, Path path, int nRepeats, long seed) {
+    new FileExperiment(graphType, path, WHITESPACE_DELIMITER, nRepeats, seed).run();
   }
 
   @Override
-  protected Dataset dataset(Parameters parameters) {
+  protected Dataset newDataset() {
     return FileDatasetBuilder.create()
         .delimiter(delimiter)
         .path(path)

@@ -34,7 +34,7 @@ import org.sharetrace.logging.events.SendCurrentEvent;
 import org.sharetrace.logging.events.UpdateEvent;
 import org.sharetrace.message.ContactMessage;
 import org.sharetrace.message.NodeMessage;
-import org.sharetrace.message.Parameters;
+import org.sharetrace.message.NodeParameters;
 import org.sharetrace.message.Refresh;
 import org.sharetrace.message.RiskScore;
 import org.sharetrace.message.RiskScoreMessage;
@@ -54,7 +54,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
   private final TimerScheduler<NodeMessage> timers;
   private final Loggables loggables;
   private final Map<ActorRef<NodeMessage>, Instant> contacts;
-  private final Parameters parameters;
+  private final NodeParameters parameters;
   private final Clock clock;
   private final IntervalCache<RiskScoreMessage> cache;
   private RiskScoreMessage previous;
@@ -65,7 +65,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
       ActorContext<NodeMessage> context,
       TimerScheduler<NodeMessage> timers,
       Set<Class<? extends Loggable>> loggable,
-      Parameters parameters,
+      NodeParameters parameters,
       Clock clock,
       IntervalCache<RiskScoreMessage> cache) {
     super(context);
@@ -105,12 +105,12 @@ public class Node extends AbstractBehavior<NodeMessage> {
   static Behavior<NodeMessage> node(
       TimerScheduler<NodeMessage> timers,
       Set<Class<? extends Loggable>> loggable,
-      Parameters parameters,
+      NodeParameters parameters,
       Clock clock,
       IntervalCache<RiskScoreMessage> cache) {
     return Behaviors.setup(
         context -> {
-          context.setLoggerName(Loggers.eventLoggerName());
+          context.setLoggerName(Loggers.EVENT_LOGGER_NAME);
           return new Node(context, timers, loggable, parameters, clock, cache);
         });
   }

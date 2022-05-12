@@ -30,7 +30,7 @@ import org.sharetrace.logging.metrics.RuntimeMetric;
 import org.sharetrace.message.AlgorithmMessage;
 import org.sharetrace.message.ContactMessage;
 import org.sharetrace.message.NodeMessage;
-import org.sharetrace.message.Parameters;
+import org.sharetrace.message.NodeParameters;
 import org.sharetrace.message.RiskScoreMessage;
 import org.sharetrace.message.Run;
 import org.sharetrace.util.TypedSupplier;
@@ -50,12 +50,12 @@ import org.sharetrace.util.TypedSupplier;
  *       Node}s have stopped passing messages (default), or a certain amount of time has passed.
  * </ol>
  *
- * @see Parameters
+ * @see NodeParameters
  */
 public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
 
   private final Loggables loggables;
-  private final Parameters parameters;
+  private final NodeParameters parameters;
   private final TemporalGraph graph;
   private final long nNodes;
   private final Clock clock;
@@ -69,7 +69,7 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
       ActorContext<AlgorithmMessage> context,
       Set<Class<? extends Loggable>> loggable,
       TemporalGraph graph,
-      Parameters parameters,
+      NodeParameters parameters,
       Clock clock,
       CacheFactory<RiskScoreMessage> cacheFactory,
       ScoreFactory scoreFactory,
@@ -90,14 +90,14 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
   static Behavior<AlgorithmMessage> riskPropagation(
       TemporalGraph graph,
       Set<Class<? extends Loggable>> loggable,
-      Parameters parameters,
+      NodeParameters parameters,
       Clock clock,
       CacheFactory<RiskScoreMessage> cacheFactory,
       ScoreFactory scoreFactory,
       ContactTimeFactory contactTimeFactory) {
     return Behaviors.setup(
         context -> {
-          context.setLoggerName(Loggers.metricLoggerName());
+          context.setLoggerName(Loggers.METRIC_LOGGER_NAME);
           return new RiskPropagation(
               context,
               loggable,

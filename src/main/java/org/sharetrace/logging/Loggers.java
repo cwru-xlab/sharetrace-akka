@@ -5,28 +5,17 @@ import org.slf4j.LoggerFactory;
 
 public final class Loggers {
 
-  private static final String METRIC_LOGGER_NAME = "MetricLogger";
-  private static final String EVENT_LOGGER_NAME = "EventLogger";
+  public static final String METRIC_LOGGER_NAME = "MetricLogger";
+  public static final String EVENT_LOGGER_NAME = "EventLogger";
+  public static final String SETTING_LOGGER_NAME = "SettingLogger";
 
   private Loggers() {}
-
-  public static Logger rootLogger() {
-    return LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
-  }
-
-  public static Logger eventLogger() {
-    return LoggerFactory.getLogger(EVENT_LOGGER_NAME);
-  }
-
-  public static String eventLoggerName() {
-    return EVENT_LOGGER_NAME;
-  }
 
   public static Logger metricLogger() {
     return LoggerFactory.getLogger(METRIC_LOGGER_NAME);
   }
 
-  public static String metricLoggerName() {
-    return METRIC_LOGGER_NAME;
+  public static Logger settingLogger() {
+    return LoggerFactory.getLogger(SETTING_LOGGER_NAME);
   }
 }

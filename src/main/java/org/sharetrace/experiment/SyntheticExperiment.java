@@ -8,19 +8,16 @@ import org.sharetrace.data.sampling.Sampler;
 import org.sharetrace.data.sampling.ScoreSampler;
 import org.sharetrace.data.sampling.TimestampSampler;
 import org.sharetrace.graph.Edge;
-import org.sharetrace.message.Parameters;
 import org.sharetrace.message.RiskScore;
 
 public abstract class SyntheticExperiment extends Experiment {
 
-  protected final GraphType graphType;
   protected final Sampler<RiskScore> scoreSampler;
   protected final Sampler<Instant> contactTimeSampler;
   protected int nNodes = -1;
 
   protected SyntheticExperiment(GraphType graphType, long seed, int nRepeats) {
-    super(nRepeats, seed);
-    this.graphType = graphType;
+    super(graphType, nRepeats, seed);
     this.scoreSampler = newScoreSampler();
     this.contactTimeSampler = newContactTimeSampler();
   }
@@ -46,7 +43,7 @@ public abstract class SyntheticExperiment extends Experiment {
   }
 
   @Override
-  protected Dataset dataset(Parameters parameters) {
+  protected Dataset newDataset() {
     return SyntheticDatasetBuilder.create()
         .addAllLoggable(loggable())
         .generator(generator())

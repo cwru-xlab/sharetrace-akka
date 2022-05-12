@@ -15,7 +15,7 @@ import org.sharetrace.graph.Node;
  * an execution of {@link RiskPropagation}.
  */
 @Value.Immutable
-abstract class BaseParameters implements NodeMessage {
+abstract class BaseNodeParameters implements NodeMessage {
 
   public static final double MIN_TRANSMISSION_RATE = 0d;
   public static final double MAX_TRANSMISSION_RATE = 1d;
