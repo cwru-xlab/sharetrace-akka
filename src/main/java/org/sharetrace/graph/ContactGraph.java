@@ -106,7 +106,12 @@ public class ContactGraph implements TemporalGraph {
   }
 
   private static Graph<Integer, Edge<Integer>> newGraph() {
-    return new FastutilMapGraph<>(new NodeIdFactory(), Edge::new, DefaultGraphType.simple());
+    return new FastutilMapGraph<>(nodeIdFactory(), Edge::new, DefaultGraphType.simple());
+  }
+
+  private static Supplier<Integer> nodeIdFactory() {
+    int[] id = new int[1];
+    return () -> id[0]++;
   }
 
   @Override
@@ -127,15 +132,5 @@ public class ContactGraph implements TemporalGraph {
   @Override
   public long nEdges() {
     return graph.iterables().edgeCount();
-  }
-
-  private static final class NodeIdFactory implements Supplier<Integer> {
-
-    private int id = 0;
-
-    @Override
-    public Integer get() {
-      return id++;
-    }
   }
 }
