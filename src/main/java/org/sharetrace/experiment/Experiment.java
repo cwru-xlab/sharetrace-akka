@@ -38,6 +38,9 @@ import org.slf4j.Logger;
 public abstract class Experiment implements Runnable {
 
   protected static final Logger logger = Loggers.settingLogger();
+  private static final double MIN_BASE = Math.log(1.1d);
+  private static final double LOG10 = Math.log(10d);
+  private static final double DECAY_RATE = -15e-8d;
   protected final GraphType graphType;
   protected final long seed;
   protected final int nIterations;
@@ -94,18 +97,6 @@ public abstract class Experiment implements Runnable {
   protected void onIteration(int i) {
     setUpIteration(i);
     Runner.run(newAlgorithm(), "RiskPropagation");
-  }
-
-  protected void setUpIteration(int i) {
-    iteration = i;
-    dataset = newDataset();
-    nodeParameters = newNodeParameters();
-    cacheParameters = newCacheParameters();
-    ExperimentSettings newSettings = newSettings();
-    if (!newSettings.equals(settings)) {
-      loggables.info(LoggableSetting.KEY, newSettings);
-      settings = newSettings;
-    }
   }
 
   protected abstract Dataset newDataset();
@@ -215,6 +206,13 @@ public abstract class Experiment implements Runnable {
         .build();
   }
 
+  protected Duration nodeTimeout() {
+    double nEdges = dataset.graph().nEdges();
+    double targetBase = Math.max(MIN_BASE, LOG10 - DECAY_RATE * nEdges);
+    long timeout = (long) Math.ceil(1000d * Math.log(nEdges) / targetBase);
+    return Duration.ofMillis(timeout);
+  }
+
   private ExperimentSettings newSettings() {
     return ExperimentSettings.builder()
         .graphType(graphType)
@@ -226,9 +224,15 @@ public abstract class Experiment implements Runnable {
         .build();
   }
 
-  protected Duration nodeTimeout() {
-    long nEdges = dataset.graph().nEdges();
-    long timeout = (long) Math.ceil(Math.log(nEdges) / Math.log(2));
-    return Duration.ofSeconds(timeout);
+  protected void setUpIteration(int i) {
+    iteration = i;
+    dataset = newDataset();
+    nodeParameters = newNodeParameters();
+    cacheParameters = newCacheParameters();
+    ExperimentSettings newSettings = newSettings();
+    if (!newSettings.equals(settings)) {
+      loggables.info(LoggableSetting.KEY, newSettings);
+      settings = newSettings;
+    }
   }
 }
