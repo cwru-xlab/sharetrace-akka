@@ -9,6 +9,7 @@
     <waitStrategyType>blocking</waitStrategyType> <!--Default: blocking-->
     <appender class="ch.qos.logback.core.ConsoleAppender">
       <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+        <jsonFactoryDecorator class="org.sharetrace.logging.decorators.Iso8601DateDecorator"/>
         <fieldNames class="net.logstash.logback.fieldnames.ShortenedFieldNames">
           <levelValue>[ignore]</levelValue>
           <logger>[ignore]</logger>
@@ -25,7 +26,6 @@
           <rootCauseFirst>true</rootCauseFirst>
           <shortenedClassNameLength>20</shortenedClassNameLength>
         </throwableConverter>
-        <timestampPattern>[UNIX_TIMESTAMP_AS_NUMBER]</timestampPattern>
       </encoder>
     </appender>
   </appender>
@@ -38,6 +38,7 @@
     <waitStrategyType>blocking</waitStrategyType> <!--Default: blocking-->
     <appender class="ch.qos.logback.core.rolling.RollingFileAppender">
       <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+        <jsonFactoryDecorator class="org.sharetrace.logging.decorators.Iso8601DateDecorator"/>
         <fieldNames class="net.logstash.logback.fieldnames.ShortenedFieldNames">
           <levelValue>[ignore]</levelValue>
           <logger>[ignore]</logger>
@@ -54,7 +55,6 @@
           <rootCauseFirst>true</rootCauseFirst>
           <shortenedClassNameLength>20</shortenedClassNameLength>
         </throwableConverter>
-        <timestampPattern>[UNIX_TIMESTAMP_AS_NUMBER]</timestampPattern>
       </encoder>
       <immediateFlush>false</immediateFlush>
       <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
@@ -76,6 +76,7 @@
       <append>true</append>
       <file>${logPath}/metrics.log</file>
       <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+        <jsonFactoryDecorator class="org.sharetrace.logging.decorators.Iso8601DateDecorator"/>
         <fieldNames class="net.logstash.logback.fieldnames.ShortenedFieldNames">
           <levelValue>[ignore]</levelValue>
           <logger>[ignore]</logger>
@@ -92,7 +93,6 @@
           <rootCauseFirst>true</rootCauseFirst>
           <shortenedClassNameLength>20</shortenedClassNameLength>
         </throwableConverter>
-        <timestampPattern>[UNIX_TIMESTAMP_AS_NUMBER]</timestampPattern>
       </encoder>
       <immediateFlush>false</immediateFlush>
     </appender>
@@ -105,6 +105,7 @@
     <appender class="ch.qos.logback.core.FileAppender">
       <append>true</append>
       <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+        <jsonFactoryDecorator class="org.sharetrace.logging.decorators.Iso8601DateDecorator"/>
         <fieldNames class="net.logstash.logback.fieldnames.ShortenedFieldNames">
           <levelValue>[ignore]</levelValue>
           <logger>[ignore]</logger>
@@ -121,7 +122,6 @@
           <rootCauseFirst>true</rootCauseFirst>
           <shortenedClassNameLength>20</shortenedClassNameLength>
         </throwableConverter>
-        <timestampPattern>[UNIX_TIMESTAMP_AS_NUMBER]</timestampPattern>
       </encoder>
       <file>${logPath}/settings.log</file>
       <immediateFlush>false</immediateFlush>
