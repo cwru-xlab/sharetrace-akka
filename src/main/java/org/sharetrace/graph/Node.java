@@ -46,7 +46,7 @@ import org.sharetrace.util.TypedSupplier;
  * An actor that corresponds to a {@link ContactGraph} node. Collectively, all {@link Node}s carry
  * out the execution of {@link RiskPropagation}.
  *
- * @see Parameters
+ * @see NodeParameters
  * @see IntervalCache
  */
 public class Node extends AbstractBehavior<NodeMessage> {
@@ -200,21 +200,17 @@ public class Node extends AbstractBehavior<NodeMessage> {
 
   private Behavior<NodeMessage> onContactMessage(ContactMessage message) {
     if (isContactAlive(message)) {
-      logContact(message);
       addContact(message);
-      sendToContact(message);
+      if (!sendCurrent(message)) {
+        sendCached(message);
+      }
     }
     return this;
   }
 
   private void addContact(ContactMessage message) {
     contacts.put(message.replyTo(), message.timestamp());
-  }
-
-  private void sendToContact(ContactMessage message) {
-    if (!sendCurrent(message)) {
-      sendCached(message);
-    }
+    logContact(message);
   }
 
   private boolean sendCurrent(ContactMessage message) {
@@ -222,19 +218,18 @@ public class Node extends AbstractBehavior<NodeMessage> {
     if (sent) {
       ActorRef<NodeMessage> contact = message.replyTo();
       RiskScoreMessage transmitted = transmitted(current);
-      logSendCurrent(contact, transmitted);
       contact.tell(transmitted);
+      logSendCurrent(contact, transmitted);
     }
     return sent;
   }
 
   private void sendCached(ContactMessage message) {
     Instant buffered = buffered(message.timestamp());
-    maxCached(buffered).ifPresent(cached -> sendCached(message, cached));
+    maxCached(buffered).ifPresent(cached -> sendCached(message.replyTo(), cached));
   }
 
-  private void sendCached(ContactMessage message, RiskScoreMessage cached) {
-    ActorRef<NodeMessage> contact = message.replyTo();
+  private void sendCached(ActorRef<NodeMessage> contact, RiskScoreMessage cached) {
     RiskScoreMessage transmitted = transmitted(cached);
     contact.tell(transmitted);
     logSendCached(contact, transmitted);
@@ -330,8 +325,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
   }
 
   private <T extends Loggable> void logEvent(Class<T> type, Supplier<T> supplier) {
-    String key = LoggableEvent.KEY;
-    loggables.info(key, key, TypedSupplier.of(type, supplier));
+    loggables.info(LoggableEvent.KEY, TypedSupplier.of(type, supplier));
   }
 
   private ContactEvent contactEvent(ContactMessage message) {
