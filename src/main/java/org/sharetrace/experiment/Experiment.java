@@ -38,9 +38,6 @@ import org.slf4j.Logger;
 public abstract class Experiment implements Runnable {
 
   protected static final Logger logger = Loggers.settingLogger();
-  private static final double MIN_BASE = Math.log(1.1d);
-  private static final double LOG10 = Math.log(10d);
-  private static final double DECAY_RATE = -15e-8d;
   protected final GraphType graphType;
   protected final long seed;
   protected final int nIterations;
@@ -193,9 +190,12 @@ public abstract class Experiment implements Runnable {
 
   protected Duration nodeTimeout() {
     double nEdges = dataset.graph().nEdges();
-    double targetBase = Math.max(MIN_BASE, LOG10 - DECAY_RATE * nEdges);
-    long timeout = (long) Math.ceil(1000d * Math.log(nEdges) / targetBase);
-    return Duration.ofMillis(timeout);
+    double minBase = Math.log(1.1d);
+    double maxBase = Math.log(10d);
+    double decayRate = 1.75E-7;
+    double targetBase = Math.max(minBase, maxBase - decayRate * nEdges);
+    long timeout = (long) Math.ceil(1E9 * Math.log(nEdges) / targetBase);
+    return Duration.ofNanos(timeout);
   }
 
   protected Duration nodeRefreshRate() {
