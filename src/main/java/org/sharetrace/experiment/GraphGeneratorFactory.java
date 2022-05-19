@@ -9,7 +9,6 @@ import org.jgrapht.generate.RandomRegularGraphGenerator;
 import org.jgrapht.generate.ScaleFreeGraphGenerator;
 import org.jgrapht.generate.WattsStrogatzGraphGenerator;
 
-
 class GraphGeneratorFactory {
 
   private GraphGeneratorFactory() {}
@@ -27,33 +26,28 @@ class GraphGeneratorFactory {
       Optional<Integer> kNearestNeighbors,
       Optional<Double> rewiringProbability) {
     switch (graphType) {
-      case GNM_RANDOM -> {
+      case GNM_RANDOM:
         return new GnmRandomGraphGenerator<>(
             nNodes, getOrThrow(nEdges, "nEdges", GraphType.GNM_RANDOM), seed, false, false);
-      }
-      case BARABASI_ALBERT -> {
+      case BARABASI_ALBERT:
         return new BarabasiAlbertGraphGenerator<>(
             getOrThrow(nInitialNodes, "nInitNodes", GraphType.BARABASI_ALBERT),
             getOrThrow(nNewEdges, "nNewEdges", GraphType.BARABASI_ALBERT),
             nNodes,
             seed);
-      }
-      case RANDOM_REGULAR -> {
+      case RANDOM_REGULAR:
         return new RandomRegularGraphGenerator<>(
             nNodes, getOrThrow(degree, "degree", GraphType.RANDOM_REGULAR), seed);
-      }
-      case WATTS_STROGATZ -> {
+      case WATTS_STROGATZ:
         return new WattsStrogatzGraphGenerator<>(
             nNodes,
             getOrThrow(kNearestNeighbors, "knn", GraphType.WATTS_STROGATZ),
             getOrThrow(rewiringProbability, "rewiringProbability", GraphType.WATTS_STROGATZ),
             seed);
-      }
-      case SCALE_FREE -> {
+      case SCALE_FREE:
         return new ScaleFreeGraphGenerator<>(nNodes, seed);
-      }
-      default ->
-          throw new IllegalArgumentException("Unable to create graph generator for " + graphType);
+      default:
+        throw new IllegalArgumentException("Unable to create graph generator for " + graphType);
     }
   }
 
