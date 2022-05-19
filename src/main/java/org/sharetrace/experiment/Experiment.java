@@ -25,6 +25,7 @@ import org.sharetrace.logging.metrics.GraphCycleMetrics;
 import org.sharetrace.logging.metrics.GraphEccentricityMetrics;
 import org.sharetrace.logging.metrics.GraphScoringMetrics;
 import org.sharetrace.logging.metrics.GraphSizeMetrics;
+import org.sharetrace.logging.metrics.GraphTopologyMetric;
 import org.sharetrace.logging.metrics.RuntimeMetric;
 import org.sharetrace.logging.settings.ExperimentSettings;
 import org.sharetrace.logging.settings.LoggableSetting;
@@ -78,6 +79,7 @@ public abstract class Experiment implements Runnable {
         GraphScoringMetrics.class,
         GraphSizeMetrics.class,
         RuntimeMetric.class,
+        GraphTopologyMetric.class,
         // Settings
         ExperimentSettings.class);
   }

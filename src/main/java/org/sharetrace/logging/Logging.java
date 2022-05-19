@@ -1,5 +1,6 @@
 package org.sharetrace.logging;
 
+import ch.qos.logback.core.spi.PropertyContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,5 +18,9 @@ public final class Logging {
 
   public static Logger settingLogger() {
     return LoggerFactory.getLogger(SETTING_LOGGER_NAME);
+  }
+
+  public static String graphsLogPath() {
+    return ((PropertyContainer) LoggerFactory.getILoggerFactory()).getProperty("graphs.log.dir");
   }
 }

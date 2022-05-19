@@ -10,10 +10,6 @@ public final class SocioPatternsExperiment extends FileExperiment {
     super(graphType, path, delimiter, nRepeats, seed);
   }
 
-  public static void main(String[] args) {
-    runInVs15(Path.of("src/main/resources/datasets/InVS15.txt"), 1, 12345);
-  }
-
   /**
    * Runs {@link RiskPropagation} on the SocioPatterns 2015 workplace dataset.
    *

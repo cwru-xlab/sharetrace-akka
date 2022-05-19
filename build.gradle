@@ -31,7 +31,7 @@ def versions = [
 
 dependencies {
     // Logging
-    runtimeOnly "ch.qos.logback:logback-classic:$versions.logback"
+    implementation "ch.qos.logback:logback-classic:$versions.logback"
     implementation "net.logstash.logback:logstash-logback-encoder:$versions.logstash"
     // Jackson
     implementation "com.fasterxml.jackson.core:jackson-databind:$versions.jackson"
@@ -42,10 +42,11 @@ dependencies {
     annotationProcessor "org.immutables:value:$versions.immutables"
     implementation "org.immutables:value:$versions.immutables"
     implementation "org.immutables:builder:$versions.immutables"
-    // Datastructures and utilities
+    // Data structures and utilities
     implementation "it.unimi.dsi:fastutil:$versions.fastutil"
     implementation "org.apache.commons:commons-math3:$versions.commonsMath"
     implementation "org.jgrapht:jgrapht-core:$versions.jgrapht"
+    implementation "org.jgrapht:jgrapht-io:$versions.jgrapht"
     implementation "org.jgrapht:jgrapht-opt:$versions.jgrapht"
     // Akka
     implementation "com.typesafe.akka:akka-actor-typed_$versions.akkaScala:$versions.akka"

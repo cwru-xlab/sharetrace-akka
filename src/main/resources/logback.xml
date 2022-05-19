@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration debug="true">
   <timestamp datePattern="yyyyMMddHHmmss" key="bySecond"/>
-  <property name="logPath" value="logs/${bySecond}"/>
+  <property name="log.dir" value="logs/${bySecond}"/>
+  <property name="graphs.log.dir" value="${log.dir}/graphs" scope="context"/>
   <appender class="net.logstash.logback.appender.LoggingEventAsyncDisruptorAppender" name="console">
     <appendRetryFrequency>5</appendRetryFrequency> <!--Default: 5ms-->
     <appendTimeout>-1</appendTimeout> <!--Default: 0-->
@@ -58,7 +59,7 @@
       </encoder>
       <immediateFlush>false</immediateFlush>
       <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-        <fileNamePattern>${logPath}/events/${bySecond}-%d{yyyyMMdd}-%i.log.zip</fileNamePattern>
+        <fileNamePattern>${log.dir}/events/${bySecond}-%d{yyyyMMdd}-%i.log.zip</fileNamePattern>
         <maxFileSize>1GB</maxFileSize>
         <maxHistory>30</maxHistory>
         <totalSizeCap>20GB</totalSizeCap>
@@ -74,7 +75,7 @@
     <waitStrategyType>blocking</waitStrategyType> <!--Default: blocking-->
     <appender class="ch.qos.logback.core.FileAppender">
       <append>true</append>
-      <file>${logPath}/metrics.log</file>
+      <file>${log.dir}/metrics.log</file>
       <encoder class="net.logstash.logback.encoder.LogstashEncoder">
         <jsonFactoryDecorator class="org.sharetrace.logging.decorators.Iso8601DateDecorator"/>
         <fieldNames class="net.logstash.logback.fieldnames.ShortenedFieldNames">
@@ -123,7 +124,7 @@
           <shortenedClassNameLength>20</shortenedClassNameLength>
         </throwableConverter>
       </encoder>
-      <file>${logPath}/settings.log</file>
+      <file>${log.dir}/settings.log</file>
       <immediateFlush>false</immediateFlush>
     </appender> <!--Default: 8192-->
     <ringBufferSize>8192</ringBufferSize> <!--Default: blocking-->
