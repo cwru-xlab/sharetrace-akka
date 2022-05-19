@@ -122,7 +122,7 @@ public class ContactGraph implements TemporalGraph {
   }
 
   private static Writer newGraphWriter(String graphLabel) throws IOException {
-    Path graphsPath = Path.of(Logging.graphsLogPath());
+    Path graphsPath = Logging.graphsLogPath();
     if (!Files.exists(graphsPath)) {
       Files.createDirectories(graphsPath);
     }
