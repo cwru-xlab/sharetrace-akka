@@ -59,9 +59,9 @@ def _unzip(zipped: Iterable[os.PathLike], dst: os.PathLike) -> None:
 
 
 def _split(it: Iterable, predicate: Predicate) -> Tuple[Iterable, Iterable]:
-    it1, it2 = itertools.tee(it)
-    true = filter(lambda e: predicate(e), it1)
-    false = itertools.filterfalse(lambda e: predicate(e), it2)
+    it = list(it)
+    true = (e for e in it if predicate(e))
+    false = (e for e in it if not predicate(e))
     return true, false
 
 
