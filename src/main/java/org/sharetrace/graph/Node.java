@@ -22,7 +22,7 @@ import org.immutables.builder.Builder;
 import org.sharetrace.RiskPropagation;
 import org.sharetrace.logging.Loggable;
 import org.sharetrace.logging.Loggables;
-import org.sharetrace.logging.Loggers;
+import org.sharetrace.logging.Logging;
 import org.sharetrace.logging.events.ContactEvent;
 import org.sharetrace.logging.events.ContactsRefreshEvent;
 import org.sharetrace.logging.events.CurrentRefreshEvent;
@@ -110,7 +110,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
       IntervalCache<RiskScoreMessage> cache) {
     return Behaviors.setup(
         context -> {
-          context.setLoggerName(Loggers.EVENT_LOGGER_NAME);
+          context.setLoggerName(Logging.EVENT_LOGGER_NAME);
           return new Node(context, timers, loggable, parameters, clock, cache);
         });
   }

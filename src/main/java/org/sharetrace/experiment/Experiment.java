@@ -12,7 +12,7 @@ import org.sharetrace.data.Dataset;
 import org.sharetrace.data.factory.CacheFactory;
 import org.sharetrace.logging.Loggable;
 import org.sharetrace.logging.Loggables;
-import org.sharetrace.logging.Loggers;
+import org.sharetrace.logging.Logging;
 import org.sharetrace.logging.events.ContactEvent;
 import org.sharetrace.logging.events.ContactsRefreshEvent;
 import org.sharetrace.logging.events.CurrentRefreshEvent;
@@ -37,7 +37,7 @@ import org.slf4j.Logger;
 
 public abstract class Experiment implements Runnable {
 
-  protected static final Logger logger = Loggers.settingLogger();
+  protected static final Logger logger = Logging.settingLogger();
   protected final GraphType graphType;
   protected final long seed;
   protected final int nIterations;

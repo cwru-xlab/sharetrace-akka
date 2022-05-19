@@ -12,7 +12,7 @@ import org.jgrapht.opt.graph.fastutil.FastutilMapGraph;
 import org.sharetrace.RiskPropagation;
 import org.sharetrace.logging.Loggable;
 import org.sharetrace.logging.Loggables;
-import org.sharetrace.logging.Loggers;
+import org.sharetrace.logging.Logging;
 import org.sharetrace.logging.metrics.GraphCycleMetrics;
 import org.sharetrace.logging.metrics.GraphEccentricityMetrics;
 import org.sharetrace.logging.metrics.GraphScoringMetrics;
@@ -33,7 +33,7 @@ import org.slf4j.Logger;
  */
 public class ContactGraph implements TemporalGraph {
 
-  private static final Logger logger = Loggers.metricLogger();
+  private static final Logger logger = Logging.metricLogger();
   private final Loggables loggables;
   private final Graph<Integer, Edge<Integer>> graph;
 
