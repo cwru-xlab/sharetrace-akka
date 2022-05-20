@@ -1,6 +1,5 @@
 package org.sharetrace.experiment;
 
-import java.time.Instant;
 import org.jgrapht.generate.GraphGenerator;
 import org.sharetrace.data.Dataset;
 import org.sharetrace.data.factory.SyntheticDatasetBuilder;
@@ -9,6 +8,8 @@ import org.sharetrace.data.sampling.ScoreSampler;
 import org.sharetrace.data.sampling.TimestampSampler;
 import org.sharetrace.graph.Edge;
 import org.sharetrace.message.RiskScore;
+
+import java.time.Instant;
 
 public abstract class SyntheticExperiment extends Experiment {
 

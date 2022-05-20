@@ -1,11 +1,13 @@
 package org.sharetrace.data.sampling;
 
-import static org.sharetrace.util.Preconditions.checkIsPositive;
-import java.time.Duration;
-import java.time.Instant;
 import org.apache.commons.math3.distribution.RealDistribution;
 import org.apache.commons.math3.distribution.UniformRealDistribution;
 import org.immutables.value.Value;
+
+import java.time.Duration;
+import java.time.Instant;
+
+import static org.sharetrace.util.Preconditions.checkIsPositive;
 
 @Value.Immutable
 abstract class BaseTimestampSampler extends BaseSampler<Instant> {

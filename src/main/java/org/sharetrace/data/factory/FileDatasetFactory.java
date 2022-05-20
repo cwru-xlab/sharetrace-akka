@@ -1,6 +1,12 @@
 package org.sharetrace.data.factory;
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import org.immutables.builder.Builder;
+import org.jgrapht.Graph;
+import org.sharetrace.data.Dataset;
+import org.sharetrace.graph.Edge;
+import org.sharetrace.logging.Loggable;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -10,11 +16,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
 import java.util.Set;
-import org.immutables.builder.Builder;
-import org.jgrapht.Graph;
-import org.sharetrace.data.Dataset;
-import org.sharetrace.graph.Edge;
-import org.sharetrace.logging.Loggable;
 
 class FileDatasetFactory extends DatasetFactory {
 
@@ -50,6 +51,14 @@ class FileDatasetFactory extends DatasetFactory {
       String delimiter,
       Instant referenceTime) {
     return new FileDatasetFactory(loggable, scoreFactory, path, delimiter, referenceTime).create();
+  }
+
+  private static Instant newer(Instant oldValue, Instant newValue) {
+    return newValue.isAfter(oldValue) ? newValue : oldValue;
+  }
+
+  private static Set<Integer> key(int node1, int node2) {
+    return Set.of(node1, node2);
   }
 
   @Override
@@ -101,14 +110,6 @@ class FileDatasetFactory extends DatasetFactory {
 
   private Instant adjustTimestamp(Set<Integer> nodes, Instant timestamp) {
     return timestamp.plus(offset);
-  }
-
-  private static Instant newer(Instant oldValue, Instant newValue) {
-    return newValue.isAfter(oldValue) ? newValue : oldValue;
-  }
-
-  private static Set<Integer> key(int node1, int node2) {
-    return Set.of(node1, node2);
   }
 
   private static final class Parsed {

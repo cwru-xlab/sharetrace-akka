@@ -1,11 +1,12 @@
 package org.sharetrace.experiment;
 
-import java.util.Random;
-import java.util.Set;
 import org.sharetrace.logging.Loggable;
 import org.sharetrace.logging.metrics.GraphSizeMetrics;
 import org.sharetrace.logging.metrics.RuntimeMetric;
 import org.sharetrace.logging.settings.ExperimentSettings;
+
+import java.util.Random;
+import java.util.Set;
 
 public final class RuntimeExperiment extends SyntheticExperiment {
 

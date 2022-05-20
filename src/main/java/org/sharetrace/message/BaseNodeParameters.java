@@ -1,14 +1,13 @@
 package org.sharetrace.message;
 
-import static org.sharetrace.util.Preconditions.checkInClosedRange;
-import static org.sharetrace.util.Preconditions.checkIsAtLeast;
-import static org.sharetrace.util.Preconditions.checkIsNonNegative;
-import static org.sharetrace.util.Preconditions.checkIsPositive;
-import java.time.Duration;
 import org.immutables.value.Value;
 import org.sharetrace.RiskPropagation;
 import org.sharetrace.graph.ContactGraph;
 import org.sharetrace.graph.Node;
+
+import java.time.Duration;
+
+import static org.sharetrace.util.Preconditions.*;
 
 /**
  * A collection of values that modify the behavior of a {@link Node} while passing messages during

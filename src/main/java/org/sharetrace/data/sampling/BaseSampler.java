@@ -1,11 +1,13 @@
 package org.sharetrace.data.sampling;
 
-import static org.sharetrace.util.Preconditions.checkArgument;
-import java.util.Random;
 import org.apache.commons.math3.distribution.RealDistribution;
 import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.random.Well44497a;
 import org.immutables.value.Value;
+
+import java.util.Random;
+
+import static org.sharetrace.util.Preconditions.checkArgument;
 
 abstract class BaseSampler<T> implements Sampler<T> {
 

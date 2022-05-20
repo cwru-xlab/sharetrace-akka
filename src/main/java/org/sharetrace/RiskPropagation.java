@@ -8,12 +8,6 @@ import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import java.time.Clock;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import org.immutables.builder.Builder;
 import org.sharetrace.data.factory.CacheFactory;
 import org.sharetrace.data.factory.ContactTimeFactory;
@@ -27,13 +21,15 @@ import org.sharetrace.logging.Loggables;
 import org.sharetrace.logging.Logging;
 import org.sharetrace.logging.metrics.LoggableMetric;
 import org.sharetrace.logging.metrics.RuntimeMetric;
-import org.sharetrace.message.AlgorithmMessage;
-import org.sharetrace.message.ContactMessage;
-import org.sharetrace.message.NodeMessage;
-import org.sharetrace.message.NodeParameters;
-import org.sharetrace.message.RiskScoreMessage;
-import org.sharetrace.message.Run;
+import org.sharetrace.message.*;
 import org.sharetrace.util.TypedSupplier;
+
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * A non-iterative, asynchronous implementation of the ShareTrace algorithm. The objective is to

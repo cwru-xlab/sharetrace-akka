@@ -1,11 +1,6 @@
 package org.sharetrace.experiment;
 
 import akka.actor.typed.Behavior;
-import java.time.Clock;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.Set;
-import java.util.stream.IntStream;
 import org.sharetrace.RiskPropagationBuilder;
 import org.sharetrace.Runner;
 import org.sharetrace.data.Dataset;
@@ -13,20 +8,8 @@ import org.sharetrace.data.factory.CacheFactory;
 import org.sharetrace.logging.Loggable;
 import org.sharetrace.logging.Loggables;
 import org.sharetrace.logging.Logging;
-import org.sharetrace.logging.events.ContactEvent;
-import org.sharetrace.logging.events.ContactsRefreshEvent;
-import org.sharetrace.logging.events.CurrentRefreshEvent;
-import org.sharetrace.logging.events.PropagateEvent;
-import org.sharetrace.logging.events.ReceiveEvent;
-import org.sharetrace.logging.events.SendCachedEvent;
-import org.sharetrace.logging.events.SendCurrentEvent;
-import org.sharetrace.logging.events.UpdateEvent;
-import org.sharetrace.logging.metrics.GraphCycleMetrics;
-import org.sharetrace.logging.metrics.GraphEccentricityMetrics;
-import org.sharetrace.logging.metrics.GraphScoringMetrics;
-import org.sharetrace.logging.metrics.GraphSizeMetrics;
-import org.sharetrace.logging.metrics.GraphTopologyMetric;
-import org.sharetrace.logging.metrics.RuntimeMetric;
+import org.sharetrace.logging.events.*;
+import org.sharetrace.logging.metrics.*;
 import org.sharetrace.logging.settings.ExperimentSettings;
 import org.sharetrace.logging.settings.LoggableSetting;
 import org.sharetrace.message.AlgorithmMessage;
@@ -35,6 +18,12 @@ import org.sharetrace.message.RiskScoreMessage;
 import org.sharetrace.util.CacheParameters;
 import org.sharetrace.util.IntervalCache;
 import org.slf4j.Logger;
+
+import java.time.Clock;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Set;
+import java.util.stream.IntStream;
 
 public abstract class Experiment implements Runnable {
 

@@ -1,8 +1,9 @@
 package org.sharetrace.message;
 
 import akka.actor.typed.ActorRef;
-import java.time.Instant;
 import org.immutables.value.Value;
+
+import java.time.Instant;
 
 /**
  * An interaction between two persons. As a message, a contact contains the timestamp at which the

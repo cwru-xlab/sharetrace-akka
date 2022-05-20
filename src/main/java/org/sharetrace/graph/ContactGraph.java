@@ -1,15 +1,5 @@
 package org.sharetrace.graph;
 
-import java.io.IOException;
-import java.io.Writer;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-import java.util.function.Supplier;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
 import org.jgrapht.Graph;
 import org.jgrapht.generate.GraphGenerator;
 import org.jgrapht.graph.DefaultGraphType;
@@ -20,15 +10,21 @@ import org.sharetrace.RiskPropagation;
 import org.sharetrace.logging.Loggable;
 import org.sharetrace.logging.Loggables;
 import org.sharetrace.logging.Logging;
-import org.sharetrace.logging.metrics.GraphCycleMetrics;
-import org.sharetrace.logging.metrics.GraphEccentricityMetrics;
-import org.sharetrace.logging.metrics.GraphScoringMetrics;
-import org.sharetrace.logging.metrics.GraphSizeMetrics;
-import org.sharetrace.logging.metrics.GraphTopologyMetric;
-import org.sharetrace.logging.metrics.LoggableMetric;
+import org.sharetrace.logging.metrics.*;
 import org.sharetrace.util.DescriptiveStats;
 import org.sharetrace.util.TypedSupplier;
 import org.slf4j.Logger;
+
+import java.io.IOException;
+import java.io.Writer;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.function.Supplier;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 /**
  * A simple graph in which a node represents a person and an edge between two nodes indicates that
@@ -52,15 +48,6 @@ public class ContactGraph implements TemporalGraph {
     logMetrics();
   }
 
-  private void logMetrics() {
-    GraphStats<?, ?> stats = GraphStats.of(graph);
-    loggables.info(LoggableMetric.KEY, sizeMetrics(stats));
-    loggables.info(LoggableMetric.KEY, cycleMetrics(stats));
-    loggables.info(LoggableMetric.KEY, eccentricityMetrics(stats));
-    loggables.info(LoggableMetric.KEY, scoringMetrics(stats));
-    logGraph();
-  }
-
   private static TypedSupplier<LoggableMetric> sizeMetrics(GraphStats<?, ?> stats) {
     return TypedSupplier.of(GraphSizeMetrics.class, () -> graphSizeMetrics(stats));
   }
@@ -75,18 +62,6 @@ public class ContactGraph implements TemporalGraph {
 
   private static TypedSupplier<LoggableMetric> scoringMetrics(GraphStats<?, ?> stats) {
     return TypedSupplier.of(GraphScoringMetrics.class, () -> graphScoringMetrics(stats));
-  }
-
-  private void logGraph() {
-    if (loggables.loggable().contains(GraphTopologyMetric.class)) {
-      String graphLabel = newGraphLabel();
-      loggables.info(LoggableMetric.KEY, GraphTopologyMetric.of(graphLabel));
-      try (Writer writer = newGraphWriter(graphLabel)) {
-        newGraphExporter().exportGraph(graph, writer);
-      } catch (IOException exception) {
-        exception.printStackTrace();
-      }
-    }
   }
 
   private static GraphSizeMetrics graphSizeMetrics(GraphStats<?, ?> stats) {
@@ -151,6 +126,27 @@ public class ContactGraph implements TemporalGraph {
   private static Supplier<Integer> nodeIdFactory() {
     int[] id = new int[1];
     return () -> id[0]++;
+  }
+
+  private void logMetrics() {
+    GraphStats<?, ?> stats = GraphStats.of(graph);
+    loggables.info(LoggableMetric.KEY, sizeMetrics(stats));
+    loggables.info(LoggableMetric.KEY, cycleMetrics(stats));
+    loggables.info(LoggableMetric.KEY, eccentricityMetrics(stats));
+    loggables.info(LoggableMetric.KEY, scoringMetrics(stats));
+    logGraph();
+  }
+
+  private void logGraph() {
+    if (loggables.loggable().contains(GraphTopologyMetric.class)) {
+      String graphLabel = newGraphLabel();
+      loggables.info(LoggableMetric.KEY, GraphTopologyMetric.of(graphLabel));
+      try (Writer writer = newGraphWriter(graphLabel)) {
+        newGraphExporter().exportGraph(graph, writer);
+      } catch (IOException exception) {
+        exception.printStackTrace();
+      }
+    }
   }
 
   @Override

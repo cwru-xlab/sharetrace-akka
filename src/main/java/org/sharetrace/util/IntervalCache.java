@@ -1,11 +1,9 @@
 package org.sharetrace.util;
 
-import static org.sharetrace.util.Preconditions.checkArgument;
-import static org.sharetrace.util.Preconditions.checkInClosedRange;
-import static org.sharetrace.util.Preconditions.checkIsAtLeast;
-import static org.sharetrace.util.Preconditions.checkIsPositive;
 import it.unimi.dsi.fastutil.objects.Object2ObjectAVLTreeMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectRBTreeMap;
+
+import javax.annotation.Nullable;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -14,7 +12,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.SortedMap;
 import java.util.function.BinaryOperator;
-import javax.annotation.Nullable;
+
+import static org.sharetrace.util.Preconditions.*;
 
 /**
  * A cache that lazily maintains a finite number of contiguous time intervals in which values are
@@ -65,18 +64,18 @@ public class IntervalCache<T> {
     updateRange();
   }
 
-  private void updateRange() {
-    Instant now = clock.instant();
-    rangeStart = now.minus(lookBack);
-    rangeEnd = now.plus(lookAhead);
-  }
-
   public static <T> Builder<T> builder() {
     return new Builder<>();
   }
 
   public static <T> BinaryOperator<T> defaultMergeStrategy() {
     return (oldValue, newValue) -> newValue;
+  }
+
+  private void updateRange() {
+    Instant now = clock.instant();
+    rangeStart = now.minus(lookBack);
+    rangeEnd = now.plus(lookAhead);
   }
 
   /**

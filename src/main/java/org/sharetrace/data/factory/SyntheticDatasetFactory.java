@@ -1,12 +1,13 @@
 package org.sharetrace.data.factory;
 
-import java.util.Set;
 import org.immutables.builder.Builder;
 import org.jgrapht.Graph;
 import org.jgrapht.generate.GraphGenerator;
 import org.sharetrace.data.Dataset;
 import org.sharetrace.graph.Edge;
 import org.sharetrace.logging.Loggable;
+
+import java.util.Set;
 
 class SyntheticDatasetFactory extends DatasetFactory {
 
