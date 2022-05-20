@@ -9,8 +9,9 @@ import os
 import pathlib
 import tempfile
 import zipfile
+from collections.abc import Callable, Iterable
 from json import loads
-from typing import Any, AnyStr, Callable, Iterable, Tuple
+from typing import Any, AnyStr
 
 Predicate = Callable[[Any], bool]
 
@@ -58,7 +59,7 @@ def _unzip(zipped: Iterable[os.PathLike], dst: os.PathLike) -> None:
             f.extractall(dst)
 
 
-def _split(it: Iterable, predicate: Predicate) -> Tuple[Iterable, Iterable]:
+def _split(it: Iterable, predicate: Predicate) -> tuple[Iterable, Iterable]:
     it = list(it)
     true = (e for e in it if predicate(e))
     false = (e for e in it if not predicate(e))
@@ -74,61 +75,49 @@ class EventCounter(collections.Counter):
         else:
             raise ValueError("'key' must be an Event instance")
 
-    @property
     def n_users(self) -> int:
-        return self.n_received - self.n_sent
+        return self.n_received() - self.n_sent()
 
-    @property
     def n_sent(self) -> int:
-        return self.n_to_contacts + self.n_propagated
+        return self.n_to_contacts() + self.n_propagated()
 
-    @property
     def n_to_contacts(self) -> int:
-        return self.n_current_sent + self.n_cached_sent
+        return self.n_current_sent() + self.n_cached_sent()
 
-    @property
     def n_received(self) -> int:
         return self[Event.RECEIVE]
 
-    @property
     def n_current_sent(self) -> int:
         return self[Event.SEND_CURRENT]
 
-    @property
     def n_cached_sent(self) -> int:
         return self[Event.SEND_CACHED]
 
-    @property
     def n_propagated(self) -> int:
         return self[Event.PROPAGATE]
 
-    @property
     def n_updates(self) -> int:
         # Disregard the initialization update of each user.
         return self[Event.UPDATE] - self.n_users
 
-    @property
     def n_contacts(self) -> int:
         # Each user logs a contact, so each contact is double counted.
         return int(self[Event.CONTACT] / 2)
 
-    @property
     def n_contact_refreshes(self) -> int:
         return self[Event.CONTACTS_REFRESH]
 
-    @property
     def n_current_refreshes(self) -> int:
         return self[Event.CURRENT_REFRESH]
 
-    @property
     def n_not_to_contacts(self) -> int:
         # Each user sends a message, so double the number of contacts.
-        return 2 * self.n_contacts - self.n_to_contacts
+        return 2 * self.n_contacts() - self.n_to_contacts()
 
 
 # Callbacks
 
-class EventCallback(Callable):
+class EventCallback(Callable[[dict], None]):
     __slots__ = ()
 
     def __init__(self):
