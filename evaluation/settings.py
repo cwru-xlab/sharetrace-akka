@@ -5,6 +5,6 @@ from json import loads
 from typing import AnyStr
 
 
-def load(path: os.PathLike | AnyStr) -> dict:
+def load_settings(path: os.PathLike | AnyStr) -> dict:
     with open(path) as f:
         return loads(f.readline())["setting"]
