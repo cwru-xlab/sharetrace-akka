@@ -124,7 +124,7 @@ public class ContactGraph implements TemporalGraph {
   }
 
   private static Supplier<Integer> nodeIdFactory() {
-    int[] id = new int[1];
+    int[] id = new int[] {0};
     return () -> id[0]++;
   }
 

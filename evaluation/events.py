@@ -9,11 +9,17 @@ import os
 import pathlib
 import tempfile
 import zipfile
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Collection
 from json import loads
-from typing import Any, AnyStr
+from typing import Any
+
+import numpy as np
+from scipy import sparse
+from scipy.sparse import csgraph
 
 Predicate = Callable[[Any], bool]
+
+ONE = np.int8(1)
 
 
 class Event(str, enum.Enum):
@@ -30,15 +36,15 @@ class Event(str, enum.Enum):
         return self.value
 
 
-def event_stream(logdir: os.PathLike | AnyStr) -> Iterable[dict]:
+def event_stream(logdir: os.PathLike | str) -> Iterable[dict]:
     logdir = pathlib.Path(logdir).absolute()
     zipped, unzipped = _split(logdir.iterdir(), _is_zipped)
     for event in _stream(unzipped):
         yield event
-    with tempfile.TemporaryDirectory() as tmp_dir:
-        tmp_dir = pathlib.Path(tmp_dir).absolute()
-        _unzip(zipped, tmp_dir)
-        for event in _stream(tmp_dir.iterdir()):
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmpdir = pathlib.Path(tmpdir).absolute()
+        _unzip(zipped, tmpdir)
+        for event in _stream(tmpdir.iterdir()):
             yield event
 
 
@@ -127,6 +133,9 @@ class EventCallback(Callable[[dict], None]):
     def __call__(self, event: dict, **kwargs) -> None:
         pass
 
+    def on_complete(self) -> None:
+        pass
+
 
 class EventCounterCallback(EventCounter, EventCallback):
 
@@ -175,14 +184,108 @@ class TimelineCallback(EventCallback):
         self.n += 1
 
 
-def analyze_events(logdir: str, *callbacks: EventCallback):
+class ReachabilityCallback(EventCallback):
+    __slots__ = (
+        "adj",
+        "msg_idx",
+        "msgs",
+        "_msg_reach",
+        "_reach_ratio",
+        "_influence",
+        "_source_size")
+
+    def __init__(self):
+        super().__init__()
+        self.adj = None
+        self.msg_idx = {}
+        self.msgs = collections.defaultdict(list)
+        self._msg_reach = None
+        self._reach_ratio = None
+        self._influence = None
+        self._source_size = None
+
+    def __call__(self, event: dict, **kwargs) -> None:
+        if event["name"] == Event.RECEIVE:
+            src, dst = np.int32(event["from"]), np.int32(event["to"])
+            uuid = event["uuid"]
+            if src == dst:
+                self.msg_idx[uuid] = src
+            else:
+                origin = self.msg_idx[uuid]
+                self.msgs[origin].append(np.array([src, dst]))
+
+    def on_complete(self) -> None:
+        self._sparsify()
+        self._compute_source_size()
+        self._compute_influence()
+        self._compute_reach_ratio()
+        self._compute_msg_reaches()
+
+    def influence(self, user: int | None = None) -> int | np.ndarray:
+        """Returns the cardinality of the influence set for a given user."""
+        return self._influence if user is None else self._influence[user]
+
+    def source_size(self, user: int | None = None) -> int | np.ndarray:
+        """Returns the cardinality of the source set for a given user."""
+        return self._source_size if user is None else self._source_size[user]
+
+    def reach_ratio(self) -> float:
+        """Returns the reachability ratio."""
+        return self._reach_ratio
+
+    def msg_reach(self, user: int | None = None) -> int | np.ndarray:
+        """Returns the message reachability for a given user's initial score."""
+        return self._msg_reach if user is None else self._msg_reach[user]
+
+    def _sparsify(self) -> None:
+        row, col, data = [], [], []
+        row_add, col_add, data_add = row.extend, col.extend, data.extend
+        repeat = itertools.repeat
+        for user, edges in self.msgs.items():
+            dst = set(dst for _, dst in edges)
+            row_add(repeat(user, len(dst)))
+            col_add(dst)
+            data_add(repeat(ONE, len(dst)))
+        self.adj = sparse.csr_matrix((data, (row, col)))
+
+    # noinspection PyTypeChecker
+    def _compute_msg_reaches(self):
+        shortest_path = csgraph.shortest_path
+        longest, nan2num = np.max, np.nan_to_num
+        msg_reach = np.zeros(len(self.msgs), dtype=np.int8)
+        for user, edges in self.msgs.items():
+            idx, adj = edges_to_adj(edges)
+            sp = shortest_path(adj, indices=idx[user])
+            msg_reach[user] = longest(nan2num(sp, copy=False, posinf=0))
+        self._msg_reach = msg_reach
+
+    def _compute_reach_ratio(self) -> None:
+        reached = self.adj.count_nonzero()
+        n = self.adj.shape[0]
+        max_possible = n ** 2 - n  # Exclude sending to self
+        self._reach_ratio = reached / max_possible
+
+    def _compute_influence(self) -> None:
+        self._influence = np.count_nonzero(self.adj.toarray(), axis=0)
+
+    def _compute_source_size(self) -> None:
+        self._source_size = np.count_nonzero(self.adj.toarray(), axis=1)
+
+
+def edges_to_adj(edges: Collection[tuple]) -> tuple[dict, sparse.spmatrix]:
+    idx = index_edges(edges)
+    adj = np.zeros((len(idx), len(idx)), dtype=np.int8)
+    for v1, v2 in edges:
+        adj[idx[v1], idx[v2]] = 1
+    return idx, sparse.csr_matrix(adj)
+
+
+def index_edges(edges: Collection[tuple]) -> dict[int, int]:
+    return {v: i for i, v in enumerate(set(itertools.chain(*edges)))}
+
+
+def analyze_events(logdir: str, *callbacks: EventCallback) -> None:
     for event, callback in itertools.product(event_stream(logdir), callbacks):
         callback(event)
-
-
-if __name__ == '__main__':
-    path = "..//logs//20220519010415//events"
-    counter = EventCounterCallback()
-    updates = UserUpdatesCallback()
-    timeline = TimelineCallback()
-    analyze_events(path, counter, updates, timeline)
+    for callback in callbacks:
+        callback.on_complete()

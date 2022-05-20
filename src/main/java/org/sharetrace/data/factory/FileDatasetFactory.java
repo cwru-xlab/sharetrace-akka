@@ -1,5 +1,6 @@
 package org.sharetrace.data.factory;
 
+import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import org.immutables.builder.Builder;
 import org.jgrapht.Graph;
@@ -20,6 +21,7 @@ import java.util.Set;
 class FileDatasetFactory extends DatasetFactory {
 
   private final Map<Set<Integer>, Instant> contacts;
+  private final IdIndexer indexer;
   private final Set<Class<? extends Loggable>> loggable;
   private final ScoreFactory scoreFactory;
   private final Path path;
@@ -35,6 +37,7 @@ class FileDatasetFactory extends DatasetFactory {
       String delimiter,
       Instant referenceTime) {
     this.contacts = new Object2ObjectOpenHashMap<>();
+    this.indexer = new IdIndexer();
     this.loggable = loggable;
     this.scoreFactory = scoreFactory;
     this.path = path;
@@ -87,7 +90,7 @@ class FileDatasetFactory extends DatasetFactory {
   }
 
   private void processLine(String line, Graph<Integer, Edge<Integer>> target) {
-    Parsed parsed = new Parsed(line, delimiter);
+    Parsed parsed = new Parsed(line, delimiter, indexer);
     addToGraph(target, parsed);
     addContact(parsed);
   }
@@ -118,16 +121,27 @@ class FileDatasetFactory extends DatasetFactory {
     private final int node2;
     private final Instant timestamp;
 
-    private Parsed(String string, String delimiter) {
+    private Parsed(String string, String delimiter, IdIndexer indexer) {
       String[] args = string.split(delimiter);
-      this.node1 = Integer.parseInt(args[1].strip());
-      this.node2 = Integer.parseInt(args[2].strip());
+      this.node1 = indexer.index(Integer.parseInt(args[1].strip()));
+      this.node2 = indexer.index(Integer.parseInt(args[2].strip()));
       this.timestamp = Instant.ofEpochSecond(Long.parseLong(args[0].strip()));
     }
 
     @Override
     public String toString() {
       return "Parsed{" + "node1=" + node1 + ", node2=" + node2 + ", timestamp=" + timestamp + '}';
+    }
+  }
+
+  private static final class IdIndexer {
+
+    private final Map<Integer, Integer> index = new Int2IntOpenHashMap();
+    private int currentId = 0;
+
+    public int index(int id) {
+      Integer indexed = index.putIfAbsent(id, currentId);
+      return (indexed == null) ? currentId++ : indexed;
     }
   }
 }
