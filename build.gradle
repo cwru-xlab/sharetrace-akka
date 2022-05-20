@@ -24,9 +24,9 @@ def versions = [
         junit      : "5.8.2",
         logback    : "1.2.11",
         logstash   : "7.1.1",
-        picoli     : "4.6.3",
+        picoli     : "4.6.3", // TODO Remove if unused
         slf4j      : "1.7.36",
-        spotBugs   : "4.6.0"
+        spotBugs   : "4.6.0" // TODO Remove
 ]
 
 dependencies {
