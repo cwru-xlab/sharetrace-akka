@@ -33,10 +33,10 @@ import org.sharetrace.logging.events.SendCachedEvent;
 import org.sharetrace.logging.events.SendCurrentEvent;
 import org.sharetrace.logging.events.UpdateEvent;
 import org.sharetrace.message.ContactMessage;
-import org.sharetrace.message.Refresh;
+import org.sharetrace.message.RefreshMessage;
 import org.sharetrace.message.RiskScore;
 import org.sharetrace.message.RiskScoreMessage;
-import org.sharetrace.message.Timeout;
+import org.sharetrace.message.TimeoutMessage;
 import org.sharetrace.message.UserMessage;
 import org.sharetrace.message.UserParameters;
 import org.sharetrace.util.IntervalCache;
@@ -101,8 +101,14 @@ public class User extends AbstractBehavior<UserMessage> {
     return Predicate.not(contact -> Objects.equals(contact.getKey(), message.replyTo()));
   }
 
-  private static Behavior<UserMessage> onTimeout(Timeout timeout) {
-    return Behaviors.stopped();
+  @Override
+  public Receive<UserMessage> createReceive() {
+    return newReceiveBuilder()
+        .onMessage(ContactMessage.class, this::onContactMessage)
+        .onMessage(RiskScoreMessage.class, this::onRiskScoreMessage)
+        .onMessage(TimeoutMessage.class, User::onTimeout)
+        .onMessage(RefreshMessage.class, this::onRefresh)
+        .build();
   }
 
   private static SendCurrentEvent sendCurrentEvent(
@@ -139,14 +145,8 @@ public class User extends AbstractBehavior<UserMessage> {
         .build();
   }
 
-  @Override
-  public Receive<UserMessage> createReceive() {
-    return newReceiveBuilder()
-        .onMessage(ContactMessage.class, this::onContactMessage)
-        .onMessage(RiskScoreMessage.class, this::onRiskScoreMessage)
-        .onMessage(Timeout.class, User::onTimeout)
-        .onMessage(Refresh.class, this::onRefresh)
-        .build();
+  private static Behavior<UserMessage> onTimeout(TimeoutMessage timeout) {
+    return Behaviors.stopped();
   }
 
   private Behavior<UserMessage> onContactMessage(ContactMessage message) {
@@ -167,7 +167,7 @@ public class User extends AbstractBehavior<UserMessage> {
     return this;
   }
 
-  private Behavior<UserMessage> onRefresh(Refresh refresh) {
+  private Behavior<UserMessage> onRefresh(RefreshMessage refresh) {
     refreshContacts();
     refreshCurrent();
     return this;
@@ -200,11 +200,11 @@ public class User extends AbstractBehavior<UserMessage> {
   }
 
   private void startRefreshTimer() {
-    timers.startTimerWithFixedDelay(Refresh.INSTANCE, parameters.refreshRate());
+    timers.startTimerWithFixedDelay(RefreshMessage.INSTANCE, parameters.refreshRate());
   }
 
   private void resetTimeout() {
-    timers.startSingleTimer(Timeout.INSTANCE, parameters.idleTimeout());
+    timers.startSingleTimer(TimeoutMessage.INSTANCE, parameters.idleTimeout());
   }
 
   private void logSendCurrent(ActorRef<UserMessage> contact) {

@@ -27,7 +27,7 @@ import org.sharetrace.logging.metrics.RuntimeMetric;
 import org.sharetrace.message.AlgorithmMessage;
 import org.sharetrace.message.ContactMessage;
 import org.sharetrace.message.RiskScoreMessage;
-import org.sharetrace.message.Run;
+import org.sharetrace.message.RunMessage;
 import org.sharetrace.message.UserMessage;
 import org.sharetrace.message.UserParameters;
 import org.sharetrace.util.TypedSupplier;
@@ -110,12 +110,12 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
   @Override
   public Receive<AlgorithmMessage> createReceive() {
     return newReceiveBuilder()
-        .onMessage(Run.class, this::onRun)
+        .onMessage(RunMessage.class, this::onRun)
         .onSignal(Terminated.class, this::onTerminate)
         .build();
   }
 
-  private Behavior<AlgorithmMessage> onRun(Run run) {
+  private Behavior<AlgorithmMessage> onRun(RunMessage run) {
     Behavior<AlgorithmMessage> behavior = this;
     if (nUsers > 0) {
       Map<Integer, ActorRef<UserMessage>> users = newUsers();
