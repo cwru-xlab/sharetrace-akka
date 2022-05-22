@@ -37,7 +37,7 @@ class GraphGeneratorFactory {
       case WATTS_STROGATZ:
         return new WattsStrogatzGraphGenerator<>(
             nNodes,
-            getOrThrow(kNearestNeighbors, "knn", GraphType.WATTS_STROGATZ),
+            getOrThrow(kNearestNeighbors, "kNearestNeighbors", GraphType.WATTS_STROGATZ),
             getOrThrow(rewiringProbability, "rewiringProbability", GraphType.WATTS_STROGATZ),
             seed);
       case SCALE_FREE:
