@@ -1,15 +1,18 @@
 package org.sharetrace.graph;
 
 import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
+import java.util.Map;
 import org.jgrapht.Graph;
 import org.jgrapht.GraphMetrics;
 import org.jgrapht.alg.interfaces.ShortestPathAlgorithm;
 import org.jgrapht.alg.interfaces.ShortestPathAlgorithm.SingleSourcePaths;
-import org.jgrapht.alg.scoring.*;
+import org.jgrapht.alg.scoring.ClosenessCentrality;
+import org.jgrapht.alg.scoring.ClusteringCoefficient;
+import org.jgrapht.alg.scoring.Coreness;
+import org.jgrapht.alg.scoring.EigenvectorCentrality;
+import org.jgrapht.alg.scoring.KatzCentrality;
 import org.jgrapht.alg.shortestpath.FloydWarshallShortestPaths;
 import org.jgrapht.alg.shortestpath.GraphMeasurer;
-
-import java.util.Map;
 
 public final class GraphStats<V, E> {
 
@@ -35,10 +38,6 @@ public final class GraphStats<V, E> {
 
   public static <V, E> GraphStats<V, E> of(Graph<V, E> graph) {
     return new GraphStats<>(graph);
-  }
-
-  private static double[] toDoubleArray(Map<?, Double> map) {
-    return map.values().stream().mapToDouble(Number::doubleValue).toArray();
   }
 
   public int girth() {
@@ -98,6 +97,10 @@ public final class GraphStats<V, E> {
           toDoubleArray(new HarmonicCentrality<>(graph, shortestPath).getScores());
     }
     return harmonicCentralities;
+  }
+
+  private static double[] toDoubleArray(Map<?, Double> map) {
+    return map.values().stream().mapToDouble(Number::doubleValue).toArray();
   }
 
   public double globalClusteringCoefficient() {

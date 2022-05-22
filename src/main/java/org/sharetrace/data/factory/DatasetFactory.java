@@ -1,5 +1,9 @@
 package org.sharetrace.data.factory;
 
+import static org.sharetrace.util.Preconditions.checkArgument;
+import java.time.Instant;
+import java.util.Map;
+import java.util.Set;
 import org.jgrapht.Graph;
 import org.jgrapht.GraphType;
 import org.jgrapht.generate.GraphGenerator;
@@ -10,19 +14,7 @@ import org.sharetrace.graph.TemporalGraph;
 import org.sharetrace.logging.Loggable;
 import org.sharetrace.message.RiskScore;
 
-import java.time.Instant;
-import java.util.Map;
-import java.util.Set;
-
-import static org.sharetrace.util.Preconditions.checkArgument;
-
 public abstract class DatasetFactory implements GraphGenerator<Integer, Edge<Integer>, Integer> {
-
-  private static <T> Graph<T, Edge<T>> checkGraphType(Graph<T, Edge<T>> graph) {
-    GraphType type = graph.getType();
-    checkArgument(type.isSimple(), () -> "Graph must be simple; got " + type);
-    return graph;
-  }
 
   @Override
   public final void generateGraph(
@@ -36,6 +28,12 @@ public abstract class DatasetFactory implements GraphGenerator<Integer, Edge<Int
   }
 
   protected abstract void createTemporalGraph(Graph<Integer, Edge<Integer>> target);
+
+  private static <T> Graph<T, Edge<T>> checkGraphType(Graph<T, Edge<T>> graph) {
+    GraphType type = graph.getType();
+    checkArgument(type.isSimple(), () -> "Graph must be simple; got " + type);
+    return graph;
+  }
 
   public Dataset create() {
     return new Dataset() {

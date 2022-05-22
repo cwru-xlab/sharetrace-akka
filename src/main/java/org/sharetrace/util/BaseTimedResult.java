@@ -1,11 +1,10 @@
 package org.sharetrace.util;
 
+import java.time.Duration;
+import java.util.Arrays;
 import org.apache.commons.math3.stat.descriptive.StatisticalSummary;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.immutables.value.Value;
-
-import java.time.Duration;
-import java.util.Arrays;
 
 @Value.Immutable
 abstract class BaseTimedResult {

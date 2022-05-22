@@ -1,10 +1,9 @@
 package org.sharetrace.logging;
 
 import ch.qos.logback.core.spi.PropertyContainer;
+import java.nio.file.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.nio.file.Path;
 
 public final class Logging {
 

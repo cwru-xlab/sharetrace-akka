@@ -1,12 +1,11 @@
 package org.sharetrace.logging;
 
-import net.logstash.logback.argument.StructuredArguments;
-import org.sharetrace.util.TypedSupplier;
-import org.slf4j.Logger;
-
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
+import net.logstash.logback.argument.StructuredArguments;
+import org.sharetrace.util.TypedSupplier;
+import org.slf4j.Logger;
 
 public final class Loggables {
 

@@ -1,9 +1,13 @@
 package org.sharetrace.experiment;
 
-import org.immutables.builder.Builder;
-import org.jgrapht.generate.*;
-
 import java.util.Optional;
+import org.immutables.builder.Builder;
+import org.jgrapht.generate.BarabasiAlbertGraphGenerator;
+import org.jgrapht.generate.GnmRandomGraphGenerator;
+import org.jgrapht.generate.GraphGenerator;
+import org.jgrapht.generate.RandomRegularGraphGenerator;
+import org.jgrapht.generate.ScaleFreeGraphGenerator;
+import org.jgrapht.generate.WattsStrogatzGraphGenerator;
 
 class GraphGeneratorFactory {
 

@@ -1,8 +1,7 @@
 package org.sharetrace.experiment;
 
-import org.sharetrace.RiskPropagation;
-
 import java.nio.file.Path;
+import org.sharetrace.RiskPropagation;
 
 public final class SocioPatternsExperiment extends FileExperiment {
 

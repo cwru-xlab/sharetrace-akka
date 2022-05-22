@@ -15,18 +15,6 @@ public final class Preconditions {
     return checkInClosedRange(value, lowerBound, upperBound, message);
   }
 
-  public static void checkArgument(boolean condition, Supplier<String> message) {
-    if (!condition) {
-      throw new IllegalArgumentException(Objects.requireNonNull(message).get());
-    }
-  }
-
-  public static double checkInClosedRange(
-      double value, double lowerBound, double upperBound, Supplier<String> message) {
-    checkArgument(value >= lowerBound && value <= upperBound, message);
-    return value;
-  }
-
   private static <T> String closedRangeMessage(String name, T loweBound, T upperBound, T value) {
     return "'"
         + name
@@ -36,6 +24,18 @@ public final class Preconditions {
         + upperBound
         + ", inclusive; got "
         + value;
+  }
+
+  public static double checkInClosedRange(
+      double value, double lowerBound, double upperBound, Supplier<String> message) {
+    checkArgument(value >= lowerBound && value <= upperBound, message);
+    return value;
+  }
+
+  public static void checkArgument(boolean condition, Supplier<String> message) {
+    if (!condition) {
+      throw new IllegalArgumentException(Objects.requireNonNull(message).get());
+    }
   }
 
   public static Duration checkIsNonNegative(Duration duration, String name) {

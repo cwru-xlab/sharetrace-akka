@@ -1,8 +1,7 @@
 package org.sharetrace.util;
 
-import org.immutables.value.Value;
-
 import java.time.Duration;
+import org.immutables.value.Value;
 
 @Value.Immutable
 interface BaseCacheParameters {

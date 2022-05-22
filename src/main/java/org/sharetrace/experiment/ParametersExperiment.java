@@ -24,10 +24,6 @@ public final class ParametersExperiment extends SyntheticExperiment {
     new ParametersExperiment(graphType, nNodes, nRepeats, seed).run();
   }
 
-  public static void run(GraphType graphType, int nNodes, long seed) {
-    run(graphType, nNodes, 1, seed);
-  }
-
   @Override
   public void run() {
     for (transmissionRate = 0.1d; transmissionRate < 1d; transmissionRate += 0.1d) {
@@ -45,5 +41,9 @@ public final class ParametersExperiment extends SyntheticExperiment {
   @Override
   protected double transmissionRate() {
     return transmissionRate;
+  }
+
+  public static void run(GraphType graphType, int nNodes, long seed) {
+    run(graphType, nNodes, 1, seed);
   }
 }

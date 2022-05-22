@@ -1,11 +1,10 @@
 package org.sharetrace.util;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
-import org.immutables.value.Value;
-
 import java.util.Arrays;
 import java.util.Collection;
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
+import org.immutables.value.Value;
 
 @Value.Immutable
 abstract class BaseDescriptiveStats {

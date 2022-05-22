@@ -1,13 +1,11 @@
 package org.sharetrace.message;
 
+import static org.sharetrace.util.Preconditions.checkInClosedRange;
+import java.time.Instant;
 import org.immutables.value.Value;
 import org.sharetrace.RiskPropagation;
 import org.sharetrace.graph.ContactGraph;
 import org.sharetrace.graph.Node;
-
-import java.time.Instant;
-
-import static org.sharetrace.util.Preconditions.checkInClosedRange;
 
 /**
  * A timestamped probability of infection. As a message, a risk score is propagated through the

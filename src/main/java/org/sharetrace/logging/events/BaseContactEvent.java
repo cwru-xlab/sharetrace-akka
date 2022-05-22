@@ -1,8 +1,7 @@
 package org.sharetrace.logging.events;
 
-import org.immutables.value.Value;
-
 import java.util.List;
+import org.immutables.value.Value;
 
 @Value.Immutable
 interface BaseContactEvent extends LoggableEvent {
