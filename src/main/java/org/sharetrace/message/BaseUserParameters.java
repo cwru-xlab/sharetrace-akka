@@ -1,20 +1,21 @@
 package org.sharetrace.message;
 
+import static org.sharetrace.util.Preconditions.checkInClosedRange;
+import static org.sharetrace.util.Preconditions.checkIsAtLeast;
+import static org.sharetrace.util.Preconditions.checkIsNonNegative;
+import static org.sharetrace.util.Preconditions.checkIsPositive;
+import java.time.Duration;
 import org.immutables.value.Value;
 import org.sharetrace.RiskPropagation;
 import org.sharetrace.User;
 import org.sharetrace.graph.ContactGraph;
-
-import java.time.Duration;
-
-import static org.sharetrace.util.Preconditions.*;
 
 /**
  * A collection of values that modify the behavior of a {@link User} while passing messages during
  * an execution of {@link RiskPropagation}.
  */
 @Value.Immutable
-abstract class BaseNodeParameters implements NodeMessage {
+abstract class BaseUserParameters implements UserMessage {
 
   public static final double MIN_TRANSMISSION_RATE = 0d;
   public static final double MAX_TRANSMISSION_RATE = 1d;

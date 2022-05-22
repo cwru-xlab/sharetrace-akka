@@ -1,5 +1,5 @@
 package org.sharetrace.message;
 
-public enum Timeout implements NodeMessage {
+public enum Timeout implements UserMessage {
   INSTANCE
 }

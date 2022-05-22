@@ -8,27 +8,30 @@ import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import org.immutables.builder.Builder;
-import org.sharetrace.data.factory.CacheFactory;
-import org.sharetrace.data.factory.ContactTimeFactory;
-import org.sharetrace.data.factory.ScoreFactory;
-import org.sharetrace.graph.ContactGraph;
-import org.sharetrace.graph.NodeBuilder;
-import org.sharetrace.graph.TemporalGraph;
-import org.sharetrace.logging.Loggable;
-import org.sharetrace.logging.Loggables;
-import org.sharetrace.logging.Logging;
-import org.sharetrace.logging.metrics.LoggableMetric;
-import org.sharetrace.logging.metrics.RuntimeMetric;
-import org.sharetrace.message.*;
-import org.sharetrace.util.TypedSupplier;
-
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.immutables.builder.Builder;
+import org.sharetrace.data.factory.CacheFactory;
+import org.sharetrace.data.factory.ContactTimeFactory;
+import org.sharetrace.data.factory.ScoreFactory;
+import org.sharetrace.graph.ContactGraph;
+import org.sharetrace.graph.TemporalGraph;
+import org.sharetrace.logging.Loggable;
+import org.sharetrace.logging.Loggables;
+import org.sharetrace.logging.Logging;
+import org.sharetrace.logging.metrics.LoggableMetric;
+import org.sharetrace.logging.metrics.RuntimeMetric;
+import org.sharetrace.message.AlgorithmMessage;
+import org.sharetrace.message.ContactMessage;
+import org.sharetrace.message.RiskScoreMessage;
+import org.sharetrace.message.Run;
+import org.sharetrace.message.UserMessage;
+import org.sharetrace.message.UserParameters;
+import org.sharetrace.util.TypedSupplier;
 
 /**
  * A non-iterative, asynchronous implementation of the ShareTrace algorithm. The objective is to
@@ -45,14 +48,14 @@ import java.util.Set;
  *       User}s have stopped passing messages (default), or a certain amount of time has passed.
  * </ol>
  *
- * @see NodeParameters
+ * @see UserParameters
  */
 public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
 
   private final Loggables loggables;
-  private final NodeParameters parameters;
+  private final UserParameters parameters;
   private final TemporalGraph graph;
-  private final long nNodes;
+  private final long nUsers;
   private final Clock clock;
   private final ScoreFactory scoreFactory;
   private final ContactTimeFactory contactTimeFactory;
@@ -64,7 +67,7 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
       ActorContext<AlgorithmMessage> context,
       Set<Class<? extends Loggable>> loggable,
       TemporalGraph graph,
-      NodeParameters parameters,
+      UserParameters parameters,
       Clock clock,
       CacheFactory<RiskScoreMessage> cacheFactory,
       ScoreFactory scoreFactory,
@@ -77,7 +80,7 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
     this.cacheFactory = cacheFactory;
     this.scoreFactory = scoreFactory;
     this.contactTimeFactory = contactTimeFactory;
-    this.nNodes = graph.nNodes();
+    this.nUsers = graph.nNodes();
     this.nStopped = 0;
   }
 
@@ -85,7 +88,7 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
   static Behavior<AlgorithmMessage> riskPropagation(
       TemporalGraph graph,
       Set<Class<? extends Loggable>> loggable,
-      NodeParameters parameters,
+      UserParameters parameters,
       Clock clock,
       CacheFactory<RiskScoreMessage> cacheFactory,
       ScoreFactory scoreFactory,
@@ -115,76 +118,76 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
 
   private Behavior<AlgorithmMessage> onRun(Run run) {
     Behavior<AlgorithmMessage> behavior = this;
-    if (nNodes > 0) {
-      Map<Integer, ActorRef<NodeMessage>> nodes = newNodes();
+    if (nUsers > 0) {
+      Map<Integer, ActorRef<UserMessage>> users = newUsers();
       startedAt = clock.instant();
-      setScores(nodes);
-      setContacts(nodes);
+      setScores(users);
+      setContacts(users);
     } else {
       behavior = Behaviors.stopped();
     }
     return behavior;
   }
 
-  private Behavior<AlgorithmMessage> onTerminate(Terminated terminated) {
-    Behavior<AlgorithmMessage> behavior = this;
-    if (++nStopped == nNodes) {
-      logMetrics();
-      behavior = Behaviors.stopped();
-    }
-    return behavior;
+  private Map<Integer, ActorRef<UserMessage>> newUsers() {
+    Map<Integer, ActorRef<UserMessage>> users = new Object2ObjectOpenHashMap<>();
+    graph.nodes().forEach(name -> users.put(name, newUser(name)));
+    return users;
   }
 
-  private Map<Integer, ActorRef<NodeMessage>> newNodes() {
-    Map<Integer, ActorRef<NodeMessage>> nodes = new Object2ObjectOpenHashMap<>();
-    graph.nodes().forEach(name -> nodes.put(name, newNode(name)));
-    return nodes;
+  private void setScores(Map<Integer, ActorRef<UserMessage>> users) {
+    users.forEach(this::sendFirstScore);
   }
 
-  private void setScores(Map<Integer, ActorRef<NodeMessage>> nodes) {
-    nodes.forEach(this::sendFirstScore);
+  private void setContacts(Map<?, ActorRef<UserMessage>> users) {
+    graph.edges().forEach(contact -> sendContact(contact, users));
   }
 
-  private void setContacts(Map<?, ActorRef<NodeMessage>> nodes) {
-    graph.edges().forEach(edge -> sendContact(edge, nodes));
+  private ActorRef<UserMessage> newUser(int name) {
+    ActorRef<UserMessage> user = getContext().spawn(newUser(), String.valueOf(name));
+    getContext().watch(user);
+    return user;
   }
 
   private void logMetrics() {
     loggables.info(LoggableMetric.KEY, runtimeMetric());
   }
 
-  private ActorRef<NodeMessage> newNode(int name) {
-    ActorRef<NodeMessage> node = getContext().spawn(newNode(), String.valueOf(name));
-    getContext().watch(node);
-    return node;
+  private void sendFirstScore(int name, ActorRef<UserMessage> user) {
+    user.tell(RiskScoreMessage.builder().score(scoreFactory.getScore(name)).replyTo(user).build());
   }
 
-  private void sendFirstScore(int name, ActorRef<NodeMessage> node) {
-    node.tell(RiskScoreMessage.builder().score(scoreFactory.getScore(name)).replyTo(node).build());
+  private void sendContact(List<Integer> contact, Map<?, ActorRef<UserMessage>> users) {
+    ActorRef<UserMessage> user1 = users.get(contact.get(0));
+    ActorRef<UserMessage> user2 = users.get(contact.get(1));
+    Instant timestamp = contactTimeFactory.getContactTime(contact.get(0), contact.get(1));
+    user1.tell(ContactMessage.builder().replyTo(user2).timestamp(timestamp).build());
+    user2.tell(ContactMessage.builder().replyTo(user1).timestamp(timestamp).build());
   }
 
-  private void sendContact(List<Integer> edge, Map<?, ActorRef<NodeMessage>> nodes) {
-    ActorRef<NodeMessage> node1 = nodes.get(edge.get(0));
-    ActorRef<NodeMessage> node2 = nodes.get(edge.get(1));
-    Instant timestamp = contactTimeFactory.getContactTime(edge.get(0), edge.get(1));
-    node1.tell(ContactMessage.builder().replyTo(node2).timestamp(timestamp).build());
-    node2.tell(ContactMessage.builder().replyTo(node1).timestamp(timestamp).build());
-  }
-
-  private TypedSupplier<LoggableMetric> runtimeMetric() {
-    return TypedSupplier.of(RuntimeMetric.class, () -> RuntimeMetric.of(runtime()));
-  }
-
-  private Behavior<NodeMessage> newNode() {
+  private Behavior<UserMessage> newUser() {
     return Behaviors.withTimers(
         timers ->
-            NodeBuilder.create()
+            UserBuilder.create()
                 .timers(timers)
                 .addAllLoggable(loggables.loggable())
                 .parameters(parameters)
                 .clock(clock)
                 .cache(cacheFactory.create())
                 .build());
+  }
+
+  private TypedSupplier<LoggableMetric> runtimeMetric() {
+    return TypedSupplier.of(RuntimeMetric.class, () -> RuntimeMetric.of(runtime()));
+  }
+
+  private Behavior<AlgorithmMessage> onTerminate(Terminated terminated) {
+    Behavior<AlgorithmMessage> behavior = this;
+    if (++nStopped == nUsers) {
+      logMetrics();
+      behavior = Behaviors.stopped();
+    }
+    return behavior;
   }
 
   private double runtime() {

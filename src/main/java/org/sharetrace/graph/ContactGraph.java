@@ -1,5 +1,15 @@
 package org.sharetrace.graph;
 
+import java.io.IOException;
+import java.io.Writer;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.function.Supplier;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 import org.jgrapht.Graph;
 import org.jgrapht.generate.GraphGenerator;
 import org.jgrapht.graph.DefaultGraphType;
@@ -11,25 +21,19 @@ import org.sharetrace.User;
 import org.sharetrace.logging.Loggable;
 import org.sharetrace.logging.Loggables;
 import org.sharetrace.logging.Logging;
-import org.sharetrace.logging.metrics.*;
+import org.sharetrace.logging.metrics.GraphCycleMetrics;
+import org.sharetrace.logging.metrics.GraphEccentricityMetrics;
+import org.sharetrace.logging.metrics.GraphScoringMetrics;
+import org.sharetrace.logging.metrics.GraphSizeMetrics;
+import org.sharetrace.logging.metrics.GraphTopologyMetric;
+import org.sharetrace.logging.metrics.LoggableMetric;
 import org.sharetrace.util.DescriptiveStats;
 import org.sharetrace.util.TypedSupplier;
 import org.slf4j.Logger;
 
-import java.io.IOException;
-import java.io.Writer;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-import java.util.function.Supplier;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
-
 /**
- * A simple graph in which a node represents a person and an edge between two nodes indicates that
- * the associated persons of the incident nodes came in contact. Nodes identifiers are zero-based
+ * A simple graph in which a node represents a user and an edge between two nodes indicates that the
+ * associated users of the incident nodes came in contact. Node identifiers are zero-based
  * contiguous natural numbers. In an instance of {@link RiskPropagation}, the topology of this graph
  * is mapped to a collection {@link User} actors.
  *

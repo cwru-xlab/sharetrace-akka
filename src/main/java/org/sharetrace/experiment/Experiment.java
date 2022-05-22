@@ -29,8 +29,8 @@ import org.sharetrace.logging.metrics.RuntimeMetric;
 import org.sharetrace.logging.settings.ExperimentSettings;
 import org.sharetrace.logging.settings.LoggableSetting;
 import org.sharetrace.message.AlgorithmMessage;
-import org.sharetrace.message.NodeParameters;
 import org.sharetrace.message.RiskScoreMessage;
+import org.sharetrace.message.UserParameters;
 import org.sharetrace.util.CacheParameters;
 import org.sharetrace.util.IntervalCache;
 import org.slf4j.Logger;
@@ -44,7 +44,7 @@ public abstract class Experiment implements Runnable {
   protected final Loggables loggables;
   protected final Instant referenceTime;
   protected Dataset dataset;
-  protected NodeParameters nodeParameters;
+  protected UserParameters userParameters;
   protected CacheParameters cacheParameters;
   protected ExperimentSettings settings;
   protected int iteration;
@@ -96,10 +96,22 @@ public abstract class Experiment implements Runnable {
     Runner.run(newAlgorithm(), "RiskPropagation");
   }
 
+  protected Behavior<AlgorithmMessage> newAlgorithm() {
+    return RiskPropagationBuilder.create()
+        .addAllLoggable(loggable())
+        .graph(dataset.graph())
+        .parameters(userParameters)
+        .clock(clock())
+        .scoreFactory(dataset)
+        .contactTimeFactory(dataset)
+        .cacheFactory(cacheFactory())
+        .build();
+  }
+
   protected void setUpIteration(int i) {
     iteration = i;
     dataset = newDataset();
-    nodeParameters = newNodeParameters();
+    userParameters = newNodeParameters();
     cacheParameters = newCacheParameters();
     ExperimentSettings newSettings = newSettings();
     if (!newSettings.equals(settings)) {
@@ -108,22 +120,11 @@ public abstract class Experiment implements Runnable {
     }
   }
 
-  protected Behavior<AlgorithmMessage> newAlgorithm() {
-    return RiskPropagationBuilder.create()
-        .addAllLoggable(loggable())
-        .graph(dataset.graph())
-        .parameters(nodeParameters)
-        .clock(clock())
-        .scoreFactory(dataset)
-        .contactTimeFactory(dataset)
-        .cacheFactory(cacheFactory())
-        .build();
-  }
-
   protected abstract Dataset newDataset();
 
-  protected NodeParameters newNodeParameters() {
-    return NodeParameters.builder()
+  protected UserParameters newNodeParameters() {
+    return userParameters
+        .builder()
         .sendTolerance(sendTolerance())
         .transmissionRate(transmissionRate())
         .timeBuffer(timeBuffer())
@@ -150,7 +151,7 @@ public abstract class Experiment implements Runnable {
         .nIterations(nIterations)
         .iteration(iteration)
         .seed(seed)
-        .nodeParameters(nodeParameters)
+        .userParameters(userParameters)
         .cacheParameters(cacheParameters)
         .build();
   }

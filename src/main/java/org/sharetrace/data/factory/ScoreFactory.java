@@ -5,5 +5,5 @@ import org.sharetrace.message.RiskScore;
 @FunctionalInterface
 public interface ScoreFactory {
 
-  RiskScore getScore(int node);
+  RiskScore getScore(int user);
 }

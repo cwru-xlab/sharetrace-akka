@@ -2,18 +2,12 @@ package org.sharetrace;
 
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
-import akka.actor.typed.javadsl.*;
+import akka.actor.typed.javadsl.AbstractBehavior;
+import akka.actor.typed.javadsl.ActorContext;
+import akka.actor.typed.javadsl.Behaviors;
+import akka.actor.typed.javadsl.Receive;
+import akka.actor.typed.javadsl.TimerScheduler;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import org.immutables.builder.Builder;
-import org.sharetrace.graph.ContactGraph;
-import org.sharetrace.logging.Loggable;
-import org.sharetrace.logging.Loggables;
-import org.sharetrace.logging.Logging;
-import org.sharetrace.logging.events.*;
-import org.sharetrace.message.*;
-import org.sharetrace.util.IntervalCache;
-import org.sharetrace.util.TypedSupplier;
-
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -24,20 +18,42 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import org.immutables.builder.Builder;
+import org.sharetrace.graph.ContactGraph;
+import org.sharetrace.logging.Loggable;
+import org.sharetrace.logging.Loggables;
+import org.sharetrace.logging.Logging;
+import org.sharetrace.logging.events.ContactEvent;
+import org.sharetrace.logging.events.ContactsRefreshEvent;
+import org.sharetrace.logging.events.CurrentRefreshEvent;
+import org.sharetrace.logging.events.LoggableEvent;
+import org.sharetrace.logging.events.PropagateEvent;
+import org.sharetrace.logging.events.ReceiveEvent;
+import org.sharetrace.logging.events.SendCachedEvent;
+import org.sharetrace.logging.events.SendCurrentEvent;
+import org.sharetrace.logging.events.UpdateEvent;
+import org.sharetrace.message.ContactMessage;
+import org.sharetrace.message.Refresh;
+import org.sharetrace.message.RiskScore;
+import org.sharetrace.message.RiskScoreMessage;
+import org.sharetrace.message.Timeout;
+import org.sharetrace.message.UserMessage;
+import org.sharetrace.message.UserParameters;
+import org.sharetrace.util.IntervalCache;
+import org.sharetrace.util.TypedSupplier;
 
 /**
  * An actor that corresponds to a {@link ContactGraph} node. Collectively, all {@link User}s carry
  * out the execution of {@link RiskPropagation}.
  *
- * @see NodeParameters
- * @see IntervalCache
+ * @see UserParameters
  */
-public class User extends AbstractBehavior<NodeMessage> {
+public class User extends AbstractBehavior<UserMessage> {
 
-  private final TimerScheduler<NodeMessage> timers;
+  private final TimerScheduler<UserMessage> timers;
   private final Loggables loggables;
-  private final Map<ActorRef<NodeMessage>, Instant> contacts;
-  private final NodeParameters parameters;
+  private final Map<ActorRef<UserMessage>, Instant> contacts;
+  private final UserParameters parameters;
   private final Clock clock;
   private final IntervalCache<RiskScoreMessage> cache;
   private RiskScoreMessage previous;
@@ -46,10 +62,10 @@ public class User extends AbstractBehavior<NodeMessage> {
   private double sendThreshold;
 
   private User(
-      ActorContext<NodeMessage> context,
-      TimerScheduler<NodeMessage> timers,
+      ActorContext<UserMessage> context,
+      TimerScheduler<UserMessage> timers,
       Set<Class<? extends Loggable>> loggable,
-      NodeParameters parameters,
+      UserParameters parameters,
       Clock clock,
       IntervalCache<RiskScoreMessage> cache) {
     super(context);
@@ -67,10 +83,10 @@ public class User extends AbstractBehavior<NodeMessage> {
   }
 
   @Builder.Factory
-  static Behavior<NodeMessage> node(
-      TimerScheduler<NodeMessage> timers,
+  static Behavior<UserMessage> user(
+      TimerScheduler<UserMessage> timers,
       Set<Class<? extends Loggable>> loggable,
-      NodeParameters parameters,
+      UserParameters parameters,
       Clock clock,
       IntervalCache<RiskScoreMessage> cache) {
     return Behaviors.setup(
@@ -80,57 +96,57 @@ public class User extends AbstractBehavior<NodeMessage> {
         });
   }
 
-  private static Predicate<Entry<ActorRef<NodeMessage>, Instant>> isNotFrom(
+  private static Predicate<Entry<ActorRef<UserMessage>, Instant>> isNotFrom(
       RiskScoreMessage message) {
     return Predicate.not(contact -> Objects.equals(contact.getKey(), message.replyTo()));
   }
 
-  private static Behavior<NodeMessage> onTimeout(Timeout timeout) {
-    return Behaviors.stopped();
-  }
-
-  private static SendCurrentEvent sendCurrentEvent(
-      ActorRef<NodeMessage> contact, RiskScoreMessage message) {
-    return SendCurrentEvent.builder()
-        .from(name(message.replyTo()))
-        .to(name(contact))
-        .score(message.score())
-        .uuid(message.uuid())
-        .build();
-  }
-
-  private static SendCachedEvent sendCachedEvent(
-      ActorRef<NodeMessage> contact, RiskScoreMessage message) {
-    return SendCachedEvent.builder()
-        .from(name(message.replyTo()))
-        .to(name(contact))
-        .score(message.score())
-        .uuid(message.uuid())
-        .build();
-  }
-
-  private static String name(ActorRef<NodeMessage> node) {
-    return node.path().name();
-  }
-
-  private static PropagateEvent propagateEvent(
-      ActorRef<NodeMessage> contact, RiskScoreMessage message) {
-    return PropagateEvent.builder()
-        .from(name(message.replyTo()))
-        .to(name(contact))
-        .score(message.score())
-        .uuid(message.uuid())
-        .build();
-  }
-
   @Override
-  public Receive<NodeMessage> createReceive() {
+  public Receive<UserMessage> createReceive() {
     return newReceiveBuilder()
         .onMessage(ContactMessage.class, this::onContactMessage)
         .onMessage(RiskScoreMessage.class, this::onRiskScoreMessage)
         .onMessage(Timeout.class, User::onTimeout)
         .onMessage(Refresh.class, this::onRefresh)
         .build();
+  }
+
+  private Behavior<UserMessage> onContactMessage(ContactMessage message) {
+    if (isContactAlive(message)) {
+      addContact(message);
+      if (!sendCurrent(message)) {
+        sendCached(message);
+      }
+    }
+    return this;
+  }
+
+  private Behavior<UserMessage> onRiskScoreMessage(RiskScoreMessage message) {
+    logReceive(message);
+    update(message);
+    propagate(message);
+    resetTimeout();
+    return this;
+  }
+
+  private static Behavior<UserMessage> onTimeout(Timeout timeout) {
+    return Behaviors.stopped();
+  }
+
+  private Behavior<UserMessage> onRefresh(Refresh refresh) {
+    refreshContacts();
+    refreshCurrent();
+    return this;
+  }
+
+  private boolean sendCurrent(ContactMessage message) {
+    boolean sent = isScoreAlive(current) && isContactRecent(message, current);
+    if (sent) {
+      ActorRef<UserMessage> contact = message.replyTo();
+      contact.tell(transmitted);
+      logSendCurrent(contact);
+    }
+    return sent;
   }
 
   private RiskScoreMessage cached(RiskScoreMessage message) {
@@ -157,10 +173,8 @@ public class User extends AbstractBehavior<NodeMessage> {
     timers.startSingleTimer(Timeout.INSTANCE, parameters.idleTimeout());
   }
 
-  private Behavior<NodeMessage> onRefresh(Refresh refresh) {
-    refreshContacts();
-    refreshCurrent();
-    return this;
+  private void logSendCurrent(ActorRef<UserMessage> contact) {
+    logEvent(SendCurrentEvent.class, () -> sendCurrentEvent(contact, transmitted));
   }
 
   private void refreshContacts() {
@@ -187,14 +201,14 @@ public class User extends AbstractBehavior<NodeMessage> {
     return maxCached(timestamp).orElseGet(this::defaultMessage);
   }
 
-  private Behavior<NodeMessage> onContactMessage(ContactMessage message) {
-    if (isContactAlive(message)) {
-      addContact(message);
-      if (!sendCurrent(message)) {
-        sendCached(message);
-      }
-    }
-    return this;
+  private static SendCurrentEvent sendCurrentEvent(
+      ActorRef<UserMessage> contact, RiskScoreMessage message) {
+    return SendCurrentEvent.builder()
+        .from(name(message.replyTo()))
+        .to(name(contact))
+        .score(message.score())
+        .uuid(message.uuid())
+        .build();
   }
 
   private void addContact(ContactMessage message) {
@@ -202,37 +216,25 @@ public class User extends AbstractBehavior<NodeMessage> {
     logContact(message);
   }
 
-  private void setMessages(RiskScoreMessage newCurrent) {
-    previous = current;
-    current = newCurrent;
-    transmitted = transmitted(current);
-  }
-
   private void sendCached(ContactMessage message) {
     Instant buffered = buffered(message.timestamp());
     maxCached(buffered).ifPresent(cached -> sendCached(message.replyTo(), cached));
   }
 
-  private boolean sendCurrent(ContactMessage message) {
-    boolean sent = isScoreAlive(current) && isContactRecent(message, current);
-    if (sent) {
-      ActorRef<NodeMessage> contact = message.replyTo();
-      contact.tell(transmitted);
-      logSendCurrent(contact);
+  private static String name(ActorRef<UserMessage> user) {
+    return user.path().name();
+  }
+
+  private Predicate<Entry<ActorRef<UserMessage>, Instant>> isContactRecent(
+      RiskScoreMessage message) {
+    return contact -> isRecent(contact.getValue(), message);
+  }
+
+  private void sendCached(ActorRef<UserMessage> contact, RiskScoreMessage cached) {
+    if (isScoreAlive(cached)) {
+      contact.tell(cached);
+      logSendCached(contact, cached);
     }
-    return sent;
-  }
-
-  private Behavior<NodeMessage> onRiskScoreMessage(RiskScoreMessage message) {
-    logReceive(message);
-    update(message);
-    propagate(message);
-    resetTimeout();
-    return this;
-  }
-
-  private void logSendCurrent(ActorRef<NodeMessage> contact) {
-    logEvent(SendCurrentEvent.class, () -> sendCurrentEvent(contact, transmitted));
   }
 
   private void propagate(RiskScoreMessage message) {
@@ -264,9 +266,8 @@ public class User extends AbstractBehavior<NodeMessage> {
     return message.score().value() >= sendThreshold;
   }
 
-  private Predicate<Entry<ActorRef<NodeMessage>, Instant>> isContactRecent(
-      RiskScoreMessage message) {
-    return contact -> isRecent(contact.getValue(), message);
+  private void logSendCached(ActorRef<UserMessage> contact, RiskScoreMessage message) {
+    logEvent(SendCachedEvent.class, () -> sendCachedEvent(contact, message));
   }
 
   private boolean isContactRecent(ContactMessage contact, RiskScoreMessage message) {
@@ -293,14 +294,17 @@ public class User extends AbstractBehavior<NodeMessage> {
     return isAlive(message.score().timestamp(), parameters.scoreTtl());
   }
 
-  private void sendCached(ActorRef<NodeMessage> contact, RiskScoreMessage cached) {
-    if (isScoreAlive(cached)) {
-      contact.tell(cached);
-      logSendCached(contact, cached);
-    }
+  private static SendCachedEvent sendCachedEvent(
+      ActorRef<UserMessage> contact, RiskScoreMessage message) {
+    return SendCachedEvent.builder()
+        .from(name(message.replyTo()))
+        .to(name(contact))
+        .score(message.score())
+        .uuid(message.uuid())
+        .build();
   }
 
-  private void propagate(ActorRef<NodeMessage> contact, RiskScoreMessage message) {
+  private void propagate(ActorRef<UserMessage> contact, RiskScoreMessage message) {
     contact.tell(message);
     logPropagate(contact, message);
   }
@@ -309,8 +313,8 @@ public class User extends AbstractBehavior<NodeMessage> {
     loggables.info(LoggableEvent.KEY, TypedSupplier.of(type, supplier));
   }
 
-  private ContactEvent contactEvent(ContactMessage message) {
-    return ContactEvent.builder().of(name()).addNodes(name(), name(message.replyTo())).build();
+  private void logPropagate(ActorRef<UserMessage> contact, RiskScoreMessage message) {
+    logEvent(PropagateEvent.class, () -> propagateEvent(contact, message));
   }
 
   private void logContact(ContactMessage message) {
@@ -370,12 +374,18 @@ public class User extends AbstractBehavior<NodeMessage> {
     }
   }
 
-  private void logSendCached(ActorRef<NodeMessage> contact, RiskScoreMessage message) {
-    logEvent(SendCachedEvent.class, () -> sendCachedEvent(contact, message));
+  private static PropagateEvent propagateEvent(
+      ActorRef<UserMessage> contact, RiskScoreMessage message) {
+    return PropagateEvent.builder()
+        .from(name(message.replyTo()))
+        .to(name(contact))
+        .score(message.score())
+        .uuid(message.uuid())
+        .build();
   }
 
-  private void logPropagate(ActorRef<NodeMessage> contact, RiskScoreMessage message) {
-    logEvent(PropagateEvent.class, () -> propagateEvent(contact, message));
+  private ContactEvent contactEvent(ContactMessage message) {
+    return ContactEvent.builder().of(name()).addUsers(name(), name(message.replyTo())).build();
   }
 
   private void logReceive(RiskScoreMessage message) {
@@ -393,5 +403,11 @@ public class User extends AbstractBehavior<NodeMessage> {
 
   private boolean isAlive(Instant timestamp, Duration timeToLive) {
     return Duration.between(timestamp, clock.instant()).compareTo(timeToLive) <= 0;
+  }
+
+  private void setMessages(RiskScoreMessage newCurrent) {
+    previous = current;
+    current = newCurrent;
+    transmitted = transmitted(current);
   }
 }

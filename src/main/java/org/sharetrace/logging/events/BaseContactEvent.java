@@ -8,5 +8,5 @@ interface BaseContactEvent extends LoggableEvent {
 
   String of();
 
-  List<String> nodes();
+  List<String> users();
 }
