@@ -99,7 +99,7 @@ public abstract class Experiment implements Runnable {
   protected void setUpIteration(int i) {
     iteration = i;
     dataset = newDataset();
-    userParameters = newNodeParameters();
+    userParameters = newUserParameters();
     cacheParameters = newCacheParameters();
     ExperimentSettings newSettings = newSettings();
     if (!newSettings.equals(settings)) {
@@ -122,7 +122,7 @@ public abstract class Experiment implements Runnable {
 
   protected abstract Dataset newDataset();
 
-  protected UserParameters newNodeParameters() {
+  protected UserParameters newUserParameters() {
     return UserParameters.builder()
         .sendTolerance(sendTolerance())
         .transmissionRate(transmissionRate())
