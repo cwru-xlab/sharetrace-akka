@@ -1,5 +1,21 @@
 package org.sharetrace.graph;
 
+import org.jgrapht.Graph;
+import org.jgrapht.generate.GraphGenerator;
+import org.jgrapht.graph.DefaultGraphType;
+import org.jgrapht.nio.GraphExporter;
+import org.jgrapht.nio.graphml.GraphMLExporter;
+import org.jgrapht.opt.graph.fastutil.FastutilMapGraph;
+import org.sharetrace.Node;
+import org.sharetrace.RiskPropagation;
+import org.sharetrace.logging.Loggable;
+import org.sharetrace.logging.Loggables;
+import org.sharetrace.logging.Logging;
+import org.sharetrace.logging.metrics.*;
+import org.sharetrace.util.DescriptiveStats;
+import org.sharetrace.util.TypedSupplier;
+import org.slf4j.Logger;
+
 import java.io.IOException;
 import java.io.Writer;
 import java.nio.file.Files;
@@ -10,25 +26,6 @@ import java.util.UUID;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
-import org.jgrapht.Graph;
-import org.jgrapht.generate.GraphGenerator;
-import org.jgrapht.graph.DefaultGraphType;
-import org.jgrapht.nio.GraphExporter;
-import org.jgrapht.nio.graphml.GraphMLExporter;
-import org.jgrapht.opt.graph.fastutil.FastutilMapGraph;
-import org.sharetrace.RiskPropagation;
-import org.sharetrace.logging.Loggable;
-import org.sharetrace.logging.Loggables;
-import org.sharetrace.logging.Logging;
-import org.sharetrace.logging.metrics.GraphCycleMetrics;
-import org.sharetrace.logging.metrics.GraphEccentricityMetrics;
-import org.sharetrace.logging.metrics.GraphScoringMetrics;
-import org.sharetrace.logging.metrics.GraphSizeMetrics;
-import org.sharetrace.logging.metrics.GraphTopologyMetric;
-import org.sharetrace.logging.metrics.LoggableMetric;
-import org.sharetrace.util.DescriptiveStats;
-import org.sharetrace.util.TypedSupplier;
-import org.slf4j.Logger;
 
 /**
  * A simple graph in which a node represents a person and an edge between two nodes indicates that

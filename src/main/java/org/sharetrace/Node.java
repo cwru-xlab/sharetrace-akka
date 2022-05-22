@@ -1,13 +1,19 @@
-package org.sharetrace.graph;
+package org.sharetrace;
 
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
-import akka.actor.typed.javadsl.AbstractBehavior;
-import akka.actor.typed.javadsl.ActorContext;
-import akka.actor.typed.javadsl.Behaviors;
-import akka.actor.typed.javadsl.Receive;
-import akka.actor.typed.javadsl.TimerScheduler;
+import akka.actor.typed.javadsl.*;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import org.immutables.builder.Builder;
+import org.sharetrace.graph.ContactGraph;
+import org.sharetrace.logging.Loggable;
+import org.sharetrace.logging.Loggables;
+import org.sharetrace.logging.Logging;
+import org.sharetrace.logging.events.*;
+import org.sharetrace.message.*;
+import org.sharetrace.util.IntervalCache;
+import org.sharetrace.util.TypedSupplier;
+
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -18,29 +24,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-import org.immutables.builder.Builder;
-import org.sharetrace.RiskPropagation;
-import org.sharetrace.logging.Loggable;
-import org.sharetrace.logging.Loggables;
-import org.sharetrace.logging.Logging;
-import org.sharetrace.logging.events.ContactEvent;
-import org.sharetrace.logging.events.ContactsRefreshEvent;
-import org.sharetrace.logging.events.CurrentRefreshEvent;
-import org.sharetrace.logging.events.LoggableEvent;
-import org.sharetrace.logging.events.PropagateEvent;
-import org.sharetrace.logging.events.ReceiveEvent;
-import org.sharetrace.logging.events.SendCachedEvent;
-import org.sharetrace.logging.events.SendCurrentEvent;
-import org.sharetrace.logging.events.UpdateEvent;
-import org.sharetrace.message.ContactMessage;
-import org.sharetrace.message.NodeMessage;
-import org.sharetrace.message.NodeParameters;
-import org.sharetrace.message.Refresh;
-import org.sharetrace.message.RiskScore;
-import org.sharetrace.message.RiskScoreMessage;
-import org.sharetrace.message.Timeout;
-import org.sharetrace.util.IntervalCache;
-import org.sharetrace.util.TypedSupplier;
 
 /**
  * An actor that corresponds to a {@link ContactGraph} node. Collectively, all {@link Node}s carry
