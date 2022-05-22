@@ -101,6 +101,44 @@ public class User extends AbstractBehavior<UserMessage> {
     return Predicate.not(contact -> Objects.equals(contact.getKey(), message.replyTo()));
   }
 
+  private static Behavior<UserMessage> onTimeout(Timeout timeout) {
+    return Behaviors.stopped();
+  }
+
+  private static SendCurrentEvent sendCurrentEvent(
+      ActorRef<UserMessage> contact, RiskScoreMessage message) {
+    return SendCurrentEvent.builder()
+        .from(name(message.replyTo()))
+        .to(name(contact))
+        .score(message.score())
+        .uuid(message.uuid())
+        .build();
+  }
+
+  private static String name(ActorRef<UserMessage> user) {
+    return user.path().name();
+  }
+
+  private static SendCachedEvent sendCachedEvent(
+      ActorRef<UserMessage> contact, RiskScoreMessage message) {
+    return SendCachedEvent.builder()
+        .from(name(message.replyTo()))
+        .to(name(contact))
+        .score(message.score())
+        .uuid(message.uuid())
+        .build();
+  }
+
+  private static PropagateEvent propagateEvent(
+      ActorRef<UserMessage> contact, RiskScoreMessage message) {
+    return PropagateEvent.builder()
+        .from(name(message.replyTo()))
+        .to(name(contact))
+        .score(message.score())
+        .uuid(message.uuid())
+        .build();
+  }
+
   @Override
   public Receive<UserMessage> createReceive() {
     return newReceiveBuilder()
@@ -127,10 +165,6 @@ public class User extends AbstractBehavior<UserMessage> {
     propagate(message);
     resetTimeout();
     return this;
-  }
-
-  private static Behavior<UserMessage> onTimeout(Timeout timeout) {
-    return Behaviors.stopped();
   }
 
   private Behavior<UserMessage> onRefresh(Refresh refresh) {
@@ -201,16 +235,6 @@ public class User extends AbstractBehavior<UserMessage> {
     return maxCached(timestamp).orElseGet(this::defaultMessage);
   }
 
-  private static SendCurrentEvent sendCurrentEvent(
-      ActorRef<UserMessage> contact, RiskScoreMessage message) {
-    return SendCurrentEvent.builder()
-        .from(name(message.replyTo()))
-        .to(name(contact))
-        .score(message.score())
-        .uuid(message.uuid())
-        .build();
-  }
-
   private void addContact(ContactMessage message) {
     contacts.put(message.replyTo(), message.timestamp());
     logContact(message);
@@ -219,10 +243,6 @@ public class User extends AbstractBehavior<UserMessage> {
   private void sendCached(ContactMessage message) {
     Instant buffered = buffered(message.timestamp());
     maxCached(buffered).ifPresent(cached -> sendCached(message.replyTo(), cached));
-  }
-
-  private static String name(ActorRef<UserMessage> user) {
-    return user.path().name();
   }
 
   private Predicate<Entry<ActorRef<UserMessage>, Instant>> isContactRecent(
@@ -294,16 +314,6 @@ public class User extends AbstractBehavior<UserMessage> {
     return isAlive(message.score().timestamp(), parameters.scoreTtl());
   }
 
-  private static SendCachedEvent sendCachedEvent(
-      ActorRef<UserMessage> contact, RiskScoreMessage message) {
-    return SendCachedEvent.builder()
-        .from(name(message.replyTo()))
-        .to(name(contact))
-        .score(message.score())
-        .uuid(message.uuid())
-        .build();
-  }
-
   private void propagate(ActorRef<UserMessage> contact, RiskScoreMessage message) {
     contact.tell(message);
     logPropagate(contact, message);
@@ -372,16 +382,6 @@ public class User extends AbstractBehavior<UserMessage> {
       setSendThreshold();
       logUpdate();
     }
-  }
-
-  private static PropagateEvent propagateEvent(
-      ActorRef<UserMessage> contact, RiskScoreMessage message) {
-    return PropagateEvent.builder()
-        .from(name(message.replyTo()))
-        .to(name(contact))
-        .score(message.score())
-        .uuid(message.uuid())
-        .build();
   }
 
   private ContactEvent contactEvent(ContactMessage message) {

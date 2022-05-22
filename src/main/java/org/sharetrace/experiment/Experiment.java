@@ -96,18 +96,6 @@ public abstract class Experiment implements Runnable {
     Runner.run(newAlgorithm(), "RiskPropagation");
   }
 
-  protected Behavior<AlgorithmMessage> newAlgorithm() {
-    return RiskPropagationBuilder.create()
-        .addAllLoggable(loggable())
-        .graph(dataset.graph())
-        .parameters(userParameters)
-        .clock(clock())
-        .scoreFactory(dataset)
-        .contactTimeFactory(dataset)
-        .cacheFactory(cacheFactory())
-        .build();
-  }
-
   protected void setUpIteration(int i) {
     iteration = i;
     dataset = newDataset();
@@ -120,11 +108,22 @@ public abstract class Experiment implements Runnable {
     }
   }
 
+  protected Behavior<AlgorithmMessage> newAlgorithm() {
+    return RiskPropagationBuilder.create()
+        .addAllLoggable(loggable())
+        .graph(dataset.graph())
+        .parameters(userParameters)
+        .clock(clock())
+        .scoreFactory(dataset)
+        .contactTimeFactory(dataset)
+        .cacheFactory(cacheFactory())
+        .build();
+  }
+
   protected abstract Dataset newDataset();
 
   protected UserParameters newNodeParameters() {
-    return userParameters
-        .builder()
+    return UserParameters.builder()
         .sendTolerance(sendTolerance())
         .transmissionRate(transmissionRate())
         .timeBuffer(timeBuffer())

@@ -129,6 +129,15 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
     return behavior;
   }
 
+  private Behavior<AlgorithmMessage> onTerminate(Terminated terminated) {
+    Behavior<AlgorithmMessage> behavior = this;
+    if (++nStopped == nUsers) {
+      logMetrics();
+      behavior = Behaviors.stopped();
+    }
+    return behavior;
+  }
+
   private Map<Integer, ActorRef<UserMessage>> newUsers() {
     Map<Integer, ActorRef<UserMessage>> users = new Object2ObjectOpenHashMap<>();
     graph.nodes().forEach(name -> users.put(name, newUser(name)));
@@ -143,14 +152,14 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
     graph.edges().forEach(contact -> sendContact(contact, users));
   }
 
+  private void logMetrics() {
+    loggables.info(LoggableMetric.KEY, runtimeMetric());
+  }
+
   private ActorRef<UserMessage> newUser(int name) {
     ActorRef<UserMessage> user = getContext().spawn(newUser(), String.valueOf(name));
     getContext().watch(user);
     return user;
-  }
-
-  private void logMetrics() {
-    loggables.info(LoggableMetric.KEY, runtimeMetric());
   }
 
   private void sendFirstScore(int name, ActorRef<UserMessage> user) {
@@ -165,6 +174,10 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
     user2.tell(ContactMessage.builder().replyTo(user1).timestamp(timestamp).build());
   }
 
+  private TypedSupplier<LoggableMetric> runtimeMetric() {
+    return TypedSupplier.of(RuntimeMetric.class, () -> RuntimeMetric.of(runtime()));
+  }
+
   private Behavior<UserMessage> newUser() {
     return Behaviors.withTimers(
         timers ->
@@ -175,19 +188,6 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
                 .clock(clock)
                 .cache(cacheFactory.create())
                 .build());
-  }
-
-  private TypedSupplier<LoggableMetric> runtimeMetric() {
-    return TypedSupplier.of(RuntimeMetric.class, () -> RuntimeMetric.of(runtime()));
-  }
-
-  private Behavior<AlgorithmMessage> onTerminate(Terminated terminated) {
-    Behavior<AlgorithmMessage> behavior = this;
-    if (++nStopped == nUsers) {
-      logMetrics();
-      behavior = Behaviors.stopped();
-    }
-    return behavior;
   }
 
   private double runtime() {
