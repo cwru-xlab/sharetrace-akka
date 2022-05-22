@@ -146,10 +146,10 @@ public class ContactNetwork {
   }
 
   private static Graph<Integer, Edge<Integer>> newGraph() {
-    return new FastutilMapGraph<>(nodeIdFactory(), Edge::new, DefaultGraphType.simple());
+    return new FastutilMapGraph<>(userIdFactory(), Edge::new, DefaultGraphType.simple());
   }
 
-  private static Supplier<Integer> nodeIdFactory() {
+  private static Supplier<Integer> userIdFactory() {
     int[] id = new int[] {0};
     return () -> id[0]++;
   }
