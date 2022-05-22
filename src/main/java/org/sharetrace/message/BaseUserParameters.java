@@ -44,7 +44,7 @@ abstract class BaseUserParameters implements UserMessage {
   /**
    * Returns the value which determines the threshold that the value of a {@link RiskScore} must
    * satisfy to be propagated by a {@link User}. Specifically, a {@link RiskScore} is only eligible
-   * for propagation if {@code scoreValue >= nodeValue * sendTolerance}. Given a positive
+   * for propagation if {@code scoreValue >= currentValue * sendTolerance}. Given a positive
    * transmission rate that is less than 1, a positive send tolerance guarantees that asynchronous,
    * non-iterative message passing eventually terminates since the value of a propagated {@link
    * RiskScore} exponentially decreases with a rate constant equal to the transmission rate.

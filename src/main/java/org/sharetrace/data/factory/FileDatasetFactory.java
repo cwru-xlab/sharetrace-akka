@@ -77,7 +77,7 @@ class FileDatasetFactory extends DatasetFactory {
 
   @Override
   protected ContactTimeFactory contactTimeFactory() {
-    return (node1, node2) -> contacts.get(key(node1, node2));
+    return (user1, user2) -> contacts.get(key(user1, user2));
   }
 
   private void processLine(String line, Graph<Integer, Edge<Integer>> target) {
@@ -86,50 +86,50 @@ class FileDatasetFactory extends DatasetFactory {
     addContact(parsed);
   }
 
+  private static Set<Integer> key(int user1, int user2) {
+    return Set.of(user1, user2);
+  }
+
   private void adjustTimestamps() {
     offset = Duration.between(lastContact, referenceTime);
-    contacts.forEach((nodes, timestamp) -> contacts.computeIfPresent(nodes, this::adjustTimestamp));
+    contacts.forEach((users, timestamp) -> contacts.computeIfPresent(users, this::adjustTimestamp));
+  }
+
+  private Instant adjustTimestamp(Set<Integer> users, Instant timestamp) {
+    return timestamp.plus(offset);
   }
 
   private void addToGraph(Graph<Integer, Edge<Integer>> target, Parsed parsed) {
-    target.addVertex(parsed.node1);
-    target.addVertex(parsed.node2);
-    target.addEdge(parsed.node1, parsed.node2);
-  }
-
-  private void addContact(Parsed parsed) {
-    lastContact = newer(lastContact, parsed.timestamp);
-    contacts.merge(key(parsed.node1, parsed.node2), parsed.timestamp, FileDatasetFactory::newer);
-  }
-
-  private Instant adjustTimestamp(Set<Integer> nodes, Instant timestamp) {
-    return timestamp.plus(offset);
+    target.addVertex(parsed.user1);
+    target.addVertex(parsed.user2);
+    target.addEdge(parsed.user1, parsed.user2);
   }
 
   private static Instant newer(Instant oldValue, Instant newValue) {
     return newValue.isAfter(oldValue) ? newValue : oldValue;
   }
 
-  private static Set<Integer> key(int node1, int node2) {
-    return Set.of(node1, node2);
+  private void addContact(Parsed parsed) {
+    lastContact = newer(lastContact, parsed.timestamp);
+    contacts.merge(key(parsed.user1, parsed.user2), parsed.timestamp, FileDatasetFactory::newer);
   }
 
   private static final class Parsed {
 
-    private final int node1;
-    private final int node2;
+    private final int user1;
+    private final int user2;
     private final Instant timestamp;
 
     private Parsed(String string, String delimiter, IdIndexer indexer) {
       String[] args = string.split(delimiter);
-      this.node1 = indexer.index(Integer.parseInt(args[1].strip()));
-      this.node2 = indexer.index(Integer.parseInt(args[2].strip()));
+      this.user1 = indexer.index(Integer.parseInt(args[1].strip()));
+      this.user2 = indexer.index(Integer.parseInt(args[2].strip()));
       this.timestamp = Instant.ofEpochSecond(Long.parseLong(args[0].strip()));
     }
 
     @Override
     public String toString() {
-      return "Parsed{" + "node1=" + node1 + ", node2=" + node2 + ", timestamp=" + timestamp + '}';
+      return "Parsed{" + "user1=" + user1 + ", user2=" + user2 + ", timestamp=" + timestamp + '}';
     }
   }
 

@@ -46,8 +46,8 @@ public abstract class DatasetFactory implements GraphGenerator<Integer, Edge<Int
       }
 
       @Override
-      public Instant getContactTime(int node1, int node2) {
-        return DatasetFactory.this.contactTimeFactory().getContactTime(node1, node2);
+      public Instant getContactTime(int user1, int user2) {
+        return DatasetFactory.this.contactTimeFactory().getContactTime(user1, user2);
       }
 
       @Override

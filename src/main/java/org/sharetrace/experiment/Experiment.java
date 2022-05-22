@@ -129,8 +129,8 @@ public abstract class Experiment implements Runnable {
         .timeBuffer(timeBuffer())
         .scoreTtl(scoreTtl())
         .contactTtl(contactTtl())
-        .idleTimeout(nodeTimeout())
-        .refreshRate(nodeRefreshRate())
+        .idleTimeout(userTimeout())
+        .refreshRate(userRefreshRate())
         .build();
   }
 
@@ -188,7 +188,7 @@ public abstract class Experiment implements Runnable {
     return defaultTtl();
   }
 
-  protected Duration nodeTimeout() {
+  protected Duration userTimeout() {
     double nEdges = dataset.contactNetwork().nContacts();
     double minBase = Math.log(1.1d);
     double maxBase = Math.log(10d);
@@ -198,7 +198,7 @@ public abstract class Experiment implements Runnable {
     return Duration.ofNanos(timeout);
   }
 
-  protected Duration nodeRefreshRate() {
+  protected Duration userRefreshRate() {
     return Duration.ofHours(1L);
   }
 
