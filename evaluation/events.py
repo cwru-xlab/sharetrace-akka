@@ -39,13 +39,14 @@ class Event(str, enum.Enum):
 def event_stream(logdir: os.PathLike | str) -> Iterable[dict]:
     logdir = pathlib.Path(logdir).absolute()
     zipped, unzipped = _split(logdir.iterdir(), _is_zipped)
-    for event in _stream(unzipped):
-        yield event
+    # Iterate over zipped first! Unzipped events occur last.
     with tempfile.TemporaryDirectory() as tmpdir:
         tmpdir = pathlib.Path(tmpdir).absolute()
         _unzip(zipped, tmpdir)
         for event in _stream(tmpdir.iterdir()):
             yield event
+    for event in _stream(unzipped):
+        yield event
 
 
 def _stream(filenames: Iterable[pathlib.Path]) -> Iterable[dict]:
@@ -163,7 +164,7 @@ class UserUpdatesCallback(EventCallback, Sized):
         self.updates = {}
         self.initials = None
         self.finals = None
-        self._n = np.int32(0)
+        self._n = np.int128(0)
 
     def __call__(self, event: dict, **kwargs) -> None:
         if event["name"] == Event.UPDATE:
@@ -183,7 +184,7 @@ class UserUpdatesCallback(EventCallback, Sized):
             updates[u], inits[u], finals[u] = user.n, user.initial, user.final
         self.updates, self.initials, self.finals = updates, inits, finals
 
-    def __len__(self) -> int:
+    def __len__(self) -> np.int128:
         return self._n
 
 
@@ -193,7 +194,7 @@ class TimelineCallback(EventCallback, Sized):
     def __init__(self):
         super().__init__()
         self.timeline = collections.defaultdict(list)
-        self._n = np.int32(0)
+        self._n = np.int128(0)
 
     def __call__(self, event: dict, **kwargs) -> None:
         self.timeline[event["name"]].append(self._n)
@@ -203,7 +204,7 @@ class TimelineCallback(EventCallback, Sized):
         self.timeline = {
             name: np.array(indices) for name, indices in self.timeline.items()}
 
-    def __len__(self) -> int:
+    def __len__(self) -> np.int128:
         return self._n
 
 
