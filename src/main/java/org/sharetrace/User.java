@@ -106,8 +106,8 @@ public class User extends AbstractBehavior<UserMessage> {
     return newReceiveBuilder()
         .onMessage(ContactMessage.class, this::onContactMessage)
         .onMessage(RiskScoreMessage.class, this::onRiskScoreMessage)
-        .onMessage(TimeoutMessage.class, User::onTimeout)
-        .onMessage(RefreshMessage.class, this::onRefresh)
+        .onMessage(TimeoutMessage.class, User::onTimeoutMessage)
+        .onMessage(RefreshMessage.class, this::onRefreshMessage)
         .build();
   }
 
@@ -145,7 +145,7 @@ public class User extends AbstractBehavior<UserMessage> {
         .build();
   }
 
-  private static Behavior<UserMessage> onTimeout(TimeoutMessage timeout) {
+  private static Behavior<UserMessage> onTimeoutMessage(TimeoutMessage message) {
     return Behaviors.stopped();
   }
 
@@ -167,7 +167,7 @@ public class User extends AbstractBehavior<UserMessage> {
     return this;
   }
 
-  private Behavior<UserMessage> onRefresh(RefreshMessage refresh) {
+  private Behavior<UserMessage> onRefreshMessage(RefreshMessage message) {
     refreshContacts();
     refreshCurrent();
     return this;
