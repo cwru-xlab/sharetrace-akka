@@ -13,11 +13,13 @@
         <jsonFactoryDecorator class="org.sharetrace.logging.decorators.Iso8601DateDecorator"/>
         <fieldNames class="net.logstash.logback.fieldnames.ShortenedFieldNames">
           <levelValue>[ignore]</levelValue>
+          <timestamp>[ignore]</timestamp>
           <logger>[ignore]</logger>
           <thread>[ignore]</thread>
           <version>[ignore]</version>
         </fieldNames>
-        <includeMdcKeyName>akkaTimestamp</includeMdcKeyName>
+        <includeContext>false</includeContext>
+        <includeMdc>false</includeMdc>
         <throwableConverter class="net.logstash.logback.stacktrace.ShortenedThrowableConverter">
           <exclude>sun\.reflect\..*\.invoke.*</exclude>
           <exclude>net\.sf\.cglib\.proxy\.MethodProxy\.invoke</exclude>
@@ -32,7 +34,7 @@
   </appender>
   <!--Ref: https://github.com/logfellow/logstash-logback-encoder#async-appenders-->
   <appender class="net.logstash.logback.appender.LoggingEventAsyncDisruptorAppender"
-    name="events">
+            name="events">
     <appendRetryFrequency>5</appendRetryFrequency> <!--Default: 5ms-->
     <appendTimeout>-1</appendTimeout> <!--Default: 0-->
     <ringBufferSize>8192</ringBufferSize> <!--Default: 8192-->
@@ -42,11 +44,13 @@
         <jsonFactoryDecorator class="org.sharetrace.logging.decorators.Iso8601DateDecorator"/>
         <fieldNames class="net.logstash.logback.fieldnames.ShortenedFieldNames">
           <levelValue>[ignore]</levelValue>
+          <timestamp>[ignore]</timestamp>
           <logger>[ignore]</logger>
           <thread>[ignore]</thread>
           <version>[ignore]</version>
         </fieldNames>
-        <includeMdcKeyName>akkaTimestamp</includeMdcKeyName>
+        <includeContext>false</includeContext>
+        <includeMdc>false</includeMdc>
         <throwableConverter class="net.logstash.logback.stacktrace.ShortenedThrowableConverter">
           <exclude>sun\.reflect\..*\.invoke.*</exclude>
           <exclude>net\.sf\.cglib\.proxy\.MethodProxy\.invoke</exclude>
@@ -68,7 +72,7 @@
   </appender>
   <!--Ref: https://github.com/logfellow/logstash-logback-encoder#async-appenders-->
   <appender class="net.logstash.logback.appender.LoggingEventAsyncDisruptorAppender"
-    name="metrics">
+            name="metrics">
     <appendRetryFrequency>5</appendRetryFrequency> <!--Default: 5ms-->
     <appendTimeout>-1</appendTimeout> <!--Default: 0-->
     <ringBufferSize>8192</ringBufferSize> <!--Default: 8192-->
@@ -80,11 +84,13 @@
         <jsonFactoryDecorator class="org.sharetrace.logging.decorators.Iso8601DateDecorator"/>
         <fieldNames class="net.logstash.logback.fieldnames.ShortenedFieldNames">
           <levelValue>[ignore]</levelValue>
+          <timestamp>[ignore]</timestamp>
           <logger>[ignore]</logger>
           <thread>[ignore]</thread>
           <version>[ignore]</version>
         </fieldNames>
-        <includeMdcKeyName>akkaTimestamp</includeMdcKeyName>
+        <includeContext>false</includeContext>
+        <includeMdc>false</includeMdc>
         <throwableConverter class="net.logstash.logback.stacktrace.ShortenedThrowableConverter">
           <exclude>sun\.reflect\..*\.invoke.*</exclude>
           <exclude>net\.sf\.cglib\.proxy\.MethodProxy\.invoke</exclude>
@@ -100,7 +106,7 @@
   </appender>
   <!--Ref: https://github.com/logfellow/logstash-logback-encoder#async-appenders-->
   <appender class="net.logstash.logback.appender.LoggingEventAsyncDisruptorAppender"
-    name="settings">
+            name="settings">
     <appendRetryFrequency>5</appendRetryFrequency> <!--Default: 5ms-->
     <appendTimeout>-1</appendTimeout> <!--Default: 0-->
     <appender class="ch.qos.logback.core.FileAppender">
@@ -109,11 +115,13 @@
         <jsonFactoryDecorator class="org.sharetrace.logging.decorators.Iso8601DateDecorator"/>
         <fieldNames class="net.logstash.logback.fieldnames.ShortenedFieldNames">
           <levelValue>[ignore]</levelValue>
+          <timestamp>[ignore]</timestamp>
           <logger>[ignore]</logger>
           <thread>[ignore]</thread>
           <version>[ignore]</version>
         </fieldNames>
-        <includeMdcKeyName>akkaTimestamp</includeMdcKeyName>
+        <includeContext>false</includeContext>
+        <includeMdc>false</includeMdc>
         <throwableConverter class="net.logstash.logback.stacktrace.ShortenedThrowableConverter">
           <exclude>sun\.reflect\..*\.invoke.*</exclude>
           <exclude>net\.sf\.cglib\.proxy\.MethodProxy\.invoke</exclude>
