@@ -8,7 +8,7 @@ import org.apache.commons.math3.distribution.UniformRealDistribution;
 import org.immutables.value.Value;
 
 @Value.Immutable
-abstract class BaseTimestampSampler extends BaseSampler<Instant> {
+abstract class BaseTimeSampler extends BaseSampler<Instant> {
 
   @Override
   public Instant sample() {

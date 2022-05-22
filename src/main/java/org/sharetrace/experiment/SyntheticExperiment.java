@@ -8,7 +8,7 @@ import org.sharetrace.data.factory.ScoreFactory;
 import org.sharetrace.data.factory.SyntheticDatasetBuilder;
 import org.sharetrace.data.sampling.Sampler;
 import org.sharetrace.data.sampling.ScoreSampler;
-import org.sharetrace.data.sampling.TimestampSampler;
+import org.sharetrace.data.sampling.TimeSampler;
 import org.sharetrace.graph.Edge;
 import org.sharetrace.message.RiskScore;
 
@@ -29,19 +29,11 @@ public abstract class SyntheticExperiment extends Experiment {
   }
 
   protected Sampler<Instant> newContactTimeSampler() {
-    return TimestampSampler.builder()
-        .seed(seed)
-        .referenceTime(referenceTime)
-        .ttl(contactTtl())
-        .build();
+    return TimeSampler.builder().seed(seed).referenceTime(referenceTime).ttl(contactTtl()).build();
   }
 
   protected Sampler<Instant> newScoreTimeSampler() {
-    return TimestampSampler.builder()
-        .seed(seed)
-        .referenceTime(referenceTime)
-        .ttl(scoreTtl())
-        .build();
+    return TimeSampler.builder().seed(seed).referenceTime(referenceTime).ttl(scoreTtl()).build();
   }
 
   @Override

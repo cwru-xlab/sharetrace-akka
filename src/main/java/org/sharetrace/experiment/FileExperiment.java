@@ -7,7 +7,7 @@ import org.sharetrace.data.factory.FileDatasetBuilder;
 import org.sharetrace.data.factory.ScoreFactory;
 import org.sharetrace.data.sampling.Sampler;
 import org.sharetrace.data.sampling.ScoreSampler;
-import org.sharetrace.data.sampling.TimestampSampler;
+import org.sharetrace.data.sampling.TimeSampler;
 import org.sharetrace.message.RiskScore;
 
 public class FileExperiment extends Experiment {
@@ -29,11 +29,7 @@ public class FileExperiment extends Experiment {
   }
 
   protected Sampler<Instant> newTimeSampler() {
-    return TimestampSampler.builder()
-        .seed(seed)
-        .referenceTime(referenceTime)
-        .ttl(scoreTtl())
-        .build();
+    return TimeSampler.builder().seed(seed).referenceTime(referenceTime).ttl(scoreTtl()).build();
   }
 
   public static void runWhitespaceDelimited(
