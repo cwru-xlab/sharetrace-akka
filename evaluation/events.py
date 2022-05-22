@@ -9,7 +9,7 @@ import os
 import pathlib
 import tempfile
 import zipfile
-from collections.abc import Callable, Iterable, Collection
+from collections.abc import Callable, Iterable, Collection, Sized
 from json import loads
 from typing import Any
 
@@ -20,6 +20,7 @@ from scipy.sparse import csgraph
 Predicate = Callable[[Any], bool]
 
 ONE = np.int8(1)
+ZERO = np.int16(0)
 
 
 class Event(str, enum.Enum):
@@ -75,17 +76,14 @@ def _split(it: Iterable, predicate: Predicate) -> tuple[Iterable, Iterable]:
 class EventCounter(collections.Counter):
     _EVENTS = set(Event)
 
+    def __init__(self):
+        super().__init__()
+
     def __setitem__(self, key, value):
         if key in EventCounter._EVENTS:
             super().__setitem__(key, value)
         else:
             raise ValueError("'key' must be an Event instance")
-
-    def n_users(self) -> int:
-        return self.n_received() - self.n_sent()
-
-    def n_sent(self) -> int:
-        return self.n_to_contacts() + self.n_propagated()
 
     def n_to_contacts(self) -> int:
         return self.n_current_sent() + self.n_cached_sent()
@@ -103,8 +101,7 @@ class EventCounter(collections.Counter):
         return self[Event.PROPAGATE]
 
     def n_updates(self) -> int:
-        # Disregard the initialization update of each user.
-        return self[Event.UPDATE] - self.n_users
+        return self[Event.UPDATE]
 
     def n_contacts(self) -> int:
         # Each user logs a contact, so each contact is double counted.
@@ -148,30 +145,35 @@ class EventCounterCallback(EventCounter, EventCallback):
 
 @dataclasses.dataclass(slots=True)
 class UserUpdates:
-    initial: float
-    final: float
-    n: int = 0
+    initial: np.float32
+    final: np.float32 = None
+    n: np.int16 = ZERO
+
+    def __post_init__(self):
+        if self.final is None:
+            self.final = self.initial
 
 
-class UserUpdatesCallback(EventCallback):
-    __slots__ = "updates", "initials", "finals", "n"
+class UserUpdatesCallback(EventCallback, Sized):
+    __slots__ = "updates", "initials", "finals", "_n"
 
     def __init__(self):
         super().__init__()
         self.updates = {}
         self.initials = None
         self.finals = None
-        self.n = 0
+        self._n = np.int32(0)
 
     def __call__(self, event: dict, **kwargs) -> None:
         if event["name"] == Event.UPDATE:
             if (name := np.int32(event["to"])) in self.updates:
                 user = self.updates[name]
-                user.n += 1
+                user.n += ONE
                 user.final = event["newScore"]["value"]
+                self._n += ONE  # Only count non-initial updates
             else:
                 value = event["newScore"]["value"]
-                self.updates[name] = UserUpdates(initial=value, final=value)
+                self.updates[name] = UserUpdates(initial=np.float32(value))
 
     def on_complete(self) -> None:
         updates = np.zeros(n_users := len(self.updates), dtype=np.int16)
@@ -180,22 +182,28 @@ class UserUpdatesCallback(EventCallback):
             updates[u], inits[u], finals[u] = user.n, user.initial, user.final
         self.updates, self.initials, self.finals = updates, inits, finals
 
+    def __len__(self) -> int:
+        return self._n
 
-class TimelineCallback(EventCallback):
-    __slots__ = "timeline", "n"
+
+class TimelineCallback(EventCallback, Sized):
+    __slots__ = "timeline", "_n"
 
     def __init__(self):
         super().__init__()
         self.timeline = collections.defaultdict(list)
-        self.n = 0
+        self._n = np.int32(0)
 
     def __call__(self, event: dict, **kwargs) -> None:
-        self.timeline[event["name"]].append(np.int32(self.n))
-        self.n += 1
+        self.timeline[event["name"]].append(self._n)
+        self._n += ONE
 
     def on_complete(self) -> None:
         self.timeline = {
             name: np.array(indices) for name, indices in self.timeline.items()}
+
+    def __len__(self) -> int:
+        return self._n
 
 
 class ReachabilityCallback(EventCallback):
