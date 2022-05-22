@@ -15,6 +15,7 @@ import java.util.Optional;
 import java.util.SortedMap;
 import java.util.function.BinaryOperator;
 import javax.annotation.Nullable;
+import org.apache.commons.math3.util.FastMath;
 
 /**
  * A cache that lazily maintains a finite number of contiguous time intervals in which values are
@@ -45,7 +46,7 @@ public class IntervalCache<T> {
   private final SortedMap<Instant, T> cache;
   private final BinaryOperator<T> mergeStrategy;
   private final Clock clock;
-  private final Duration interval;
+  private final long intervalNanos;
   private final Duration lookBack;
   private final Duration lookAhead;
   private final Duration refreshRate;
@@ -57,7 +58,7 @@ public class IntervalCache<T> {
     cache = builder.cache;
     mergeStrategy = builder.mergeStrategy;
     clock = builder.clock;
-    interval = builder.interval;
+    intervalNanos = builder.interval.toNanos();
     lookBack = builder.lookBack;
     lookAhead = builder.lookAhead;
     refreshRate = builder.refreshRate;
@@ -106,9 +107,9 @@ public class IntervalCache<T> {
   }
 
   private Instant floorKey(Instant timestamp) {
-    Duration sinceStart = Duration.between(rangeStart, timestamp);
-    long multiplier = (long) Math.floor(sinceStart.dividedBy(interval));
-    return rangeStart.plus(interval.multipliedBy(multiplier));
+    long sinceStart = Duration.between(rangeStart, timestamp).toNanos();
+    long multiplier = FastMath.floorDiv(sinceStart, intervalNanos);
+    return rangeStart.plus(Duration.ofNanos(intervalNanos * multiplier));
   }
 
   /**
