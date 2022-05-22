@@ -20,7 +20,6 @@ from scipy.sparse import csgraph
 Predicate = Callable[[Any], bool]
 
 ONE = np.int8(1)
-ZERO = np.int16(0)
 
 
 class Event(str, enum.Enum):
@@ -145,9 +144,11 @@ class EventCounterCallback(EventCounter, EventCallback):
 
 @dataclasses.dataclass(slots=True)
 class UserUpdates:
+    _DEFAULT_N = np.int16(0)
+
     initial: np.float32
     final: np.float32 = None
-    n: np.int16 = ZERO
+    n: np.int16 = _DEFAULT_N
 
     def __post_init__(self):
         if self.final is None:
@@ -177,7 +178,7 @@ class UserUpdatesCallback(EventCallback, Sized):
 
     def on_complete(self) -> None:
         updates = np.zeros(n_users := len(self.updates), dtype=np.int16)
-        inits, finals = np.zeros(n_users), np.zeros(n_users)
+        inits, finals = np.zeros((2, n_users), dtype=np.float32)
         for u, user in self.updates.items():
             updates[u], inits[u], finals[u] = user.n, user.initial, user.final
         self.updates, self.initials, self.finals = updates, inits, finals
