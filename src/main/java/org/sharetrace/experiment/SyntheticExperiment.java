@@ -1,15 +1,16 @@
 package org.sharetrace.experiment;
 
+import java.time.Instant;
 import org.jgrapht.generate.GraphGenerator;
 import org.sharetrace.data.Dataset;
+import org.sharetrace.data.factory.ContactTimeFactory;
+import org.sharetrace.data.factory.ScoreFactory;
 import org.sharetrace.data.factory.SyntheticDatasetBuilder;
 import org.sharetrace.data.sampling.Sampler;
 import org.sharetrace.data.sampling.ScoreSampler;
 import org.sharetrace.data.sampling.TimestampSampler;
 import org.sharetrace.graph.Edge;
 import org.sharetrace.message.RiskScore;
-
-import java.time.Instant;
 
 public abstract class SyntheticExperiment extends Experiment {
 
@@ -24,7 +25,7 @@ public abstract class SyntheticExperiment extends Experiment {
   }
 
   protected Sampler<RiskScore> newScoreSampler() {
-    return ScoreSampler.builder().timestampSampler(newScoreTimestampSampler()).seed(seed).build();
+    return ScoreSampler.builder().timeSampler(newScoreTimeSampler()).seed(seed).build();
   }
 
   protected Sampler<Instant> newContactTimeSampler() {
@@ -35,7 +36,7 @@ public abstract class SyntheticExperiment extends Experiment {
         .build();
   }
 
-  protected Sampler<Instant> newScoreTimestampSampler() {
+  protected Sampler<Instant> newScoreTimeSampler() {
     return TimestampSampler.builder()
         .seed(seed)
         .referenceTime(referenceTime)
@@ -48,8 +49,8 @@ public abstract class SyntheticExperiment extends Experiment {
     return SyntheticDatasetBuilder.create()
         .addAllLoggable(loggable())
         .generator(generator())
-        .scoreFactory(x -> scoreSampler.sample())
-        .contactTimeFactory((x, xx) -> contactTimeSampler.sample())
+        .scoreFactory(scoreFactory())
+        .contactTimeFactory(contactTimeFactory())
         .build();
   }
 
@@ -62,6 +63,14 @@ public abstract class SyntheticExperiment extends Experiment {
         .nNewEdges(2)
         .rewiringProbability(0.3)
         .build();
+  }
+
+  private ScoreFactory scoreFactory() {
+    return x -> scoreSampler.sample();
+  }
+
+  private ContactTimeFactory contactTimeFactory() {
+    return (x, xx) -> contactTimeSampler.sample();
   }
 
   protected int getNumNodes() {

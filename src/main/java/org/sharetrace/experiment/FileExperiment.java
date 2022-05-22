@@ -1,14 +1,14 @@
 package org.sharetrace.experiment;
 
+import java.nio.file.Path;
+import java.time.Instant;
 import org.sharetrace.data.Dataset;
 import org.sharetrace.data.factory.FileDatasetBuilder;
+import org.sharetrace.data.factory.ScoreFactory;
 import org.sharetrace.data.sampling.Sampler;
 import org.sharetrace.data.sampling.ScoreSampler;
 import org.sharetrace.data.sampling.TimestampSampler;
 import org.sharetrace.message.RiskScore;
-
-import java.nio.file.Path;
-import java.time.Instant;
 
 public class FileExperiment extends Experiment {
 
@@ -24,21 +24,21 @@ public class FileExperiment extends Experiment {
     this.scoreSampler = newScoreSampler();
   }
 
-  public static void runWhitespaceDelimited(
-      GraphType graphType, Path path, int nRepeats, long seed) {
-    new FileExperiment(graphType, path, WHITESPACE_DELIMITER, nRepeats, seed).run();
-  }
-
   protected Sampler<RiskScore> newScoreSampler() {
-    return ScoreSampler.builder().timestampSampler(newTimestampSampler()).seed(seed).build();
+    return ScoreSampler.builder().timeSampler(newTimeSampler()).seed(seed).build();
   }
 
-  protected Sampler<Instant> newTimestampSampler() {
+  protected Sampler<Instant> newTimeSampler() {
     return TimestampSampler.builder()
         .seed(seed)
         .referenceTime(referenceTime)
         .ttl(scoreTtl())
         .build();
+  }
+
+  public static void runWhitespaceDelimited(
+      GraphType graphType, Path path, int nRepeats, long seed) {
+    new FileExperiment(graphType, path, WHITESPACE_DELIMITER, nRepeats, seed).run();
   }
 
   @Override
@@ -48,7 +48,11 @@ public class FileExperiment extends Experiment {
         .path(path)
         .addAllLoggable(loggable())
         .referenceTime(referenceTime)
-        .scoreFactory(x -> scoreSampler.sample())
+        .scoreFactory(scoreFactory())
         .build();
+  }
+
+  private ScoreFactory scoreFactory() {
+    return x -> scoreSampler.sample();
   }
 }
