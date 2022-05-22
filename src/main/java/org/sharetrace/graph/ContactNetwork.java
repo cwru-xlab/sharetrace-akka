@@ -32,21 +32,21 @@ import org.sharetrace.util.TypedSupplier;
 import org.slf4j.Logger;
 
 /**
- * A simple graph in which a node represents a user and an edge between two nodes indicates that the
- * associated users of the incident nodes came in contact. Node identifiers are zero-based
+ * A directed graph in which a node represents a user and an edge between two nodes indicates that
+ * the associated users of the incident nodes came in contact. Node identifiers are zero-based
  * contiguous natural numbers. In an instance of {@link RiskPropagation}, the topology of this graph
  * is mapped to a collection {@link User} actors.
  *
  * @see User
  * @see Edge
  */
-public class ContactGraph implements TemporalGraph {
+public class ContactNetwork {
 
   private static final Logger logger = Logging.metricLogger();
   private final Loggables loggables;
   private final Graph<Integer, Edge<Integer>> graph;
 
-  private ContactGraph(
+  private ContactNetwork(
       Graph<Integer, Edge<Integer>> graph, Set<Class<? extends Loggable>> loggable) {
     this.graph = graph;
     this.loggables = Loggables.create(loggable, logger);
@@ -137,12 +137,12 @@ public class ContactGraph implements TemporalGraph {
     return exporter;
   }
 
-  public static ContactGraph create(
+  public static ContactNetwork create(
       GraphGenerator<Integer, Edge<Integer>, ?> generator,
       Set<Class<? extends Loggable>> loggable) {
     Graph<Integer, Edge<Integer>> graph = newGraph();
     generator.generateGraph(graph);
-    return new ContactGraph(graph, loggable);
+    return new ContactNetwork(graph, loggable);
   }
 
   private static Graph<Integer, Edge<Integer>> newGraph() {
@@ -154,23 +154,19 @@ public class ContactGraph implements TemporalGraph {
     return () -> id[0]++;
   }
 
-  @Override
-  public IntStream nodes() {
+  public IntStream users() {
     return graph.vertexSet().stream().mapToInt(Integer::intValue);
   }
 
-  @Override
-  public Stream<List<Integer>> edges() {
+  public Stream<List<Integer>> contacts() {
     return graph.edgeSet().stream().map(edge -> List.of(edge.source(), edge.target()));
   }
 
-  @Override
-  public long nNodes() {
+  public long nUsers() {
     return graph.iterables().vertexCount();
   }
 
-  @Override
-  public long nEdges() {
+  public long nContacts() {
     return graph.iterables().edgeCount();
   }
 }

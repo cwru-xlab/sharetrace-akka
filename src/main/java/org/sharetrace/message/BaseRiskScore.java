@@ -5,11 +5,11 @@ import java.time.Instant;
 import org.immutables.value.Value;
 import org.sharetrace.RiskPropagation;
 import org.sharetrace.User;
-import org.sharetrace.graph.ContactGraph;
+import org.sharetrace.graph.ContactNetwork;
 
 /**
  * A timestamped probability of infection. As a message, a risk score is propagated through the
- * {@link ContactGraph}. When initially propagated from their source {@link User}, a risk score is
+ * {@link ContactNetwork}. When initially propagated from their source {@link User}, a risk score is
  * referred to as a <b>symptom score</b> since it is only based on the symptoms of a person. As the
  * current value of a {@link User}, a risk score is referred to as an <b>exposure score</b> since it
  * also accounts for (in)direct forms of contact with other persons.

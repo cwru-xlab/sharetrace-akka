@@ -37,7 +37,7 @@ class SyntheticDatasetFactory extends DatasetFactory {
   }
 
   @Override
-  public void createTemporalGraph(Graph<Integer, Edge<Integer>> target) {
+  public void createContactNetwork(Graph<Integer, Edge<Integer>> target) {
     generator.generateGraph(target);
   }
 

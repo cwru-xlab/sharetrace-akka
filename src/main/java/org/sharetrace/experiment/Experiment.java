@@ -111,7 +111,7 @@ public abstract class Experiment implements Runnable {
   protected Behavior<AlgorithmMessage> newAlgorithm() {
     return RiskPropagationBuilder.create()
         .addAllLoggable(loggable())
-        .graph(dataset.graph())
+        .contactNetwork(dataset.contactNetwork())
         .parameters(userParameters)
         .clock(clock())
         .scoreFactory(dataset)
@@ -189,7 +189,7 @@ public abstract class Experiment implements Runnable {
   }
 
   protected Duration nodeTimeout() {
-    double nEdges = dataset.graph().nEdges();
+    double nEdges = dataset.contactNetwork().nContacts();
     double minBase = Math.log(1.1d);
     double maxBase = Math.log(10d);
     double decayRate = 1.75E-7;

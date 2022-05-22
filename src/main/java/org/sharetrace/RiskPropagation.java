@@ -18,8 +18,7 @@ import org.immutables.builder.Builder;
 import org.sharetrace.data.factory.CacheFactory;
 import org.sharetrace.data.factory.ContactTimeFactory;
 import org.sharetrace.data.factory.ScoreFactory;
-import org.sharetrace.graph.ContactGraph;
-import org.sharetrace.graph.TemporalGraph;
+import org.sharetrace.graph.ContactNetwork;
 import org.sharetrace.logging.Loggable;
 import org.sharetrace.logging.Loggables;
 import org.sharetrace.logging.Logging;
@@ -36,14 +35,14 @@ import org.sharetrace.util.TypedSupplier;
 /**
  * A non-iterative, asynchronous implementation of the ShareTrace algorithm. The objective is to
  * estimate the marginal posterior probability of infection for all individuals in the specified
- * {@link ContactGraph}. The main steps of the algorithm are as follows:
+ * {@link ContactNetwork}. The main steps of the algorithm are as follows:
  *
  * <ol>
- *   <li>Map the {@link ContactGraph} to a collection {@link User} actors.
+ *   <li>Map the {@link ContactNetwork} to a collection {@link User} actors.
  *   <li>For each {@link User}, send it an initial {@link RiskScoreMessage}.
- *   <li>For each pair of {@link User}s that correspond to an edge in the {@link ContactGraph}, send
- *       each a complimentary {@link ContactMessage} that contains the {@link ActorRef} and time of
- *       contact of the other {@link User}.
+ *   <li>For each pair of {@link User}s that correspond to an edge in the {@link ContactNetwork},
+ *       send each a complimentary {@link ContactMessage} that contains the {@link ActorRef} and
+ *       time of contact of the other {@link User}.
  *   <li>Terminate once the stopping condition is satisfied. Termination occurs when when all {@link
  *       User}s have stopped passing messages (default), or a certain amount of time has passed.
  * </ol>
@@ -54,7 +53,7 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
 
   private final Loggables loggables;
   private final UserParameters parameters;
-  private final TemporalGraph graph;
+  private final ContactNetwork contactNetwork;
   private final long nUsers;
   private final Clock clock;
   private final ScoreFactory scoreFactory;
@@ -66,7 +65,7 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
   private RiskPropagation(
       ActorContext<AlgorithmMessage> context,
       Set<Class<? extends Loggable>> loggable,
-      TemporalGraph graph,
+      ContactNetwork contactNetwork,
       UserParameters parameters,
       Clock clock,
       CacheFactory<RiskScoreMessage> cacheFactory,
@@ -74,19 +73,19 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
       ContactTimeFactory contactTimeFactory) {
     super(context);
     this.loggables = Loggables.create(loggable, () -> getContext().getLog());
-    this.graph = graph;
+    this.contactNetwork = contactNetwork;
     this.parameters = parameters;
     this.clock = clock;
     this.cacheFactory = cacheFactory;
     this.scoreFactory = scoreFactory;
     this.contactTimeFactory = contactTimeFactory;
-    this.nUsers = graph.nNodes();
+    this.nUsers = contactNetwork.nUsers();
     this.nStopped = 0;
   }
 
   @Builder.Factory
   static Behavior<AlgorithmMessage> riskPropagation(
-      TemporalGraph graph,
+      ContactNetwork contactNetwork,
       Set<Class<? extends Loggable>> loggable,
       UserParameters parameters,
       Clock clock,
@@ -99,7 +98,7 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
           return new RiskPropagation(
               context,
               loggable,
-              graph,
+              contactNetwork,
               parameters,
               clock,
               cacheFactory,
@@ -140,7 +139,7 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
 
   private Map<Integer, ActorRef<UserMessage>> newUsers() {
     Map<Integer, ActorRef<UserMessage>> users = new Object2ObjectOpenHashMap<>();
-    graph.nodes().forEach(name -> users.put(name, newUser(name)));
+    contactNetwork.users().forEach(name -> users.put(name, newUser(name)));
     return users;
   }
 
@@ -149,7 +148,7 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
   }
 
   private void setContacts(Map<?, ActorRef<UserMessage>> users) {
-    graph.edges().forEach(contact -> sendContact(contact, users));
+    contactNetwork.contacts().forEach(contact -> sendContact(contact, users));
   }
 
   private void logMetrics() {

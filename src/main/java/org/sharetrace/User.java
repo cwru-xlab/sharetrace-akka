@@ -19,7 +19,7 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import org.immutables.builder.Builder;
-import org.sharetrace.graph.ContactGraph;
+import org.sharetrace.graph.ContactNetwork;
 import org.sharetrace.logging.Loggable;
 import org.sharetrace.logging.Loggables;
 import org.sharetrace.logging.Logging;
@@ -43,7 +43,7 @@ import org.sharetrace.util.IntervalCache;
 import org.sharetrace.util.TypedSupplier;
 
 /**
- * An actor that corresponds to a {@link ContactGraph} node. Collectively, all {@link User}s carry
+ * An actor that corresponds to a {@link ContactNetwork} node. Collectively, all {@link User}s carry
  * out the execution of {@link RiskPropagation}.
  *
  * @see UserParameters

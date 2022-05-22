@@ -8,7 +8,7 @@ import java.time.Duration;
 import org.immutables.value.Value;
 import org.sharetrace.RiskPropagation;
 import org.sharetrace.User;
-import org.sharetrace.graph.ContactGraph;
+import org.sharetrace.graph.ContactNetwork;
 
 /**
  * A collection of values that modify the behavior of a {@link User} while passing messages during
@@ -35,7 +35,7 @@ abstract class BaseUserParameters implements UserMessage {
 
   /**
    * Returns the value which determines at what rate the value of a {@link RiskScore} exponentially
-   * decreases as it propagates through the {@link ContactGraph}. A transmission rate of 0 results
+   * decreases as it propagates through the {@link ContactNetwork}. A transmission rate of 0 results
    * in no value decay, and so an execution of {@link RiskPropagation} must be terminated by other
    * means than relying on a nonzero send tolerance.
    */
@@ -65,15 +65,15 @@ abstract class BaseUserParameters implements UserMessage {
    * Returns the duration which determines how long a given {@link RiskScore} is considered
    * relevant. Intuitively, {@link RiskScore}s that are based on older data are (1) less likely to
    * still accurately reflect the current risk of a person; and (2) more likely to have already been
-   * accounted for in the {@link ContactGraph} by its propagation to other {@link User}s.
+   * accounted for in the {@link ContactNetwork} by its propagation to other {@link User}s.
    */
   public abstract Duration scoreTtl();
 
   /**
    * Returns the duration which determines how long a given contact is considered relevant.
    * Intuitively, contacts that occurred further in the past are less likely to propagate any new
-   * {@link RiskScore} in the {@link ContactGraph} for which the complimentary {@link User} has not
-   * already accounted.
+   * {@link RiskScore} in the {@link ContactNetwork} for which the complimentary {@link User} has
+   * not already accounted.
    */
   public abstract Duration contactTtl();
 

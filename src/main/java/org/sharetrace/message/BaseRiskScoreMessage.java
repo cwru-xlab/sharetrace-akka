@@ -5,7 +5,7 @@ import java.util.UUID;
 import org.immutables.value.Value;
 import org.sharetrace.RiskPropagation;
 import org.sharetrace.User;
-import org.sharetrace.graph.ContactGraph;
+import org.sharetrace.graph.ContactNetwork;
 
 @Value.Immutable
 abstract class BaseRiskScoreMessage implements UserMessage, Comparable<RiskScoreMessage> {
@@ -24,7 +24,7 @@ abstract class BaseRiskScoreMessage implements UserMessage, Comparable<RiskScore
 
   /**
    * Returns a universally unique identifier that can be used to correlate risk scores as they
-   * propagate through the {@link ContactGraph} during {@link RiskPropagation}.
+   * propagate through the {@link ContactNetwork} during {@link RiskPropagation}.
    */
   @Value.Default
   public String uuid() {

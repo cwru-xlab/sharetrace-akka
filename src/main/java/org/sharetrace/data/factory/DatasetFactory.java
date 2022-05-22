@@ -8,9 +8,8 @@ import org.jgrapht.Graph;
 import org.jgrapht.GraphType;
 import org.jgrapht.generate.GraphGenerator;
 import org.sharetrace.data.Dataset;
-import org.sharetrace.graph.ContactGraph;
+import org.sharetrace.graph.ContactNetwork;
 import org.sharetrace.graph.Edge;
-import org.sharetrace.graph.TemporalGraph;
 import org.sharetrace.logging.Loggable;
 import org.sharetrace.message.RiskScore;
 
@@ -19,15 +18,15 @@ public abstract class DatasetFactory implements GraphGenerator<Integer, Edge<Int
   @Override
   public final void generateGraph(
       Graph<Integer, Edge<Integer>> target, Map<String, Integer> resultMap) {
-    createTemporalGraph(checkGraphType(target));
+    createContactNetwork(checkGraphType(target));
   }
 
   @Override
   public final void generateGraph(Graph<Integer, Edge<Integer>> target) {
-    createTemporalGraph(checkGraphType(target));
+    createContactNetwork(checkGraphType(target));
   }
 
-  protected abstract void createTemporalGraph(Graph<Integer, Edge<Integer>> target);
+  protected abstract void createContactNetwork(Graph<Integer, Edge<Integer>> target);
 
   private static <T> Graph<T, Edge<T>> checkGraphType(Graph<T, Edge<T>> graph) {
     GraphType type = graph.getType();
@@ -38,8 +37,8 @@ public abstract class DatasetFactory implements GraphGenerator<Integer, Edge<Int
   public Dataset create() {
     return new Dataset() {
 
-      private final TemporalGraph graph =
-          ContactGraph.create(DatasetFactory.this, DatasetFactory.this.loggable());
+      private final ContactNetwork contactNetwork =
+          ContactNetwork.create(DatasetFactory.this, DatasetFactory.this.loggable());
 
       @Override
       public RiskScore getScore(int user) {
@@ -52,13 +51,19 @@ public abstract class DatasetFactory implements GraphGenerator<Integer, Edge<Int
       }
 
       @Override
-      public TemporalGraph graph() {
-        return graph;
+      public ContactNetwork contactNetwork() {
+        return contactNetwork;
       }
 
       @Override
       public String toString() {
-        return "Dataset{" + "nNodes=" + graph.nNodes() + ", " + "nEdges=" + graph.nEdges() + '}';
+        return "Dataset{"
+            + "nUsers="
+            + contactNetwork.nUsers()
+            + ", "
+            + "nContacts="
+            + contactNetwork.nContacts()
+            + '}';
       }
     };
   }
