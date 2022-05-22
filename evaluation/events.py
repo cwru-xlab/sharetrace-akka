@@ -154,21 +154,31 @@ class UserUpdates:
 
 
 class UserUpdatesCallback(EventCallback):
-    __slots__ = "updates"
+    __slots__ = "updates", "initials", "finals", "n"
 
     def __init__(self):
         super().__init__()
         self.updates = {}
+        self.initials = None
+        self.finals = None
+        self.n = 0
 
     def __call__(self, event: dict, **kwargs) -> None:
         if event["name"] == Event.UPDATE:
-            if (name := event["to"]) in self.updates:
+            if (name := np.int32(event["to"])) in self.updates:
                 user = self.updates[name]
                 user.n += 1
                 user.final = event["newScore"]["value"]
             else:
                 value = event["newScore"]["value"]
                 self.updates[name] = UserUpdates(initial=value, final=value)
+
+    def on_complete(self) -> None:
+        updates = np.zeros(n_users := len(self.updates), dtype=np.int16)
+        inits, finals = np.zeros(n_users), np.zeros(n_users)
+        for u, user in self.updates.items():
+            updates[u], inits[u], finals[u] = user.n, user.initial, user.final
+        self.updates, self.initials, self.finals = updates, inits, finals
 
 
 class TimelineCallback(EventCallback):
@@ -180,8 +190,12 @@ class TimelineCallback(EventCallback):
         self.n = 0
 
     def __call__(self, event: dict, **kwargs) -> None:
-        self.timeline[event["name"]].append(self.n)
+        self.timeline[event["name"]].append(np.int32(self.n))
         self.n += 1
+
+    def on_complete(self) -> None:
+        self.timeline = {
+            name: np.array(indices) for name, indices in self.timeline.items()}
 
 
 class ReachabilityCallback(EventCallback):
@@ -198,7 +212,7 @@ class ReachabilityCallback(EventCallback):
         super().__init__()
         self.adj = None
         self.msg_idx = {}
-        self.msgs = collections.defaultdict(list)
+        self.msgs: dict | list = collections.defaultdict(list)
         self._msg_reach = None
         self._reach_ratio = None
         self._influence = None
@@ -215,11 +229,15 @@ class ReachabilityCallback(EventCallback):
                 self.msgs[origin].append(np.array([src, dst]))
 
     def on_complete(self) -> None:
+        self._to_numpy()
         self._sparsify()
         self._compute_source_size()
         self._compute_influence()
         self._compute_reach_ratio()
         self._compute_msg_reaches()
+
+    def _to_numpy(self):
+        self.msgs = [np.array(edges) for _, edges in sorted(self.msgs.items())]
 
     def influence(self, user: int | None = None) -> int | np.ndarray:
         """Returns the cardinality of the influence set for a given user."""
@@ -241,7 +259,7 @@ class ReachabilityCallback(EventCallback):
         row, col, data = [], [], []
         row_add, col_add, data_add = row.extend, col.extend, data.extend
         repeat = itertools.repeat
-        for user, edges in self.msgs.items():
+        for user, edges in enumerate(self.msgs):
             dst = set(dst for _, dst in edges)
             row_add(repeat(user, len(dst)))
             col_add(dst)
@@ -253,7 +271,7 @@ class ReachabilityCallback(EventCallback):
         shortest_path = csgraph.shortest_path
         longest, nan2num = np.max, np.nan_to_num
         msg_reach = np.zeros(len(self.msgs), dtype=np.int8)
-        for user, edges in self.msgs.items():
+        for user, edges in enumerate(self.msgs):
             idx, adj = edges_to_adj(edges)
             sp = shortest_path(adj, indices=idx[user])
             msg_reach[user] = longest(nan2num(sp, copy=False, posinf=0))
