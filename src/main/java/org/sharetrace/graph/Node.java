@@ -94,7 +94,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
   }
 
   private void setSendThreshold() {
-    sendThreshold = current.score().value() * parameters.transmissionRate();
+    sendThreshold = current.score().value() * parameters.sendTolerance();
   }
 
   private void startRefreshTimer() {
