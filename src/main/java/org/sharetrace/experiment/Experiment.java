@@ -189,12 +189,12 @@ public abstract class Experiment implements Runnable {
   }
 
   protected Duration userTimeout() {
-    double nEdges = dataset.contactNetwork().nContacts();
+    double nContacts = dataset.contactNetwork().nContacts();
     double minBase = Math.log(1.1d);
     double maxBase = Math.log(10d);
     double decayRate = 1.75E-7;
-    double targetBase = Math.max(minBase, maxBase - decayRate * nEdges);
-    long timeout = (long) Math.ceil(1E9 * Math.log(nEdges) / targetBase);
+    double targetBase = Math.max(minBase, maxBase - decayRate * nContacts);
+    long timeout = (long) Math.ceil(1E9 * Math.log(nContacts) / targetBase);
     return Duration.ofNanos(timeout);
   }
 
