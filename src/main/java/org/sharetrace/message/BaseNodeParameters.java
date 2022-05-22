@@ -1,8 +1,8 @@
 package org.sharetrace.message;
 
 import org.immutables.value.Value;
-import org.sharetrace.Node;
 import org.sharetrace.RiskPropagation;
+import org.sharetrace.User;
 import org.sharetrace.graph.ContactGraph;
 
 import java.time.Duration;
@@ -10,7 +10,7 @@ import java.time.Duration;
 import static org.sharetrace.util.Preconditions.*;
 
 /**
- * A collection of values that modify the behavior of a {@link Node} while passing messages during
+ * A collection of values that modify the behavior of a {@link User} while passing messages during
  * an execution of {@link RiskPropagation}.
  */
 @Value.Immutable
@@ -42,7 +42,7 @@ abstract class BaseNodeParameters implements NodeMessage {
 
   /**
    * Returns the value which determines the threshold that the value of a {@link RiskScore} must
-   * satisfy to be propagated by a {@link Node}. Specifically, a {@link RiskScore} is only eligible
+   * satisfy to be propagated by a {@link User}. Specifically, a {@link RiskScore} is only eligible
    * for propagation if {@code scoreValue >= nodeValue * sendTolerance}. Given a positive
    * transmission rate that is less than 1, a positive send tolerance guarantees that asynchronous,
    * non-iterative message passing eventually terminates since the value of a propagated {@link
@@ -64,14 +64,14 @@ abstract class BaseNodeParameters implements NodeMessage {
    * Returns the duration which determines how long a given {@link RiskScore} is considered
    * relevant. Intuitively, {@link RiskScore}s that are based on older data are (1) less likely to
    * still accurately reflect the current risk of a person; and (2) more likely to have already been
-   * accounted for in the {@link ContactGraph} by its propagation to other {@link Node}s.
+   * accounted for in the {@link ContactGraph} by its propagation to other {@link User}s.
    */
   public abstract Duration scoreTtl();
 
   /**
    * Returns the duration which determines how long a given contact is considered relevant.
    * Intuitively, contacts that occurred further in the past are less likely to propagate any new
-   * {@link RiskScore} in the {@link ContactGraph} for which the complimentary {@link Node} has not
+   * {@link RiskScore} in the {@link ContactGraph} for which the complimentary {@link User} has not
    * already accounted.
    */
   public abstract Duration contactTtl();

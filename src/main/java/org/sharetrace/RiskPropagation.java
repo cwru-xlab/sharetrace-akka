@@ -36,13 +36,13 @@ import java.util.Set;
  * {@link ContactGraph}. The main steps of the algorithm are as follows:
  *
  * <ol>
- *   <li>Map the {@link ContactGraph} to a collection {@link Node} actors.
- *   <li>For each {@link Node}, send it an initial {@link RiskScoreMessage}.
- *   <li>For each pair of {@link Node}s that correspond to an edge in the {@link ContactGraph}, send
+ *   <li>Map the {@link ContactGraph} to a collection {@link User} actors.
+ *   <li>For each {@link User}, send it an initial {@link RiskScoreMessage}.
+ *   <li>For each pair of {@link User}s that correspond to an edge in the {@link ContactGraph}, send
  *       each a complimentary {@link ContactMessage} that contains the {@link ActorRef} and time of
- *       contact of the other {@link Node}.
+ *       contact of the other {@link User}.
  *   <li>Terminate once the stopping condition is satisfied. Termination occurs when when all {@link
- *       Node}s have stopped passing messages (default), or a certain amount of time has passed.
+ *       User}s have stopped passing messages (default), or a certain amount of time has passed.
  * </ol>
  *
  * @see NodeParameters

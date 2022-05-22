@@ -1,8 +1,8 @@
 package org.sharetrace.message;
 
 import org.immutables.value.Value;
-import org.sharetrace.Node;
 import org.sharetrace.RiskPropagation;
+import org.sharetrace.User;
 import org.sharetrace.graph.ContactGraph;
 
 import java.time.Instant;
@@ -11,9 +11,9 @@ import static org.sharetrace.util.Preconditions.checkInClosedRange;
 
 /**
  * A timestamped probability of infection. As a message, a risk score is propagated through the
- * {@link ContactGraph}. When initially propagated from their source {@link Node}, a risk score is
+ * {@link ContactGraph}. When initially propagated from their source {@link User}, a risk score is
  * referred to as a <b>symptom score</b> since it is only based on the symptoms of a person. As the
- * current value of a {@link Node}, a risk score is referred to as an <b>exposure score</b> since it
+ * current value of a {@link User}, a risk score is referred to as an <b>exposure score</b> since it
  * also accounts for (in)direct forms of contact with other persons.
  *
  * <p><b>Note</b>: this class has a natural ordering that is inconsistent with equals. Risk scores

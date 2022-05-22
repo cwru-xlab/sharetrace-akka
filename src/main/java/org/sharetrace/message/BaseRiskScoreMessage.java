@@ -2,8 +2,8 @@ package org.sharetrace.message;
 
 import akka.actor.typed.ActorRef;
 import org.immutables.value.Value;
-import org.sharetrace.Node;
 import org.sharetrace.RiskPropagation;
+import org.sharetrace.User;
 import org.sharetrace.graph.ContactGraph;
 
 import java.util.UUID;
@@ -12,7 +12,7 @@ import java.util.UUID;
 abstract class BaseRiskScoreMessage implements NodeMessage, Comparable<RiskScoreMessage> {
 
   /**
-   * Returns the actor reference associated with the {@link Node} that propagates this risk score.
+   * Returns the actor reference associated with the {@link User} that propagates this risk score.
    */
   public abstract ActorRef<NodeMessage> replyTo();
 

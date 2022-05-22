@@ -26,13 +26,13 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 /**
- * An actor that corresponds to a {@link ContactGraph} node. Collectively, all {@link Node}s carry
+ * An actor that corresponds to a {@link ContactGraph} node. Collectively, all {@link User}s carry
  * out the execution of {@link RiskPropagation}.
  *
  * @see NodeParameters
  * @see IntervalCache
  */
-public class Node extends AbstractBehavior<NodeMessage> {
+public class User extends AbstractBehavior<NodeMessage> {
 
   private final TimerScheduler<NodeMessage> timers;
   private final Loggables loggables;
@@ -45,7 +45,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
   private RiskScoreMessage transmitted;
   private double sendThreshold;
 
-  private Node(
+  private User(
       ActorContext<NodeMessage> context,
       TimerScheduler<NodeMessage> timers,
       Set<Class<? extends Loggable>> loggable,
@@ -76,7 +76,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
     return Behaviors.setup(
         context -> {
           context.setLoggerName(Logging.EVENT_LOGGER_NAME);
-          return new Node(context, timers, loggable, parameters, clock, cache);
+          return new User(context, timers, loggable, parameters, clock, cache);
         });
   }
 
@@ -128,7 +128,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
     return newReceiveBuilder()
         .onMessage(ContactMessage.class, this::onContactMessage)
         .onMessage(RiskScoreMessage.class, this::onRiskScoreMessage)
-        .onMessage(Timeout.class, Node::onTimeout)
+        .onMessage(Timeout.class, User::onTimeout)
         .onMessage(Refresh.class, this::onRefresh)
         .build();
   }

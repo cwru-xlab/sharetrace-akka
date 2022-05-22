@@ -6,8 +6,8 @@ import org.jgrapht.graph.DefaultGraphType;
 import org.jgrapht.nio.GraphExporter;
 import org.jgrapht.nio.graphml.GraphMLExporter;
 import org.jgrapht.opt.graph.fastutil.FastutilMapGraph;
-import org.sharetrace.Node;
 import org.sharetrace.RiskPropagation;
+import org.sharetrace.User;
 import org.sharetrace.logging.Loggable;
 import org.sharetrace.logging.Loggables;
 import org.sharetrace.logging.Logging;
@@ -31,9 +31,9 @@ import java.util.stream.Stream;
  * A simple graph in which a node represents a person and an edge between two nodes indicates that
  * the associated persons of the incident nodes came in contact. Nodes identifiers are zero-based
  * contiguous natural numbers. In an instance of {@link RiskPropagation}, the topology of this graph
- * is mapped to a collection {@link Node} actors.
+ * is mapped to a collection {@link User} actors.
  *
- * @see Node
+ * @see User
  * @see Edge
  */
 public class ContactGraph implements TemporalGraph {
