@@ -16,7 +16,6 @@ import org.sharetrace.logging.Logging;
 import org.sharetrace.logging.events.ContactEvent;
 import org.sharetrace.logging.events.ContactsRefreshEvent;
 import org.sharetrace.logging.events.CurrentRefreshEvent;
-import org.sharetrace.logging.events.PropagateEvent;
 import org.sharetrace.logging.events.ReceiveEvent;
 import org.sharetrace.logging.events.SendCachedEvent;
 import org.sharetrace.logging.events.SendCurrentEvent;
@@ -68,7 +67,6 @@ public abstract class Experiment implements Runnable {
         ContactEvent.class,
         ContactsRefreshEvent.class,
         CurrentRefreshEvent.class,
-        PropagateEvent.class,
         ReceiveEvent.class,
         SendCachedEvent.class,
         SendCurrentEvent.class,
