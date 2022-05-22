@@ -41,8 +41,8 @@ public abstract class DatasetFactory implements GraphGenerator<Integer, Edge<Int
           ContactNetwork.create(DatasetFactory.this, DatasetFactory.this.loggable());
 
       @Override
-      public RiskScore getScore(int user) {
-        return DatasetFactory.this.scoreFactory().getScore(user);
+      public RiskScore getRiskScore(int user) {
+        return DatasetFactory.this.riskScoreFactory().getRiskScore(user);
       }
 
       @Override
@@ -70,7 +70,7 @@ public abstract class DatasetFactory implements GraphGenerator<Integer, Edge<Int
 
   protected abstract Set<Class<? extends Loggable>> loggable();
 
-  protected abstract ScoreFactory scoreFactory();
+  protected abstract RiskScoreFactory riskScoreFactory();
 
   protected abstract ContactTimeFactory contactTimeFactory();
 }

@@ -7,7 +7,7 @@ import org.immutables.value.Value;
 import org.sharetrace.message.RiskScore;
 
 @Value.Immutable
-abstract class BaseScoreSampler extends BaseSampler<RiskScore> {
+abstract class BaseRiskScoreSampler extends BaseSampler<RiskScore> {
 
   @Override
   public RiskScore sample() {

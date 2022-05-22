@@ -22,7 +22,7 @@ class FileDatasetFactory extends DatasetFactory {
   private final Map<Set<Integer>, Instant> contacts;
   private final IdIndexer indexer;
   private final Set<Class<? extends Loggable>> loggable;
-  private final ScoreFactory scoreFactory;
+  private final RiskScoreFactory riskScoreFactory;
   private final Path path;
   private final String delimiter;
   private final Instant referenceTime;
@@ -31,14 +31,14 @@ class FileDatasetFactory extends DatasetFactory {
 
   private FileDatasetFactory(
       Set<Class<? extends Loggable>> loggable,
-      ScoreFactory scoreFactory,
+      RiskScoreFactory riskScoreFactory,
       Path path,
       String delimiter,
       Instant referenceTime) {
     this.contacts = new Object2ObjectOpenHashMap<>();
     this.indexer = new IdIndexer();
     this.loggable = loggable;
-    this.scoreFactory = scoreFactory;
+    this.riskScoreFactory = riskScoreFactory;
     this.path = path;
     this.delimiter = delimiter;
     this.referenceTime = referenceTime;
@@ -48,11 +48,12 @@ class FileDatasetFactory extends DatasetFactory {
   @Builder.Factory
   public static Dataset fileDataset(
       Set<Class<? extends Loggable>> loggable,
-      ScoreFactory scoreFactory,
+      RiskScoreFactory riskScoreFactory,
       Path path,
       String delimiter,
       Instant referenceTime) {
-    return new FileDatasetFactory(loggable, scoreFactory, path, delimiter, referenceTime).create();
+    return new FileDatasetFactory(loggable, riskScoreFactory, path, delimiter, referenceTime)
+        .create();
   }
 
   @Override
@@ -71,8 +72,8 @@ class FileDatasetFactory extends DatasetFactory {
   }
 
   @Override
-  protected ScoreFactory scoreFactory() {
-    return scoreFactory;
+  protected RiskScoreFactory riskScoreFactory() {
+    return riskScoreFactory;
   }
 
   @Override

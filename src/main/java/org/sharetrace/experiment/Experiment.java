@@ -114,7 +114,7 @@ public abstract class Experiment implements Runnable {
         .contactNetwork(dataset.contactNetwork())
         .parameters(userParameters)
         .clock(clock())
-        .scoreFactory(dataset)
+        .riskScoreFactory(dataset)
         .contactTimeFactory(dataset)
         .cacheFactory(cacheFactory())
         .build();

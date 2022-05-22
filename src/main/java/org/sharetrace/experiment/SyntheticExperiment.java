@@ -4,28 +4,28 @@ import java.time.Instant;
 import org.jgrapht.generate.GraphGenerator;
 import org.sharetrace.data.Dataset;
 import org.sharetrace.data.factory.ContactTimeFactory;
-import org.sharetrace.data.factory.ScoreFactory;
+import org.sharetrace.data.factory.RiskScoreFactory;
 import org.sharetrace.data.factory.SyntheticDatasetBuilder;
+import org.sharetrace.data.sampling.RiskScoreSampler;
 import org.sharetrace.data.sampling.Sampler;
-import org.sharetrace.data.sampling.ScoreSampler;
 import org.sharetrace.data.sampling.TimeSampler;
 import org.sharetrace.graph.Edge;
 import org.sharetrace.message.RiskScore;
 
 public abstract class SyntheticExperiment extends Experiment {
 
-  protected final Sampler<RiskScore> scoreSampler;
+  protected final Sampler<RiskScore> riskScoreSampler;
   protected final Sampler<Instant> contactTimeSampler;
   protected int nNodes = -1;
 
   protected SyntheticExperiment(GraphType graphType, long seed, int nRepeats) {
     super(graphType, nRepeats, seed);
-    this.scoreSampler = newScoreSampler();
+    this.riskScoreSampler = newScoreSampler();
     this.contactTimeSampler = newContactTimeSampler();
   }
 
   protected Sampler<RiskScore> newScoreSampler() {
-    return ScoreSampler.builder().timeSampler(newScoreTimeSampler()).seed(seed).build();
+    return RiskScoreSampler.builder().timeSampler(newScoreTimeSampler()).seed(seed).build();
   }
 
   protected Sampler<Instant> newContactTimeSampler() {
@@ -41,7 +41,7 @@ public abstract class SyntheticExperiment extends Experiment {
     return SyntheticDatasetBuilder.create()
         .addAllLoggable(loggable())
         .generator(generator())
-        .scoreFactory(scoreFactory())
+        .riskScoreFactory(riskScoreFactory())
         .contactTimeFactory(contactTimeFactory())
         .build();
   }
@@ -57,8 +57,8 @@ public abstract class SyntheticExperiment extends Experiment {
         .build();
   }
 
-  private ScoreFactory scoreFactory() {
-    return x -> scoreSampler.sample();
+  private RiskScoreFactory riskScoreFactory() {
+    return x -> riskScoreSampler.sample();
   }
 
   private ContactTimeFactory contactTimeFactory() {

@@ -4,9 +4,9 @@ import java.nio.file.Path;
 import java.time.Instant;
 import org.sharetrace.data.Dataset;
 import org.sharetrace.data.factory.FileDatasetBuilder;
-import org.sharetrace.data.factory.ScoreFactory;
+import org.sharetrace.data.factory.RiskScoreFactory;
+import org.sharetrace.data.sampling.RiskScoreSampler;
 import org.sharetrace.data.sampling.Sampler;
-import org.sharetrace.data.sampling.ScoreSampler;
 import org.sharetrace.data.sampling.TimeSampler;
 import org.sharetrace.message.RiskScore;
 
@@ -15,17 +15,17 @@ public class FileExperiment extends Experiment {
   private static final String WHITESPACE_DELIMITER = "\\s+";
   private final Path path;
   private final String delimiter;
-  private final Sampler<RiskScore> scoreSampler;
+  private final Sampler<RiskScore> riskScoreSampler;
 
   public FileExperiment(GraphType graphType, Path path, String delimiter, int nRepeats, long seed) {
     super(graphType, nRepeats, seed);
     this.path = path;
     this.delimiter = delimiter;
-    this.scoreSampler = newScoreSampler();
+    this.riskScoreSampler = newRiskScoreSampler();
   }
 
-  protected Sampler<RiskScore> newScoreSampler() {
-    return ScoreSampler.builder().timeSampler(newTimeSampler()).seed(seed).build();
+  protected Sampler<RiskScore> newRiskScoreSampler() {
+    return RiskScoreSampler.builder().timeSampler(newTimeSampler()).seed(seed).build();
   }
 
   protected Sampler<Instant> newTimeSampler() {
@@ -44,11 +44,11 @@ public class FileExperiment extends Experiment {
         .path(path)
         .addAllLoggable(loggable())
         .referenceTime(referenceTime)
-        .scoreFactory(scoreFactory())
+        .riskScoreFactory(riskScoreFactory())
         .build();
   }
 
-  private ScoreFactory scoreFactory() {
-    return x -> scoreSampler.sample();
+  private RiskScoreFactory riskScoreFactory() {
+    return x -> riskScoreSampler.sample();
   }
 }

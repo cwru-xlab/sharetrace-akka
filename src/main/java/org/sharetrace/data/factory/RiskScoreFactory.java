@@ -3,7 +3,7 @@ package org.sharetrace.data.factory;
 import org.sharetrace.message.RiskScore;
 
 @FunctionalInterface
-public interface ScoreFactory {
+public interface RiskScoreFactory {
 
-  RiskScore getScore(int user);
+  RiskScore getRiskScore(int user);
 }

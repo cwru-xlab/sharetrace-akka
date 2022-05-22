@@ -11,17 +11,17 @@ import org.sharetrace.logging.Loggable;
 class SyntheticDatasetFactory extends DatasetFactory {
 
   private final Set<Class<? extends Loggable>> loggable;
-  private final ScoreFactory scoreFactory;
+  private final RiskScoreFactory riskScoreFactory;
   private final ContactTimeFactory contactTimeFactory;
   private final GraphGenerator<Integer, Edge<Integer>, ?> generator;
 
   private SyntheticDatasetFactory(
       Set<Class<? extends Loggable>> loggable,
-      ScoreFactory scoreFactory,
+      RiskScoreFactory riskScoreFactory,
       ContactTimeFactory contactTimeFactory,
       GraphGenerator<Integer, Edge<Integer>, ?> generator) {
     this.loggable = loggable;
-    this.scoreFactory = scoreFactory;
+    this.riskScoreFactory = riskScoreFactory;
     this.contactTimeFactory = contactTimeFactory;
     this.generator = generator;
   }
@@ -29,10 +29,10 @@ class SyntheticDatasetFactory extends DatasetFactory {
   @Builder.Factory
   public static Dataset syntheticDataset(
       Set<Class<? extends Loggable>> loggable,
-      ScoreFactory scoreFactory,
+      RiskScoreFactory riskScoreFactory,
       ContactTimeFactory contactTimeFactory,
       GraphGenerator<Integer, Edge<Integer>, ?> generator) {
-    return new SyntheticDatasetFactory(loggable, scoreFactory, contactTimeFactory, generator)
+    return new SyntheticDatasetFactory(loggable, riskScoreFactory, contactTimeFactory, generator)
         .create();
   }
 
@@ -47,8 +47,8 @@ class SyntheticDatasetFactory extends DatasetFactory {
   }
 
   @Override
-  protected ScoreFactory scoreFactory() {
-    return scoreFactory;
+  protected RiskScoreFactory riskScoreFactory() {
+    return riskScoreFactory;
   }
 
   @Override

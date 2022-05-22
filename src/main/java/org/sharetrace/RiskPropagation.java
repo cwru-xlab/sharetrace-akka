@@ -17,7 +17,7 @@ import java.util.Set;
 import org.immutables.builder.Builder;
 import org.sharetrace.data.factory.CacheFactory;
 import org.sharetrace.data.factory.ContactTimeFactory;
-import org.sharetrace.data.factory.ScoreFactory;
+import org.sharetrace.data.factory.RiskScoreFactory;
 import org.sharetrace.graph.ContactNetwork;
 import org.sharetrace.logging.Loggable;
 import org.sharetrace.logging.Loggables;
@@ -56,7 +56,7 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
   private final ContactNetwork contactNetwork;
   private final long nUsers;
   private final Clock clock;
-  private final ScoreFactory scoreFactory;
+  private final RiskScoreFactory riskScoreFactory;
   private final ContactTimeFactory contactTimeFactory;
   private final CacheFactory<RiskScoreMessage> cacheFactory;
   private Instant startedAt;
@@ -69,7 +69,7 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
       UserParameters parameters,
       Clock clock,
       CacheFactory<RiskScoreMessage> cacheFactory,
-      ScoreFactory scoreFactory,
+      RiskScoreFactory riskScoreFactory,
       ContactTimeFactory contactTimeFactory) {
     super(context);
     this.loggables = Loggables.create(loggable, () -> getContext().getLog());
@@ -77,7 +77,7 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
     this.parameters = parameters;
     this.clock = clock;
     this.cacheFactory = cacheFactory;
-    this.scoreFactory = scoreFactory;
+    this.riskScoreFactory = riskScoreFactory;
     this.contactTimeFactory = contactTimeFactory;
     this.nUsers = contactNetwork.nUsers();
     this.nStopped = 0;
@@ -90,7 +90,7 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
       UserParameters parameters,
       Clock clock,
       CacheFactory<RiskScoreMessage> cacheFactory,
-      ScoreFactory scoreFactory,
+      RiskScoreFactory riskScoreFactory,
       ContactTimeFactory contactTimeFactory) {
     return Behaviors.setup(
         context -> {
@@ -102,7 +102,7 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
               parameters,
               clock,
               cacheFactory,
-              scoreFactory,
+              riskScoreFactory,
               contactTimeFactory);
         });
   }
@@ -162,7 +162,11 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
   }
 
   private void sendFirstScore(int name, ActorRef<UserMessage> user) {
-    user.tell(RiskScoreMessage.builder().score(scoreFactory.getScore(name)).replyTo(user).build());
+    user.tell(
+        RiskScoreMessage.builder()
+            .score(riskScoreFactory.getRiskScore(name))
+            .replyTo(user)
+            .build());
   }
 
   private void sendContact(List<Integer> contact, Map<?, ActorRef<UserMessage>> users) {
