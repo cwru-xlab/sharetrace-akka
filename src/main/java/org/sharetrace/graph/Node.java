@@ -59,6 +59,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
   private final IntervalCache<RiskScoreMessage> cache;
   private RiskScoreMessage previous;
   private RiskScoreMessage current;
+  private RiskScoreMessage transmitted;
   private double sendThreshold;
 
   private Node(
@@ -77,28 +78,9 @@ public class Node extends AbstractBehavior<NodeMessage> {
     this.cache = cache;
     this.previous = cached(defaultMessage());
     this.current = previous;
+    this.transmitted = transmitted(current);
     setSendThreshold();
     startRefreshTimer();
-  }
-
-  private RiskScoreMessage cached(RiskScoreMessage message) {
-    cache.put(message.score().timestamp(), message);
-    return message;
-  }
-
-  private RiskScoreMessage defaultMessage() {
-    return RiskScoreMessage.builder()
-        .score(RiskScore.of(RiskScore.MIN_VALUE, clock.instant()))
-        .replyTo(getContext().getSelf())
-        .build();
-  }
-
-  private void setSendThreshold() {
-    sendThreshold = current.score().value() * parameters.sendTolerance();
-  }
-
-  private void startRefreshTimer() {
-    timers.startTimerWithFixedDelay(Refresh.INSTANCE, parameters.refreshRate());
   }
 
   @Builder.Factory
@@ -168,6 +150,26 @@ public class Node extends AbstractBehavior<NodeMessage> {
         .build();
   }
 
+  private RiskScoreMessage cached(RiskScoreMessage message) {
+    cache.put(message.score().timestamp(), transmitted(message));
+    return message;
+  }
+
+  private RiskScoreMessage defaultMessage() {
+    return RiskScoreMessage.builder()
+        .score(RiskScore.of(RiskScore.MIN_VALUE, clock.instant()))
+        .replyTo(getContext().getSelf())
+        .build();
+  }
+
+  private void setSendThreshold() {
+    sendThreshold = current.score().value() * parameters.sendTolerance();
+  }
+
+  private void startRefreshTimer() {
+    timers.startTimerWithFixedDelay(Refresh.INSTANCE, parameters.refreshRate());
+  }
+
   private void resetTimeout() {
     timers.startSingleTimer(Timeout.INSTANCE, parameters.idleTimeout());
   }
@@ -189,7 +191,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
   private void refreshCurrent() {
     if (!isScoreAlive(current)) {
       RiskScoreMessage newCurrent = maxCachedOrDefault(clock.instant());
-      updatePreviousAndCurrent(newCurrent);
+      setMessages(newCurrent);
       logCurrentRefresh();
     }
   }
@@ -199,7 +201,7 @@ public class Node extends AbstractBehavior<NodeMessage> {
   }
 
   private RiskScoreMessage maxCachedOrDefault(Instant timestamp) {
-    return cache.headMax(timestamp, RiskScoreMessage::compareTo).orElseGet(this::defaultMessage);
+    return maxCached(timestamp).orElseGet(this::defaultMessage);
   }
 
   private Behavior<NodeMessage> onContactMessage(ContactMessage message) {
@@ -217,15 +219,10 @@ public class Node extends AbstractBehavior<NodeMessage> {
     logContact(message);
   }
 
-  private boolean sendCurrent(ContactMessage message) {
-    boolean sent = isScoreAlive(current) && isContactRecent(message, current);
-    if (sent) {
-      ActorRef<NodeMessage> contact = message.replyTo();
-      RiskScoreMessage transmitted = transmitted(current);
-      contact.tell(transmitted);
-      logSendCurrent(contact, transmitted);
-    }
-    return sent;
+  private void setMessages(RiskScoreMessage newCurrent) {
+    previous = current;
+    current = newCurrent;
+    transmitted = transmitted(current);
   }
 
   private void sendCached(ContactMessage message) {
@@ -233,10 +230,14 @@ public class Node extends AbstractBehavior<NodeMessage> {
     maxCached(buffered).ifPresent(cached -> sendCached(message.replyTo(), cached));
   }
 
-  private void sendCached(ActorRef<NodeMessage> contact, RiskScoreMessage cached) {
-    RiskScoreMessage transmitted = transmitted(cached);
-    contact.tell(transmitted);
-    logSendCached(contact, transmitted);
+  private boolean sendCurrent(ContactMessage message) {
+    boolean sent = isScoreAlive(current) && isContactRecent(message, current);
+    if (sent) {
+      ActorRef<NodeMessage> contact = message.replyTo();
+      contact.tell(transmitted);
+      logSendCurrent(contact);
+    }
+    return sent;
   }
 
   private Behavior<NodeMessage> onRiskScoreMessage(RiskScoreMessage message) {
@@ -247,17 +248,8 @@ public class Node extends AbstractBehavior<NodeMessage> {
     return this;
   }
 
-  private void update(RiskScoreMessage message) {
-    if (cached(message).score().value() > current.score().value()) {
-      updatePreviousAndCurrent(message);
-      setSendThreshold();
-      logUpdate();
-    }
-  }
-
-  private void updatePreviousAndCurrent(RiskScoreMessage newCurrent) {
-    previous = current;
-    current = newCurrent;
+  private void logSendCurrent(ActorRef<NodeMessage> contact) {
+    logEvent(SendCurrentEvent.class, () -> sendCurrentEvent(contact, transmitted));
   }
 
   private void propagate(RiskScoreMessage message) {
@@ -318,9 +310,11 @@ public class Node extends AbstractBehavior<NodeMessage> {
     return isAlive(message.score().timestamp(), parameters.scoreTtl());
   }
 
-  private boolean isAlive(Instant timestamp, Duration timeToLive) {
-    Duration sinceTimestamp = Duration.between(timestamp, clock.instant());
-    return timeToLive.compareTo(sinceTimestamp) >= 0;
+  private void sendCached(ActorRef<NodeMessage> contact, RiskScoreMessage cached) {
+    if (isScoreAlive(cached)) {
+      contact.tell(cached);
+      logSendCached(contact, cached);
+    }
   }
 
   private void propagate(ActorRef<NodeMessage> contact, RiskScoreMessage message) {
@@ -385,8 +379,12 @@ public class Node extends AbstractBehavior<NodeMessage> {
     return name(getContext().getSelf());
   }
 
-  private void logSendCurrent(ActorRef<NodeMessage> contact, RiskScoreMessage message) {
-    logEvent(SendCurrentEvent.class, () -> sendCurrentEvent(contact, message));
+  private void update(RiskScoreMessage message) {
+    if (cached(message).score().value() > current.score().value()) {
+      setMessages(message);
+      setSendThreshold();
+      logUpdate();
+    }
   }
 
   private void logSendCached(ActorRef<NodeMessage> contact, RiskScoreMessage message) {
@@ -408,5 +406,9 @@ public class Node extends AbstractBehavior<NodeMessage> {
         .score(message.score())
         .uuid(message.uuid())
         .build();
+  }
+
+  private boolean isAlive(Instant timestamp, Duration timeToLive) {
+    return Duration.between(timestamp, clock.instant()).compareTo(timeToLive) <= 0;
   }
 }
