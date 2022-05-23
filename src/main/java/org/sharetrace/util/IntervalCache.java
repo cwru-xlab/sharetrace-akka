@@ -109,7 +109,7 @@ public class IntervalCache<T> {
   private Instant floorKey(Instant timestamp) {
     long sinceStart = Duration.between(rangeStart, timestamp).toNanos();
     long multiplier = FastMath.floorDiv(sinceStart, intervalNanos);
-    return rangeStart.plus(Duration.ofNanos(intervalNanos * multiplier));
+    return rangeStart.plusNanos(intervalNanos * multiplier);
   }
 
   /**
