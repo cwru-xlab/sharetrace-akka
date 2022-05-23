@@ -4,8 +4,8 @@ import static org.sharetrace.util.Preconditions.checkArgument;
 import static org.sharetrace.util.Preconditions.checkInClosedRange;
 import static org.sharetrace.util.Preconditions.checkIsAtLeast;
 import static org.sharetrace.util.Preconditions.checkIsPositive;
-import it.unimi.dsi.fastutil.objects.Object2ObjectAVLTreeMap;
-import it.unimi.dsi.fastutil.objects.Object2ObjectRBTreeMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectAVLTreeMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectRBTreeMap;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -43,16 +43,16 @@ public class IntervalCache<T> {
   public static final Clock DEFAULT_CLOCK = Clock.systemUTC();
   public static final boolean DEFAULT_PRIORITIZE_READS = false;
 
-  private final SortedMap<Instant, T> cache;
+  private final SortedMap<Long, T> cache;
   private final BinaryOperator<T> mergeStrategy;
   private final Clock clock;
   private final long interval;
   private final long lookBack;
   private final long lookAhead;
   private final long refreshRate;
-  private Instant lastRefresh;
-  private Instant rangeStart;
-  private Instant rangeEnd;
+  private long lastRefresh;
+  private long rangeStart;
+  private long rangeEnd;
 
   private IntervalCache(Builder<T> builder) {
     cache = builder.cache;
@@ -62,14 +62,12 @@ public class IntervalCache<T> {
     lookBack = builder.lookBack;
     lookAhead = builder.lookAhead;
     refreshRate = builder.refreshRate;
-    lastRefresh = clock.instant();
+    lastRefresh = getTime();
     updateRange();
   }
 
-  private void updateRange() {
-    Instant now = clock.instant();
-    rangeStart = now.minusSeconds(lookBack);
-    rangeEnd = now.plusSeconds(lookAhead);
+  private long getTime() {
+    return clock.instant().getEpochSecond();
   }
 
   public static <T> Builder<T> builder() {
@@ -78,6 +76,12 @@ public class IntervalCache<T> {
 
   public static <T> BinaryOperator<T> defaultMergeStrategy() {
     return (oldValue, newValue) -> newValue;
+  }
+
+  private void updateRange() {
+    long now = getTime();
+    rangeStart = now - lookBack;
+    rangeEnd = now + lookAhead;
   }
 
   /**
@@ -89,27 +93,25 @@ public class IntervalCache<T> {
   @Nullable
   public T get(Instant timestamp) {
     Objects.requireNonNull(timestamp);
+    long time = timestamp.getEpochSecond();
     refresh();
-    return isInRange(timestamp) ? cache.get(floorKey(timestamp)) : null;
+    return isInRange(time) ? cache.get(floorKey(time)) : null;
   }
 
   private void refresh() {
-    long sinceRefresh = Duration.between(lastRefresh, clock.instant()).toSeconds();
-    if (sinceRefresh > refreshRate) {
+    if (getTime() - lastRefresh > refreshRate) {
       updateRange();
       cache.headMap(rangeStart).clear();
-      lastRefresh = clock.instant();
+      lastRefresh = getTime();
     }
   }
 
-  private boolean isInRange(Instant timestamp) {
-    return rangeStart.isBefore(timestamp) && rangeEnd.isAfter(timestamp);
+  private boolean isInRange(long timestamp) {
+    return rangeStart <= timestamp && rangeEnd >= timestamp;
   }
 
-  private Instant floorKey(Instant timestamp) {
-    long sinceStart = Duration.between(rangeStart, timestamp).toSeconds();
-    long multiplier = FastMath.floorDiv(sinceStart, interval);
-    return rangeStart.plusSeconds(interval * multiplier);
+  private long floorKey(long timestamp) {
+    return rangeStart + interval * FastMath.floorDiv(timestamp - rangeStart, interval);
   }
 
   /**
@@ -123,16 +125,16 @@ public class IntervalCache<T> {
     Objects.requireNonNull(timestamp);
     Objects.requireNonNull(value);
     refresh();
-    Instant key = floorKey(checkInRange(timestamp));
+    long key = floorKey(checkInRange(timestamp.getEpochSecond()));
     cache.merge(key, value, mergeStrategy);
   }
 
-  private Instant checkInRange(Instant timestamp) {
+  private long checkInRange(long timestamp) {
     checkArgument(isInRange(timestamp), () -> rangeMessage(timestamp));
     return timestamp;
   }
 
-  private String rangeMessage(Instant timestamp) {
+  private String rangeMessage(long timestamp) {
     return "'timestamp' must be between " + rangeStart + " and " + rangeEnd + "; got " + timestamp;
   }
 
@@ -147,7 +149,7 @@ public class IntervalCache<T> {
     Objects.requireNonNull(timestamp);
     Objects.requireNonNull(comparator);
     refresh();
-    return cache.headMap(timestamp).values().stream().max(comparator);
+    return cache.headMap(timestamp.getEpochSecond()).values().stream().max(comparator);
   }
 
   public static final class Builder<T> {
@@ -161,7 +163,7 @@ public class IntervalCache<T> {
     private long lookAhead;
     private long refreshRate = DEFAULT_REFRESH_RATE.toSeconds();
     private boolean prioritizeReads = DEFAULT_PRIORITIZE_READS;
-    private SortedMap<Instant, T> cache;
+    private SortedMap<Long, T> cache;
 
     /** Sets duration of each contiguous time interval. */
     public Builder<T> interval(Duration interval) {
@@ -214,8 +216,8 @@ public class IntervalCache<T> {
       return new IntervalCache<>(this);
     }
 
-    private SortedMap<Instant, T> newCache() {
-      return prioritizeReads ? new Object2ObjectAVLTreeMap<>() : new Object2ObjectRBTreeMap<>();
+    private SortedMap<Long, T> newCache() {
+      return prioritizeReads ? new Long2ObjectAVLTreeMap<>() : new Long2ObjectRBTreeMap<>();
     }
   }
 }
