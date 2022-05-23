@@ -6,9 +6,9 @@ import org.immutables.value.Value;
 @Value.Immutable
 interface BaseCacheParameters {
 
-  long nIntervals();
+  int nIntervals();
 
-  long nLookAhead();
+  int nLookAhead();
 
   Duration interval();
 

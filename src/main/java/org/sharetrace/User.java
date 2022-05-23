@@ -59,7 +59,7 @@ public class User extends AbstractBehavior<UserMessage> {
   private RiskScoreMessage previous;
   private RiskScoreMessage current;
   private RiskScoreMessage transmitted;
-  private double sendThreshold;
+  private float sendThreshold;
 
   private User(
       ActorContext<UserMessage> context,

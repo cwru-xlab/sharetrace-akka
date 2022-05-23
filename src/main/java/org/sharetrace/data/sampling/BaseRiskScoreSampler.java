@@ -11,7 +11,7 @@ abstract class BaseRiskScoreSampler extends BaseSampler<RiskScore> {
 
   @Override
   public RiskScore sample() {
-    return RiskScore.of(normalizedSample(valueDistribution()), timeSampler().sample());
+    return RiskScore.of((float) normalizedSample(valueDistribution()), timeSampler().sample());
   }
 
   /**
@@ -20,7 +20,7 @@ abstract class BaseRiskScoreSampler extends BaseSampler<RiskScore> {
    */
   @Value.Default
   protected RealDistribution valueDistribution() {
-    return new UniformRealDistribution(generator(), 0d, 1d);
+    return new UniformRealDistribution(generator(), RiskScore.MIN_VALUE, RiskScore.MAX_VALUE);
   }
 
   /** Returns a sampler to generate {@link RiskScore} timestamps. */

@@ -20,18 +20,18 @@ import org.sharetrace.graph.ContactNetwork;
 @Value.Immutable
 abstract class BaseRiskScore implements Comparable<BaseRiskScore> {
 
-  public static final double MIN_VALUE = 0d;
-  public static final double MAX_VALUE = 1d;
+  public static final float MIN_VALUE = 0f;
+  public static final float MAX_VALUE = 100f;
 
   @Override
   public int compareTo(BaseRiskScore score) {
-    int byValue = Double.compare(value(), score.value());
+    int byValue = Float.compare(value(), score.value());
     return byValue != 0 ? byValue : timestamp().compareTo(score.timestamp());
   }
 
   /** Returns the magnitude of this risk score; modified during {@link RiskPropagation}. */
   @Value.Parameter
-  public abstract double value();
+  public abstract float value();
 
   /**
    * Returns when this risk score was first computed; never modified during {@link RiskPropagation}.

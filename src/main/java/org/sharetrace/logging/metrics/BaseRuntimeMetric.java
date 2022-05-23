@@ -6,5 +6,5 @@ import org.immutables.value.Value;
 interface BaseRuntimeMetric extends LoggableMetric {
 
   @Value.Parameter
-  double seconds();
+  float seconds();
 }

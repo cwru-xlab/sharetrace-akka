@@ -168,12 +168,12 @@ public abstract class Experiment implements Runnable {
             .build();
   }
 
-  protected double sendTolerance() {
-    return 0.6d;
+  protected float sendTolerance() {
+    return 0.6f;
   }
 
-  protected double transmissionRate() {
-    return 0.8d;
+  protected float transmissionRate() {
+    return 0.8f;
   }
 
   protected Duration timeBuffer() {
@@ -194,8 +194,8 @@ public abstract class Experiment implements Runnable {
     double maxBase = Math.log(10d);
     double decayRate = 1.75E-7;
     double targetBase = Math.max(minBase, maxBase - decayRate * nContacts);
-    long timeout = (long) Math.ceil(1E9 * Math.log(nContacts) / targetBase);
-    return Duration.ofNanos(timeout);
+    long timeout = (long) Math.ceil(Math.log(nContacts) / targetBase);
+    return Duration.ofSeconds(timeout);
   }
 
   protected Duration userRefreshRate() {
@@ -210,15 +210,15 @@ public abstract class Experiment implements Runnable {
     return Duration.ofDays(1L);
   }
 
-  protected long cacheIntervals() {
-    return 2L * defaultTtl().toDays();
+  protected int cacheIntervals() {
+    return (int) (2 * defaultTtl().toDays());
   }
 
   protected Duration cacheRefreshRate() {
     return Duration.ofHours(1L);
   }
 
-  protected long cacheLookAhead() {
+  protected int cacheLookAhead() {
     return IntervalCache.MIN_LOOK_AHEAD;
   }
 

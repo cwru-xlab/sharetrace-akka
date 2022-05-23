@@ -36,8 +36,8 @@ import org.apache.commons.math3.util.FastMath;
  */
 public class IntervalCache<T> {
 
-  public static final long MIN_INTERVALS = 1L;
-  public static final long MIN_LOOK_AHEAD = MIN_INTERVALS;
+  public static final int MIN_INTERVALS = 1;
+  public static final int MIN_LOOK_AHEAD = MIN_INTERVALS;
   public static final Duration DEFAULT_REFRESH_RATE = Duration.ofMinutes(1L);
   public static final Duration DEFAULT_INTERVAL = Duration.ofDays(1L);
   public static final Clock DEFAULT_CLOCK = Clock.systemUTC();
@@ -46,10 +46,10 @@ public class IntervalCache<T> {
   private final SortedMap<Instant, T> cache;
   private final BinaryOperator<T> mergeStrategy;
   private final Clock clock;
-  private final long intervalNanos;
-  private final Duration lookBack;
-  private final Duration lookAhead;
-  private final Duration refreshRate;
+  private final long interval;
+  private final long lookBack;
+  private final long lookAhead;
+  private final long refreshRate;
   private Instant lastRefresh;
   private Instant rangeStart;
   private Instant rangeEnd;
@@ -58,7 +58,7 @@ public class IntervalCache<T> {
     cache = builder.cache;
     mergeStrategy = builder.mergeStrategy;
     clock = builder.clock;
-    intervalNanos = builder.interval.toNanos();
+    interval = builder.interval;
     lookBack = builder.lookBack;
     lookAhead = builder.lookAhead;
     refreshRate = builder.refreshRate;
@@ -68,8 +68,8 @@ public class IntervalCache<T> {
 
   private void updateRange() {
     Instant now = clock.instant();
-    rangeStart = now.minus(lookBack);
-    rangeEnd = now.plus(lookAhead);
+    rangeStart = now.minusSeconds(lookBack);
+    rangeEnd = now.plusSeconds(lookAhead);
   }
 
   public static <T> Builder<T> builder() {
@@ -94,8 +94,8 @@ public class IntervalCache<T> {
   }
 
   private void refresh() {
-    Duration sinceRefresh = Duration.between(lastRefresh, clock.instant());
-    if (sinceRefresh.compareTo(refreshRate) > 0) {
+    long sinceRefresh = Duration.between(lastRefresh, clock.instant()).toSeconds();
+    if (sinceRefresh > refreshRate) {
       updateRange();
       cache.headMap(rangeStart).clear();
       lastRefresh = clock.instant();
@@ -107,9 +107,9 @@ public class IntervalCache<T> {
   }
 
   private Instant floorKey(Instant timestamp) {
-    long sinceStart = Duration.between(rangeStart, timestamp).toNanos();
-    long multiplier = FastMath.floorDiv(sinceStart, intervalNanos);
-    return rangeStart.plusNanos(intervalNanos * multiplier);
+    long sinceStart = Duration.between(rangeStart, timestamp).toSeconds();
+    long multiplier = FastMath.floorDiv(sinceStart, interval);
+    return rangeStart.plusSeconds(interval * multiplier);
   }
 
   /**
@@ -154,36 +154,36 @@ public class IntervalCache<T> {
 
     private BinaryOperator<T> mergeStrategy = defaultMergeStrategy();
     private Clock clock = DEFAULT_CLOCK;
-    private Duration interval = DEFAULT_INTERVAL;
-    private long nIntervals = MIN_INTERVALS;
-    private long nLookAhead = MIN_LOOK_AHEAD;
-    private Duration lookBack;
-    private Duration lookAhead;
-    private Duration refreshRate = DEFAULT_REFRESH_RATE;
+    private long interval = DEFAULT_INTERVAL.toSeconds();
+    private int nIntervals = MIN_INTERVALS;
+    private int nLookAhead = MIN_LOOK_AHEAD;
+    private long lookBack;
+    private long lookAhead;
+    private long refreshRate = DEFAULT_REFRESH_RATE.toSeconds();
     private boolean prioritizeReads = DEFAULT_PRIORITIZE_READS;
     private SortedMap<Instant, T> cache;
 
     /** Sets duration of each contiguous time interval. */
     public Builder<T> interval(Duration interval) {
-      this.interval = checkIsPositive(interval, "interval");
+      this.interval = checkIsPositive(interval, "interval").toSeconds();
       return this;
     }
 
     /** Sets the total number of contiguous time intervals. */
-    public Builder<T> nIntervals(long nIntervals) {
-      this.nIntervals = (long) checkIsAtLeast(nIntervals, MIN_INTERVALS, "nIntervals");
+    public Builder<T> nIntervals(int nIntervals) {
+      this.nIntervals = (int) checkIsAtLeast(nIntervals, MIN_INTERVALS, "nIntervals");
       return this;
     }
 
     /** Sets the number of "future" time intervals. */
-    public Builder<T> nLookAhead(long nLookAhead) {
+    public Builder<T> nLookAhead(int nLookAhead) {
       this.nLookAhead = nLookAhead;
       return this;
     }
 
     /** Sets the duration after which the cache will refresh. */
     public Builder<T> refreshRate(Duration refreshRate) {
-      this.refreshRate = checkIsPositive(refreshRate, "refreshRate");
+      this.refreshRate = checkIsPositive(refreshRate, "refreshRate").toSeconds();
       return this;
     }
 
@@ -207,9 +207,9 @@ public class IntervalCache<T> {
 
     /** Returns an initialized instance of the cache. */
     public IntervalCache<T> build() {
-      checkInClosedRange(nLookAhead, MIN_LOOK_AHEAD, nIntervals, "nLookHead");
-      lookBack = interval.multipliedBy(nIntervals - nLookAhead);
-      lookAhead = interval.multipliedBy(nLookAhead);
+      checkInClosedRange(nLookAhead, MIN_LOOK_AHEAD, nIntervals, "nLookAhead");
+      lookBack = interval * (nIntervals - nLookAhead);
+      lookAhead = interval * nLookAhead;
       cache = newCache();
       return new IntervalCache<>(this);
     }

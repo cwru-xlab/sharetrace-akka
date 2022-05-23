@@ -17,9 +17,9 @@ import org.sharetrace.graph.ContactNetwork;
 @Value.Immutable
 abstract class BaseUserParameters implements UserMessage {
 
-  public static final double MIN_TRANSMISSION_RATE = 0d;
-  public static final double MAX_TRANSMISSION_RATE = 1d;
-  public static final double MIN_SEND_TOLERANCE = 0d;
+  public static final float MIN_TRANSMISSION_RATE = 0f;
+  public static final float MAX_TRANSMISSION_RATE = 1f;
+  public static final float MIN_SEND_TOLERANCE = 0f;
 
   @Value.Check
   protected void check() {
@@ -39,7 +39,7 @@ abstract class BaseUserParameters implements UserMessage {
    * in no value decay, and so an execution of {@link RiskPropagation} must be terminated by other
    * means than relying on a nonzero send tolerance.
    */
-  public abstract double transmissionRate();
+  public abstract float transmissionRate();
 
   /**
    * Returns the value which determines the threshold that the value of a {@link RiskScore} must
@@ -49,7 +49,7 @@ abstract class BaseUserParameters implements UserMessage {
    * non-iterative message passing eventually terminates since the value of a propagated {@link
    * RiskScore} exponentially decreases with a rate constant equal to the transmission rate.
    */
-  public abstract double sendTolerance();
+  public abstract float sendTolerance();
 
   /**
    * Returns the duration which determines to what extent a {@link RiskScore} is considered relevant

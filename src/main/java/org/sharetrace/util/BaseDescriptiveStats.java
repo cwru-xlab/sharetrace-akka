@@ -1,8 +1,9 @@
 package org.sharetrace.util;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.immutables.value.Value;
 
@@ -11,67 +12,69 @@ abstract class BaseDescriptiveStats {
 
   public static DescriptiveStats of(Collection<Number> values) {
     DescriptiveStatistics statistics = new DescriptiveStatistics();
-    values.stream().mapToDouble(Number::doubleValue).forEach(statistics::addValue);
+    values.stream().mapToDouble(Number::floatValue).forEach(statistics::addValue);
     return DescriptiveStats.builder().statistics(statistics).build();
   }
 
-  public static DescriptiveStats of(double[] values) {
+  public static DescriptiveStats of(float[] values) {
     DescriptiveStatistics statistics = new DescriptiveStatistics();
-    Arrays.stream(values).forEach(statistics::addValue);
+    for (float value : values) {
+      statistics.addValue(value);
+    }
     return DescriptiveStats.builder().statistics(statistics).build();
   }
 
   @Value.Derived
-  public double mean() {
-    return statistics().getMean();
+  public float mean() {
+    return (float) statistics().getMean();
   }
 
   @JsonIgnore
   protected abstract DescriptiveStatistics statistics();
 
   @Value.Derived
-  public double sampleVariance() {
-    return statistics().getVariance();
+  public float sampleVariance() {
+    return (float) statistics().getVariance();
   }
 
   @Value.Derived
-  public double max() {
-    return statistics().getMax();
+  public float max() {
+    return (float) statistics().getMax();
   }
 
   @Value.Derived
-  public double min() {
-    return statistics().getMin();
+  public float min() {
+    return (float) statistics().getMin();
   }
 
   @Value.Derived
-  public double median() {
-    return statistics().getPercentile(50);
+  public float median() {
+    return (float) statistics().getPercentile(50);
   }
 
   @Value.Derived
-  public double lowerWhisker() {
-    return lowerQuartile() - 1.5 * interQuartileRange();
+  public float lowerWhisker() {
+    return (float) (lowerQuartile() - 1.5 * interQuartileRange());
   }
 
   @Value.Derived
-  public double lowerQuartile() {
-    return statistics().getPercentile(25);
+  public float lowerQuartile() {
+    return (float) statistics().getPercentile(25);
   }
 
   @Value.Derived
-  public double interQuartileRange() {
+  public float interQuartileRange() {
     return upperQuartile() - lowerQuartile();
   }
 
   @Value.Derived
-  public double upperQuartile() {
-    return statistics().getPercentile(75);
+  public float upperQuartile() {
+    return (float) statistics().getPercentile(75);
   }
 
   @Value.Derived
-  public double upperWhisker() {
-    return upperQuartile() + 1.5 * interQuartileRange();
+  public float upperWhisker() {
+    return (float) (upperQuartile() + 1.5 * interQuartileRange());
   }
 
   @Value.Derived
@@ -80,14 +83,22 @@ abstract class BaseDescriptiveStats {
   }
 
   @Value.Derived
-  public double sum() {
-    return statistics().getSum();
+  public float sum() {
+    return (float) statistics().getSum();
   }
 
   @Value.Derived
-  public double[] outliers() {
-    return Arrays.stream(statistics().getValues())
-        .filter(v -> v < lowerWhisker() || v > upperWhisker())
-        .toArray();
+  public float[] outliers() {
+    List<Float> outliers = new ArrayList<>();
+    for (double value : statistics().getValues()) {
+      if (value < lowerWhisker() || value > upperWhisker()) {
+        outliers.add((float) value);
+      }
+    }
+    float[] unwrapped = new float[outliers.size()];
+    for (int i = 0; i < outliers.size(); i++) {
+      unwrapped[i] = outliers.get(i);
+    }
+    return unwrapped;
   }
 }

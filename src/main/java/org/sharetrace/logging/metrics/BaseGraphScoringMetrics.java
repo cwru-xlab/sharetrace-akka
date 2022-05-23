@@ -12,9 +12,9 @@ interface BaseGraphScoringMetrics extends LoggableMetric {
 
   DescriptiveStats eigenvectorCentrality();
 
-  double degeneracy();
+  float degeneracy();
 
-  double globalClusteringCoefficient();
+  float globalClusteringCoefficient();
 
   DescriptiveStats localClusteringCoefficient();
 }

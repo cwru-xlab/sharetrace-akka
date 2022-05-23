@@ -193,7 +193,7 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
                 .build());
   }
 
-  private double runtime() {
-    return Duration.between(startedAt, clock.instant()).toNanos() / 1e9;
+  private float runtime() {
+    return Duration.between(startedAt, clock.instant()).toNanos() / 1e9f;
   }
 }

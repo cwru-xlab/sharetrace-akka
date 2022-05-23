@@ -16,15 +16,15 @@ import org.jgrapht.alg.shortestpath.GraphMeasurer;
 
 public final class GraphStats<V, E> {
 
-  private static final double NOT_COMPUTED = -1d;
+  private static final float NOT_COMPUTED = -1f;
   private final Graph<V, E> graph;
   private final ShortestPathAlgorithm<V, ?> shortestPath;
   private GraphMeasurer<V, ?> measurer;
-  private double[] harmonicCentralities;
-  private double[] katzCentralities;
-  private double[] eigenvectorCentralities;
-  private double[] localClusteringCoefficients;
-  private double globalClusteringCoefficient = NOT_COMPUTED;
+  private float[] harmonicCentralities;
+  private float[] katzCentralities;
+  private float[] eigenvectorCentralities;
+  private float[] localClusteringCoefficients;
+  private float globalClusteringCoefficient = NOT_COMPUTED;
   private long nTriangles = (long) NOT_COMPUTED;
   private int center = (int) NOT_COMPUTED;
   private int periphery = (int) NOT_COMPUTED;
@@ -54,16 +54,16 @@ public final class GraphStats<V, E> {
     return nTriangles;
   }
 
-  public long nNodes() {
-    return graph.iterables().vertexCount();
+  public int nNodes() {
+    return (int) graph.iterables().vertexCount();
   }
 
-  public long nEdges() {
-    return graph.iterables().edgeCount();
+  public int nEdges() {
+    return (int) graph.iterables().edgeCount();
   }
 
-  public long radius() {
-    return (long) getMeasurer().getRadius();
+  public int radius() {
+    return (int) getMeasurer().getRadius();
   }
 
   private GraphMeasurer<V, ?> getMeasurer() {
@@ -73,8 +73,8 @@ public final class GraphStats<V, E> {
     return measurer;
   }
 
-  public long diameter() {
-    return (long) getMeasurer().getDiameter();
+  public int diameter() {
+    return (int) getMeasurer().getDiameter();
   }
 
   public int periphery() {
@@ -91,43 +91,48 @@ public final class GraphStats<V, E> {
     return center;
   }
 
-  public double[] harmonicCentralities() {
+  public float[] harmonicCentralities() {
     if (harmonicCentralities == null) {
-      harmonicCentralities =
-          toDoubleArray(new HarmonicCentrality<>(graph, shortestPath).getScores());
+      harmonicCentralities = toArray(new HarmonicCentrality<>(graph, shortestPath).getScores());
     }
     return harmonicCentralities;
   }
 
-  private static double[] toDoubleArray(Map<?, Double> map) {
-    return map.values().stream().mapToDouble(Number::doubleValue).toArray();
+  private static float[] toArray(Map<?, Double> map) {
+    float[] values = new float[map.size()];
+    int i = 0;
+    for (double value : map.values()) {
+      values[i] = (float) value;
+      i++;
+    }
+    return values;
   }
 
-  public double globalClusteringCoefficient() {
+  public float globalClusteringCoefficient() {
     if (globalClusteringCoefficient == NOT_COMPUTED) {
       globalClusteringCoefficient =
-          new ClusteringCoefficient<>(graph).getGlobalClusteringCoefficient();
+          (float) new ClusteringCoefficient<>(graph).getGlobalClusteringCoefficient();
     }
     return globalClusteringCoefficient;
   }
 
-  public double[] localClusteringCoefficients() {
+  public float[] localClusteringCoefficients() {
     if (localClusteringCoefficients == null) {
-      localClusteringCoefficients = toDoubleArray(new ClusteringCoefficient<>(graph).getScores());
+      localClusteringCoefficients = toArray(new ClusteringCoefficient<>(graph).getScores());
     }
     return localClusteringCoefficients;
   }
 
-  public double[] katzCentralities() {
+  public float[] katzCentralities() {
     if (katzCentralities == null) {
-      katzCentralities = toDoubleArray(new KatzCentrality<>(graph).getScores());
+      katzCentralities = toArray(new KatzCentrality<>(graph).getScores());
     }
     return katzCentralities;
   }
 
-  public double[] eigenvectorCentralities() {
+  public float[] eigenvectorCentralities() {
     if (eigenvectorCentralities == null) {
-      eigenvectorCentralities = toDoubleArray(new EigenvectorCentrality<>(graph).getScores());
+      eigenvectorCentralities = toArray(new EigenvectorCentrality<>(graph).getScores());
     }
     return eigenvectorCentralities;
   }
