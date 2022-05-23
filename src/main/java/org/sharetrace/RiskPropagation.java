@@ -110,12 +110,12 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
   @Override
   public Receive<AlgorithmMessage> createReceive() {
     return newReceiveBuilder()
-        .onMessage(RunMessage.class, this::onRun)
+        .onMessage(RunMessage.class, this::onRunMessage)
         .onSignal(Terminated.class, this::onTerminate)
         .build();
   }
 
-  private Behavior<AlgorithmMessage> onRun(RunMessage run) {
+  private Behavior<AlgorithmMessage> onRunMessage(RunMessage message) {
     Behavior<AlgorithmMessage> behavior = this;
     if (nUsers > 0) {
       Map<Integer, ActorRef<UserMessage>> users = newUsers();

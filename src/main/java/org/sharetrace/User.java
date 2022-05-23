@@ -75,9 +75,8 @@ public class User extends AbstractBehavior<UserMessage> {
     this.parameters = parameters;
     this.clock = clock;
     this.cache = cache;
-    this.previous = cached(defaultMessage());
-    this.current = previous;
-    this.transmitted = transmitted(current);
+    this.current = cached(defaultMessage());
+    setMessages(current);
     setSendThreshold();
     startRefreshTimer();
   }
@@ -99,16 +98,6 @@ public class User extends AbstractBehavior<UserMessage> {
   private static Predicate<Entry<ActorRef<UserMessage>, Instant>> isNotFrom(
       RiskScoreMessage message) {
     return Predicate.not(contact -> Objects.equals(contact.getKey(), message.replyTo()));
-  }
-
-  @Override
-  public Receive<UserMessage> createReceive() {
-    return newReceiveBuilder()
-        .onMessage(ContactMessage.class, this::onContactMessage)
-        .onMessage(RiskScoreMessage.class, this::onRiskScoreMessage)
-        .onMessage(TimeoutMessage.class, User::onTimeoutMessage)
-        .onMessage(RefreshMessage.class, this::onRefreshMessage)
-        .build();
   }
 
   private static SendCurrentEvent sendCurrentEvent(
@@ -145,8 +134,14 @@ public class User extends AbstractBehavior<UserMessage> {
         .build();
   }
 
-  private static Behavior<UserMessage> onTimeoutMessage(TimeoutMessage message) {
-    return Behaviors.stopped();
+  @Override
+  public Receive<UserMessage> createReceive() {
+    return newReceiveBuilder()
+        .onMessage(ContactMessage.class, this::onContactMessage)
+        .onMessage(RiskScoreMessage.class, this::onRiskScoreMessage)
+        .onMessage(TimeoutMessage.class, x -> Behaviors.stopped())
+        .onMessage(RefreshMessage.class, this::onRefreshMessage)
+        .build();
   }
 
   private Behavior<UserMessage> onContactMessage(ContactMessage message) {
@@ -221,8 +216,7 @@ public class User extends AbstractBehavior<UserMessage> {
 
   private void refreshCurrent() {
     if (!isScoreAlive(current)) {
-      RiskScoreMessage newCurrent = maxCachedOrDefault(clock.instant());
-      setMessages(newCurrent);
+      setMessages(maxCachedOrDefault());
       logCurrentRefresh();
     }
   }
@@ -231,8 +225,8 @@ public class User extends AbstractBehavior<UserMessage> {
     return cache.headMax(timestamp, RiskScoreMessage::compareTo);
   }
 
-  private RiskScoreMessage maxCachedOrDefault(Instant timestamp) {
-    return maxCached(timestamp).orElseGet(this::defaultMessage);
+  private RiskScoreMessage maxCachedOrDefault() {
+    return maxCached(clock.instant()).orElseGet(this::defaultMessage);
   }
 
   private void addContact(ContactMessage message) {
