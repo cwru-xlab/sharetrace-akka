@@ -14,7 +14,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.SortedMap;
 import java.util.function.BinaryOperator;
-import javax.annotation.Nullable;
 import org.apache.commons.math3.util.FastMath;
 
 /**
@@ -70,6 +69,12 @@ public class IntervalCache<T> {
     return clock.instant().getEpochSecond();
   }
 
+  private void updateRange() {
+    long now = getTime();
+    rangeStart = now - lookBack;
+    rangeEnd = now + lookAhead;
+  }
+
   public static <T> Builder<T> builder() {
     return new Builder<>();
   }
@@ -78,24 +83,18 @@ public class IntervalCache<T> {
     return (oldValue, newValue) -> newValue;
   }
 
-  private void updateRange() {
-    long now = getTime();
-    rangeStart = now - lookBack;
-    rangeEnd = now + lookAhead;
-  }
-
   /**
-   * Returns the cached value associated with the time interval that contains the specified
-   * timestamp. If no value has been cached in the time interval or the timestamp falls outside the
-   * timespan of the cache, {@code null} is returned. Prior to retrieving the value, the cache is
-   * possibly refreshed if it has been sufficiently long since its previous refresh.
+   * Returns an {@link Optional} containing the cached value associated with the time interval that
+   * contains the specified timestamp. If no value has been cached in the time interval or the
+   * timestamp falls outside the timespan of the cache an empty {@link Optional} is returned. Prior
+   * to retrieving the value, the cache is possibly refreshed if it has been sufficiently long since
+   * its previous refresh.
    */
-  @Nullable
-  public T get(Instant timestamp) {
+  public Optional<T> get(Instant timestamp) {
     Objects.requireNonNull(timestamp);
-    long time = timestamp.getEpochSecond();
     refresh();
-    return isInRange(time) ? cache.get(floorKey(time)) : null;
+    long key = floorKey(timestamp.getEpochSecond());
+    return Optional.ofNullable(cache.get(key));
   }
 
   private void refresh() {
@@ -104,10 +103,6 @@ public class IntervalCache<T> {
       cache.headMap(rangeStart).clear();
       lastRefresh = getTime();
     }
-  }
-
-  private boolean isInRange(long timestamp) {
-    return rangeStart <= timestamp && rangeEnd >= timestamp;
   }
 
   private long floorKey(long timestamp) {
@@ -132,6 +127,10 @@ public class IntervalCache<T> {
   private long checkInRange(long timestamp) {
     checkArgument(isInRange(timestamp), () -> rangeMessage(timestamp));
     return timestamp;
+  }
+
+  private boolean isInRange(long timestamp) {
+    return timestamp >= rangeStart && timestamp <= rangeEnd;
   }
 
   private String rangeMessage(long timestamp) {
