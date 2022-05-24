@@ -142,7 +142,7 @@ public class IntervalCache<T> {
    * Prior to retrieving the value, the cache is possibly refreshed if it has been sufficiently long
    * since its previous refresh.
    */
-  public Optional<T> headMax(Instant timestamp, Comparator<T> comparator) {
+  public Optional<T> max(Instant timestamp, Comparator<T> comparator) {
     Objects.requireNonNull(timestamp);
     Objects.requireNonNull(comparator);
     refresh();

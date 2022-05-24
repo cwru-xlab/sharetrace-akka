@@ -242,7 +242,7 @@ public class User extends AbstractBehavior<UserMessage> {
   }
 
   private Optional<RiskScoreMessage> maxCached(Instant timestamp) {
-    return cache.headMax(timestamp, RiskScoreMessage::compareTo);
+    return cache.max(timestamp, RiskScoreMessage::compareTo);
   }
 
   private RiskScoreMessage maxCachedOrDefault() {
