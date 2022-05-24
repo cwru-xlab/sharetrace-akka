@@ -14,6 +14,7 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BinaryOperator;
+import java.util.function.Predicate;
 
 /**
  * A cache that lazily maintains a finite number of contiguous, half-closed (start-inclusive) time
@@ -147,10 +148,11 @@ public class IntervalCache<T> {
     Objects.requireNonNull(comparator);
     refresh();
     long time = toLong(timestamp);
-    return cache.entrySet().stream()
-        .filter(e -> e.getKey() <= time)
-        .map(Entry::getValue)
-        .max(comparator);
+    return cache.entrySet().stream().filter(isNotAfter(time)).map(Entry::getValue).max(comparator);
+  }
+
+  private static Predicate<Entry<Long, ?>> isNotAfter(long timestamp) {
+    return entry -> entry.getKey() <= timestamp;
   }
 
   private boolean isInRange(long timestamp) {
