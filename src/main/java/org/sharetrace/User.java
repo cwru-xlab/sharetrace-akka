@@ -13,7 +13,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -75,10 +74,46 @@ public class User extends AbstractBehavior<UserMessage> {
     this.parameters = parameters;
     this.clock = clock;
     this.cache = cache;
-    this.current = cached(defaultMessage());
+    this.current = defaultMessage();
     setMessages(current);
     setSendThreshold();
     startRefreshTimer();
+  }
+
+  private RiskScoreMessage defaultMessage() {
+    return RiskScoreMessage.builder()
+        .score(RiskScore.of(RiskScore.MIN_VALUE, clock.instant()))
+        .replyTo(getContext().getSelf())
+        .build();
+  }
+
+  private void setMessages(RiskScoreMessage newCurrent) {
+    previous = current;
+    current = newCurrent;
+    transmitted = transmitted(current);
+  }
+
+  private void setSendThreshold() {
+    sendThreshold = current.score().value() * parameters.sendTolerance();
+  }
+
+  private void startRefreshTimer() {
+    timers.startTimerWithFixedDelay(RefreshMessage.INSTANCE, parameters.refreshRate());
+  }
+
+  private RiskScoreMessage transmitted(RiskScoreMessage received) {
+    return RiskScoreMessage.builder()
+        .replyTo(getContext().getSelf())
+        .score(transmittedScore(received))
+        .uuid(received.uuid())
+        .build();
+  }
+
+  private RiskScore transmittedScore(RiskScoreMessage received) {
+    return RiskScore.builder()
+        .value(received.score().value() * parameters.transmissionRate())
+        .timestamp(received.score().timestamp())
+        .build();
   }
 
   @Builder.Factory
@@ -97,7 +132,7 @@ public class User extends AbstractBehavior<UserMessage> {
 
   private static Predicate<Entry<ActorRef<UserMessage>, Instant>> isNotFrom(
       RiskScoreMessage message) {
-    return Predicate.not(contact -> Objects.equals(contact.getKey(), message.replyTo()));
+    return Predicate.not(contact -> contact.getKey().equals(message.replyTo()));
   }
 
   private static SendCurrentEvent sendCurrentEvent(
@@ -183,21 +218,6 @@ public class User extends AbstractBehavior<UserMessage> {
     return message;
   }
 
-  private RiskScoreMessage defaultMessage() {
-    return RiskScoreMessage.builder()
-        .score(RiskScore.of(RiskScore.MIN_VALUE, clock.instant()))
-        .replyTo(getContext().getSelf())
-        .build();
-  }
-
-  private void setSendThreshold() {
-    sendThreshold = current.score().value() * parameters.sendTolerance();
-  }
-
-  private void startRefreshTimer() {
-    timers.startTimerWithFixedDelay(RefreshMessage.INSTANCE, parameters.refreshRate());
-  }
-
   private void resetTimeout() {
     timers.startSingleTimer(TimeoutMessage.INSTANCE, parameters.idleTimeout());
   }
@@ -259,21 +279,6 @@ public class User extends AbstractBehavior<UserMessage> {
           .filter(isContactRecent(message))
           .forEach(contact -> propagate(contact.getKey(), transmitted));
     }
-  }
-
-  private RiskScoreMessage transmitted(RiskScoreMessage received) {
-    return RiskScoreMessage.builder()
-        .replyTo(getContext().getSelf())
-        .score(transmittedScore(received))
-        .uuid(received.uuid())
-        .build();
-  }
-
-  private RiskScore transmittedScore(RiskScoreMessage received) {
-    return RiskScore.builder()
-        .value(received.score().value() * parameters.transmissionRate())
-        .timestamp(received.score().timestamp())
-        .build();
   }
 
   private boolean isHighEnough(RiskScoreMessage message) {
@@ -397,11 +402,5 @@ public class User extends AbstractBehavior<UserMessage> {
 
   private boolean isAlive(Instant timestamp, Duration timeToLive) {
     return Duration.between(timestamp, clock.instant()).compareTo(timeToLive) <= 0;
-  }
-
-  private void setMessages(RiskScoreMessage newCurrent) {
-    previous = current;
-    current = newCurrent;
-    transmitted = transmitted(current);
   }
 }
