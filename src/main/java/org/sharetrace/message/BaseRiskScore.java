@@ -21,7 +21,7 @@ import org.sharetrace.graph.ContactNetwork;
 abstract class BaseRiskScore implements Comparable<BaseRiskScore> {
 
   public static final float MIN_VALUE = 0f;
-  public static final float MAX_VALUE = 100f;
+  public static final float MAX_VALUE = 1f;
 
   @Override
   public int compareTo(BaseRiskScore score) {
