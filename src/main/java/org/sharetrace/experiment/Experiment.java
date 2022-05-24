@@ -136,7 +136,6 @@ public abstract class Experiment implements Runnable {
 
   protected CacheParameters newCacheParameters() {
     return CacheParameters.builder()
-        .prioritizeReads(cachePrioritizeReads())
         .interval(cacheInterval())
         .nIntervals(cacheIntervals())
         .refreshRate(cacheRefreshRate())
@@ -164,7 +163,6 @@ public abstract class Experiment implements Runnable {
             .refreshRate(cacheParameters.refreshRate())
             .clock(clock())
             .mergeStrategy(this::cacheMerge)
-            .prioritizeReads(cacheParameters.prioritizeReads())
             .build();
   }
 
@@ -200,10 +198,6 @@ public abstract class Experiment implements Runnable {
 
   protected Duration userRefreshRate() {
     return Duration.ofHours(1L);
-  }
-
-  protected boolean cachePrioritizeReads() {
-    return false;
   }
 
   protected Duration cacheInterval() {

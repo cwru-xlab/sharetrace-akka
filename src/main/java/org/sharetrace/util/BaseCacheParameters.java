@@ -13,6 +13,4 @@ interface BaseCacheParameters {
   Duration interval();
 
   Duration refreshRate();
-
-  boolean prioritizeReads();
 }
