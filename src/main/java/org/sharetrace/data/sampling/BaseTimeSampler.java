@@ -13,7 +13,7 @@ abstract class BaseTimeSampler extends BaseSampler<Instant> {
   @Override
   public Instant sample() {
     long lookBack = Math.round(normalizedSample(ttlDistribution()) * ttl().getSeconds());
-    return referenceTime().minus(Duration.ofSeconds(lookBack));
+    return referenceTime().minusSeconds(lookBack);
   }
 
   /**
