@@ -138,7 +138,7 @@ public abstract class Experiment implements Runnable {
     return CacheParameters.builder()
         .interval(cacheInterval())
         .nIntervals(cacheIntervals())
-        .refreshRate(cacheRefreshRate())
+        .refreshPeriod(cacheRefreshPeriod())
         .nLookAhead(cacheLookAhead())
         .build();
   }
@@ -154,16 +154,8 @@ public abstract class Experiment implements Runnable {
         .build();
   }
 
-  protected CacheFactory<RiskScoreMessage> cacheFactory() {
-    return () ->
-        IntervalCache.<RiskScoreMessage>builder()
-            .nIntervals(cacheParameters.nIntervals())
-            .nLookAhead(cacheParameters.nLookAhead())
-            .interval(cacheParameters.interval())
-            .refreshRate(cacheParameters.refreshRate())
-            .clock(clock())
-            .mergeStrategy(this::cacheMerge)
-            .build();
+  protected Duration cacheRefreshPeriod() {
+    return Duration.ofHours(1L);
   }
 
   protected float sendTolerance() {
@@ -208,12 +200,20 @@ public abstract class Experiment implements Runnable {
     return (int) (2 * defaultTtl().toDays());
   }
 
-  protected Duration cacheRefreshRate() {
-    return Duration.ofHours(1L);
+  protected int cacheLookAhead() {
+    return 1;
   }
 
-  protected int cacheLookAhead() {
-    return IntervalCache.MIN_LOOK_AHEAD;
+  protected CacheFactory<RiskScoreMessage> cacheFactory() {
+    return () ->
+        IntervalCache.<RiskScoreMessage>builder()
+            .nIntervals(cacheParameters.nIntervals())
+            .nLookAhead(cacheParameters.nLookAhead())
+            .interval(cacheParameters.interval())
+            .refreshPeriod(cacheParameters.refreshPeriod())
+            .clock(clock())
+            .mergeStrategy(this::cacheMerge)
+            .build();
   }
 
   protected RiskScoreMessage cacheMerge(RiskScoreMessage oldScore, RiskScoreMessage newScore) {

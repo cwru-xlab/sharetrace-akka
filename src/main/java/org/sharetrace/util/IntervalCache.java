@@ -1,7 +1,6 @@
 package org.sharetrace.util;
 
-import static org.sharetrace.util.Preconditions.checkArgument;
-import static org.sharetrace.util.Preconditions.checkInClosedRange;
+import static org.sharetrace.util.Preconditions.checkInLowerInclusiveRange;
 import static org.sharetrace.util.Preconditions.checkIsAtLeast;
 import static org.sharetrace.util.Preconditions.checkIsPositive;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
@@ -36,7 +35,9 @@ import java.util.function.Predicate;
 public class IntervalCache<T> {
 
   public static final int MIN_INTERVALS = 1;
-  public static final int MIN_LOOK_AHEAD = MIN_INTERVALS;
+  public static final int DEFAULT_INTERVALS = MIN_INTERVALS;
+  public static final int MIN_LOOK_AHEAD = 0;
+  public static final int DEFAULT_LOOK_AHEAD = MIN_INTERVALS;
   public static final Duration DEFAULT_REFRESH_RATE = Duration.ofMinutes(1L);
   public static final Duration DEFAULT_INTERVAL = Duration.ofDays(1L);
   public static final Clock DEFAULT_CLOCK = Clock.systemUTC();
@@ -47,7 +48,7 @@ public class IntervalCache<T> {
   private final long interval;
   private final long lookBack;
   private final long lookAhead;
-  private final long refreshRate;
+  private final long refreshPeriod;
   private long lastRefresh;
   private long rangeStart;
   private long rangeEnd;
@@ -59,19 +60,35 @@ public class IntervalCache<T> {
     interval = builder.interval;
     lookBack = builder.lookBack;
     lookAhead = builder.lookAhead;
-    refreshRate = builder.refreshRate;
+    refreshPeriod = builder.refreshPeriod;
     lastRefresh = getTime();
     updateRange();
   }
 
-  private static long toLong(Duration duration) {
-    return duration.toSeconds();
+  private long getTime() {
+    return toLong(clock.instant());
   }
 
   private void updateRange() {
     long now = getTime();
     rangeStart = now - lookBack;
     rangeEnd = now + lookAhead;
+  }
+
+  private static long toLong(Instant instant) {
+    return instant.getEpochSecond();
+  }
+
+  public static <T> Builder<T> builder() {
+    return new Builder<>();
+  }
+
+  public static <T> BinaryOperator<T> defaultMergeStrategy() {
+    return (oldValue, newValue) -> newValue;
+  }
+
+  private static long toLong(Duration duration) {
+    return duration.toSeconds();
   }
 
   /**
@@ -88,34 +105,6 @@ public class IntervalCache<T> {
     return Optional.ofNullable(cache.get(key));
   }
 
-  public static <T> Builder<T> builder() {
-    return new Builder<>();
-  }
-
-  public static <T> BinaryOperator<T> defaultMergeStrategy() {
-    return (oldValue, newValue) -> newValue;
-  }
-
-  private void refresh() {
-    if (getTime() - lastRefresh > refreshRate) {
-      updateRange();
-      cache.entrySet().removeIf(e -> e.getKey() < rangeStart);
-      lastRefresh = getTime();
-    }
-  }
-
-  private long floorKey(long timestamp) {
-    return rangeStart + interval * Math.floorDiv(timestamp - rangeStart, interval);
-  }
-
-  private static long toLong(Instant instant) {
-    return instant.getEpochSecond();
-  }
-
-  private long getTime() {
-    return toLong(clock.instant());
-  }
-
   /**
    * Adds the specified value to the time interval that contains the specified timestamp according
    * merge strategy of this instance. Prior to adding the value, the cache is possibly refreshed if
@@ -127,13 +116,20 @@ public class IntervalCache<T> {
     Objects.requireNonNull(timestamp);
     Objects.requireNonNull(value);
     refresh();
-    long time = checkInRange(toLong(timestamp));
+    long time = checkInLowerInclusiveRange(toLong(timestamp), rangeStart, rangeEnd, "timestamp");
     cache.merge(floorKey(time), value, mergeStrategy);
   }
 
-  private long checkInRange(long timestamp) {
-    checkArgument(isInRange(timestamp), () -> rangeMessage(timestamp));
-    return timestamp;
+  private long floorKey(long timestamp) {
+    return rangeStart + interval * Math.floorDiv(timestamp - rangeStart, interval);
+  }
+
+  private void refresh() {
+    if (getTime() - lastRefresh > refreshPeriod) {
+      updateRange();
+      cache.entrySet().removeIf(entry -> entry.getKey() < rangeStart);
+      lastRefresh = getTime();
+    }
   }
 
   /**
@@ -155,29 +151,16 @@ public class IntervalCache<T> {
     return entry -> entry.getKey() <= timestamp;
   }
 
-  private boolean isInRange(long timestamp) {
-    return timestamp >= rangeStart && timestamp < rangeEnd;
-  }
-
-  private String rangeMessage(long timestamp) {
-    return "'timestamp' must be at least "
-        + rangeStart
-        + " and less than"
-        + rangeEnd
-        + "; got "
-        + timestamp;
-  }
-
   public static final class Builder<T> {
 
     private BinaryOperator<T> mergeStrategy = defaultMergeStrategy();
     private Clock clock = DEFAULT_CLOCK;
     private long interval = toLong(DEFAULT_INTERVAL);
-    private int nIntervals = MIN_INTERVALS;
-    private int nLookAhead = MIN_LOOK_AHEAD;
+    private int nIntervals = DEFAULT_INTERVALS;
+    private int nLookAhead = DEFAULT_LOOK_AHEAD;
     private long lookBack;
     private long lookAhead;
-    private long refreshRate = toLong(DEFAULT_REFRESH_RATE);
+    private long refreshPeriod = toLong(DEFAULT_REFRESH_RATE);
     private Map<Long, T> cache;
 
     /** Sets duration of each contiguous time interval. */
@@ -188,7 +171,7 @@ public class IntervalCache<T> {
 
     /** Sets the total number of contiguous time intervals. */
     public Builder<T> nIntervals(int nIntervals) {
-      this.nIntervals = (int) checkIsAtLeast(nIntervals, MIN_INTERVALS, "nIntervals");
+      this.nIntervals = checkIsAtLeast(nIntervals, MIN_INTERVALS, "nIntervals");
       return this;
     }
 
@@ -199,8 +182,8 @@ public class IntervalCache<T> {
     }
 
     /** Sets the duration after which the cache will refresh. */
-    public Builder<T> refreshRate(Duration refreshRate) {
-      this.refreshRate = toLong(checkIsPositive(refreshRate, "refreshRate"));
+    public Builder<T> refreshPeriod(Duration refreshPeriod) {
+      this.refreshPeriod = toLong(checkIsPositive(refreshPeriod, "refreshPeriod"));
       return this;
     }
 
@@ -218,7 +201,7 @@ public class IntervalCache<T> {
 
     /** Returns an initialized instance of the cache. */
     public IntervalCache<T> build() {
-      checkInClosedRange(nLookAhead, MIN_LOOK_AHEAD, nIntervals, "nLookAhead");
+      checkInLowerInclusiveRange(nLookAhead, MIN_LOOK_AHEAD, nIntervals, "nLookAhead");
       lookBack = interval * (nIntervals - nLookAhead);
       lookAhead = interval * nLookAhead;
       cache = newCache();

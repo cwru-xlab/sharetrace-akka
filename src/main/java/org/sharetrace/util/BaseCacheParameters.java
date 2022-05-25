@@ -12,5 +12,5 @@ interface BaseCacheParameters {
 
   Duration interval();
 
-  Duration refreshRate();
+  Duration refreshPeriod();
 }

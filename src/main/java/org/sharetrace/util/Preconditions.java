@@ -15,15 +15,10 @@ public final class Preconditions {
     return checkInClosedRange(value, lowerBound, upperBound, message);
   }
 
-  private static <T> String closedRangeMessage(String name, T loweBound, T upperBound, T value) {
-    return "'"
-        + name
-        + "' must be between "
-        + loweBound
-        + " and "
-        + upperBound
-        + ", inclusive; got "
-        + value;
+  public static long checkInLowerInclusiveRange(
+      long value, long lowerBound, long upperBound, String name) {
+    Supplier<String> message = () -> lowerInclusiveMessage(name, lowerBound, upperBound, value);
+    return checkInLowerInclusiveRange(value, lowerBound, upperBound, message);
   }
 
   public static double checkInClosedRange(
@@ -36,6 +31,28 @@ public final class Preconditions {
     if (!condition) {
       throw new IllegalArgumentException(Objects.requireNonNull(message).get());
     }
+  }
+
+  private static <T> String lowerInclusiveMessage(
+      String name, T lowerBound, T upperBound, T value) {
+    return "'"
+        + name
+        + "' must be at least "
+        + lowerBound
+        + " and "
+        + upperBound
+        + "less than; got "
+        + value;
+  }
+
+  public static long checkInLowerInclusiveRange(
+      long value, long lowerBound, long upperBound, Supplier<String> message) {
+    checkArgument(value >= lowerBound && value < upperBound, message);
+    return value;
+  }
+
+  public static int checkIsAtLeast(int value, int lowerBound, String name) {
+    return checkIsAtLeast(value, lowerBound, () -> atLeastMessage(name, lowerBound, value));
   }
 
   public static Duration checkIsNonNegative(Duration duration, String name) {
@@ -62,6 +79,22 @@ public final class Preconditions {
 
   private static <T> String atLeastMessage(String name, T lowerBound, T value) {
     return "'" + name + "' must be at least " + lowerBound + "; got " + value;
+  }
+
+  public static int checkIsAtLeast(int value, int lowerBound, Supplier<String> message) {
+    checkArgument(value >= lowerBound, message);
+    return value;
+  }
+
+  private static <T> String closedRangeMessage(String name, T lowerBound, T upperBound, T value) {
+    return "'"
+        + name
+        + "' must be between "
+        + lowerBound
+        + " and "
+        + upperBound
+        + ", inclusive; got "
+        + value;
   }
 
   public static Duration checkIsPositive(Duration duration, String name) {
