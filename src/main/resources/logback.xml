@@ -10,7 +10,6 @@
     <waitStrategyType>blocking</waitStrategyType> <!--Default: blocking-->
     <appender class="ch.qos.logback.core.ConsoleAppender">
       <encoder class="net.logstash.logback.encoder.LogstashEncoder">
-        <jsonFactoryDecorator class="org.sharetrace.logging.decorators.Iso8601DateDecorator"/>
         <fieldNames class="net.logstash.logback.fieldnames.ShortenedFieldNames">
           <levelValue>[ignore]</levelValue>
           <timestamp>[ignore]</timestamp>
@@ -41,7 +40,6 @@
     <waitStrategyType>blocking</waitStrategyType> <!--Default: blocking-->
     <appender class="ch.qos.logback.core.rolling.RollingFileAppender">
       <encoder class="net.logstash.logback.encoder.LogstashEncoder">
-        <jsonFactoryDecorator class="org.sharetrace.logging.decorators.Iso8601DateDecorator"/>
         <fieldNames class="net.logstash.logback.fieldnames.ShortenedFieldNames">
           <levelValue>[ignore]</levelValue>
           <timestamp>[ignore]</timestamp>
@@ -81,7 +79,6 @@
       <append>true</append>
       <file>${log.dir}/metrics.log</file>
       <encoder class="net.logstash.logback.encoder.LogstashEncoder">
-        <jsonFactoryDecorator class="org.sharetrace.logging.decorators.Iso8601DateDecorator"/>
         <fieldNames class="net.logstash.logback.fieldnames.ShortenedFieldNames">
           <levelValue>[ignore]</levelValue>
           <timestamp>[ignore]</timestamp>
@@ -112,7 +109,6 @@
     <appender class="ch.qos.logback.core.FileAppender">
       <append>true</append>
       <encoder class="net.logstash.logback.encoder.LogstashEncoder">
-        <jsonFactoryDecorator class="org.sharetrace.logging.decorators.Iso8601DateDecorator"/>
         <fieldNames class="net.logstash.logback.fieldnames.ShortenedFieldNames">
           <levelValue>[ignore]</levelValue>
           <timestamp>[ignore]</timestamp>
