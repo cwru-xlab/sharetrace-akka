@@ -13,7 +13,8 @@ import org.sharetrace.graph.Edge;
 import org.sharetrace.logging.Loggable;
 import org.sharetrace.message.RiskScore;
 
-public abstract class DatasetFactory implements GraphGenerator<Integer, Edge<Integer>, Integer> {
+public abstract class DatasetFactory
+    implements Dataset, GraphGenerator<Integer, Edge<Integer>, Integer> {
 
   @Override
   public final void generateGraph(
@@ -37,17 +38,16 @@ public abstract class DatasetFactory implements GraphGenerator<Integer, Edge<Int
   public Dataset create() {
     return new Dataset() {
 
-      private final ContactNetwork contactNetwork =
-          ContactNetwork.create(DatasetFactory.this, DatasetFactory.this.loggable());
+      private final ContactNetwork contactNetwork = DatasetFactory.this.contactNetwork();
 
       @Override
       public RiskScore getRiskScore(int user) {
-        return DatasetFactory.this.riskScoreFactory().getRiskScore(user);
+        return DatasetFactory.this.getRiskScore(user);
       }
 
       @Override
       public Instant getContactTime(int user1, int user2) {
-        return DatasetFactory.this.contactTimeFactory().getContactTime(user1, user2);
+        return DatasetFactory.this.getContactTime(user1, user2);
       }
 
       @Override
@@ -68,9 +68,10 @@ public abstract class DatasetFactory implements GraphGenerator<Integer, Edge<Int
     };
   }
 
+  @Override
+  public ContactNetwork contactNetwork() {
+    return ContactNetwork.create(this, loggable());
+  }
+
   protected abstract Set<Class<? extends Loggable>> loggable();
-
-  protected abstract RiskScoreFactory riskScoreFactory();
-
-  protected abstract ContactTimeFactory contactTimeFactory();
 }

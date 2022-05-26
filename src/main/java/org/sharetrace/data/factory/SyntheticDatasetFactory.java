@@ -1,5 +1,6 @@
 package org.sharetrace.data.factory;
 
+import java.time.Instant;
 import java.util.Set;
 import org.immutables.builder.Builder;
 import org.jgrapht.Graph;
@@ -7,6 +8,7 @@ import org.jgrapht.generate.GraphGenerator;
 import org.sharetrace.data.Dataset;
 import org.sharetrace.graph.Edge;
 import org.sharetrace.logging.Loggable;
+import org.sharetrace.message.RiskScore;
 
 class SyntheticDatasetFactory extends DatasetFactory {
 
@@ -47,12 +49,12 @@ class SyntheticDatasetFactory extends DatasetFactory {
   }
 
   @Override
-  protected RiskScoreFactory riskScoreFactory() {
-    return riskScoreFactory;
+  public Instant getContactTime(int user1, int user2) {
+    return contactTimeFactory.getContactTime(user1, user2);
   }
 
   @Override
-  protected ContactTimeFactory contactTimeFactory() {
-    return contactTimeFactory;
+  public RiskScore getRiskScore(int user) {
+    return riskScoreFactory.getRiskScore(user);
   }
 }

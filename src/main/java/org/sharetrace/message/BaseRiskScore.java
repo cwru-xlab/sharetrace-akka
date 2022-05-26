@@ -18,13 +18,13 @@ import org.sharetrace.graph.ContactNetwork;
  * are only compared by value (first) and timestamp (second).
  */
 @Value.Immutable
-abstract class BaseRiskScore implements Comparable<BaseRiskScore> {
+abstract class BaseRiskScore implements Comparable<RiskScore> {
 
   public static final float MIN_VALUE = 0f;
   public static final float MAX_VALUE = 1f;
 
   @Override
-  public int compareTo(BaseRiskScore score) {
+  public int compareTo(RiskScore score) {
     int byValue = Float.compare(value(), score.value());
     return byValue != 0 ? byValue : timestamp().compareTo(score.timestamp());
   }

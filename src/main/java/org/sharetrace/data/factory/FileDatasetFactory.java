@@ -16,6 +16,7 @@ import org.jgrapht.Graph;
 import org.sharetrace.data.Dataset;
 import org.sharetrace.graph.Edge;
 import org.sharetrace.logging.Loggable;
+import org.sharetrace.message.RiskScore;
 
 class FileDatasetFactory extends DatasetFactory {
 
@@ -56,6 +57,15 @@ class FileDatasetFactory extends DatasetFactory {
         .create();
   }
 
+  private static Instant newer(Instant oldValue, Instant newValue) {
+    return newValue.isAfter(oldValue) ? newValue : oldValue;
+  }
+
+  @Override
+  public Instant getContactTime(int user1, int user2) {
+    return contacts.get(key(user1, user2));
+  }
+
   @Override
   protected void createContactNetwork(Graph<Integer, Edge<Integer>> target) {
     try (BufferedReader reader = Files.newBufferedReader(path)) {
@@ -71,33 +81,15 @@ class FileDatasetFactory extends DatasetFactory {
     return loggable;
   }
 
-  @Override
-  protected RiskScoreFactory riskScoreFactory() {
-    return riskScoreFactory;
-  }
-
-  @Override
-  protected ContactTimeFactory contactTimeFactory() {
-    return (user1, user2) -> contacts.get(key(user1, user2));
-  }
-
   private void processLine(String line, Graph<Integer, Edge<Integer>> target) {
     Parsed parsed = new Parsed(line, delimiter, indexer);
     addToGraph(target, parsed);
     addContact(parsed);
   }
 
-  private static Set<Integer> key(int user1, int user2) {
-    return Set.of(user1, user2);
-  }
-
   private void adjustTimestamps() {
     offset = Duration.between(lastContact, referenceTime);
     contacts.forEach((users, timestamp) -> contacts.computeIfPresent(users, this::adjustTimestamp));
-  }
-
-  private Instant adjustTimestamp(Set<Integer> users, Instant timestamp) {
-    return timestamp.plus(offset);
   }
 
   private void addToGraph(Graph<Integer, Edge<Integer>> target, Parsed parsed) {
@@ -106,13 +98,22 @@ class FileDatasetFactory extends DatasetFactory {
     target.addEdge(parsed.user1, parsed.user2);
   }
 
-  private static Instant newer(Instant oldValue, Instant newValue) {
-    return newValue.isAfter(oldValue) ? newValue : oldValue;
-  }
-
   private void addContact(Parsed parsed) {
     lastContact = newer(lastContact, parsed.timestamp);
     contacts.merge(key(parsed.user1, parsed.user2), parsed.timestamp, FileDatasetFactory::newer);
+  }
+
+  private static Set<Integer> key(int user1, int user2) {
+    return Set.of(user1, user2);
+  }
+
+  @Override
+  public RiskScore getRiskScore(int user) {
+    return riskScoreFactory.getRiskScore(user);
+  }
+
+  private Instant adjustTimestamp(Set<Integer> users, Instant timestamp) {
+    return timestamp.plus(offset);
   }
 
   private static final class Parsed {
