@@ -217,8 +217,8 @@ public abstract class Experiment implements Runnable {
   }
 
   protected RiskScoreMessage cacheMerge(RiskScoreMessage oldScore, RiskScoreMessage newScore) {
-    double oldValue = oldScore.score().value();
-    double newValue = newScore.score().value();
+    float oldValue = oldScore.score().value();
+    float newValue = newScore.score().value();
     Instant oldTimestamp = oldScore.score().timestamp();
     Instant newTimestamp = newScore.score().timestamp();
     boolean isHigher = oldValue < newValue;
