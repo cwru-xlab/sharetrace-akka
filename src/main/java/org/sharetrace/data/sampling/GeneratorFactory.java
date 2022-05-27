@@ -5,5 +5,5 @@ import org.apache.commons.math3.random.RandomGenerator;
 @FunctionalInterface
 public interface GeneratorFactory {
 
-  RandomGenerator create(long seed);
+  RandomGenerator newGenerator(long seed);
 }
