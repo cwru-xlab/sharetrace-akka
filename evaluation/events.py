@@ -174,8 +174,8 @@ class UserUpdatesCallback(EventCallback, Sized):
                 user.final = event["newScore"]["value"]
                 self._n += ONE  # Only count non-initial updates
             else:
-                value = event["newScore"]["value"]
-                self.updates[name] = UserUpdates(initial=np.float32(value))
+                self.updates[name] = UserUpdates(
+                    initial=np.float32(event["newScore"]["value"]))
 
     def on_complete(self) -> None:
         updates = np.zeros(n_users := len(self.updates), dtype=np.int16)
@@ -304,7 +304,7 @@ def edges_to_adj(edges: Collection[tuple]) -> tuple[dict, sparse.spmatrix]:
     idx = index_edges(edges)
     adj = np.zeros((len(idx), len(idx)), dtype=np.int8)
     for v1, v2 in edges:
-        adj[idx[v1], idx[v2]] = 1
+        adj[idx[v1], idx[v2]] = ONE
     return idx, sparse.csr_matrix(adj)
 
 
