@@ -1,5 +1,6 @@
 package org.sharetrace.experiment;
 
+import java.time.Duration;
 import java.time.Instant;
 import org.jgrapht.generate.GraphGenerator;
 import org.sharetrace.data.Dataset;
@@ -20,20 +21,21 @@ public abstract class SyntheticExperiment extends Experiment {
 
   protected SyntheticExperiment(GraphType graphType, long seed, int nRepeats) {
     super(graphType, nRepeats, seed);
-    this.riskScoreSampler = newScoreSampler();
+    this.riskScoreSampler = newRiskScoreSampler();
     this.contactTimeSampler = newContactTimeSampler();
   }
 
-  protected Sampler<RiskScore> newScoreSampler() {
-    return RiskScoreSampler.builder().timeSampler(newScoreTimeSampler()).seed(seed).build();
+  protected Sampler<RiskScore> newRiskScoreSampler() {
+    Sampler<Instant> timeSampler = newTimeSampler(scoreTtl());
+    return RiskScoreSampler.builder().timeSampler(timeSampler).seed(seed).build();
   }
 
   protected Sampler<Instant> newContactTimeSampler() {
-    return TimeSampler.builder().seed(seed).referenceTime(referenceTime).ttl(contactTtl()).build();
+    return newTimeSampler(contactTtl());
   }
 
-  protected Sampler<Instant> newScoreTimeSampler() {
-    return TimeSampler.builder().seed(seed).referenceTime(referenceTime).ttl(scoreTtl()).build();
+  protected Sampler<Instant> newTimeSampler(Duration ttl) {
+    return TimeSampler.builder().seed(seed).referenceTime(referenceTime).ttl(ttl).build();
   }
 
   @Override
