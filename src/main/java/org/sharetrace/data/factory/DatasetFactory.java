@@ -19,15 +19,15 @@ public abstract class DatasetFactory
   @Override
   public final void generateGraph(
       Graph<Integer, Edge<Integer>> target, Map<String, Integer> resultMap) {
-    createContactNetwork(checkGraphType(target));
+    newContactNetwork(checkGraphType(target));
   }
 
   @Override
   public final void generateGraph(Graph<Integer, Edge<Integer>> target) {
-    createContactNetwork(checkGraphType(target));
+    newContactNetwork(checkGraphType(target));
   }
 
-  protected abstract void createContactNetwork(Graph<Integer, Edge<Integer>> target);
+  protected abstract void newContactNetwork(Graph<Integer, Edge<Integer>> target);
 
   private static <T> Graph<T, Edge<T>> checkGraphType(Graph<T, Edge<T>> graph) {
     GraphType type = graph.getType();
@@ -35,7 +35,7 @@ public abstract class DatasetFactory
     return graph;
   }
 
-  public Dataset create() {
+  public Dataset newDataset() {
     return new Dataset() {
 
       private final ContactNetwork contactNetwork = DatasetFactory.this.contactNetwork();

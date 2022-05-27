@@ -54,7 +54,7 @@ class FileDatasetFactory extends DatasetFactory {
       String delimiter,
       Instant referenceTime) {
     return new FileDatasetFactory(loggable, riskScoreFactory, path, delimiter, referenceTime)
-        .create();
+        .newDataset();
   }
 
   private static Instant newer(Instant oldValue, Instant newValue) {
@@ -67,7 +67,7 @@ class FileDatasetFactory extends DatasetFactory {
   }
 
   @Override
-  protected void createContactNetwork(Graph<Integer, Edge<Integer>> target) {
+  protected void newContactNetwork(Graph<Integer, Edge<Integer>> target) {
     try (BufferedReader reader = Files.newBufferedReader(path)) {
       reader.lines().forEach(line -> processLine(line, target));
       adjustTimestamps();

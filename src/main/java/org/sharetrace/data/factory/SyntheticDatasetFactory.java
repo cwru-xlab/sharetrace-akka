@@ -35,11 +35,11 @@ class SyntheticDatasetFactory extends DatasetFactory {
       ContactTimeFactory contactTimeFactory,
       GraphGenerator<Integer, Edge<Integer>, ?> generator) {
     return new SyntheticDatasetFactory(loggable, riskScoreFactory, contactTimeFactory, generator)
-        .create();
+        .newDataset();
   }
 
   @Override
-  public void createContactNetwork(Graph<Integer, Edge<Integer>> target) {
+  public void newContactNetwork(Graph<Integer, Edge<Integer>> target) {
     generator.generateGraph(target);
   }
 

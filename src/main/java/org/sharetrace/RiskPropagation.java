@@ -189,7 +189,7 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
                 .addAllLoggable(loggables.loggable())
                 .parameters(parameters)
                 .clock(clock)
-                .cache(cacheFactory.create())
+                .cache(cacheFactory.newCache())
                 .build());
   }
 
