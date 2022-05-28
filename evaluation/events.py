@@ -243,7 +243,7 @@ class ReachabilityCallback(EventCallback):
         self._sparsify()
         self._compute_source_size()
         self._compute_influence()
-        self._compute_reach_ratio()
+        self._compute_reach_ratio()  # Must come after influence calculation.
         self._compute_msg_reaches()
 
     def _to_numpy(self):
@@ -288,10 +288,7 @@ class ReachabilityCallback(EventCallback):
         self._msg_reach = msg_reach
 
     def _compute_reach_ratio(self) -> None:
-        reached = self.adj.count_nonzero()
-        n = self.adj.shape[0]
-        max_possible = n ** 2 - n  # Exclude sending to self
-        self._reach_ratio = reached / max_possible
+        self._reach_ratio = np.mean(self._influence) / self.adj.shape[0]
 
     def _compute_influence(self) -> None:
         self._influence = np.count_nonzero(self.adj.toarray(), axis=0)
