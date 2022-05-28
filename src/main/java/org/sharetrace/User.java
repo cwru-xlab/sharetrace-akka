@@ -75,8 +75,7 @@ public class User extends AbstractBehavior<UserMessage> {
     this.clock = clock;
     this.cache = cache;
     this.current = defaultMessage();
-    setMessages(current);
-    setSendThreshold();
+    setMessagesAndThreshold(current);
     startRefreshTimer();
   }
 
@@ -87,13 +86,10 @@ public class User extends AbstractBehavior<UserMessage> {
         .build();
   }
 
-  private void setMessages(RiskScoreMessage newCurrent) {
+  private void setMessagesAndThreshold(RiskScoreMessage newCurrent) {
     previous = current;
     current = newCurrent;
     transmitted = transmitted(current);
-  }
-
-  private void setSendThreshold() {
     sendThreshold = current.score().value() * parameters.sendTolerance();
   }
 
@@ -236,7 +232,7 @@ public class User extends AbstractBehavior<UserMessage> {
 
   private void refreshCurrent() {
     if (!isScoreAlive(current)) {
-      setMessages(maxCachedOrDefault());
+      setMessagesAndThreshold(maxCachedOrDefault());
       logCurrentRefresh();
     }
   }
@@ -282,7 +278,7 @@ public class User extends AbstractBehavior<UserMessage> {
   }
 
   private boolean isHighEnough(RiskScoreMessage message) {
-    return message.score().value() >= sendThreshold;
+    return message.score().value() > sendThreshold;
   }
 
   private void logSendCached(ActorRef<UserMessage> contact, RiskScoreMessage message) {
@@ -377,8 +373,7 @@ public class User extends AbstractBehavior<UserMessage> {
 
   private void update(RiskScoreMessage message) {
     if (cached(message).score().value() > current.score().value()) {
-      setMessages(message);
-      setSendThreshold();
+      setMessagesAndThreshold(message);
       logUpdate();
     }
   }
@@ -401,6 +396,6 @@ public class User extends AbstractBehavior<UserMessage> {
   }
 
   private boolean isAlive(Instant timestamp, Duration timeToLive) {
-    return Duration.between(timestamp, clock.instant()).compareTo(timeToLive) <= 0;
+    return Duration.between(timestamp, clock.instant()).compareTo(timeToLive) < 0;
   }
 }
