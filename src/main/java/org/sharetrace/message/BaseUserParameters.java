@@ -25,7 +25,7 @@ abstract class BaseUserParameters implements UserMessage {
   protected void check() {
     checkInClosedRange(
         transmissionRate(), MIN_TRANSMISSION_RATE, MAX_TRANSMISSION_RATE, "transmissionRate");
-    checkIsAtLeast(sendTolerance(), MIN_SEND_TOLERANCE, "sendTolerance");
+    checkIsAtLeast(sendCoefficient(), MIN_SEND_TOLERANCE, "sendCoefficient");
     checkIsNonNegative(timeBuffer(), "timeBuffer");
     checkIsPositive(scoreTtl(), "scoreTtl");
     checkIsPositive(contactTtl(), "contactTtl");
@@ -44,12 +44,12 @@ abstract class BaseUserParameters implements UserMessage {
   /**
    * Returns the value which determines the threshold that the value of a {@link RiskScore} must
    * satisfy to be propagated by a {@link User}. Specifically, a {@link RiskScore} is only eligible
-   * for propagation if {@code scoreValue >= currentValue * sendTolerance}. Given a positive
+   * for propagation if {@code scoreValue >= currentValue * sendCoefficient}. Given a positive
    * transmission rate that is less than 1, a positive send tolerance guarantees that asynchronous,
    * non-iterative message passing eventually terminates since the value of a propagated {@link
    * RiskScore} exponentially decreases with a rate constant equal to the transmission rate.
    */
-  public abstract float sendTolerance();
+  public abstract float sendCoefficient();
 
   /**
    * Returns the duration which determines to what extent a {@link RiskScore} is considered relevant

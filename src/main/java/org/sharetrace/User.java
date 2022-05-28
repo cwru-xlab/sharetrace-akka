@@ -90,7 +90,7 @@ public class User extends AbstractBehavior<UserMessage> {
     previous = current;
     current = newCurrent;
     transmitted = transmitted(current);
-    sendThreshold = current.score().value() * parameters.sendTolerance();
+    sendThreshold = current.score().value() * parameters.sendCoefficient();
   }
 
   private void startRefreshTimer() {

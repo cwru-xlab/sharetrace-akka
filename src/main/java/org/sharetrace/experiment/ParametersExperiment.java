@@ -4,7 +4,7 @@ import java.util.Random;
 
 public final class ParametersExperiment extends SyntheticExperiment {
 
-  private float sendTolerance;
+  private float sendCoefficient;
   private float transmissionRate;
 
   public ParametersExperiment(GraphType graphType, int nNodes, int nRepeats, long seed) {
@@ -27,15 +27,15 @@ public final class ParametersExperiment extends SyntheticExperiment {
   @Override
   public void run() {
     for (transmissionRate = 0.1f; transmissionRate < 1d; transmissionRate += 0.1d) {
-      for (sendTolerance = 0.1f; sendTolerance < 1.1d; sendTolerance += 0.1d) {
+      for (sendCoefficient = 0.1f; sendCoefficient < 1.1d; sendCoefficient += 0.1d) {
         super.run();
       }
     }
   }
 
   @Override
-  protected float sendTolerance() {
-    return sendTolerance;
+  protected float sendCoefficient() {
+    return sendCoefficient;
   }
 
   @Override

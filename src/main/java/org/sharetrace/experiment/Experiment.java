@@ -124,7 +124,7 @@ public abstract class Experiment implements Runnable {
 
   protected UserParameters newUserParameters() {
     return UserParameters.builder()
-        .sendTolerance(sendTolerance())
+        .sendCoefficient(sendCoefficient())
         .transmissionRate(transmissionRate())
         .timeBuffer(timeBuffer())
         .scoreTtl(scoreTtl())
@@ -158,7 +158,7 @@ public abstract class Experiment implements Runnable {
     return Duration.ofHours(1L);
   }
 
-  protected float sendTolerance() {
+  protected float sendCoefficient() {
     return 0.6f;
   }
 
