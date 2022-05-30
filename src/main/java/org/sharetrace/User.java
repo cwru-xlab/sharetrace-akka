@@ -187,8 +187,7 @@ public class User extends AbstractBehavior<UserMessage> {
 
   private Behavior<UserMessage> onRiskScoreMessage(RiskScoreMessage message) {
     logReceive(message);
-    update(message);
-    propagate(message);
+    propagate(updateAndCache(message));
     resetTimeout();
     return this;
   }
@@ -207,11 +206,6 @@ public class User extends AbstractBehavior<UserMessage> {
       logSendCurrent(contact);
     }
     return sent;
-  }
-
-  private RiskScoreMessage cached(RiskScoreMessage message) {
-    cache.put(message.score().timestamp(), transmitted(message));
-    return message;
   }
 
   private void resetTimeout() {
@@ -268,12 +262,11 @@ public class User extends AbstractBehavior<UserMessage> {
   }
 
   private void propagate(RiskScoreMessage message) {
-    RiskScoreMessage transmitted = transmitted(message);
-    if (isScoreAlive(transmitted) && isHighEnough(transmitted)) {
+    if (isScoreAlive(message) && isHighEnough(message)) {
       contacts.entrySet().stream()
           .filter(isNotFrom(message))
           .filter(isContactRecent(message))
-          .forEach(contact -> propagate(contact.getKey(), transmitted));
+          .forEach(contact -> propagate(contact.getKey(), message));
     }
   }
 
@@ -371,11 +364,22 @@ public class User extends AbstractBehavior<UserMessage> {
     return name(getContext().getSelf());
   }
 
-  private void update(RiskScoreMessage message) {
-    if (cached(message).score().value() > current.score().value()) {
+  private RiskScoreMessage updateAndCache(RiskScoreMessage message) {
+    return cached(update(message) ? transmitted : transmitted(message));
+  }
+
+  private boolean update(RiskScoreMessage message) {
+    boolean updated = message.score().value() > current.score().value();
+    if (updated) {
       setMessagesAndThreshold(message);
       logUpdate();
     }
+    return updated;
+  }
+
+  private RiskScoreMessage cached(RiskScoreMessage message) {
+    cache.put(message.score().timestamp(), message);
+    return message;
   }
 
   private ContactEvent contactEvent(ContactMessage message) {
