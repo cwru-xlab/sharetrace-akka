@@ -141,10 +141,6 @@ public class User extends AbstractBehavior<UserMessage> {
         .build();
   }
 
-  private static String name(ActorRef<UserMessage> user) {
-    return user.path().name();
-  }
-
   private static SendCachedEvent sendCachedEvent(
       ActorRef<UserMessage> contact, RiskScoreMessage message) {
     return SendCachedEvent.builder()
@@ -163,6 +159,10 @@ public class User extends AbstractBehavior<UserMessage> {
         .score(message.score())
         .uuid(message.uuid())
         .build();
+  }
+
+  private static String name(ActorRef<UserMessage> user) {
+    return user.path().name();
   }
 
   @Override
@@ -307,31 +307,12 @@ public class User extends AbstractBehavior<UserMessage> {
     logPropagate(contact, message);
   }
 
-  private <T extends Loggable> void logEvent(Class<T> type, Supplier<T> supplier) {
-    loggables.info(LoggableEvent.KEY, TypedSupplier.of(type, supplier));
-  }
-
   private void logPropagate(ActorRef<UserMessage> contact, RiskScoreMessage message) {
     logEvent(PropagateEvent.class, () -> propagateEvent(contact, message));
   }
 
   private void logContact(ContactMessage message) {
     logEvent(ContactEvent.class, () -> contactEvent(message));
-  }
-
-  private void logUpdate() {
-    logEvent(UpdateEvent.class, this::updateEvent);
-  }
-
-  private UpdateEvent updateEvent() {
-    return UpdateEvent.builder()
-        .from(name(current.replyTo()))
-        .to(name())
-        .oldScore(previous.score())
-        .newScore(current.score())
-        .oldUuid(previous.uuid())
-        .newUuid(current.uuid())
-        .build();
   }
 
   private void logContactsRefresh(int nRemaining, int nExpired) {
@@ -360,26 +341,40 @@ public class User extends AbstractBehavior<UserMessage> {
         .build();
   }
 
-  private String name() {
-    return name(getContext().getSelf());
-  }
-
   private RiskScoreMessage updateAndCache(RiskScoreMessage message) {
-    return cached(update(message) ? transmitted : transmitted(message));
-  }
-
-  private boolean update(RiskScoreMessage message) {
-    boolean updated = message.score().value() > current.score().value();
-    if (updated) {
+    RiskScoreMessage propagate;
+    if (message.score().value() > current.score().value()) {
       setMessagesAndThreshold(message);
       logUpdate();
+      propagate = transmitted;
+    } else {
+      propagate = transmitted(message);
     }
-    return updated;
+    cache.put(propagate.score().timestamp(), propagate);
+    return propagate;
   }
 
-  private RiskScoreMessage cached(RiskScoreMessage message) {
-    cache.put(message.score().timestamp(), message);
-    return message;
+  private void logUpdate() {
+    logEvent(UpdateEvent.class, this::updateEvent);
+  }
+
+  private <T extends Loggable> void logEvent(Class<T> type, Supplier<T> supplier) {
+    loggables.info(LoggableEvent.KEY, TypedSupplier.of(type, supplier));
+  }
+
+  private UpdateEvent updateEvent() {
+    return UpdateEvent.builder()
+        .from(name(current.replyTo()))
+        .to(name())
+        .oldScore(previous.score())
+        .newScore(current.score())
+        .oldUuid(previous.uuid())
+        .newUuid(current.uuid())
+        .build();
+  }
+
+  private String name() {
+    return name(getContext().getSelf());
   }
 
   private ContactEvent contactEvent(ContactMessage message) {
