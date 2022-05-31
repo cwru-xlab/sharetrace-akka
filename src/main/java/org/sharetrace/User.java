@@ -94,7 +94,7 @@ public class User extends AbstractBehavior<UserMessage> {
   }
 
   private void startRefreshTimer() {
-    timers.startTimerWithFixedDelay(RefreshMessage.INSTANCE, parameters.refreshRate());
+    timers.startTimerWithFixedDelay(RefreshMessage.INSTANCE, parameters.refreshPeriod());
   }
 
   private RiskScoreMessage transmitted(RiskScoreMessage received) {

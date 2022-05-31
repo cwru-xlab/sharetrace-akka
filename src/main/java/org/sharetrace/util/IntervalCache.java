@@ -24,7 +24,7 @@ import java.util.function.Predicate;
  * <p>Upon request to retrieve a value, the cache checks to see if it should synchronously refresh
  * itself by shifting forward its time horizon and removing expired values (based on their
  * timestamp). The frequency with which this refresh operation occurs is based on the specified
- * {@code refreshRate} and {@code clock}. Note that if all values have expired, the cache is
+ * {@code refreshPeriod} and {@code clock}. Note that if all values have expired, the cache is
  * reinitialized based on the current time, according to the {@code clock}.
  *
  * <p>A user-defined strategy can be provided that determines how values in a given time interval

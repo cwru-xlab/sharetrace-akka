@@ -30,7 +30,7 @@ abstract class BaseUserParameters implements UserMessage {
     checkIsPositive(scoreTtl(), "scoreTtl");
     checkIsPositive(contactTtl(), "contactTtl");
     checkIsPositive(idleTimeout(), "idleTimeout");
-    checkIsPositive(refreshRate(), "refreshRate");
+    checkIsPositive(refreshPeriod(), "refreshPeriod");
   }
 
   /**
@@ -81,5 +81,5 @@ abstract class BaseUserParameters implements UserMessage {
   public abstract Duration idleTimeout();
 
   // TODO Add Javadoc
-  public abstract Duration refreshRate();
+  public abstract Duration refreshPeriod();
 }

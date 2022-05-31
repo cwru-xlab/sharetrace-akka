@@ -130,7 +130,7 @@ public abstract class Experiment implements Runnable {
         .scoreTtl(scoreTtl())
         .contactTtl(contactTtl())
         .idleTimeout(userTimeout())
-        .refreshRate(userRefreshRate())
+        .refreshPeriod(userRefreshPeriod())
         .build();
   }
 
@@ -188,7 +188,7 @@ public abstract class Experiment implements Runnable {
     return Duration.ofSeconds(timeout);
   }
 
-  protected Duration userRefreshRate() {
+  protected Duration userRefreshPeriod() {
     return Duration.ofHours(1L);
   }
 
