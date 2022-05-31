@@ -176,7 +176,7 @@ public class User extends AbstractBehavior<UserMessage> {
   }
 
   private Behavior<UserMessage> onContactMessage(ContactMessage message) {
-    if (isContactAlive(message)) {
+    if (isContactAlive(message.timestamp())) {
       addContact(message);
       if (!sendCurrent(message)) {
         sendCached(message);
@@ -288,10 +288,6 @@ public class User extends AbstractBehavior<UserMessage> {
 
   private Instant buffered(Instant timestamp) {
     return timestamp.plus(parameters.timeBuffer());
-  }
-
-  private boolean isContactAlive(ContactMessage message) {
-    return isContactAlive(message.timestamp());
   }
 
   private boolean isContactAlive(Instant timestamp) {
