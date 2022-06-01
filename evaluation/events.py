@@ -50,7 +50,7 @@ def event_stream(logdir: os.PathLike | str) -> Iterable[dict]:
 
 
 def _stream(filenames: Iterable[pathlib.Path]) -> Iterable[dict]:
-    for filename in filenames:
+    for filename in sorted(filenames):
         with filename.open() as log:
             for line in log:
                 yield loads(line)["event"]
