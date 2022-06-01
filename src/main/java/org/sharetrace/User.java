@@ -339,15 +339,23 @@ public class User extends AbstractBehavior<UserMessage> {
 
   private RiskScoreMessage updateAndCache(RiskScoreMessage message) {
     RiskScoreMessage propagate;
-    if (message.score().value() > current.score().value()) {
+    if (isHigherThanCurrent(message)) {
       setMessagesAndThreshold(message);
       logUpdate();
       propagate = transmitted;
     } else {
       propagate = transmitted(message);
     }
-    cache.put(propagate.score().timestamp(), propagate);
-    return propagate;
+    return cached(propagate);
+  }
+
+  private boolean isHigherThanCurrent(RiskScoreMessage message) {
+    return message.score().value() > current.score().value();
+  }
+
+  private RiskScoreMessage cached(RiskScoreMessage message) {
+    cache.put(message.score().timestamp(), message);
+    return message;
   }
 
   private void logUpdate() {
