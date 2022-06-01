@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
 import java.util.function.Predicate;
 
@@ -124,16 +125,24 @@ public class IntervalCache<T> {
   /**
    * Adds the specified value to the time interval that contains the specified timestamp according
    * merge strategy of this instance. Prior to adding the value, the cache is possibly refreshed if
-   * it has been sufficiently long since its previous refresh.
+   * it has been sufficiently long since its previous refresh. This method follows {@link
+   * Map#merge(Object, Object, BiFunction)} with the exception that null values are not permitted.
    *
    * @throws IllegalArgumentException if the timespan does not contain the specified timestamp.
+   * @throws NullPointerException if the value being added to the cache is null.
    */
   public void put(Instant timestamp, T value) {
     Objects.requireNonNull(timestamp);
     Objects.requireNonNull(value);
     refresh();
-    long time = checkInLowerInclusiveRange(toLong(timestamp), rangeStart, rangeEnd, "timestamp");
-    cache.merge(floorKey(time), value, mergeStrategy);
+    long key = checkedFloorKey(toLong(timestamp));
+    T oldValue = cache.get(key);
+    T newValue = oldValue == null ? value : mergeStrategy.apply(oldValue, value);
+    cache.put(key, Objects.requireNonNull(newValue));
+  }
+
+  private long checkedFloorKey(long timestamp) {
+    return floorKey(checkInLowerInclusiveRange(timestamp, rangeStart, rangeEnd, "timestamp"));
   }
 
   /**
