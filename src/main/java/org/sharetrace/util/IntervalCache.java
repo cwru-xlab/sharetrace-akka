@@ -105,6 +105,22 @@ public class IntervalCache<T> {
     return Optional.ofNullable(cache.get(key));
   }
 
+  private void refresh() {
+    if (getTime() - lastRefresh > refreshPeriod) {
+      updateRange();
+      cache.entrySet().removeIf(isExpired());
+      lastRefresh = getTime();
+    }
+  }
+
+  private long floorKey(long timestamp) {
+    return rangeStart + interval * Math.floorDiv(timestamp - rangeStart, interval);
+  }
+
+  private Predicate<Entry<Long, ?>> isExpired() {
+    return entry -> entry.getKey() < rangeStart;
+  }
+
   /**
    * Adds the specified value to the time interval that contains the specified timestamp according
    * merge strategy of this instance. Prior to adding the value, the cache is possibly refreshed if
@@ -118,18 +134,6 @@ public class IntervalCache<T> {
     refresh();
     long time = checkInLowerInclusiveRange(toLong(timestamp), rangeStart, rangeEnd, "timestamp");
     cache.merge(floorKey(time), value, mergeStrategy);
-  }
-
-  private long floorKey(long timestamp) {
-    return rangeStart + interval * Math.floorDiv(timestamp - rangeStart, interval);
-  }
-
-  private void refresh() {
-    if (getTime() - lastRefresh > refreshPeriod) {
-      updateRange();
-      cache.entrySet().removeIf(entry -> entry.getKey() < rangeStart);
-      lastRefresh = getTime();
-    }
   }
 
   /**
