@@ -178,9 +178,9 @@ public class User extends AbstractBehavior<UserMessage> {
   private Behavior<UserMessage> onContactMessage(ContactMessage message) {
     if (isContactAlive(message.timestamp())) {
       addContact(message);
-      if (!sendCurrent(message)) {
-        sendCached(message);
-      }
+    }
+    if (!sendCurrent(message)) {
+      sendCached(message);
     }
     return this;
   }
