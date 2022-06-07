@@ -176,13 +176,17 @@ public class User extends AbstractBehavior<UserMessage> {
   }
 
   private Behavior<UserMessage> onContactMessage(ContactMessage message) {
-    if (isContactAlive(message.timestamp())) {
-      addContact(message);
-    }
-    if (!sendCurrent(message)) {
+    addContactIfAlive(message);
+    sendToContact(message);
+    return this;
+  }
+
+  private void sendToContact(ContactMessage message) {
+    if (isScoreAlive(current) && isContactRecent(message, current)) {
+      sendCurrent(message);
+    } else {
       sendCached(message);
     }
-    return this;
   }
 
   private Behavior<UserMessage> onRiskScoreMessage(RiskScoreMessage message) {
@@ -198,14 +202,10 @@ public class User extends AbstractBehavior<UserMessage> {
     return this;
   }
 
-  private boolean sendCurrent(ContactMessage message) {
-    boolean sent = isScoreAlive(current) && isContactRecent(message, current);
-    if (sent) {
-      ActorRef<UserMessage> contact = message.replyTo();
-      contact.tell(transmitted);
-      logSendCurrent(contact);
-    }
-    return sent;
+  private void sendCurrent(ContactMessage message) {
+    ActorRef<UserMessage> contact = message.replyTo();
+    contact.tell(transmitted);
+    logSendCurrent(contact);
   }
 
   private void resetTimeout() {
@@ -239,9 +239,11 @@ public class User extends AbstractBehavior<UserMessage> {
     return maxCached(clock.instant()).orElseGet(this::defaultMessage);
   }
 
-  private void addContact(ContactMessage message) {
-    contacts.put(message.replyTo(), message.timestamp());
-    logContact(message);
+  private void addContactIfAlive(ContactMessage message) {
+    if (isContactAlive(message.timestamp())) {
+      contacts.put(message.replyTo(), message.timestamp());
+      logContact(message);
+    }
   }
 
   private void sendCached(ContactMessage message) {
