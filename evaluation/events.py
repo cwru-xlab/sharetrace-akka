@@ -35,6 +35,12 @@ class Event(str, enum.Enum):
     def __repr__(self):
         return self.value
 
+    def __int__(self):
+        return _EVENTS[self.value]
+
+
+_EVENTS = {v: i for i, v in enumerate(Event)}
+
 
 def event_stream(logdir: os.PathLike | str) -> Iterable[dict]:
     logdir = pathlib.Path(logdir).absolute()
@@ -74,13 +80,12 @@ def _split(it: Iterable, predicate: Predicate) -> tuple[Iterable, Iterable]:
 
 
 class EventCounter(collections.Counter):
-    _EVENTS = set(Event)
 
     def __init__(self):
         super().__init__()
 
     def __setitem__(self, key, value):
-        if key in EventCounter._EVENTS:
+        if key in _EVENTS:
             super().__setitem__(key, value)
         else:
             raise ValueError("'key' must be an Event instance")
@@ -145,11 +150,11 @@ class EventCounterCallback(EventCounter, EventCallback):
 
 @dataclasses.dataclass(slots=True)
 class UserUpdates:
-    _DEFAULT_N = np.int16(0)
+    _DEFAULT_N = np.uint16(0)
 
     initial: np.float32
     final: np.float32 = None
-    n: np.int16 = _DEFAULT_N
+    n: np.uint16 = _DEFAULT_N
 
     def __post_init__(self):
         if self.final is None:
@@ -164,15 +169,15 @@ class UserUpdatesCallback(EventCallback, Sized):
         self.updates = {}
         self.initials = None
         self.finals = None
-        self._n = np.int128(0)
+        self._n = 0
 
     def __call__(self, event: dict, **kwargs) -> None:
         if event["name"] == Event.UPDATE:
-            if (name := np.int32(event["to"])) in self.updates:
+            if (name := np.uint32(event["to"])) in self.updates:
                 user = self.updates[name]
-                user.n += ONE
+                user.n += 1
                 user.final = event["newScore"]["value"]
-                self._n += ONE  # Only count non-initial updates
+                self._n += 1  # Only count non-initial updates
             else:
                 self.updates[name] = UserUpdates(
                     initial=np.float32(event["newScore"]["value"]))
@@ -184,28 +189,40 @@ class UserUpdatesCallback(EventCallback, Sized):
             updates[u], inits[u], finals[u] = user.n, user.initial, user.final
         self.updates, self.initials, self.finals = updates, inits, finals
 
-    def __len__(self) -> np.int128:
+    def __len__(self) -> int:
         return self._n
 
 
-class TimelineCallback(EventCallback, Sized):
-    __slots__ = "timeline", "_n"
+class TimelineCallback(EventCallback):
+    __slots__ = "_events", "_repeats", "labels"
 
     def __init__(self):
         super().__init__()
-        self.timeline = collections.defaultdict(list)
-        self._n = np.int128(0)
+        self._events = [None]
+        self._repeats = [0]
+        self.labels: dict | np.ndarray = dict()
 
     def __call__(self, event: dict, **kwargs) -> None:
-        self.timeline[event["name"]].append(self._n)
-        self._n += ONE
+        if (name := event["name"]) not in self.labels:
+            self.labels[name] = len(self.labels)
+        if (label := self.labels[name]) == self._events[-1]:
+            self._repeats[-1] += 1
+        else:
+            self._events.append(label)
+            self._repeats.append(1)
 
     def on_complete(self) -> None:
-        self.timeline = {
-            name: np.array(indices) for name, indices in self.timeline.items()}
+        self._events = np.array(self._events[1:])
+        self._repeats = np.array(self._repeats[1:])
+        self.labels = np.array(list(self.labels))
 
-    def __len__(self) -> np.int128:
-        return self._n
+    def flatten(self, labeled: bool = False) -> np.ndarray:
+        names = self.labels[self._events] if labeled else self._events
+        return np.repeat(names, self._repeats)
+
+    def run_length_encoded(self, labeled: bool = False) -> np.ndarray:
+        names = self.labels[self._events] if labeled else self._events
+        return np.array([(n, r) for n, r in zip(names, self._repeats)])
 
 
 class ReachabilityCallback(EventCallback):
@@ -230,7 +247,7 @@ class ReachabilityCallback(EventCallback):
 
     def __call__(self, event: dict, **kwargs) -> None:
         if event["name"] == Event.RECEIVE:
-            src, dst = np.int32(event["from"]), np.int32(event["to"])
+            src, dst = np.uint32(event["from"]), np.uint32(event["to"])
             uuid = event["uuid"]
             if src == dst:
                 self.msg_idx[uuid] = src
@@ -247,7 +264,7 @@ class ReachabilityCallback(EventCallback):
         self._compute_msg_reaches()
 
     def _to_numpy(self):
-        self.msgs = [np.array(edges) for _, edges in sorted(self.msgs.items())]
+        self.msgs = [np.array(self.msgs[v]) for v in range(len(self.msgs))]
 
     def influence(self, user: int | None = None) -> int | np.ndarray:
         """Returns the cardinality of the influence set for a given user."""
@@ -277,14 +294,15 @@ class ReachabilityCallback(EventCallback):
         self.adj = sparse.csr_matrix((data, (row, col)))
 
     # noinspection PyTypeChecker
-    def _compute_msg_reaches(self):
+    def _compute_msg_reaches(self) -> None:
         shortest_path = csgraph.shortest_path
         longest, nan2num = np.max, np.nan_to_num
         msg_reach = np.zeros(len(self.msgs), dtype=np.int8)
         for user, edges in enumerate(self.msgs):
-            idx, adj = edges_to_adj(edges)
-            sp = shortest_path(adj, indices=idx[user])
-            msg_reach[user] = longest(nan2num(sp, copy=False, posinf=0))
+            if len(edges) > 0:
+                idx, adj = edges_to_adj(edges)
+                sp = shortest_path(adj, indices=idx[user])
+                msg_reach[user] = longest(nan2num(sp, copy=False, posinf=0))
         self._msg_reach = msg_reach
 
     def _compute_reach_ratio(self) -> None:
