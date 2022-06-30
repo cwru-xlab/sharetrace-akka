@@ -17,8 +17,8 @@
           <thread>[ignore]</thread>
           <version>[ignore]</version>
         </fieldNames>
-        <includeContext>false</includeContext>
-        <includeMdc>false</includeMdc>
+        <includeContext>true</includeContext>
+        <includeMdcKeyName>iteration</includeMdcKeyName>
         <throwableConverter class="net.logstash.logback.stacktrace.ShortenedThrowableConverter">
           <exclude>sun\.reflect\..*\.invoke.*</exclude>
           <exclude>net\.sf\.cglib\.proxy\.MethodProxy\.invoke</exclude>
@@ -47,8 +47,8 @@
           <thread>[ignore]</thread>
           <version>[ignore]</version>
         </fieldNames>
-        <includeContext>false</includeContext>
-        <includeMdc>false</includeMdc>
+        <includeContext>true</includeContext>
+        <includeMdcKeyName>iteration</includeMdcKeyName>
         <throwableConverter class="net.logstash.logback.stacktrace.ShortenedThrowableConverter">
           <exclude>sun\.reflect\..*\.invoke.*</exclude>
           <exclude>net\.sf\.cglib\.proxy\.MethodProxy\.invoke</exclude>
@@ -86,8 +86,8 @@
           <thread>[ignore]</thread>
           <version>[ignore]</version>
         </fieldNames>
-        <includeContext>false</includeContext>
-        <includeMdc>false</includeMdc>
+        <includeContext>true</includeContext>
+        <includeMdcKeyName>iteration</includeMdcKeyName>
         <throwableConverter class="net.logstash.logback.stacktrace.ShortenedThrowableConverter">
           <exclude>sun\.reflect\..*\.invoke.*</exclude>
           <exclude>net\.sf\.cglib\.proxy\.MethodProxy\.invoke</exclude>
@@ -116,8 +116,8 @@
           <thread>[ignore]</thread>
           <version>[ignore]</version>
         </fieldNames>
-        <includeContext>false</includeContext>
-        <includeMdc>false</includeMdc>
+        <includeContext>true</includeContext>
+        <includeMdcKeyName>iteration</includeMdcKeyName>
         <throwableConverter class="net.logstash.logback.stacktrace.ShortenedThrowableConverter">
           <exclude>sun\.reflect\..*\.invoke.*</exclude>
           <exclude>net\.sf\.cglib\.proxy\.MethodProxy\.invoke</exclude>

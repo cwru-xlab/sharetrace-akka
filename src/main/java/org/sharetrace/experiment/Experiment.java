@@ -4,6 +4,7 @@ import akka.actor.typed.Behavior;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.IntStream;
 import org.sharetrace.RiskPropagationBuilder;
@@ -88,7 +89,7 @@ public abstract class Experiment implements Runnable {
 
   @Override
   public void run() {
-    IntStream.range(0, nIterations).forEach(this::onIteration);
+    IntStream.rangeClosed(1, nIterations).forEach(this::onIteration);
   }
 
   protected void onIteration(int i) {
@@ -111,6 +112,7 @@ public abstract class Experiment implements Runnable {
   protected Behavior<AlgorithmMessage> newAlgorithm() {
     return RiskPropagationBuilder.create()
         .addAllLoggable(loggable())
+        .putAllUserMdc(userMdc())
         .contactNetwork(dataset.contactNetwork())
         .parameters(userParameters)
         .clock(clock())
@@ -154,8 +156,20 @@ public abstract class Experiment implements Runnable {
         .build();
   }
 
-  protected Duration cacheRefreshPeriod() {
-    return Duration.ofHours(1L);
+  private Map<String, String> userMdc() {
+    return Map.of("iteration", String.valueOf(iteration));
+  }
+
+  protected CacheFactory<RiskScoreMessage> cacheFactory() {
+    return () ->
+        IntervalCache.<RiskScoreMessage>builder()
+            .nIntervals(cacheParameters.nIntervals())
+            .nLookAhead(cacheParameters.nLookAhead())
+            .interval(cacheParameters.interval())
+            .refreshPeriod(cacheParameters.refreshPeriod())
+            .clock(clock())
+            .mergeStrategy(this::cacheMerge)
+            .build();
   }
 
   protected float sendCoefficient() {
@@ -200,20 +214,12 @@ public abstract class Experiment implements Runnable {
     return (int) (2 * defaultTtl().toDays());
   }
 
-  protected int cacheLookAhead() {
-    return 1;
+  protected Duration cacheRefreshPeriod() {
+    return Duration.ofHours(1L);
   }
 
-  protected CacheFactory<RiskScoreMessage> cacheFactory() {
-    return () ->
-        IntervalCache.<RiskScoreMessage>builder()
-            .nIntervals(cacheParameters.nIntervals())
-            .nLookAhead(cacheParameters.nLookAhead())
-            .interval(cacheParameters.interval())
-            .refreshPeriod(cacheParameters.refreshPeriod())
-            .clock(clock())
-            .mergeStrategy(this::cacheMerge)
-            .build();
+  protected int cacheLookAhead() {
+    return 1;
   }
 
   protected RiskScoreMessage cacheMerge(RiskScoreMessage oldScore, RiskScoreMessage newScore) {
