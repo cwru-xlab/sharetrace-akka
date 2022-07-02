@@ -56,8 +56,10 @@ abstract class BaseFileDataset implements Dataset {
       IdIndexer indexer,
       LastContactTime lastContactTime) {
     Parsed parsed = new Parsed(line, delimiter(), indexer);
-    contacts.merge(key(parsed.user1, parsed.user2), parsed.timestamp, BaseFileDataset::newer);
-    lastContactTime.update(parsed.timestamp);
+    if (parsed.user1 != parsed.user2) {
+      contacts.merge(key(parsed.user1, parsed.user2), parsed.timestamp, BaseFileDataset::newer);
+      lastContactTime.update(parsed.timestamp);
+    }
   }
 
   private void adjustTimestamps(
