@@ -1,7 +1,6 @@
 package org.sharetrace.logging.settings;
 
 import org.immutables.value.Value;
-import org.sharetrace.experiment.GraphType;
 import org.sharetrace.message.UserParameters;
 import org.sharetrace.util.CacheParameters;
 
@@ -16,5 +15,5 @@ interface BaseExperimentSettings extends LoggableSetting {
 
   int iteration();
 
-  GraphType graphType();
+  String graphType();
 }

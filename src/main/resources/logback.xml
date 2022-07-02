@@ -17,8 +17,9 @@
           <thread>[ignore]</thread>
           <version>[ignore]</version>
         </fieldNames>
-        <includeContext>true</includeContext>
+        <includeContext>false</includeContext>
         <includeMdcKeyName>iteration</includeMdcKeyName>
+        <includeMdcKeyName>graphType</includeMdcKeyName>
       </encoder>
     </appender>
   </appender>
@@ -38,8 +39,9 @@
           <thread>[ignore]</thread>
           <version>[ignore]</version>
         </fieldNames>
-        <includeContext>true</includeContext>
+        <includeContext>false</includeContext>
         <includeMdcKeyName>iteration</includeMdcKeyName>
+        <includeMdcKeyName>graphType</includeMdcKeyName>
       </encoder>
       <immediateFlush>false</immediateFlush>
       <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
@@ -68,8 +70,9 @@
           <thread>[ignore]</thread>
           <version>[ignore]</version>
         </fieldNames>
-        <includeContext>true</includeContext>
+        <includeContext>false</includeContext>
         <includeMdcKeyName>iteration</includeMdcKeyName>
+        <includeMdcKeyName>graphType</includeMdcKeyName>
       </encoder>
       <immediateFlush>false</immediateFlush>
     </appender>
@@ -89,8 +92,9 @@
           <thread>[ignore]</thread>
           <version>[ignore]</version>
         </fieldNames>
-        <includeContext>true</includeContext>
+        <includeContext>false</includeContext>
         <includeMdcKeyName>iteration</includeMdcKeyName>
+        <includeMdcKeyName>graphType</includeMdcKeyName>
       </encoder>
       <file>${log.dir}/settings.log</file>
       <immediateFlush>false</immediateFlush>

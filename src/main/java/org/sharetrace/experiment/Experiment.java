@@ -147,13 +147,9 @@ public abstract class Experiment implements Runnable {
         .build();
   }
 
-  private Map<String, String> mdc() {
-    return Logging.mdc(iteration);
-  }
-
   protected void setUpIteration(int i) {
     iteration = i;
-    addMdc(); // Must go before dataset creation when logging graph metrics.
+    mdc().forEach(MDC::put); // Must go before dataset creation when logging graph metrics.
     dataset = newDataset();
     userParameters = newUserParameters();
     cacheParameters = newCacheParameters();
@@ -172,8 +168,8 @@ public abstract class Experiment implements Runnable {
             .build();
   }
 
-  private void addMdc() {
-    Logging.mdc(iteration).forEach(MDC::put);
+  private Map<String, String> mdc() {
+    return Logging.mdc(iteration, graphType);
   }
 
   protected float sendCoefficient() {
@@ -231,7 +227,7 @@ public abstract class Experiment implements Runnable {
 
   private ExperimentSettings settings() {
     return ExperimentSettings.builder()
-        .graphType(graphType)
+        .graphType(graphType.toString())
         .iteration(iteration)
         .seed(seed)
         .userParameters(userParameters)
