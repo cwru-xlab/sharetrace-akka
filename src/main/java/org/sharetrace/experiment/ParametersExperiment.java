@@ -1,36 +1,34 @@
 package org.sharetrace.experiment;
 
-import java.util.Random;
+import java.util.Objects;
+import org.sharetrace.util.Range;
 
-public final class ParametersExperiment extends SyntheticExperiment {
+public class ParametersExperiment extends SyntheticExperiment {
 
+  private final Range transmissionRates;
+  private final Range sendCoefficients;
   private float sendCoefficient;
   private float transmissionRate;
 
-  public ParametersExperiment(GraphType graphType, int nNodes, int nRepeats, long seed) {
-    super(graphType, seed, nRepeats);
-    this.nNodes = nNodes;
-  }
-
-  public static void run(GraphType graphType, int nNodes) {
-    run(graphType, nNodes, 1);
-  }
-
-  public static void run(GraphType graphType, int nNodes, int nRepeats) {
-    run(graphType, nNodes, nRepeats, new Random().nextLong());
-  }
-
-  public static void run(GraphType graphType, int nNodes, int nRepeats, long seed) {
-    new ParametersExperiment(graphType, nNodes, nRepeats, seed).run();
+  protected ParametersExperiment(Builder builder) {
+    super(builder);
+    this.transmissionRates = builder.transmissionRates;
+    this.sendCoefficients = builder.sendCoefficients;
   }
 
   @Override
   public void run() {
-    for (transmissionRate = 0.1f; transmissionRate < 1d; transmissionRate += 0.1d) {
-      for (sendCoefficient = 0.1f; sendCoefficient < 1.1d; sendCoefficient += 0.1d) {
+    for (int tr : transmissionRates) {
+      transmissionRate = scale(tr);
+      for (int sc : sendCoefficients) {
+        sendCoefficient = scale(sc);
         super.run();
       }
     }
+  }
+
+  private static float scale(float value) {
+    return value / 10f;
   }
 
   @Override
@@ -43,7 +41,36 @@ public final class ParametersExperiment extends SyntheticExperiment {
     return transmissionRate;
   }
 
-  public static void run(GraphType graphType, int nNodes, long seed) {
-    run(graphType, nNodes, 1, seed);
+  public static class Builder extends SyntheticExperiment.Builder {
+    private Integer nNodes;
+    private Range transmissionRates = Range.of(1, 10);
+    private Range sendCoefficients = Range.of(1, 11);
+
+    public Builder nNodes(int nNodes) {
+      this.nNodes = nNodes;
+      return this;
+    }
+
+    public Builder transmissionRates(Range transmissionRates) {
+      this.transmissionRates = Objects.requireNonNull(transmissionRates);
+      return this;
+    }
+
+    public Builder sendCoefficients(Range sendCoefficients) {
+      this.sendCoefficients = Objects.requireNonNull(sendCoefficients);
+      return this;
+    }
+
+    @Override
+    public void preBuild() {
+      Objects.requireNonNull(nNodes);
+      super.preBuild();
+    }
+
+    @Override
+    public Experiment build() {
+      preBuild();
+      return new ParametersExperiment(this);
+    }
   }
 }

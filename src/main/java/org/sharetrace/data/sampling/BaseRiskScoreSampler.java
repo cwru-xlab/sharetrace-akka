@@ -20,7 +20,7 @@ abstract class BaseRiskScoreSampler extends BaseSampler<RiskScore> {
    */
   @Value.Default
   protected RealDistribution valueDistribution() {
-    return new UniformRealDistribution(generator(), RiskScore.MIN_VALUE, RiskScore.MAX_VALUE);
+    return new UniformRealDistribution(randomGenerator(), RiskScore.MIN_VALUE, RiskScore.MAX_VALUE);
   }
 
   /** Returns a sampler to generate {@link RiskScore} timestamps. */

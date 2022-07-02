@@ -5,6 +5,8 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Random;
 import java.util.Set;
 import java.util.stream.IntStream;
 import org.sharetrace.RiskPropagationBuilder;
@@ -30,32 +32,40 @@ import org.sharetrace.logging.metrics.RuntimeMetric;
 import org.sharetrace.logging.settings.ExperimentSettings;
 import org.sharetrace.logging.settings.LoggableSetting;
 import org.sharetrace.message.AlgorithmMessage;
+import org.sharetrace.message.RiskScore;
 import org.sharetrace.message.RiskScoreMessage;
 import org.sharetrace.message.UserParameters;
 import org.sharetrace.util.CacheParameters;
 import org.sharetrace.util.IntervalCache;
 import org.slf4j.Logger;
+import org.slf4j.MDC;
 
 public abstract class Experiment implements Runnable {
 
-  protected static final Logger logger = Logging.settingLogger();
-  protected final GraphType graphType;
+  private static final Logger logger = Logging.settingLogger();
   protected final long seed;
   protected final int nIterations;
-  protected final Loggables loggables;
   protected final Instant referenceTime;
-  protected Dataset dataset;
-  protected UserParameters userParameters;
-  protected CacheParameters cacheParameters;
-  protected ExperimentSettings settings;
-  protected int iteration;
+  private final GraphType graphType;
+  private final Loggables loggables;
+  private Dataset dataset;
+  private UserParameters userParameters;
+  private CacheParameters cacheParameters;
+  private int iteration;
 
-  protected Experiment(GraphType graphType, int nIterations, long seed) {
-    this.graphType = graphType;
-    this.nIterations = nIterations;
-    this.seed = seed;
+  protected Experiment(Builder builder) {
+    checkBuilder(builder);
+    this.graphType = builder.graphType;
+    this.nIterations = builder.nIterations;
+    this.seed = builder.seed;
     this.referenceTime = newReferenceTime();
     this.loggables = Loggables.create(loggable(), logger);
+  }
+
+  private static void checkBuilder(Builder builder) {
+    if (!builder.preBuildCalled) {
+      throw new IllegalStateException("preBuild() must be called prior to calling build()");
+    }
   }
 
   protected Instant newReferenceTime() {
@@ -97,23 +107,11 @@ public abstract class Experiment implements Runnable {
     Runner.run(newAlgorithm(), "RiskPropagation");
   }
 
-  protected void setUpIteration(int i) {
-    iteration = i;
-    dataset = newDataset();
-    userParameters = newUserParameters();
-    cacheParameters = newCacheParameters();
-    ExperimentSettings newSettings = newSettings();
-    if (!newSettings.equals(settings)) {
-      loggables.info(LoggableSetting.KEY, newSettings);
-      settings = newSettings;
-    }
-  }
-
   protected Behavior<AlgorithmMessage> newAlgorithm() {
     return RiskPropagationBuilder.create()
         .addAllLoggable(loggable())
-        .putAllUserMdc(userMdc())
-        .contactNetwork(dataset.contactNetwork())
+        .putAllMdc(mdc())
+        .contactNetwork(dataset.getContactNetwork())
         .parameters(userParameters)
         .clock(clock())
         .riskScoreFactory(dataset)
@@ -122,18 +120,18 @@ public abstract class Experiment implements Runnable {
         .build();
   }
 
+  private Map<String, String> mdc() {
+    return Logging.mdc(iteration);
+  }
+
+  protected RiskScoreMessage cacheMerge(RiskScoreMessage oldMsg, RiskScoreMessage newMsg) {
+    return isHigher(newMsg, oldMsg) || isApproxEqualAndOlder(newMsg, oldMsg) ? newMsg : oldMsg;
+  }
+
   protected abstract Dataset newDataset();
 
-  protected UserParameters newUserParameters() {
-    return UserParameters.builder()
-        .sendCoefficient(sendCoefficient())
-        .transmissionRate(transmissionRate())
-        .timeBuffer(timeBuffer())
-        .scoreTtl(scoreTtl())
-        .contactTtl(contactTtl())
-        .idleTimeout(userTimeout())
-        .refreshPeriod(userRefreshPeriod())
-        .build();
+  private boolean isHigher(RiskScoreMessage msg1, RiskScoreMessage msg2) {
+    return msg1.score().value() - msg2.score().value() > scoreTolerance();
   }
 
   protected CacheParameters newCacheParameters() {
@@ -145,19 +143,21 @@ public abstract class Experiment implements Runnable {
         .build();
   }
 
-  private ExperimentSettings newSettings() {
-    return ExperimentSettings.builder()
-        .graphType(graphType)
-        .nIterations(nIterations)
-        .iteration(iteration)
-        .seed(seed)
-        .userParameters(userParameters)
-        .cacheParameters(cacheParameters)
-        .build();
+  private boolean isApproxEqualAndOlder(RiskScoreMessage msg1, RiskScoreMessage msg2) {
+    RiskScore score1 = msg1.score();
+    RiskScore score2 = msg2.score();
+    boolean isApproxEqual = Math.abs(score1.value() - score2.value()) < scoreTolerance();
+    boolean isOlder = score1.timestamp().isBefore(score2.timestamp());
+    return isApproxEqual && isOlder;
   }
 
-  private Map<String, String> userMdc() {
-    return Map.of("iteration", String.valueOf(iteration));
+  protected void setUpIteration(int i) {
+    iteration = i;
+    addMdc(); // Must go before dataset creation when logging graph metrics.
+    dataset = newDataset();
+    userParameters = newUserParameters();
+    cacheParameters = newCacheParameters();
+    loggables.info(LoggableSetting.KEY, settings());
   }
 
   protected CacheFactory<RiskScoreMessage> cacheFactory() {
@@ -170,6 +170,10 @@ public abstract class Experiment implements Runnable {
             .clock(clock())
             .mergeStrategy(this::cacheMerge)
             .build();
+  }
+
+  private void addMdc() {
+    Logging.mdc(iteration).forEach(MDC::put);
   }
 
   protected float sendCoefficient() {
@@ -192,14 +196,17 @@ public abstract class Experiment implements Runnable {
     return defaultTtl();
   }
 
-  protected Duration userTimeout() {
-    double nContacts = dataset.contactNetwork().nContacts();
-    double minBase = Math.log(1.1d);
-    double maxBase = Math.log(10d);
-    double decayRate = 1.75E-7;
-    double targetBase = Math.max(minBase, maxBase - decayRate * nContacts);
-    long timeout = (long) Math.ceil(Math.log(nContacts) / targetBase);
-    return Duration.ofSeconds(timeout);
+  protected UserParameters newUserParameters() {
+    return UserParameters.builder()
+        .scoreTolerance(scoreTolerance())
+        .sendCoefficient(sendCoefficient())
+        .transmissionRate(transmissionRate())
+        .timeBuffer(timeBuffer())
+        .scoreTtl(scoreTtl())
+        .contactTtl(contactTtl())
+        .idleTimeout(idleTimeout())
+        .refreshPeriod(userRefreshPeriod())
+        .build();
   }
 
   protected Duration userRefreshPeriod() {
@@ -222,17 +229,59 @@ public abstract class Experiment implements Runnable {
     return 1;
   }
 
-  protected RiskScoreMessage cacheMerge(RiskScoreMessage oldScore, RiskScoreMessage newScore) {
-    float oldValue = oldScore.score().value();
-    float newValue = newScore.score().value();
-    Instant oldTimestamp = oldScore.score().timestamp();
-    Instant newTimestamp = newScore.score().timestamp();
-    boolean isHigher = oldValue < newValue;
-    boolean isOlder = oldValue == newValue && oldTimestamp.isAfter(newTimestamp);
-    return isHigher || isOlder ? newScore : oldScore;
+  private ExperimentSettings settings() {
+    return ExperimentSettings.builder()
+        .graphType(graphType)
+        .iteration(iteration)
+        .seed(seed)
+        .userParameters(userParameters)
+        .cacheParameters(cacheParameters)
+        .build();
   }
 
   protected Duration defaultTtl() {
     return Duration.ofDays(14L);
+  }
+
+  protected float scoreTolerance() {
+    return 0.01f;
+  }
+
+  protected Duration idleTimeout() {
+    double nContacts = dataset.getContactNetwork().nContacts();
+    double minBase = Math.log(1.1d);
+    double maxBase = Math.log(10d);
+    double decayRate = 1.75E-7;
+    double targetBase = Math.max(minBase, maxBase - decayRate * nContacts);
+    long timeout = (long) Math.ceil(Math.log(nContacts) / targetBase);
+    return Duration.ofSeconds(timeout);
+  }
+
+  public abstract static class Builder {
+    protected GraphType graphType;
+    protected int nIterations = 1;
+    protected long seed = new Random().nextLong();
+    private boolean preBuildCalled = false;
+
+    public Builder graphType(GraphType graphType) {
+      this.graphType = Objects.requireNonNull(graphType);
+      return this;
+    }
+
+    public Builder nIterations(int nIterations) {
+      this.nIterations = nIterations;
+      return this;
+    }
+
+    public Builder seed(long seed) {
+      this.seed = seed;
+      return this;
+    }
+
+    public void preBuild() {
+      preBuildCalled = true;
+    }
+
+    public abstract Experiment build();
   }
 }

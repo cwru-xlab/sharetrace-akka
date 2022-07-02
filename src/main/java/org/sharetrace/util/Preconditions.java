@@ -33,6 +33,11 @@ public final class Preconditions {
     }
   }
 
+  public static int checkIsAtLeast(int value, int lowerBound, Supplier<String> message) {
+    checkArgument(value >= lowerBound, message);
+    return value;
+  }
+
   private static <T> String lowerInclusiveMessage(
       String name, T lowerBound, T upperBound, T value) {
     return "'"
@@ -51,8 +56,22 @@ public final class Preconditions {
     return value;
   }
 
-  public static int checkIsAtLeast(int value, int lowerBound, String name) {
+  public static <N extends Number> N checkIsAtLeast(N value, N lowerBound, String name) {
     return checkIsAtLeast(value, lowerBound, () -> atLeastMessage(name, lowerBound, value));
+  }
+
+  public static <N extends Number> N checkIsAtLeast(
+      N value, N lowerBound, Supplier<String> message) {
+    checkArgument(value.doubleValue() >= lowerBound.doubleValue(), message);
+    return value;
+  }
+
+  private static <T> String atLeastMessage(String name, T lowerBound, T value) {
+    return "'" + name + "' must be at least " + lowerBound + "; got " + value;
+  }
+
+  public static <N extends Number> N checkIsNonNegative(N value, String name) {
+    return checkIsNonNegative(value, () -> nonNegativeMessage(name, value));
   }
 
   public static Duration checkIsNonNegative(Duration duration, String name) {
@@ -68,33 +87,13 @@ public final class Preconditions {
     return "'" + name + "' must be non-negative; got " + value;
   }
 
-  public static double checkIsAtLeast(double value, double lowerBound, String name) {
-    return checkIsAtLeast(value, lowerBound, () -> atLeastMessage(name, lowerBound, value));
-  }
-
-  public static double checkIsAtLeast(double value, double lowerBound, Supplier<String> message) {
-    checkArgument(value >= lowerBound, message);
+  public static <N extends Number> N checkIsNonNegative(N value, Supplier<String> message) {
+    checkArgument(Objects.requireNonNull(value).doubleValue() >= 0, message);
     return value;
   }
 
-  private static <T> String atLeastMessage(String name, T lowerBound, T value) {
-    return "'" + name + "' must be at least " + lowerBound + "; got " + value;
-  }
-
-  public static int checkIsAtLeast(int value, int lowerBound, Supplier<String> message) {
-    checkArgument(value >= lowerBound, message);
-    return value;
-  }
-
-  private static <T> String closedRangeMessage(String name, T lowerBound, T upperBound, T value) {
-    return "'"
-        + name
-        + "' must be between "
-        + lowerBound
-        + " and "
-        + upperBound
-        + ", inclusive; got "
-        + value;
+  public static <N extends Number> N checkIsPositive(N value, String name) {
+    return checkIsPositive(value, () -> positiveMessage(name, value));
   }
 
   public static Duration checkIsPositive(Duration duration, String name) {
@@ -109,5 +108,36 @@ public final class Preconditions {
 
   private static <T> String positiveMessage(String name, T value) {
     return "'" + name + "' must be positive; got " + value;
+  }
+
+  public static <N extends Number> N checkIsPositive(N value, Supplier<String> message) {
+    Objects.requireNonNull(value);
+    checkArgument(value.doubleValue() > 0, message);
+    return value;
+  }
+
+  public static <N extends Number> N checkIsNonzero(N value, String name) {
+    return checkIsNonzero(value, () -> nonzeroMessage(name, value));
+  }
+
+  public static <N extends Number> N checkIsNonzero(N value, Supplier<String> message) {
+    Objects.requireNonNull(value);
+    checkArgument(value.doubleValue() != 0, message);
+    return value;
+  }
+
+  private static <T> String nonzeroMessage(String name, T value) {
+    return "'" + name + "' must be nonzero; got " + value;
+  }
+
+  private static <T> String closedRangeMessage(String name, T lowerBound, T upperBound, T value) {
+    return "'"
+        + name
+        + "' must be between "
+        + lowerBound
+        + " and "
+        + upperBound
+        + ", inclusive; got "
+        + value;
   }
 }

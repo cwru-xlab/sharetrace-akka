@@ -19,18 +19,19 @@ abstract class BaseUserParameters implements UserMessage {
 
   public static final float MIN_TRANSMISSION_RATE = 0f;
   public static final float MAX_TRANSMISSION_RATE = 1f;
-  public static final float MIN_SEND_TOLERANCE = 0f;
+  public static final float MIN_SEND_COEFFICIENT = 0f;
 
   @Value.Check
   protected void check() {
     checkInClosedRange(
         transmissionRate(), MIN_TRANSMISSION_RATE, MAX_TRANSMISSION_RATE, "transmissionRate");
-    checkIsAtLeast(sendCoefficient(), MIN_SEND_TOLERANCE, "sendCoefficient");
+    checkIsAtLeast(sendCoefficient(), MIN_SEND_COEFFICIENT, "sendCoefficient");
     checkIsNonNegative(timeBuffer(), "timeBuffer");
     checkIsPositive(scoreTtl(), "scoreTtl");
     checkIsPositive(contactTtl(), "contactTtl");
     checkIsPositive(idleTimeout(), "idleTimeout");
     checkIsPositive(refreshPeriod(), "refreshPeriod");
+    checkIsNonNegative(scoreTolerance(), "scoreTolerance");
   }
 
   /**
@@ -82,4 +83,10 @@ abstract class BaseUserParameters implements UserMessage {
 
   // TODO Add Javadoc
   public abstract Duration refreshPeriod();
+
+  /**
+   * Returns the maximum absolute difference between {@link RiskScore} values for them to be
+   * considered approximately equal.
+   */
+  public abstract float scoreTolerance();
 }

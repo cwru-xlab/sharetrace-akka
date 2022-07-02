@@ -19,21 +19,12 @@
         </fieldNames>
         <includeContext>true</includeContext>
         <includeMdcKeyName>iteration</includeMdcKeyName>
-        <throwableConverter class="net.logstash.logback.stacktrace.ShortenedThrowableConverter">
-          <exclude>sun\.reflect\..*\.invoke.*</exclude>
-          <exclude>net\.sf\.cglib\.proxy\.MethodProxy\.invoke</exclude>
-          <inlineHash>true</inlineHash>
-          <maxDepthPerThrowable>30</maxDepthPerThrowable>
-          <maxLength>2048</maxLength>
-          <rootCauseFirst>true</rootCauseFirst>
-          <shortenedClassNameLength>20</shortenedClassNameLength>
-        </throwableConverter>
       </encoder>
     </appender>
   </appender>
   <!--Ref: https://github.com/logfellow/logstash-logback-encoder#async-appenders-->
   <appender class="net.logstash.logback.appender.LoggingEventAsyncDisruptorAppender"
-            name="events">
+    name="events">
     <appendRetryFrequency>5</appendRetryFrequency> <!--Default: 5ms-->
     <appendTimeout>-1</appendTimeout> <!--Default: 0-->
     <ringBufferSize>8192</ringBufferSize> <!--Default: 8192-->
@@ -49,15 +40,6 @@
         </fieldNames>
         <includeContext>true</includeContext>
         <includeMdcKeyName>iteration</includeMdcKeyName>
-        <throwableConverter class="net.logstash.logback.stacktrace.ShortenedThrowableConverter">
-          <exclude>sun\.reflect\..*\.invoke.*</exclude>
-          <exclude>net\.sf\.cglib\.proxy\.MethodProxy\.invoke</exclude>
-          <inlineHash>true</inlineHash>
-          <maxDepthPerThrowable>30</maxDepthPerThrowable>
-          <maxLength>2048</maxLength>
-          <rootCauseFirst>true</rootCauseFirst>
-          <shortenedClassNameLength>20</shortenedClassNameLength>
-        </throwableConverter>
       </encoder>
       <immediateFlush>false</immediateFlush>
       <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
@@ -70,7 +52,7 @@
   </appender>
   <!--Ref: https://github.com/logfellow/logstash-logback-encoder#async-appenders-->
   <appender class="net.logstash.logback.appender.LoggingEventAsyncDisruptorAppender"
-            name="metrics">
+    name="metrics">
     <appendRetryFrequency>5</appendRetryFrequency> <!--Default: 5ms-->
     <appendTimeout>-1</appendTimeout> <!--Default: 0-->
     <ringBufferSize>8192</ringBufferSize> <!--Default: 8192-->
@@ -88,22 +70,13 @@
         </fieldNames>
         <includeContext>true</includeContext>
         <includeMdcKeyName>iteration</includeMdcKeyName>
-        <throwableConverter class="net.logstash.logback.stacktrace.ShortenedThrowableConverter">
-          <exclude>sun\.reflect\..*\.invoke.*</exclude>
-          <exclude>net\.sf\.cglib\.proxy\.MethodProxy\.invoke</exclude>
-          <inlineHash>true</inlineHash>
-          <maxDepthPerThrowable>30</maxDepthPerThrowable>
-          <maxLength>2048</maxLength>
-          <rootCauseFirst>true</rootCauseFirst>
-          <shortenedClassNameLength>20</shortenedClassNameLength>
-        </throwableConverter>
       </encoder>
       <immediateFlush>false</immediateFlush>
     </appender>
   </appender>
   <!--Ref: https://github.com/logfellow/logstash-logback-encoder#async-appenders-->
   <appender class="net.logstash.logback.appender.LoggingEventAsyncDisruptorAppender"
-            name="settings">
+    name="settings">
     <appendRetryFrequency>5</appendRetryFrequency> <!--Default: 5ms-->
     <appendTimeout>-1</appendTimeout> <!--Default: 0-->
     <appender class="ch.qos.logback.core.FileAppender">
@@ -118,15 +91,6 @@
         </fieldNames>
         <includeContext>true</includeContext>
         <includeMdcKeyName>iteration</includeMdcKeyName>
-        <throwableConverter class="net.logstash.logback.stacktrace.ShortenedThrowableConverter">
-          <exclude>sun\.reflect\..*\.invoke.*</exclude>
-          <exclude>net\.sf\.cglib\.proxy\.MethodProxy\.invoke</exclude>
-          <inlineHash>true</inlineHash>
-          <maxDepthPerThrowable>30</maxDepthPerThrowable>
-          <maxLength>2048</maxLength>
-          <rootCauseFirst>true</rootCauseFirst>
-          <shortenedClassNameLength>20</shortenedClassNameLength>
-        </throwableConverter>
       </encoder>
       <file>${log.dir}/settings.log</file>
       <immediateFlush>false</immediateFlush>

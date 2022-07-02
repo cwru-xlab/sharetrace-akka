@@ -1,4 +1,4 @@
-package org.sharetrace.experiment;
+package org.sharetrace.data.factory;
 
 import java.util.Optional;
 import org.immutables.builder.Builder;
@@ -8,10 +8,11 @@ import org.jgrapht.generate.GraphGenerator;
 import org.jgrapht.generate.RandomRegularGraphGenerator;
 import org.jgrapht.generate.ScaleFreeGraphGenerator;
 import org.jgrapht.generate.WattsStrogatzGraphGenerator;
+import org.sharetrace.experiment.GraphType;
 
-class GraphGeneratorFactory {
+class GraphGenerators {
 
-  private GraphGeneratorFactory() {}
+  private GraphGenerators() {}
 
   @Builder.Factory
   @SuppressWarnings("OptionalUsedAsFieldOrParameterType")

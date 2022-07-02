@@ -2,6 +2,7 @@ package org.sharetrace.logging;
 
 import ch.qos.logback.core.spi.PropertyContainer;
 import java.nio.file.Path;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,5 +25,9 @@ public final class Logging {
   public static Path graphsLogPath() {
     PropertyContainer properties = (PropertyContainer) LoggerFactory.getILoggerFactory();
     return Path.of(properties.getProperty("graphs.log.dir"));
+  }
+
+  public static Map<String, String> mdc(int iteration) {
+    return Map.of("iteration", String.valueOf(iteration));
   }
 }

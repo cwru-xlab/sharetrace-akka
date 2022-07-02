@@ -114,7 +114,7 @@ public class User extends AbstractBehavior<UserMessage> {
 
   @Builder.Factory
   static Behavior<UserMessage> user(
-      TimerScheduler<UserMessage> timers,
+      Map<String, String> mdc,
       Set<Class<? extends Loggable>> loggable,
       UserParameters parameters,
       Clock clock,
@@ -122,7 +122,10 @@ public class User extends AbstractBehavior<UserMessage> {
     return Behaviors.setup(
         context -> {
           context.setLoggerName(Logging.EVENT_LOGGER_NAME);
-          return new User(context, timers, loggable, parameters, clock, cache);
+          Behavior<UserMessage> user =
+              Behaviors.withTimers(
+                  timers -> new User(context, timers, loggable, parameters, clock, cache));
+          return Behaviors.withMdc(UserMessage.class, message -> mdc, user);
         });
   }
 
@@ -352,7 +355,7 @@ public class User extends AbstractBehavior<UserMessage> {
   }
 
   private boolean isHigherThanCurrent(RiskScoreMessage message) {
-    return message.score().value() > current.score().value();
+    return message.score().value() - current.score().value() > parameters.scoreTolerance();
   }
 
   private RiskScoreMessage cached(RiskScoreMessage message) {

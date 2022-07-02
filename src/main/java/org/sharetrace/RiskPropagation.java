@@ -7,7 +7,6 @@ import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
-import akka.actor.typed.javadsl.TimerScheduler;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import java.time.Clock;
 import java.time.Duration;
@@ -32,6 +31,7 @@ import org.sharetrace.message.RunMessage;
 import org.sharetrace.message.UserMessage;
 import org.sharetrace.message.UserParameters;
 import org.sharetrace.util.TypedSupplier;
+import org.slf4j.MDC;
 
 /**
  * A non-iterative, asynchronous implementation of the ShareTrace algorithm. The objective is to
@@ -53,7 +53,7 @@ import org.sharetrace.util.TypedSupplier;
 public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
 
   private final Loggables loggables;
-  private final Map<String, String> userMdc;
+  private final Map<String, String> mdc;
   private final UserParameters parameters;
   private final ContactNetwork contactNetwork;
   private final long nUsers;
@@ -67,7 +67,7 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
   private RiskPropagation(
       ActorContext<AlgorithmMessage> context,
       Set<Class<? extends Loggable>> loggable,
-      Map<String, String> userMdc,
+      Map<String, String> mdc,
       ContactNetwork contactNetwork,
       UserParameters parameters,
       Clock clock,
@@ -76,7 +76,7 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
       ContactTimeFactory contactTimeFactory) {
     super(context);
     this.loggables = Loggables.create(loggable, () -> getContext().getLog());
-    this.userMdc = userMdc;
+    this.mdc = mdc;
     this.contactNetwork = contactNetwork;
     this.parameters = parameters;
     this.clock = clock;
@@ -91,7 +91,7 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
   static Behavior<AlgorithmMessage> riskPropagation(
       ContactNetwork contactNetwork,
       Set<Class<? extends Loggable>> loggable,
-      Map<String, String> userMdc,
+      Map<String, String> mdc,
       UserParameters parameters,
       Clock clock,
       CacheFactory<RiskScoreMessage> cacheFactory,
@@ -103,7 +103,7 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
           return new RiskPropagation(
               context,
               loggable,
-              userMdc,
+              mdc,
               contactNetwork,
               parameters,
               clock,
@@ -137,6 +137,7 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
   private Behavior<AlgorithmMessage> onTerminate(Terminated terminated) {
     Behavior<AlgorithmMessage> behavior = this;
     if (++nStopped == nUsers) {
+      mdc.forEach(MDC::put);
       logMetrics();
       behavior = Behaviors.stopped();
     }
@@ -188,20 +189,16 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
   }
 
   private Behavior<UserMessage> newUser() {
-    return Behaviors.withMdc(UserMessage.class, userMdc, Behaviors.withTimers(this::newUser));
+    return UserBuilder.create()
+        .putAllMdc(mdc)
+        .addAllLoggable(loggables.loggable())
+        .parameters(parameters)
+        .clock(clock)
+        .cache(cacheFactory.getCache())
+        .build();
   }
 
   private float runtime() {
     return Duration.between(startedAt, clock.instant()).toNanos() / 1e9f;
-  }
-
-  private Behavior<UserMessage> newUser(TimerScheduler<UserMessage> timers) {
-    return UserBuilder.create()
-        .timers(timers)
-        .addAllLoggable(loggables.loggable())
-        .parameters(parameters)
-        .clock(clock)
-        .cache(cacheFactory.newCache())
-        .build();
   }
 }

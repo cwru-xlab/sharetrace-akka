@@ -22,7 +22,7 @@ abstract class BaseTimeSampler extends BaseSampler<Instant> {
    */
   @Value.Default
   protected RealDistribution ttlDistribution() {
-    return new UniformRealDistribution(generator(), 0d, 1d);
+    return new UniformRealDistribution(randomGenerator(), 0d, 1d);
   }
 
   /** Returns the duration for which a timestamp is valid. */

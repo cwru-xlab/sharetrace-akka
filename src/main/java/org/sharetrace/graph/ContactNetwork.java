@@ -162,6 +162,11 @@ public class ContactNetwork {
     return graph.edgeSet().stream().map(edge -> List.of(edge.source(), edge.target()));
   }
 
+  @Override
+  public String toString() {
+    return "ContactNetwork{nUsers=" + nUsers() + ", nContacts=" + nContacts() + "}";
+  }
+
   public long nUsers() {
     return graph.iterables().vertexCount();
   }

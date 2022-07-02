@@ -14,8 +14,6 @@ interface BaseExperimentSettings extends LoggableSetting {
 
   long seed();
 
-  int nIterations();
-
   int iteration();
 
   GraphType graphType();
