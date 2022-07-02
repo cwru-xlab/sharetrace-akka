@@ -13,6 +13,9 @@ import org.sharetrace.RiskPropagationBuilder;
 import org.sharetrace.Runner;
 import org.sharetrace.data.Dataset;
 import org.sharetrace.data.factory.CacheFactory;
+import org.sharetrace.data.sampling.RiskScoreSampler;
+import org.sharetrace.data.sampling.Sampler;
+import org.sharetrace.data.sampling.TimeSampler;
 import org.sharetrace.logging.Loggable;
 import org.sharetrace.logging.Loggables;
 import org.sharetrace.logging.Logging;
@@ -46,6 +49,8 @@ public abstract class Experiment implements Runnable {
   protected final long seed;
   protected final int nIterations;
   protected final Instant referenceTime;
+  protected final Sampler<RiskScore> riskScoreSampler;
+  protected final Sampler<Instant> contactTimeSampler;
   private final GraphType graphType;
   private final Loggables loggables;
   private Dataset dataset;
@@ -59,6 +64,8 @@ public abstract class Experiment implements Runnable {
     this.nIterations = builder.nIterations;
     this.seed = builder.seed;
     this.referenceTime = newReferenceTime();
+    this.riskScoreSampler = newRiskScoreSampler();
+    this.contactTimeSampler = newContactTimeSampler();
     this.loggables = Loggables.create(loggable(), logger);
   }
 
@@ -70,6 +77,15 @@ public abstract class Experiment implements Runnable {
 
   protected Instant newReferenceTime() {
     return clock().instant();
+  }
+
+  protected Sampler<RiskScore> newRiskScoreSampler() {
+    Sampler<Instant> timeSampler = newTimeSampler(scoreTtl());
+    return RiskScoreSampler.builder().timeSampler(timeSampler).seed(seed).build();
+  }
+
+  protected Sampler<Instant> newContactTimeSampler() {
+    return newTimeSampler(contactTtl());
   }
 
   protected Set<Class<? extends Loggable>> loggable() {
@@ -95,6 +111,22 @@ public abstract class Experiment implements Runnable {
 
   protected Clock clock() {
     return Clock.systemUTC();
+  }
+
+  protected Sampler<Instant> newTimeSampler(Duration ttl) {
+    return TimeSampler.builder().seed(seed).referenceTime(referenceTime).ttl(ttl).build();
+  }
+
+  protected Duration scoreTtl() {
+    return defaultTtl();
+  }
+
+  protected Duration contactTtl() {
+    return defaultTtl();
+  }
+
+  protected Duration defaultTtl() {
+    return Duration.ofDays(14L);
   }
 
   @Override
@@ -128,8 +160,6 @@ public abstract class Experiment implements Runnable {
     return msg1.score().value() - msg2.score().value() > scoreTolerance();
   }
 
-  protected abstract Dataset newDataset();
-
   private boolean isApproxEqualAndOlder(RiskScoreMessage msg1, RiskScoreMessage msg2) {
     RiskScore score1 = msg1.score();
     RiskScore score2 = msg2.score();
@@ -138,23 +168,20 @@ public abstract class Experiment implements Runnable {
     return isApproxEqual && isOlder;
   }
 
-  protected CacheParameters newCacheParameters() {
-    return CacheParameters.builder()
-        .interval(cacheInterval())
-        .nIntervals(cacheIntervals())
-        .refreshPeriod(cacheRefreshPeriod())
-        .nLookAhead(cacheLookAhead())
-        .build();
-  }
-
   protected void setUpIteration(int i) {
     iteration = i;
     mdc().forEach(MDC::put); // Must go before dataset creation when logging graph metrics.
-    dataset = newDataset();
-    userParameters = newUserParameters();
-    cacheParameters = newCacheParameters();
+    dataset = getDataset();
+    userParameters = getUserParameters();
+    cacheParameters = getCacheParameters();
     loggables.info(LoggableSetting.KEY, settings());
   }
+
+  private Map<String, String> mdc() {
+    return Logging.mdc(iteration, graphType);
+  }
+
+  protected abstract Dataset getDataset();
 
   protected CacheFactory<RiskScoreMessage> cacheFactory() {
     return () ->
@@ -168,8 +195,17 @@ public abstract class Experiment implements Runnable {
             .build();
   }
 
-  private Map<String, String> mdc() {
-    return Logging.mdc(iteration, graphType);
+  protected UserParameters getUserParameters() {
+    return UserParameters.builder()
+        .scoreTolerance(scoreTolerance())
+        .sendCoefficient(sendCoefficient())
+        .transmissionRate(transmissionRate())
+        .timeBuffer(timeBuffer())
+        .scoreTtl(scoreTtl())
+        .contactTtl(contactTtl())
+        .idleTimeout(idleTimeout())
+        .refreshPeriod(userRefreshPeriod())
+        .build();
   }
 
   protected float sendCoefficient() {
@@ -184,24 +220,12 @@ public abstract class Experiment implements Runnable {
     return Duration.ofDays(2L);
   }
 
-  protected Duration scoreTtl() {
-    return defaultTtl();
-  }
-
-  protected Duration contactTtl() {
-    return defaultTtl();
-  }
-
-  protected UserParameters newUserParameters() {
-    return UserParameters.builder()
-        .scoreTolerance(scoreTolerance())
-        .sendCoefficient(sendCoefficient())
-        .transmissionRate(transmissionRate())
-        .timeBuffer(timeBuffer())
-        .scoreTtl(scoreTtl())
-        .contactTtl(contactTtl())
-        .idleTimeout(idleTimeout())
-        .refreshPeriod(userRefreshPeriod())
+  protected CacheParameters getCacheParameters() {
+    return CacheParameters.builder()
+        .interval(cacheInterval())
+        .nIntervals(cacheIntervals())
+        .refreshPeriod(cacheRefreshPeriod())
+        .nLookAhead(cacheLookAhead())
         .build();
   }
 
@@ -233,10 +257,6 @@ public abstract class Experiment implements Runnable {
         .userParameters(userParameters)
         .cacheParameters(cacheParameters)
         .build();
-  }
-
-  protected Duration defaultTtl() {
-    return Duration.ofDays(14L);
   }
 
   protected float scoreTolerance() {

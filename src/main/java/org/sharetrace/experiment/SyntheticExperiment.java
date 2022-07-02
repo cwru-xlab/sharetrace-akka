@@ -1,43 +1,20 @@
 package org.sharetrace.experiment;
 
-import java.time.Duration;
-import java.time.Instant;
 import java.util.Objects;
 import org.sharetrace.data.Dataset;
 import org.sharetrace.data.SyntheticDataset;
 import org.sharetrace.data.factory.GraphGeneratorBuilder;
 import org.sharetrace.data.factory.GraphGeneratorFactory;
-import org.sharetrace.data.sampling.RiskScoreSampler;
-import org.sharetrace.data.sampling.Sampler;
-import org.sharetrace.data.sampling.TimeSampler;
 import org.sharetrace.graph.Edge;
-import org.sharetrace.message.RiskScore;
 
 public class SyntheticExperiment extends Experiment {
 
-  private final Sampler<RiskScore> riskScoreSampler;
-  private final Sampler<Instant> contactTimeSampler;
   private final GraphGeneratorFactory graphGeneratorFactory;
   protected int nNodes = -1;
 
   protected SyntheticExperiment(Builder builder) {
     super(builder);
     this.graphGeneratorFactory = builder.generatorFactory;
-    this.riskScoreSampler = newRiskScoreSampler();
-    this.contactTimeSampler = newContactTimeSampler();
-  }
-
-  protected Sampler<RiskScore> newRiskScoreSampler() {
-    Sampler<Instant> timeSampler = newTimeSampler(scoreTtl());
-    return RiskScoreSampler.builder().timeSampler(timeSampler).seed(seed).build();
-  }
-
-  protected Sampler<Instant> newContactTimeSampler() {
-    return newTimeSampler(contactTtl());
-  }
-
-  protected Sampler<Instant> newTimeSampler(Duration ttl) {
-    return TimeSampler.builder().seed(seed).referenceTime(referenceTime).ttl(ttl).build();
   }
 
   public static Builder builder() {
@@ -45,7 +22,7 @@ public class SyntheticExperiment extends Experiment {
   }
 
   @Override
-  protected Dataset newDataset() {
+  protected Dataset getDataset() {
     return SyntheticDataset.builder()
         .addAllLoggable(loggable())
         .graphGenerator(graphGeneratorFactory.getGraphGenerator(nNodes))
