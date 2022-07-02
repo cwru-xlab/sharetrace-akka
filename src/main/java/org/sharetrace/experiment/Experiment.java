@@ -107,6 +107,10 @@ public abstract class Experiment implements Runnable {
     Runner.run(newAlgorithm(), "RiskPropagation");
   }
 
+  protected RiskScoreMessage cacheMerge(RiskScoreMessage oldMsg, RiskScoreMessage newMsg) {
+    return isHigher(newMsg, oldMsg) || isApproxEqualAndOlder(newMsg, oldMsg) ? newMsg : oldMsg;
+  }
+
   protected Behavior<AlgorithmMessage> newAlgorithm() {
     return RiskPropagationBuilder.create()
         .addAllLoggable(loggable())
@@ -120,18 +124,18 @@ public abstract class Experiment implements Runnable {
         .build();
   }
 
-  private Map<String, String> mdc() {
-    return Logging.mdc(iteration);
-  }
-
-  protected RiskScoreMessage cacheMerge(RiskScoreMessage oldMsg, RiskScoreMessage newMsg) {
-    return isHigher(newMsg, oldMsg) || isApproxEqualAndOlder(newMsg, oldMsg) ? newMsg : oldMsg;
+  private boolean isHigher(RiskScoreMessage msg1, RiskScoreMessage msg2) {
+    return msg1.score().value() - msg2.score().value() > scoreTolerance();
   }
 
   protected abstract Dataset newDataset();
 
-  private boolean isHigher(RiskScoreMessage msg1, RiskScoreMessage msg2) {
-    return msg1.score().value() - msg2.score().value() > scoreTolerance();
+  private boolean isApproxEqualAndOlder(RiskScoreMessage msg1, RiskScoreMessage msg2) {
+    RiskScore score1 = msg1.score();
+    RiskScore score2 = msg2.score();
+    boolean isApproxEqual = Math.abs(score1.value() - score2.value()) < scoreTolerance();
+    boolean isOlder = score1.timestamp().isBefore(score2.timestamp());
+    return isApproxEqual && isOlder;
   }
 
   protected CacheParameters newCacheParameters() {
@@ -143,12 +147,8 @@ public abstract class Experiment implements Runnable {
         .build();
   }
 
-  private boolean isApproxEqualAndOlder(RiskScoreMessage msg1, RiskScoreMessage msg2) {
-    RiskScore score1 = msg1.score();
-    RiskScore score2 = msg2.score();
-    boolean isApproxEqual = Math.abs(score1.value() - score2.value()) < scoreTolerance();
-    boolean isOlder = score1.timestamp().isBefore(score2.timestamp());
-    return isApproxEqual && isOlder;
+  private Map<String, String> mdc() {
+    return Logging.mdc(iteration);
   }
 
   protected void setUpIteration(int i) {
