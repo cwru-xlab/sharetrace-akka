@@ -28,7 +28,7 @@ public final class Logging {
     return Path.of(properties.getProperty("graphs.log.dir"));
   }
 
-  public static Map<String, String> mdc(int iteration, GraphType graphType) {
-    return Map.of("iteration", String.valueOf(iteration), "graphType", graphType.toString());
+  public static Map<String, String> mdc(String iteration, GraphType graphType) {
+    return Map.of("iteration", iteration, "graphType", graphType.toString());
   }
 }

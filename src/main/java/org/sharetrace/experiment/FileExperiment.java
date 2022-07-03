@@ -2,7 +2,6 @@ package org.sharetrace.experiment;
 
 import java.nio.file.Path;
 import java.util.Objects;
-import org.sharetrace.data.Dataset;
 import org.sharetrace.data.FileDataset;
 
 public class FileExperiment extends Experiment {
@@ -22,14 +21,15 @@ public class FileExperiment extends Experiment {
   }
 
   @Override
-  protected Dataset getDataset() {
-    return FileDataset.builder()
-        .delimiter(delimiter)
-        .path(path)
-        .addAllLoggable(loggable())
-        .referenceTime(referenceTime)
-        .riskScoreFactory(x -> riskScoreSampler.sample())
-        .build();
+  protected void setDataset() {
+    dataset =
+        FileDataset.builder()
+            .delimiter(delimiter)
+            .path(path)
+            .addAllLoggable(loggable())
+            .referenceTime(referenceTime)
+            .riskScoreFactory(x -> riskScoreSampler.sample())
+            .build();
   }
 
   public static class Builder extends Experiment.Builder {

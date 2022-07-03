@@ -50,10 +50,9 @@ public class ContactNetwork {
       Graph<Integer, Edge<Integer>> graph, Set<Class<? extends Loggable>> loggable) {
     this.graph = graph;
     this.loggables = Loggables.create(loggable, logger);
-    logMetrics();
   }
 
-  private void logMetrics() {
+  public void logMetrics() {
     GraphStats<?, ?> stats = GraphStats.of(graph);
     loggables.info(LoggableMetric.KEY, sizeMetrics(stats));
     loggables.info(LoggableMetric.KEY, cycleMetrics(stats));

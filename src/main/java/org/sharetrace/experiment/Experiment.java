@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
-import java.util.stream.IntStream;
+import java.util.UUID;
 import org.sharetrace.RiskPropagationBuilder;
 import org.sharetrace.Runner;
 import org.sharetrace.data.Dataset;
@@ -40,23 +40,24 @@ import org.sharetrace.message.RiskScoreMessage;
 import org.sharetrace.message.UserParameters;
 import org.sharetrace.util.CacheParameters;
 import org.sharetrace.util.IntervalCache;
+import org.sharetrace.util.Range;
 import org.slf4j.Logger;
 import org.slf4j.MDC;
 
 public abstract class Experiment implements Runnable {
 
-  private static final Logger logger = Logging.settingLogger();
-  protected final long seed;
-  protected final int nIterations;
+  protected static final Logger logger = Logging.settingLogger();
   protected final Instant referenceTime;
   protected final Sampler<RiskScore> riskScoreSampler;
   protected final Sampler<Instant> contactTimeSampler;
-  private final GraphType graphType;
-  private final Loggables loggables;
-  private Dataset dataset;
-  private UserParameters userParameters;
-  private CacheParameters cacheParameters;
-  private int iteration;
+  protected final long seed;
+  protected final int nIterations;
+  protected final GraphType graphType;
+  protected final Loggables loggables;
+  protected Dataset dataset;
+  protected UserParameters userParameters;
+  protected CacheParameters cacheParameters;
+  protected String iteration;
 
   protected Experiment(Builder builder) {
     checkBuilder(builder);
@@ -113,8 +114,9 @@ public abstract class Experiment implements Runnable {
     return Clock.systemUTC();
   }
 
-  protected Sampler<Instant> newTimeSampler(Duration ttl) {
-    return TimeSampler.builder().seed(seed).referenceTime(referenceTime).ttl(ttl).build();
+  @Override
+  public void run() {
+    Range.of(nIterations).forEach(this::onIteration);
   }
 
   protected Duration scoreTtl() {
@@ -129,18 +131,77 @@ public abstract class Experiment implements Runnable {
     return Duration.ofDays(14L);
   }
 
-  @Override
-  public void run() {
-    IntStream.rangeClosed(1, nIterations).forEach(this::onIteration);
+  protected void onIteration(double i) {
+    setUpIteration();
+    runAlgorithm();
   }
 
-  protected void onIteration(int i) {
-    setUpIteration(i);
+  protected void setUpIteration() {
+    setIteration();
+    addMdc(); // Must go before dataset logging when logging graph metrics.
+    setDatasetAndParameters();
+    logDatasetAndSettings();
+  }
+
+  protected void runAlgorithm() {
     Runner.run(newAlgorithm(), "RiskPropagation");
   }
 
-  protected RiskScoreMessage cacheMerge(RiskScoreMessage oldMsg, RiskScoreMessage newMsg) {
-    return isHigher(newMsg, oldMsg) || isApproxEqualAndOlder(newMsg, oldMsg) ? newMsg : oldMsg;
+  protected void setIteration() {
+    iteration = UUID.randomUUID().toString();
+  }
+
+  protected void addMdc() {
+    mdc().forEach(MDC::put);
+  }
+
+  protected void setDatasetAndParameters() {
+    setDataset();
+    setUserParameters();
+    setCacheParameters();
+  }
+
+  protected void logDatasetAndSettings() {
+    logDataset();
+    logSettings();
+  }
+
+  protected abstract void setDataset();
+
+  protected void setUserParameters() {
+    userParameters =
+        UserParameters.builder()
+            .scoreTolerance(scoreTolerance())
+            .sendCoefficient(sendCoefficient())
+            .transmissionRate(transmissionRate())
+            .timeBuffer(timeBuffer())
+            .scoreTtl(scoreTtl())
+            .contactTtl(contactTtl())
+            .idleTimeout(idleTimeout())
+            .refreshPeriod(userRefreshPeriod())
+            .build();
+  }
+
+  protected void setCacheParameters() {
+    cacheParameters =
+        CacheParameters.builder()
+            .interval(cacheInterval())
+            .nIntervals(cacheIntervals())
+            .refreshPeriod(cacheRefreshPeriod())
+            .nLookAhead(cacheLookAhead())
+            .build();
+  }
+
+  protected void logDataset() {
+    dataset.getContactNetwork().logMetrics();
+  }
+
+  protected void logSettings() {
+    loggables.info(LoggableSetting.KEY, settings());
+  }
+
+  protected float scoreTolerance() {
+    return 0.01f;
   }
 
   protected Behavior<AlgorithmMessage> newAlgorithm() {
@@ -156,56 +217,18 @@ public abstract class Experiment implements Runnable {
         .build();
   }
 
-  private boolean isHigher(RiskScoreMessage msg1, RiskScoreMessage msg2) {
-    return msg1.score().value() - msg2.score().value() > scoreTolerance();
-  }
-
-  private boolean isApproxEqualAndOlder(RiskScoreMessage msg1, RiskScoreMessage msg2) {
-    RiskScore score1 = msg1.score();
-    RiskScore score2 = msg2.score();
-    boolean isApproxEqual = Math.abs(score1.value() - score2.value()) < scoreTolerance();
-    boolean isOlder = score1.timestamp().isBefore(score2.timestamp());
-    return isApproxEqual && isOlder;
-  }
-
-  protected void setUpIteration(int i) {
-    iteration = i;
-    mdc().forEach(MDC::put); // Must go before dataset creation when logging graph metrics.
-    dataset = getDataset();
-    userParameters = getUserParameters();
-    cacheParameters = getCacheParameters();
-    loggables.info(LoggableSetting.KEY, settings());
-  }
-
   private Map<String, String> mdc() {
     return Logging.mdc(iteration, graphType);
   }
 
-  protected abstract Dataset getDataset();
-
-  protected CacheFactory<RiskScoreMessage> cacheFactory() {
-    return () ->
-        IntervalCache.<RiskScoreMessage>builder()
-            .nIntervals(cacheParameters.nIntervals())
-            .nLookAhead(cacheParameters.nLookAhead())
-            .interval(cacheParameters.interval())
-            .refreshPeriod(cacheParameters.refreshPeriod())
-            .clock(clock())
-            .mergeStrategy(this::cacheMerge)
-            .build();
-  }
-
-  protected UserParameters getUserParameters() {
-    return UserParameters.builder()
-        .scoreTolerance(scoreTolerance())
-        .sendCoefficient(sendCoefficient())
-        .transmissionRate(transmissionRate())
-        .timeBuffer(timeBuffer())
-        .scoreTtl(scoreTtl())
-        .contactTtl(contactTtl())
-        .idleTimeout(idleTimeout())
-        .refreshPeriod(userRefreshPeriod())
-        .build();
+  protected Duration idleTimeout() {
+    double nContacts = dataset.getContactNetwork().nContacts();
+    double minBase = Math.log(1.1d);
+    double maxBase = Math.log(10d);
+    double decayRate = 1.75E-7;
+    double targetBase = Math.max(minBase, maxBase - decayRate * nContacts);
+    long timeout = (long) Math.ceil(Math.log(nContacts) / targetBase);
+    return Duration.ofSeconds(timeout);
   }
 
   protected float sendCoefficient() {
@@ -220,13 +243,8 @@ public abstract class Experiment implements Runnable {
     return Duration.ofDays(2L);
   }
 
-  protected CacheParameters getCacheParameters() {
-    return CacheParameters.builder()
-        .interval(cacheInterval())
-        .nIntervals(cacheIntervals())
-        .refreshPeriod(cacheRefreshPeriod())
-        .nLookAhead(cacheLookAhead())
-        .build();
+  protected TimeSampler newTimeSampler(Duration ttl) {
+    return TimeSampler.builder().seed(seed).referenceTime(referenceTime).ttl(ttl).build();
   }
 
   protected Duration userRefreshPeriod() {
@@ -259,18 +277,32 @@ public abstract class Experiment implements Runnable {
         .build();
   }
 
-  protected float scoreTolerance() {
-    return 0.01f;
+  protected CacheFactory<RiskScoreMessage> cacheFactory() {
+    return () ->
+        IntervalCache.<RiskScoreMessage>builder()
+            .nIntervals(cacheParameters.nIntervals())
+            .nLookAhead(cacheParameters.nLookAhead())
+            .interval(cacheParameters.interval())
+            .refreshPeriod(cacheParameters.refreshPeriod())
+            .clock(clock())
+            .mergeStrategy(this::cacheMerge)
+            .build();
   }
 
-  protected Duration idleTimeout() {
-    double nContacts = dataset.getContactNetwork().nContacts();
-    double minBase = Math.log(1.1d);
-    double maxBase = Math.log(10d);
-    double decayRate = 1.75E-7;
-    double targetBase = Math.max(minBase, maxBase - decayRate * nContacts);
-    long timeout = (long) Math.ceil(Math.log(nContacts) / targetBase);
-    return Duration.ofSeconds(timeout);
+  protected RiskScoreMessage cacheMerge(RiskScoreMessage oldMsg, RiskScoreMessage newMsg) {
+    return isHigher(newMsg, oldMsg) || isApproxEqualAndOlder(newMsg, oldMsg) ? newMsg : oldMsg;
+  }
+
+  private boolean isHigher(RiskScoreMessage msg1, RiskScoreMessage msg2) {
+    return msg1.score().value() - msg2.score().value() > scoreTolerance();
+  }
+
+  private boolean isApproxEqualAndOlder(RiskScoreMessage msg1, RiskScoreMessage msg2) {
+    RiskScore score1 = msg1.score();
+    RiskScore score2 = msg2.score();
+    boolean isApproxEqual = Math.abs(score1.value() - score2.value()) < scoreTolerance();
+    boolean isOlder = score1.timestamp().isBefore(score2.timestamp());
+    return isApproxEqual && isOlder;
   }
 
   public abstract static class Builder {

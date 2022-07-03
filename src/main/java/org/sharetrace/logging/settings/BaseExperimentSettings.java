@@ -13,7 +13,7 @@ interface BaseExperimentSettings extends LoggableSetting {
 
   long seed();
 
-  int iteration();
+  String iteration();
 
   String graphType();
 }

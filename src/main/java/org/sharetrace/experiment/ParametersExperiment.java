@@ -1,6 +1,10 @@
 package org.sharetrace.experiment;
 
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+import org.sharetrace.logging.Loggable;
+import org.sharetrace.logging.metrics.GraphTopologyMetric;
 import org.sharetrace.util.Range;
 
 public class ParametersExperiment extends SyntheticExperiment {
@@ -12,23 +16,38 @@ public class ParametersExperiment extends SyntheticExperiment {
 
   protected ParametersExperiment(Builder builder) {
     super(builder);
+    this.nNodes = builder.nNodes;
     this.transmissionRates = builder.transmissionRates;
     this.sendCoefficients = builder.sendCoefficients;
   }
 
+  public static Builder builder() {
+    return new Builder();
+  }
+
+  protected Set<Class<? extends Loggable>> loggable() {
+    return super.loggable().stream()
+        .filter(loggable -> !loggable.equals(GraphTopologyMetric.class))
+        .collect(Collectors.toUnmodifiableSet());
+  }
+
   @Override
   public void run() {
-    for (int tr : transmissionRates) {
-      transmissionRate = scale(tr);
-      for (int sc : sendCoefficients) {
-        sendCoefficient = scale(sc);
+    for (double tr : transmissionRates) {
+      transmissionRate = (float) tr;
+      for (double sc : sendCoefficients) {
+        sendCoefficient = (float) sc;
+        setDatasetAndParameters();
         super.run();
       }
     }
   }
 
-  private static float scale(float value) {
-    return value / 10f;
+  @Override
+  protected void setUpIteration() {
+    setIteration();
+    addMdc();
+    logDatasetAndSettings();
   }
 
   @Override
@@ -43,8 +62,8 @@ public class ParametersExperiment extends SyntheticExperiment {
 
   public static class Builder extends SyntheticExperiment.Builder {
     private Integer nNodes;
-    private Range transmissionRates = Range.of(1, 10);
-    private Range sendCoefficients = Range.of(1, 11);
+    private Range transmissionRates = Range.of(1, 10, 1, 0.1);
+    private Range sendCoefficients = Range.of(1, 11, 1, 0.1);
 
     public Builder nNodes(int nNodes) {
       this.nNodes = nNodes;

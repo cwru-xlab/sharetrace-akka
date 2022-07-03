@@ -1,7 +1,6 @@
 package org.sharetrace.experiment;
 
 import java.util.Objects;
-import org.sharetrace.data.Dataset;
 import org.sharetrace.data.SyntheticDataset;
 import org.sharetrace.data.factory.GraphGeneratorBuilder;
 import org.sharetrace.data.factory.GraphGeneratorFactory;
@@ -22,13 +21,14 @@ public class SyntheticExperiment extends Experiment {
   }
 
   @Override
-  protected Dataset getDataset() {
-    return SyntheticDataset.builder()
-        .addAllLoggable(loggable())
-        .graphGenerator(graphGeneratorFactory.getGraphGenerator(nNodes))
-        .riskScoreFactory(x -> riskScoreSampler.sample())
-        .contactTimeFactory((x, xx) -> contactTimeSampler.sample())
-        .build();
+  protected void setDataset() {
+    dataset =
+        SyntheticDataset.builder()
+            .addAllLoggable(loggable())
+            .graphGenerator(graphGeneratorFactory.getGraphGenerator(nNodes))
+            .riskScoreFactory(x -> riskScoreSampler.sample())
+            .contactTimeFactory((x, xx) -> contactTimeSampler.sample())
+            .build();
   }
 
   public static class Builder extends Experiment.Builder {

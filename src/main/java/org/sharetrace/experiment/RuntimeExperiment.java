@@ -29,8 +29,8 @@ public class RuntimeExperiment extends SyntheticExperiment {
 
   @Override
   public void run() {
-    for (int n : nodes) {
-      nNodes = n;
+    for (double n : nodes) {
+      nNodes = (int) n;
       super.run();
     }
   }
@@ -44,7 +44,7 @@ public class RuntimeExperiment extends SyntheticExperiment {
     }
 
     @Override
-    public Experiment build() {
+    public RuntimeExperiment build() {
       preBuild();
       return new RuntimeExperiment(this);
     }
