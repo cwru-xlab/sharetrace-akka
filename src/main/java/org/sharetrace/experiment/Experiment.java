@@ -131,6 +131,10 @@ public abstract class Experiment implements Runnable {
     return Duration.ofDays(14L);
   }
 
+  protected TimeSampler newTimeSampler(Duration ttl) {
+    return TimeSampler.builder().seed(seed).referenceTime(referenceTime).ttl(ttl).build();
+  }
+
   protected void onIteration(double i) {
     setUpIteration();
     runAlgorithm();
@@ -138,7 +142,7 @@ public abstract class Experiment implements Runnable {
 
   protected void setUpIteration() {
     setIteration();
-    addMdc(); // Must go before dataset logging when logging graph metrics.
+    addMdc();
     setDatasetAndParameters();
     logDatasetAndSettings();
   }
@@ -164,6 +168,23 @@ public abstract class Experiment implements Runnable {
   protected void logDatasetAndSettings() {
     logDataset();
     logSettings();
+  }
+
+  protected Behavior<AlgorithmMessage> newAlgorithm() {
+    return RiskPropagationBuilder.create()
+        .addAllLoggable(loggable())
+        .putAllMdc(mdc())
+        .contactNetwork(dataset.getContactNetwork())
+        .parameters(userParameters)
+        .clock(clock())
+        .riskScoreFactory(dataset)
+        .contactTimeFactory(dataset)
+        .cacheFactory(cacheFactory())
+        .build();
+  }
+
+  private Map<String, String> mdc() {
+    return Logging.mdc(iteration, graphType);
   }
 
   protected abstract void setDataset();
@@ -200,35 +221,20 @@ public abstract class Experiment implements Runnable {
     loggables.info(LoggableSetting.KEY, settings());
   }
 
+  protected CacheFactory<RiskScoreMessage> cacheFactory() {
+    return () ->
+        IntervalCache.<RiskScoreMessage>builder()
+            .nIntervals(cacheParameters.nIntervals())
+            .nLookAhead(cacheParameters.nLookAhead())
+            .interval(cacheParameters.interval())
+            .refreshPeriod(cacheParameters.refreshPeriod())
+            .clock(clock())
+            .mergeStrategy(this::cacheMerge)
+            .build();
+  }
+
   protected float scoreTolerance() {
     return 0.01f;
-  }
-
-  protected Behavior<AlgorithmMessage> newAlgorithm() {
-    return RiskPropagationBuilder.create()
-        .addAllLoggable(loggable())
-        .putAllMdc(mdc())
-        .contactNetwork(dataset.getContactNetwork())
-        .parameters(userParameters)
-        .clock(clock())
-        .riskScoreFactory(dataset)
-        .contactTimeFactory(dataset)
-        .cacheFactory(cacheFactory())
-        .build();
-  }
-
-  private Map<String, String> mdc() {
-    return Logging.mdc(iteration, graphType);
-  }
-
-  protected Duration idleTimeout() {
-    double nContacts = dataset.getContactNetwork().nContacts();
-    double minBase = Math.log(1.1d);
-    double maxBase = Math.log(10d);
-    double decayRate = 1.75E-7;
-    double targetBase = Math.max(minBase, maxBase - decayRate * nContacts);
-    long timeout = (long) Math.ceil(Math.log(nContacts) / targetBase);
-    return Duration.ofSeconds(timeout);
   }
 
   protected float sendCoefficient() {
@@ -243,8 +249,14 @@ public abstract class Experiment implements Runnable {
     return Duration.ofDays(2L);
   }
 
-  protected TimeSampler newTimeSampler(Duration ttl) {
-    return TimeSampler.builder().seed(seed).referenceTime(referenceTime).ttl(ttl).build();
+  protected Duration idleTimeout() {
+    double nContacts = dataset.getContactNetwork().nContacts();
+    double minBase = Math.log(1.1d);
+    double maxBase = Math.log(10d);
+    double decayRate = 1.75E-7;
+    double targetBase = Math.max(minBase, maxBase - decayRate * nContacts);
+    long timeout = (long) Math.ceil(Math.log(nContacts) / targetBase);
+    return Duration.ofSeconds(timeout);
   }
 
   protected Duration userRefreshPeriod() {
@@ -275,18 +287,6 @@ public abstract class Experiment implements Runnable {
         .userParameters(userParameters)
         .cacheParameters(cacheParameters)
         .build();
-  }
-
-  protected CacheFactory<RiskScoreMessage> cacheFactory() {
-    return () ->
-        IntervalCache.<RiskScoreMessage>builder()
-            .nIntervals(cacheParameters.nIntervals())
-            .nLookAhead(cacheParameters.nLookAhead())
-            .interval(cacheParameters.interval())
-            .refreshPeriod(cacheParameters.refreshPeriod())
-            .clock(clock())
-            .mergeStrategy(this::cacheMerge)
-            .build();
   }
 
   protected RiskScoreMessage cacheMerge(RiskScoreMessage oldMsg, RiskScoreMessage newMsg) {

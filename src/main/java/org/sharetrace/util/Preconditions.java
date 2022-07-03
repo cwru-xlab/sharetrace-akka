@@ -56,6 +56,11 @@ public final class Preconditions {
     return value;
   }
 
+  public static <N extends Number> N checkIsNonNegative(N value, Supplier<String> message) {
+    checkArgument(Objects.requireNonNull(value).doubleValue() >= 0, message);
+    return value;
+  }
+
   public static <N extends Number> N checkIsAtLeast(N value, N lowerBound, String name) {
     return checkIsAtLeast(value, lowerBound, () -> atLeastMessage(name, lowerBound, value));
   }
@@ -74,6 +79,23 @@ public final class Preconditions {
     return checkIsNonNegative(value, () -> nonNegativeMessage(name, value));
   }
 
+  public static <N extends Number> N checkIsPositive(N value, Supplier<String> message) {
+    Objects.requireNonNull(value);
+    checkArgument(value.doubleValue() > 0, message);
+    return value;
+  }
+
+  private static <T> String closedRangeMessage(String name, T lowerBound, T upperBound, T value) {
+    return "'"
+        + name
+        + "' must be between "
+        + lowerBound
+        + " and "
+        + upperBound
+        + ", inclusive; got "
+        + value;
+  }
+
   public static Duration checkIsNonNegative(Duration duration, String name) {
     return checkIsNonNegative(duration, () -> nonNegativeMessage(name, duration));
   }
@@ -83,17 +105,16 @@ public final class Preconditions {
     return duration;
   }
 
+  public static <N extends Number> N checkIsPositive(N value, String name) {
+    return checkIsPositive(value, () -> positiveMessage(name, value));
+  }
+
   private static <T> String nonNegativeMessage(String name, T value) {
     return "'" + name + "' must be non-negative; got " + value;
   }
 
-  public static <N extends Number> N checkIsNonNegative(N value, Supplier<String> message) {
-    checkArgument(Objects.requireNonNull(value).doubleValue() >= 0, message);
-    return value;
-  }
-
-  public static <N extends Number> N checkIsPositive(N value, String name) {
-    return checkIsPositive(value, () -> positiveMessage(name, value));
+  private static <T> String positiveMessage(String name, T value) {
+    return "'" + name + "' must be positive; got " + value;
   }
 
   public static Duration checkIsPositive(Duration duration, String name) {
@@ -104,16 +125,6 @@ public final class Preconditions {
     Objects.requireNonNull(duration);
     checkArgument(!duration.isNegative() && !duration.isZero(), message);
     return duration;
-  }
-
-  private static <T> String positiveMessage(String name, T value) {
-    return "'" + name + "' must be positive; got " + value;
-  }
-
-  public static <N extends Number> N checkIsPositive(N value, Supplier<String> message) {
-    Objects.requireNonNull(value);
-    checkArgument(value.doubleValue() > 0, message);
-    return value;
   }
 
   public static <N extends Number> N checkIsNonzero(N value, String name) {
@@ -128,16 +139,5 @@ public final class Preconditions {
 
   private static <T> String nonzeroMessage(String name, T value) {
     return "'" + name + "' must be nonzero; got " + value;
-  }
-
-  private static <T> String closedRangeMessage(String name, T lowerBound, T upperBound, T value) {
-    return "'"
-        + name
-        + "' must be between "
-        + lowerBound
-        + " and "
-        + upperBound
-        + ", inclusive; got "
-        + value;
   }
 }

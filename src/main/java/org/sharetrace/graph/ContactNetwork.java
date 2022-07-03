@@ -52,6 +52,23 @@ public class ContactNetwork {
     this.loggables = Loggables.create(loggable, logger);
   }
 
+  public static ContactNetwork create(
+      GraphGenerator<Integer, Edge<Integer>, ?> generator,
+      Set<Class<? extends Loggable>> loggable) {
+    Graph<Integer, Edge<Integer>> graph = newGraph();
+    generator.generateGraph(graph);
+    return new ContactNetwork(graph, loggable);
+  }
+
+  private static Graph<Integer, Edge<Integer>> newGraph() {
+    return new FastutilMapGraph<>(userIdFactory(), Edge::new, DefaultGraphType.simple());
+  }
+
+  private static Supplier<Integer> userIdFactory() {
+    int[] id = new int[] {0};
+    return () -> id[0]++;
+  }
+
   public void logMetrics() {
     GraphStats<?, ?> stats = GraphStats.of(graph);
     loggables.info(LoggableMetric.KEY, sizeMetrics(stats));
@@ -134,23 +151,6 @@ public class ContactNetwork {
     GraphMLExporter<Integer, Edge<Integer>> exporter = new GraphMLExporter<>();
     exporter.setVertexIdProvider(String::valueOf);
     return exporter;
-  }
-
-  public static ContactNetwork create(
-      GraphGenerator<Integer, Edge<Integer>, ?> generator,
-      Set<Class<? extends Loggable>> loggable) {
-    Graph<Integer, Edge<Integer>> graph = newGraph();
-    generator.generateGraph(graph);
-    return new ContactNetwork(graph, loggable);
-  }
-
-  private static Graph<Integer, Edge<Integer>> newGraph() {
-    return new FastutilMapGraph<>(userIdFactory(), Edge::new, DefaultGraphType.simple());
-  }
-
-  private static Supplier<Integer> userIdFactory() {
-    int[] id = new int[] {0};
-    return () -> id[0]++;
   }
 
   public IntStream users() {
