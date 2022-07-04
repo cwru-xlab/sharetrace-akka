@@ -32,7 +32,7 @@ class GraphGenerators {
             nNodes, getOrThrow(nEdges, "nEdges", GraphType.GNM_RANDOM), seed, false, false);
       case BARABASI_ALBERT:
         return new BarabasiAlbertGraphGenerator<>(
-            getOrThrow(nInitialNodes, "nInitNodes", GraphType.BARABASI_ALBERT),
+            getOrThrow(nInitialNodes, "nInitialNodes", GraphType.BARABASI_ALBERT),
             getOrThrow(nNewEdges, "nNewEdges", GraphType.BARABASI_ALBERT),
             nNodes,
             seed);
