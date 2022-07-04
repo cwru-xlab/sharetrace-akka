@@ -15,6 +15,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import org.immutables.value.Value;
 import org.jgrapht.Graph;
+import org.jgrapht.Graphs;
 import org.jgrapht.generate.GraphGenerator;
 import org.sharetrace.data.factory.RiskScoreFactory;
 import org.sharetrace.graph.ContactNetwork;
@@ -99,9 +100,7 @@ abstract class BaseFileDataset implements Dataset {
     List<Integer> users;
     for (Entry<Set<Integer>, Instant> entry : contacts().entrySet()) {
       users = List.copyOf(entry.getKey());
-      target.addVertex(users.get(0));
-      target.addVertex(users.get(1));
-      target.addEdge(users.get(0), users.get(1));
+      Graphs.addEdgeWithVertices(target, users.get(0), users.get(1));
     }
   }
 
