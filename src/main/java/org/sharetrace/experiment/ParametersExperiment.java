@@ -33,11 +33,12 @@ public class ParametersExperiment extends SyntheticExperiment {
 
   @Override
   public void run() {
+    setDataset();
     for (double tr : transmissionRates) {
       transmissionRate = (float) tr;
       for (double sc : sendCoefficients) {
         sendCoefficient = (float) sc;
-        setDatasetAndParameters();
+        setParameters();
         super.run();
       }
     }
@@ -61,6 +62,7 @@ public class ParametersExperiment extends SyntheticExperiment {
   }
 
   public static class Builder extends SyntheticExperiment.Builder {
+
     private Integer nNodes;
     private Range transmissionRates = Range.of(1, 10, 1, 0.1);
     private Range sendCoefficients = Range.of(1, 11, 1, 0.1);
@@ -71,18 +73,20 @@ public class ParametersExperiment extends SyntheticExperiment {
     }
 
     public Builder transmissionRates(Range transmissionRates) {
-      this.transmissionRates = Objects.requireNonNull(transmissionRates);
+      this.transmissionRates = transmissionRates;
       return this;
     }
 
     public Builder sendCoefficients(Range sendCoefficients) {
-      this.sendCoefficients = Objects.requireNonNull(sendCoefficients);
+      this.sendCoefficients = sendCoefficients;
       return this;
     }
 
     @Override
     public void preBuild() {
       Objects.requireNonNull(nNodes);
+      Objects.requireNonNull(transmissionRates);
+      Objects.requireNonNull(sendCoefficients);
       super.preBuild();
     }
 

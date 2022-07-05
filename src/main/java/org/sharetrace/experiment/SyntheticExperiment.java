@@ -1,6 +1,7 @@
 package org.sharetrace.experiment;
 
 import java.util.Objects;
+import org.jgrapht.generate.GraphGenerator;
 import org.sharetrace.data.SyntheticDataset;
 import org.sharetrace.data.factory.GraphGeneratorBuilder;
 import org.sharetrace.data.factory.GraphGeneratorFactory;
@@ -25,18 +26,22 @@ public class SyntheticExperiment extends Experiment {
     dataset =
         SyntheticDataset.builder()
             .addAllLoggable(loggable())
-            .graphGenerator(graphGeneratorFactory.getGraphGenerator(nNodes))
-            .riskScoreFactory(x -> riskScoreSampler.sample())
-            .contactTimeFactory((x, xx) -> contactTimeSampler.sample())
+            .graphGenerator(getGraphGenerator())
+            .riskScoreFactory(riskScoreFactory())
+            .contactTimeFactory(contactTimeFactory())
             .build();
+  }
+
+  protected GraphGenerator<Integer, Edge<Integer>, ?> getGraphGenerator() {
+    return graphGeneratorFactory.getGraphGenerator(nNodes);
   }
 
   public static class Builder extends Experiment.Builder {
 
-    private GraphGeneratorFactory generatorFactory;
+    protected GraphGeneratorFactory generatorFactory;
 
-    public Builder graphGeneratorFactory(GraphGeneratorFactory factory) {
-      this.generatorFactory = Objects.requireNonNull(factory);
+    public Builder graphGeneratorFactory(GraphGeneratorFactory generatorFactory) {
+      this.generatorFactory = generatorFactory;
       return this;
     }
 

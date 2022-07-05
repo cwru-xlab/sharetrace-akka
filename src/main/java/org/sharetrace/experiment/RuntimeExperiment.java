@@ -10,11 +10,11 @@ import org.sharetrace.util.Range;
 
 public class RuntimeExperiment extends SyntheticExperiment {
 
-  private final Range nodes;
+  private final Range nNodesRange;
 
   private RuntimeExperiment(Builder builder) {
     super(builder);
-    this.nodes = builder.nodes;
+    this.nNodesRange = builder.nNodesRange;
   }
 
   public static Builder builder() {
@@ -29,22 +29,38 @@ public class RuntimeExperiment extends SyntheticExperiment {
 
   @Override
   public void run() {
-    for (double n : nodes) {
+    for (double n : nNodesRange) {
       nNodes = (int) n;
+      setDataset();
+      setParameters();
       super.run();
     }
   }
 
-  public static class Builder extends SyntheticExperiment.Builder {
-    private Range nodes;
+  @Override
+  protected void setUpIteration() {
+    setIteration();
+    addMdc();
+    logDatasetAndSettings();
+  }
 
-    public Builder nodes(Range nodes) {
-      this.nodes = Objects.requireNonNull(nodes);
+  public static class Builder extends SyntheticExperiment.Builder {
+
+    private Range nNodesRange;
+
+    public Builder nNodesRange(Range nNodesRange) {
+      this.nNodesRange = nNodesRange;
       return this;
     }
 
     @Override
-    public RuntimeExperiment build() {
+    public void preBuild() {
+      Objects.requireNonNull(nNodesRange);
+      super.preBuild();
+    }
+
+    @Override
+    public Experiment build() {
       preBuild();
       return new RuntimeExperiment(this);
     }

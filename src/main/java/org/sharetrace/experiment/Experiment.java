@@ -13,6 +13,8 @@ import org.sharetrace.RiskPropagationBuilder;
 import org.sharetrace.Runner;
 import org.sharetrace.data.Dataset;
 import org.sharetrace.data.factory.CacheFactory;
+import org.sharetrace.data.factory.ContactTimeFactory;
+import org.sharetrace.data.factory.RiskScoreFactory;
 import org.sharetrace.data.sampling.RiskScoreSampler;
 import org.sharetrace.data.sampling.Sampler;
 import org.sharetrace.data.sampling.TimeSampler;
@@ -40,6 +42,7 @@ import org.sharetrace.message.RiskScoreMessage;
 import org.sharetrace.message.UserParameters;
 import org.sharetrace.util.CacheParameters;
 import org.sharetrace.util.IntervalCache;
+import org.sharetrace.util.Preconditions;
 import org.sharetrace.util.Range;
 import org.slf4j.Logger;
 import org.slf4j.MDC;
@@ -80,9 +83,9 @@ public abstract class Experiment implements Runnable {
     return clock().instant();
   }
 
-  protected Sampler<RiskScore> newRiskScoreSampler() {
-    Sampler<Instant> timeSampler = newTimeSampler(scoreTtl());
-    return RiskScoreSampler.builder().timeSampler(timeSampler).seed(seed).build();
+  @Override
+  public void run() {
+    Range.of(nIterations).forEach(this::onIteration);
   }
 
   protected Sampler<Instant> newContactTimeSampler() {
@@ -114,9 +117,8 @@ public abstract class Experiment implements Runnable {
     return Clock.systemUTC();
   }
 
-  @Override
-  public void run() {
-    Range.of(nIterations).forEach(this::onIteration);
+  protected Sampler<RiskScore> newRiskScoreSampler() {
+    return RiskScoreSampler.builder().timeSampler(newTimeSampler(scoreTtl())).seed(seed).build();
   }
 
   protected Duration scoreTtl() {
@@ -143,7 +145,7 @@ public abstract class Experiment implements Runnable {
   protected void setUpIteration() {
     setIteration();
     addMdc();
-    setDatasetAndParameters();
+    setParameters();
     logDatasetAndSettings();
   }
 
@@ -159,8 +161,7 @@ public abstract class Experiment implements Runnable {
     mdc().forEach(MDC::put);
   }
 
-  protected void setDatasetAndParameters() {
-    setDataset();
+  protected void setParameters() {
     setUserParameters();
     setCacheParameters();
   }
@@ -186,8 +187,6 @@ public abstract class Experiment implements Runnable {
   private Map<String, String> mdc() {
     return Logging.mdc(iteration, graphType);
   }
-
-  protected abstract void setDataset();
 
   protected void setUserParameters() {
     userParameters =
@@ -251,7 +250,7 @@ public abstract class Experiment implements Runnable {
 
   protected Duration idleTimeout() {
     double nContacts = dataset.getContactNetwork().nContacts();
-    double minBase = Math.log(1.1d);
+    double minBase = Math.log(1.1);
     double maxBase = Math.log(10d);
     double decayRate = 1.75E-7;
     double targetBase = Math.max(minBase, maxBase - decayRate * nContacts);
@@ -305,14 +304,25 @@ public abstract class Experiment implements Runnable {
     return isApproxEqual && isOlder;
   }
 
+  protected abstract void setDataset();
+
+  protected RiskScoreFactory riskScoreFactory() {
+    return x -> riskScoreSampler.sample();
+  }
+
+  protected ContactTimeFactory contactTimeFactory() {
+    return (x, xx) -> contactTimeSampler.sample();
+  }
+
   public abstract static class Builder {
+
     protected GraphType graphType;
     protected int nIterations = 1;
     protected long seed = new Random().nextLong();
     private boolean preBuildCalled = false;
 
     public Builder graphType(GraphType graphType) {
-      this.graphType = Objects.requireNonNull(graphType);
+      this.graphType = graphType;
       return this;
     }
 
@@ -327,6 +337,8 @@ public abstract class Experiment implements Runnable {
     }
 
     public void preBuild() {
+      Objects.requireNonNull(graphType);
+      Preconditions.checkIsPositive(nIterations, "nIterations");
       preBuildCalled = true;
     }
 

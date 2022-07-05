@@ -28,22 +28,30 @@ public class FileExperiment extends Experiment {
             .path(path)
             .addAllLoggable(loggable())
             .referenceTime(referenceTime)
-            .riskScoreFactory(x -> riskScoreSampler.sample())
+            .riskScoreFactory(riskScoreFactory())
             .build();
   }
 
   public static class Builder extends Experiment.Builder {
+
     private Path path;
     private String delimiter = WHITESPACE_DELIMITER;
 
     public Builder path(Path path) {
-      this.path = Objects.requireNonNull(path);
+      this.path = path;
       return this;
     }
 
     public Builder delimiter(String delimiter) {
-      this.delimiter = Objects.requireNonNull(delimiter);
+      this.delimiter = delimiter;
       return this;
+    }
+
+    @Override
+    public void preBuild() {
+      Objects.requireNonNull(path);
+      Objects.requireNonNull(delimiter);
+      super.preBuild();
     }
 
     @Override
