@@ -27,18 +27,20 @@ class GraphGenerators {
       Optional<Integer> kNearestNeighbors,
       Optional<Double> rewiringProbability) {
     switch (graphType) {
+        // Random
       case GNM_RANDOM:
         return new GnmRandomGraphGenerator<>(
             nNodes, getOrThrow(nEdges, "nEdges", GraphType.GNM_RANDOM), seed, false, false);
+      case RANDOM_REGULAR:
+        return new RandomRegularGraphGenerator<>(
+            nNodes, getOrThrow(degree, "degree", GraphType.RANDOM_REGULAR), seed);
+        // Non-random
       case BARABASI_ALBERT:
         return new BarabasiAlbertGraphGenerator<>(
             getOrThrow(nInitialNodes, "nInitialNodes", GraphType.BARABASI_ALBERT),
             getOrThrow(nNewEdges, "nNewEdges", GraphType.BARABASI_ALBERT),
             nNodes,
             seed);
-      case RANDOM_REGULAR:
-        return new RandomRegularGraphGenerator<>(
-            nNodes, getOrThrow(degree, "degree", GraphType.RANDOM_REGULAR), seed);
       case WATTS_STROGATZ:
         return new WattsStrogatzGraphGenerator<>(
             nNodes,
@@ -48,13 +50,21 @@ class GraphGenerators {
       case SCALE_FREE:
         return new ScaleFreeGraphGenerator<>(nNodes, seed);
       default:
-        throw new IllegalArgumentException("Unable to create graph generator for " + graphType);
+        throw generatorCreationFailedException(graphType);
     }
   }
 
   @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
   private static <T> T getOrThrow(Optional<T> optional, String name, GraphType graphType) {
-    return optional.orElseThrow(
-        () -> new IllegalArgumentException("Missing parameter " + name + " for " + graphType));
+    return optional.orElseThrow(() -> missingParameterException(name, graphType));
+  }
+
+  private static RuntimeException generatorCreationFailedException(GraphType graphType) {
+    return new IllegalArgumentException("Failed to create graph generator for " + graphType);
+  }
+
+  private static RuntimeException missingParameterException(String name, GraphType graphType) {
+    return new IllegalArgumentException(
+        "Missing parameter " + name + " for " + "graph" + graphType);
   }
 }
