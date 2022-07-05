@@ -18,7 +18,7 @@ public final class GraphStats<V, E> {
 
   private static final float NOT_COMPUTED = -1f;
   private final Graph<V, E> graph;
-  private final ShortestPathAlgorithm<V, ?> shortestPath;
+  private final ShortestPathAlgorithm<V, E> shortestPath;
   private GraphMeasurer<V, ?> measurer;
   private float[] harmonicCentralities;
   private float[] katzCentralities;
@@ -68,7 +68,7 @@ public final class GraphStats<V, E> {
 
   private GraphMeasurer<V, ?> getMeasurer() {
     if (measurer == null) {
-      measurer = new GraphMeasurer<>(graph);
+      measurer = new GraphMeasurer<>(graph, shortestPath);
     }
     return measurer;
   }
