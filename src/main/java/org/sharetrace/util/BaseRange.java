@@ -30,6 +30,7 @@ abstract class BaseRange extends AbstractCollection<Double> {
   @Override
   public Iterator<Double> iterator() {
     return new Iterator<>() {
+
       private final BigDecimal scale = BigDecimal.valueOf(scale());
       private int next = start();
 
