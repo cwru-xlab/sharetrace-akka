@@ -9,6 +9,8 @@ import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
+import javax.annotation.Nullable;
+import org.apache.commons.math3.distribution.RealDistribution;
 import org.sharetrace.RiskPropagationBuilder;
 import org.sharetrace.Runner;
 import org.sharetrace.data.Dataset;
@@ -68,8 +70,8 @@ public abstract class Experiment implements Runnable {
     this.nIterations = builder.nIterations;
     this.seed = builder.seed;
     this.referenceTime = newReferenceTime();
-    this.riskScoreSampler = newRiskScoreSampler();
-    this.contactTimeSampler = newContactTimeSampler();
+    this.riskScoreSampler = newRiskScoreSampler(builder);
+    this.contactTimeSampler = newContactTimeSampler(builder);
     this.loggables = Loggables.create(loggable(), logger);
   }
 
@@ -83,13 +85,16 @@ public abstract class Experiment implements Runnable {
     return clock().instant();
   }
 
-  @Override
-  public void run() {
-    Range.of(nIterations).forEach(this::onIteration);
+  private Sampler<RiskScore> newRiskScoreSampler(Builder builder) {
+    RiskScoreSampler.Builder samplerBuilder = RiskScoreSampler.builder();
+    if (builder.scoreValueDistribution != null) {
+      samplerBuilder.valueDistribution(builder.scoreValueDistribution);
+    }
+    return samplerBuilder.seed(seed).timeSampler(newScoreTimeSampler(builder)).build();
   }
 
-  protected Sampler<Instant> newContactTimeSampler() {
-    return newTimeSampler(contactTtl());
+  private Sampler<Instant> newContactTimeSampler(Builder builder) {
+    return newTimeSampler(builder.contactTimeTtlDistribution, contactTtl());
   }
 
   protected Set<Class<? extends Loggable>> loggable() {
@@ -117,15 +122,23 @@ public abstract class Experiment implements Runnable {
     return Clock.systemUTC();
   }
 
-  protected Sampler<RiskScore> newRiskScoreSampler() {
-    return RiskScoreSampler.builder().timeSampler(newTimeSampler(scoreTtl())).seed(seed).build();
+  protected Sampler<Instant> newScoreTimeSampler(Builder builder) {
+    return newTimeSampler(builder.scoreTimeTtlDistribution, scoreTtl());
   }
 
-  protected Duration scoreTtl() {
-    return defaultTtl();
+  private TimeSampler newTimeSampler(@Nullable RealDistribution ttlDistribution, Duration ttl) {
+    TimeSampler.Builder builder = TimeSampler.builder();
+    if (ttlDistribution != null) {
+      builder.ttlDistribution(ttlDistribution);
+    }
+    return builder.ttl(ttl).seed(seed).referenceTime(referenceTime).build();
   }
 
   protected Duration contactTtl() {
+    return defaultTtl();
+  }
+
+  protected Duration scoreTtl() {
     return defaultTtl();
   }
 
@@ -133,8 +146,9 @@ public abstract class Experiment implements Runnable {
     return Duration.ofDays(14L);
   }
 
-  protected TimeSampler newTimeSampler(Duration ttl) {
-    return TimeSampler.builder().seed(seed).referenceTime(referenceTime).ttl(ttl).build();
+  @Override
+  public void run() {
+    Range.of(nIterations).forEach(this::onIteration);
   }
 
   protected void onIteration(double i) {
@@ -314,11 +328,18 @@ public abstract class Experiment implements Runnable {
     return (x, xx) -> contactTimeSampler.sample();
   }
 
+  private TimeSampler newTimeSampler(Duration ttl) {
+    return TimeSampler.builder().ttl(ttl).seed(seed).referenceTime(referenceTime).build();
+  }
+
   public abstract static class Builder {
 
     protected GraphType graphType;
     protected int nIterations = 1;
     protected long seed = new Random().nextLong();
+    private RealDistribution scoreValueDistribution;
+    private RealDistribution scoreTimeTtlDistribution;
+    private RealDistribution contactTimeTtlDistribution;
     private boolean preBuildCalled = false;
 
     public Builder graphType(GraphType graphType) {
@@ -333,6 +354,21 @@ public abstract class Experiment implements Runnable {
 
     public Builder seed(long seed) {
       this.seed = seed;
+      return this;
+    }
+
+    public Builder scoreValueDistribution(RealDistribution scoreValueDistribution) {
+      this.scoreValueDistribution = scoreValueDistribution;
+      return this;
+    }
+
+    public Builder scoreTimeTtlDistribution(RealDistribution scoreTimeTtlDistribution) {
+      this.scoreTimeTtlDistribution = scoreTimeTtlDistribution;
+      return this;
+    }
+
+    public Builder contactTimeTtlDistribution(RealDistribution contactTimeTtlDistribution) {
+      this.contactTimeTtlDistribution = contactTimeTtlDistribution;
       return this;
     }
 
