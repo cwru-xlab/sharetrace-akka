@@ -22,6 +22,7 @@ abstract class BaseRiskScore implements Comparable<RiskScore> {
 
   public static final float MIN_VALUE = 0f;
   public static final float MAX_VALUE = 1f;
+  public static final float VALUE_RANGE = MAX_VALUE - MIN_VALUE;
 
   @Override
   public int compareTo(RiskScore score) {
