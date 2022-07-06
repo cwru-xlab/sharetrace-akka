@@ -71,8 +71,8 @@ abstract class BaseFileDataset implements Dataset {
 
   protected abstract String delimiter();
 
-  private static Instant newer(Instant oldValue, Instant newValue) {
-    return newValue.isAfter(oldValue) ? newValue : oldValue;
+  private static Instant newer(Instant timestamp1, Instant timestamp2) {
+    return timestamp1.isAfter(timestamp2) ? timestamp1 : timestamp2;
   }
 
   protected abstract Instant referenceTime();
