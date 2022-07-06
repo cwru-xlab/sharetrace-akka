@@ -11,13 +11,12 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.immutables.builder.Builder;
 import org.sharetrace.data.factory.CacheFactory;
-import org.sharetrace.data.factory.ContactTimeFactory;
 import org.sharetrace.data.factory.RiskScoreFactory;
+import org.sharetrace.graph.Contact;
 import org.sharetrace.graph.ContactNetwork;
 import org.sharetrace.logging.Loggable;
 import org.sharetrace.logging.Loggables;
@@ -56,10 +55,9 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
   private final Map<String, String> mdc;
   private final UserParameters parameters;
   private final ContactNetwork contactNetwork;
-  private final long nUsers;
+  private final int nUsers;
   private final Clock clock;
   private final RiskScoreFactory riskScoreFactory;
-  private final ContactTimeFactory contactTimeFactory;
   private final CacheFactory<RiskScoreMessage> cacheFactory;
   private Instant startedAt;
   private int nStopped;
@@ -72,8 +70,7 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
       UserParameters parameters,
       Clock clock,
       CacheFactory<RiskScoreMessage> cacheFactory,
-      RiskScoreFactory riskScoreFactory,
-      ContactTimeFactory contactTimeFactory) {
+      RiskScoreFactory riskScoreFactory) {
     super(context);
     this.loggables = Loggables.create(loggable, () -> getContext().getLog());
     this.mdc = mdc;
@@ -82,7 +79,6 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
     this.clock = clock;
     this.cacheFactory = cacheFactory;
     this.riskScoreFactory = riskScoreFactory;
-    this.contactTimeFactory = contactTimeFactory;
     this.nUsers = contactNetwork.nUsers();
     this.nStopped = 0;
   }
@@ -95,8 +91,7 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
       UserParameters parameters,
       Clock clock,
       CacheFactory<RiskScoreMessage> cacheFactory,
-      RiskScoreFactory riskScoreFactory,
-      ContactTimeFactory contactTimeFactory) {
+      RiskScoreFactory riskScoreFactory) {
     return Behaviors.setup(
         context -> {
           context.setLoggerName(Logging.METRIC_LOGGER_NAME);
@@ -108,8 +103,7 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
               parameters,
               clock,
               cacheFactory,
-              riskScoreFactory,
-              contactTimeFactory);
+              riskScoreFactory);
         });
   }
 
@@ -176,12 +170,11 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
             .build());
   }
 
-  private void sendContact(List<Integer> contact, Map<?, ActorRef<UserMessage>> users) {
-    ActorRef<UserMessage> user1 = users.get(contact.get(0));
-    ActorRef<UserMessage> user2 = users.get(contact.get(1));
-    Instant timestamp = contactTimeFactory.getContactTime(contact.get(0), contact.get(1));
-    user1.tell(ContactMessage.builder().replyTo(user2).timestamp(timestamp).build());
-    user2.tell(ContactMessage.builder().replyTo(user1).timestamp(timestamp).build());
+  private void sendContact(Contact contact, Map<?, ActorRef<UserMessage>> users) {
+    ActorRef<UserMessage> user1 = users.get(contact.user1());
+    ActorRef<UserMessage> user2 = users.get(contact.user2());
+    user1.tell(ContactMessage.builder().replyTo(user2).timestamp(contact.timestamp()).build());
+    user2.tell(ContactMessage.builder().replyTo(user1).timestamp(contact.timestamp()).build());
   }
 
   private TypedSupplier<LoggableMetric> runtimeMetric() {

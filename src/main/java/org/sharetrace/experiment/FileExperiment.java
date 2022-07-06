@@ -21,6 +21,19 @@ public class FileExperiment extends Experiment {
   }
 
   @Override
+  public void run() {
+    setDataset();
+    setParameters();
+    super.run();
+  }
+
+  protected void setUpIteration() {
+    setIteration();
+    addMdc();
+    logDatasetAndSettings();
+  }
+
+  @Override
   protected void setDataset() {
     dataset =
         FileDataset.builder()

@@ -149,10 +149,10 @@ public abstract class Experiment implements Runnable {
 
   @Override
   public void run() {
-    Range.of(nIterations).forEach(this::onIteration);
+    Range.of(nIterations).forEach(x -> onIteration());
   }
 
-  protected void onIteration(double i) {
+  protected void onIteration() {
     setUpIteration();
     runAlgorithm();
   }
@@ -160,6 +160,7 @@ public abstract class Experiment implements Runnable {
   protected void setUpIteration() {
     setIteration();
     addMdc();
+    setDataset();
     setParameters();
     logDatasetAndSettings();
   }
@@ -175,6 +176,8 @@ public abstract class Experiment implements Runnable {
   protected void addMdc() {
     mdc().forEach(MDC::put);
   }
+
+  protected abstract void setDataset();
 
   protected void setParameters() {
     setUserParameters();
@@ -194,7 +197,6 @@ public abstract class Experiment implements Runnable {
         .parameters(userParameters)
         .clock(clock())
         .riskScoreFactory(dataset)
-        .contactTimeFactory(dataset)
         .cacheFactory(cacheFactory())
         .build();
   }
@@ -318,8 +320,6 @@ public abstract class Experiment implements Runnable {
     boolean isOlder = score1.timestamp().isBefore(score2.timestamp());
     return isApproxEqual && isOlder;
   }
-
-  protected abstract void setDataset();
 
   protected RiskScoreFactory riskScoreFactory() {
     return x -> riskScoreSampler.sample();
