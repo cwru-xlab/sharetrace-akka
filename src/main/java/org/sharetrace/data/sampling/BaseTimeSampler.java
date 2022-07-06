@@ -1,11 +1,11 @@
 package org.sharetrace.data.sampling;
 
-import static org.sharetrace.util.Preconditions.checkIsPositive;
 import java.time.Duration;
 import java.time.Instant;
 import org.apache.commons.math3.distribution.RealDistribution;
 import org.apache.commons.math3.distribution.UniformRealDistribution;
 import org.immutables.value.Value;
+import org.sharetrace.util.Preconditions;
 
 @Value.Immutable
 abstract class BaseTimeSampler extends BaseSampler<Instant> {
@@ -33,7 +33,6 @@ abstract class BaseTimeSampler extends BaseSampler<Instant> {
 
   @Value.Check
   protected void check() {
-    checkBoundedness(ttlDistribution());
-    checkIsPositive(ttl(), "ttl");
+    Preconditions.checkIsPositive(ttl(), "ttl");
   }
 }
