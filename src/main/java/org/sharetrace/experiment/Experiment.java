@@ -126,7 +126,8 @@ public abstract class Experiment implements Runnable {
     return newTimeSampler(builder.scoreTimeTtlDistribution, scoreTtl());
   }
 
-  private TimeSampler newTimeSampler(@Nullable RealDistribution ttlDistribution, Duration ttl) {
+  private Sampler<Instant> newTimeSampler(
+      @Nullable RealDistribution ttlDistribution, Duration ttl) {
     TimeSampler.Builder builder = TimeSampler.builder();
     if (ttlDistribution != null) {
       builder.ttlDistribution(ttlDistribution);
