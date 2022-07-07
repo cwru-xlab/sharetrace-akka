@@ -49,8 +49,8 @@ abstract class BaseSyntheticContactNetwork implements ContactNetwork {
 
   @Value.Derived
   protected Set<Contact> contactSet() {
-    return helper().contactNetwork().edgeSet().stream()
-        .map(this::toContact)
+    return helper()
+        .contacts(this::toContact)
         .collect(ObjectOpenHashSet.toSetWithExpectedSize(nContacts()));
   }
 

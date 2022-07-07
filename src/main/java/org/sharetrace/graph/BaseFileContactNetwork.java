@@ -45,7 +45,7 @@ abstract class BaseFileContactNetwork implements ContactNetwork {
 
   @Override
   public Stream<Contact> contacts() {
-    return helper().contactNetwork().edgeSet().stream().map(this::toContact);
+    return helper().contacts(this::toContact);
   }
 
   @Override

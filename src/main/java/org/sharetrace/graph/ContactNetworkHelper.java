@@ -7,8 +7,10 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 import org.jgrapht.Graph;
 import org.jgrapht.generate.GraphGenerator;
 import org.jgrapht.graph.AsUnmodifiableGraph;
@@ -29,7 +31,7 @@ import org.sharetrace.util.DescriptiveStats;
 import org.sharetrace.util.TypedSupplier;
 import org.slf4j.Logger;
 
-public class ContactNetworkHelper {
+class ContactNetworkHelper {
 
   private static final Logger logger = Logging.metricLogger();
   private final Graph<Integer, Edge<Integer>> contactNetwork;
@@ -58,12 +60,16 @@ public class ContactNetworkHelper {
     return () -> id[0]++;
   }
 
+  public Stream<Contact> contacts(Function<Edge<Integer>, Contact> toContact) {
+    return contactNetwork.edgeSet().stream().map(toContact);
+  }
+
   public Contact toContact(Edge<Integer> edge, Instant timestamp) {
     return Contact.builder().user1(edge.source()).user2(edge.target()).timestamp(timestamp).build();
   }
 
   public int nUsers() {
-    return (int) contactNetwork().iterables().vertexCount();
+    return (int) contactNetwork.iterables().vertexCount();
   }
 
   public Graph<Integer, Edge<Integer>> contactNetwork() {
@@ -71,11 +77,11 @@ public class ContactNetworkHelper {
   }
 
   public int nContacts() {
-    return (int) contactNetwork().iterables().edgeCount();
+    return (int) contactNetwork.iterables().edgeCount();
   }
 
   public IntStream users() {
-    return contactNetwork().vertexSet().stream().mapToInt(Integer::intValue);
+    return contactNetwork.vertexSet().stream().mapToInt(Integer::intValue);
   }
 
   public void logMetrics() {
