@@ -11,7 +11,6 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -148,8 +147,8 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
   }
 
   private void sendSymptomScores(Map<Integer, ActorRef<UserMessage>> users) {
-    ActorRef<UserMessage> user;
     int name;
+    ActorRef<UserMessage> user;
     RiskScore symptomScore;
     for (Entry<Integer, ActorRef<UserMessage>> entry : users.entrySet()) {
       name = entry.getKey();
@@ -160,11 +159,9 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
   }
 
   private void sendContacts(Map<Integer, ActorRef<UserMessage>> users) {
-    Iterator<Contact> iterator = contactNetwork.contacts().iterator();
-    Contact contact;
+    Iterable<Contact> contacts = () -> contactNetwork.contacts().iterator();
     ActorRef<UserMessage> user1, user2;
-    while (iterator.hasNext()) {
-      contact = iterator.next();
+    for (Contact contact : contacts) {
       user1 = users.get(contact.user1());
       user2 = users.get(contact.user2());
       user1.tell(ContactMessage.builder().replyTo(user2).timestamp(contact.timestamp()).build());
