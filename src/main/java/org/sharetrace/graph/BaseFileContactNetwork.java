@@ -46,7 +46,8 @@ abstract class BaseFileContactNetwork implements ContactNetwork {
 
   @Override
   public Stream<Contact> contacts() {
-    return helper().contacts(this::toContact);
+    ContactTimeFactory contactTimeFactory = contactTimeFactory();
+    return helper().contacts(edge -> helper().toContact(edge, contactTimeFactory));
   }
 
   @Override
@@ -118,10 +119,6 @@ abstract class BaseFileContactNetwork implements ContactNetwork {
   }
 
   protected abstract Instant referenceTime();
-
-  private Contact toContact(Edge<Integer> edge) {
-    return helper().toContact(edge, contactTimeFactory());
-  }
 
   private ContactTimeFactory contactTimeFactory() {
     return (user1, user2) -> contactMap().get(key(user1, user2));

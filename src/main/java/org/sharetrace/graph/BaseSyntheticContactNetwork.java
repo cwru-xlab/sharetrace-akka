@@ -38,6 +38,16 @@ abstract class BaseSyntheticContactNetwork implements ContactNetwork {
   }
 
   @Value.Derived
+  protected Set<Contact> contactSet() {
+    ContactTimeFactory contactTimeFactory = contactTimeFactory();
+    return helper()
+        .contacts(edge -> helper().toContact(edge, contactTimeFactory))
+        .collect(ObjectOpenHashSet.toSetWithExpectedSize(nContacts()));
+  }
+
+  protected abstract ContactTimeFactory contactTimeFactory();
+
+  @Value.Derived
   protected ContactNetworkHelper helper() {
     return ContactNetworkHelper.create(graphGenerator(), loggable());
   }
@@ -45,17 +55,4 @@ abstract class BaseSyntheticContactNetwork implements ContactNetwork {
   protected abstract GraphGenerator<Integer, Edge<Integer>, ?> graphGenerator();
 
   protected abstract Set<Class<? extends Loggable>> loggable();
-
-  @Value.Derived
-  protected Set<Contact> contactSet() {
-    return helper()
-        .contacts(this::toContact)
-        .collect(ObjectOpenHashSet.toSetWithExpectedSize(nContacts()));
-  }
-
-  protected abstract ContactTimeFactory contactTimeFactory();
-
-  private Contact toContact(Edge<Integer> edge) {
-    return helper().toContact(edge, contactTimeFactory());
-  }
 }
