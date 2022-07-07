@@ -17,7 +17,7 @@ import org.jgrapht.graph.AsUnmodifiableGraph;
 import org.jgrapht.graph.DefaultGraphType;
 import org.jgrapht.nio.GraphExporter;
 import org.jgrapht.nio.graphml.GraphMLExporter;
-import org.jgrapht.opt.graph.fastutil.FastutilMapGraph;
+import org.jgrapht.opt.graph.fastutil.FastutilMapIntVertexGraph;
 import org.sharetrace.logging.Loggable;
 import org.sharetrace.logging.Loggables;
 import org.sharetrace.logging.Logging;
@@ -52,7 +52,8 @@ class ContactNetworkHelper {
   }
 
   private static Graph<Integer, Edge<Integer>> newContactNetwork() {
-    return new FastutilMapGraph<>(userIdFactory(), Edge::new, DefaultGraphType.simple());
+    return new FastutilMapIntVertexGraph<>(
+        userIdFactory(), Edge::new, DefaultGraphType.simple(), false);
   }
 
   private static Supplier<Integer> userIdFactory() {
