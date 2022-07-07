@@ -8,7 +8,6 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -63,11 +62,11 @@ class ContactNetworkHelper {
     return () -> id[0]++;
   }
 
-  public Stream<Contact> contacts(Function<Edge<Integer>, Contact> toContact) {
-    return contactNetwork.edgeSet().stream().map(toContact);
+  public Stream<Contact> contacts(ContactTimeFactory contactTimeFactory) {
+    return contactNetwork.edgeSet().stream().map(edge -> toContact(edge, contactTimeFactory));
   }
 
-  public Contact toContact(Edge<Integer> edge, ContactTimeFactory contactTimeFactory) {
+  private static Contact toContact(Edge<Integer> edge, ContactTimeFactory contactTimeFactory) {
     int user1 = edge.source();
     int user2 = edge.target();
     Instant contactTime = contactTimeFactory.getContactTime(user1, user2);
