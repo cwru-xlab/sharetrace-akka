@@ -119,9 +119,8 @@ abstract class BaseFileContactNetwork implements ContactNetwork {
   protected abstract Instant referenceTime();
 
   private Contact toContact(Edge<Integer> edge) {
-    int user1 = edge.source();
-    int user2 = edge.target();
-    Instant timestamp = contactMap().get(key(user1, user2));
+    Set<Integer> key = key(edge.source(), edge.target());
+    Instant timestamp = contactMap().get(key);
     return helper().toContact(edge, timestamp);
   }
 
