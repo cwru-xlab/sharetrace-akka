@@ -1,6 +1,7 @@
 package org.sharetrace.graph;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -117,7 +118,7 @@ class ContactNetworkHelper {
       try (Writer writer = newGraphWriter(graphLabel)) {
         newGraphExporter().exportGraph(contactNetwork, writer);
       } catch (IOException exception) {
-        exception.printStackTrace();
+        throw new UncheckedIOException(exception);
       }
     }
   }
