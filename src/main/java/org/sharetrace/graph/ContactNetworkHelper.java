@@ -69,7 +69,7 @@ class ContactNetworkHelper {
   }
 
   public int nUsers() {
-    return (int) contactNetwork.iterables().vertexCount();
+    return contactNetwork.vertexSet().size();
   }
 
   public Graph<Integer, Edge<Integer>> contactNetwork() {
@@ -77,7 +77,7 @@ class ContactNetworkHelper {
   }
 
   public int nContacts() {
-    return (int) contactNetwork.iterables().edgeCount();
+    return contactNetwork.edgeSet().size();
   }
 
   public IntStream users() {
