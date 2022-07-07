@@ -19,7 +19,6 @@ import org.immutables.value.Value;
 import org.jgrapht.Graph;
 import org.jgrapht.Graphs;
 import org.jgrapht.generate.GraphGenerator;
-import org.sharetrace.data.factory.ContactTimeFactory;
 import org.sharetrace.logging.Loggable;
 
 @Value.Immutable
@@ -47,8 +46,7 @@ abstract class BaseFileContactNetwork implements ContactNetwork {
   @Override
   public Stream<Contact> contacts() {
     ContactNetworkHelper helper = helper();
-    ContactTimeFactory contactTimeFactory = contactTimeFactory();
-    return helper.contacts(edge -> helper.toContact(edge, contactTimeFactory));
+    return helper.contacts(edge -> helper.toContact(edge, this::getContactTime));
   }
 
   @Override
@@ -121,8 +119,8 @@ abstract class BaseFileContactNetwork implements ContactNetwork {
 
   protected abstract Instant referenceTime();
 
-  private ContactTimeFactory contactTimeFactory() {
-    return (user1, user2) -> contactMap().get(key(user1, user2));
+  private Instant getContactTime(int user1, int user2) {
+    return contactMap().get(key(user1, user2));
   }
 
   private static final class Parsed {
