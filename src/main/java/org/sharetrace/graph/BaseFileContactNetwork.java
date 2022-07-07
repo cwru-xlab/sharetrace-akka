@@ -46,8 +46,9 @@ abstract class BaseFileContactNetwork implements ContactNetwork {
 
   @Override
   public Stream<Contact> contacts() {
+    ContactNetworkHelper helper = helper();
     ContactTimeFactory contactTimeFactory = contactTimeFactory();
-    return helper().contacts(edge -> helper().toContact(edge, contactTimeFactory));
+    return helper.contacts(edge -> helper.toContact(edge, contactTimeFactory));
   }
 
   @Override

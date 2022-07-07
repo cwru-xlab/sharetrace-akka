@@ -39,9 +39,10 @@ abstract class BaseSyntheticContactNetwork implements ContactNetwork {
 
   @Value.Derived
   protected Set<Contact> contactSet() {
+    ContactNetworkHelper helper = helper();
     ContactTimeFactory contactTimeFactory = contactTimeFactory();
-    return helper()
-        .contacts(edge -> helper().toContact(edge, contactTimeFactory))
+    return helper
+        .contacts(edge -> helper.toContact(edge, contactTimeFactory))
         .collect(ObjectOpenHashSet.toSetWithExpectedSize(nContacts()));
   }
 
