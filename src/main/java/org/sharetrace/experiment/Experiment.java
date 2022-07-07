@@ -329,10 +329,6 @@ public abstract class Experiment implements Runnable {
     return (x, xx) -> contactTimeSampler.sample();
   }
 
-  private TimeSampler newTimeSampler(Duration ttl) {
-    return TimeSampler.builder().ttl(ttl).seed(seed).referenceTime(referenceTime).build();
-  }
-
   public abstract static class Builder {
 
     protected GraphType graphType;
