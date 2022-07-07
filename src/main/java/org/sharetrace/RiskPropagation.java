@@ -11,7 +11,9 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import org.immutables.builder.Builder;
 import org.sharetrace.data.factory.CacheFactory;
@@ -25,6 +27,7 @@ import org.sharetrace.logging.metrics.LoggableMetric;
 import org.sharetrace.logging.metrics.RuntimeMetric;
 import org.sharetrace.message.AlgorithmMessage;
 import org.sharetrace.message.ContactMessage;
+import org.sharetrace.message.RiskScore;
 import org.sharetrace.message.RiskScoreMessage;
 import org.sharetrace.message.RunMessage;
 import org.sharetrace.message.UserMessage;
@@ -120,8 +123,8 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
     if (nUsers > 0) {
       Map<Integer, ActorRef<UserMessage>> users = newUsers();
       startedAt = clock.instant();
-      setScores(users);
-      setContacts(users);
+      sendSymptomScores(users);
+      sendContacts(users);
     } else {
       behavior = Behaviors.stopped();
     }
@@ -144,12 +147,29 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
     return users;
   }
 
-  private void setScores(Map<Integer, ActorRef<UserMessage>> users) {
-    users.forEach(this::sendFirstScore);
+  private void sendSymptomScores(Map<Integer, ActorRef<UserMessage>> users) {
+    ActorRef<UserMessage> user;
+    int name;
+    RiskScore symptomScore;
+    for (Entry<Integer, ActorRef<UserMessage>> entry : users.entrySet()) {
+      name = entry.getKey();
+      user = entry.getValue();
+      symptomScore = riskScoreFactory.getRiskScore(name);
+      user.tell(RiskScoreMessage.builder().score(symptomScore).replyTo(user).build());
+    }
   }
 
-  private void setContacts(Map<?, ActorRef<UserMessage>> users) {
-    contactNetwork.contacts().forEach(contact -> sendContact(contact, users));
+  private void sendContacts(Map<Integer, ActorRef<UserMessage>> users) {
+    Iterator<Contact> iterator = contactNetwork.contacts().iterator();
+    Contact contact;
+    ActorRef<UserMessage> user1, user2;
+    while (iterator.hasNext()) {
+      contact = iterator.next();
+      user1 = users.get(contact.user1());
+      user2 = users.get(contact.user2());
+      user1.tell(ContactMessage.builder().replyTo(user2).timestamp(contact.timestamp()).build());
+      user2.tell(ContactMessage.builder().replyTo(user1).timestamp(contact.timestamp()).build());
+    }
   }
 
   private void logMetrics() {
@@ -160,21 +180,6 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
     ActorRef<UserMessage> user = getContext().spawn(newUser(), String.valueOf(name));
     getContext().watch(user);
     return user;
-  }
-
-  private void sendFirstScore(int name, ActorRef<UserMessage> user) {
-    user.tell(
-        RiskScoreMessage.builder()
-            .score(riskScoreFactory.getRiskScore(name))
-            .replyTo(user)
-            .build());
-  }
-
-  private void sendContact(Contact contact, Map<?, ActorRef<UserMessage>> users) {
-    ActorRef<UserMessage> user1 = users.get(contact.user1());
-    ActorRef<UserMessage> user2 = users.get(contact.user2());
-    user1.tell(ContactMessage.builder().replyTo(user2).timestamp(contact.timestamp()).build());
-    user2.tell(ContactMessage.builder().replyTo(user1).timestamp(contact.timestamp()).build());
   }
 
   private TypedSupplier<LoggableMetric> runtimeMetric() {
