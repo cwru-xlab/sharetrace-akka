@@ -1,7 +1,6 @@
 package org.sharetrace.graph;
 
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
-import java.time.Instant;
 import java.util.Set;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -57,9 +56,6 @@ abstract class BaseSyntheticContactNetwork implements ContactNetwork {
   protected abstract ContactTimeFactory contactTimeFactory();
 
   private Contact toContact(Edge<Integer> edge) {
-    int user1 = edge.source();
-    int user2 = edge.target();
-    Instant timestamp = contactTimeFactory().getContactTime(user1, user2);
-    return helper().toContact(edge, timestamp);
+    return helper().toContact(edge, contactTimeFactory());
   }
 }

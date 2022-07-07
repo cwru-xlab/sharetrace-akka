@@ -19,6 +19,7 @@ import org.jgrapht.graph.DefaultGraphType;
 import org.jgrapht.nio.GraphExporter;
 import org.jgrapht.nio.graphml.GraphMLExporter;
 import org.jgrapht.opt.graph.fastutil.FastutilMapIntVertexGraph;
+import org.sharetrace.data.factory.ContactTimeFactory;
 import org.sharetrace.logging.Loggable;
 import org.sharetrace.logging.Loggables;
 import org.sharetrace.logging.Logging;
@@ -66,8 +67,11 @@ class ContactNetworkHelper {
     return contactNetwork.edgeSet().stream().map(toContact);
   }
 
-  public Contact toContact(Edge<Integer> edge, Instant timestamp) {
-    return Contact.builder().user1(edge.source()).user2(edge.target()).timestamp(timestamp).build();
+  public Contact toContact(Edge<Integer> edge, ContactTimeFactory contactTimeFactory) {
+    int user1 = edge.source();
+    int user2 = edge.target();
+    Instant contactTime = contactTimeFactory.getContactTime(user1, user2);
+    return Contact.builder().user1(user1).user2(user2).timestamp(contactTime).build();
   }
 
   public int nUsers() {
