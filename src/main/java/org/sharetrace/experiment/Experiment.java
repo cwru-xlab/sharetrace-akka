@@ -310,7 +310,7 @@ public abstract class Experiment implements Runnable {
   }
 
   private boolean isHigher(RiskScoreMessage msg1, RiskScoreMessage msg2) {
-    return msg1.score().value() - msg2.score().value() > scoreTolerance();
+    return msg1.score().value() > msg2.score().value();
   }
 
   private boolean isApproxEqualAndOlder(RiskScoreMessage msg1, RiskScoreMessage msg2) {

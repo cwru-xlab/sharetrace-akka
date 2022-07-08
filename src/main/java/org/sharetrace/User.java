@@ -81,7 +81,7 @@ public class User extends AbstractBehavior<UserMessage> {
 
   private RiskScoreMessage defaultMessage() {
     return RiskScoreMessage.builder()
-        .score(RiskScore.of(RiskScore.MIN_VALUE, clock.instant()))
+        .score(RiskScore.ofMinValue(clock.instant()))
         .replyTo(getContext().getSelf())
         .build();
   }
@@ -355,7 +355,8 @@ public class User extends AbstractBehavior<UserMessage> {
   }
 
   private boolean isHigherThanCurrent(RiskScoreMessage message) {
-    return message.score().value() - current.score().value() > parameters.scoreTolerance();
+    // Do NOT use scoreTolerance; otherwise, it causes issues with logging and analysis.
+    return message.score().value() > current.score().value();
   }
 
   private RiskScoreMessage cached(RiskScoreMessage message) {
