@@ -30,6 +30,10 @@ abstract class BaseRiskScore implements Comparable<RiskScore> {
     return byValue != 0 ? byValue : timestamp().compareTo(score.timestamp());
   }
 
+  public static RiskScore ofMinValue(Instant timestamp) {
+    return RiskScore.of(MIN_VALUE, timestamp);
+  }
+
   /** Returns the magnitude of this risk score; modified during {@link RiskPropagation}. */
   @Value.Parameter
   public abstract float value();
