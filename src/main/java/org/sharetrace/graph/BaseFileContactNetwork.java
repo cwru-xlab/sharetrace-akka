@@ -25,10 +25,6 @@ import org.sharetrace.logging.Loggable;
 @Value.Immutable
 abstract class BaseFileContactNetwork implements ContactNetwork {
 
-  private static Set<Integer> key(int user1, int user2) {
-    return Set.of(user1, user2);
-  }
-
   @Override
   public int nUsers() {
     return helper().nUsers();
@@ -98,10 +94,13 @@ abstract class BaseFileContactNetwork implements ContactNetwork {
       Map<Set<Integer>, Instant> contacts,
       IdIndexer indexer,
       LastContactTime lastContactTime) {
-    Parsed parsed = new Parsed(line, delimiter(), indexer);
-    if (parsed.user1 != parsed.user2) {
-      contacts.merge(parsed.key(), parsed.timestamp, BaseFileContactNetwork::newer);
-      lastContactTime.update(parsed.timestamp);
+    String[] args = line.split(delimiter());
+    int user1 = parseAndIndexUser(args[1], indexer);
+    int user2 = parseAndIndexUser(args[2], indexer);
+    if (user1 != user2) {
+      Instant timestamp = parseTimestamp(args[0]);
+      contacts.merge(key(user1, user2), timestamp, BaseFileContactNetwork::newer);
+      lastContactTime.update(timestamp);
     }
   }
 
@@ -113,6 +112,18 @@ abstract class BaseFileContactNetwork implements ContactNetwork {
 
   protected abstract String delimiter();
 
+  private static int parseAndIndexUser(String user, IdIndexer indexer) {
+    return indexer.index(Integer.parseInt(user.strip()));
+  }
+
+  private static Instant parseTimestamp(String timestamp) {
+    return Instant.ofEpochSecond(Long.parseLong(timestamp.strip()));
+  }
+
+  private static Set<Integer> key(int user1, int user2) {
+    return Set.of(user1, user2);
+  }
+
   private static Instant newer(Instant timestamp1, Instant timestamp2) {
     return timestamp1.isAfter(timestamp2) ? timestamp1 : timestamp2;
   }
@@ -121,29 +132,6 @@ abstract class BaseFileContactNetwork implements ContactNetwork {
 
   private ContactTimeFactory contactTimeFactory() {
     return (user1, user2) -> contactMap().get(key(user1, user2));
-  }
-
-  private static final class Parsed {
-
-    private final int user1;
-    private final int user2;
-    private final Instant timestamp;
-
-    private Parsed(String string, String delimiter, IdIndexer indexer) {
-      String[] args = string.split(delimiter);
-      this.user1 = indexer.index(Integer.parseInt(args[1].strip()));
-      this.user2 = indexer.index(Integer.parseInt(args[2].strip()));
-      this.timestamp = Instant.ofEpochSecond(Long.parseLong(args[0].strip()));
-    }
-
-    public Set<Integer> key() {
-      return BaseFileContactNetwork.key(user1, user2);
-    }
-
-    @Override
-    public String toString() {
-      return "Parsed{" + "user1=" + user1 + ", user2=" + user2 + ", timestamp=" + timestamp + '}';
-    }
   }
 
   private static final class LastContactTime {
