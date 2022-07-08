@@ -287,6 +287,7 @@ class ReachabilityCallback(EventCallback):
         row_add, col_add, data_add = row.extend, col.extend, data.extend
         repeat = itertools.repeat
         for user, edges in enumerate(self.msgs):
+            # Keep user as a destination to show loops in the network.
             dst = set(dst for _, dst in edges)
             row_add(repeat(user, len(dst)))
             col_add(dst)
