@@ -61,7 +61,7 @@ public class FileExperiment extends Experiment {
     }
 
     @Override
-    public void preBuild() {
+    protected void preBuild() {
       Objects.requireNonNull(path);
       Objects.requireNonNull(delimiter);
       super.preBuild();

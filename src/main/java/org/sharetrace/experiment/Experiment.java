@@ -369,7 +369,7 @@ public abstract class Experiment implements Runnable {
       return this;
     }
 
-    public void preBuild() {
+    protected void preBuild() {
       Objects.requireNonNull(graphType);
       Preconditions.checkIsPositive(nIterations, "nIterations");
       preBuildCalled = true;

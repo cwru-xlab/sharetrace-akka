@@ -37,18 +37,9 @@ public class ParametersExperiment extends SyntheticExperiment {
       transmissionRate = (float) tr;
       for (double sc : sendCoefficients) {
         sendCoefficient = (float) sc;
-        setParameters();
         super.run();
       }
     }
-  }
-
-  @Override
-  protected void setUpIteration() {
-    setIteration();
-    addMdc();
-    setDataset();
-    logDatasetAndSettings();
   }
 
   @Override
@@ -83,7 +74,7 @@ public class ParametersExperiment extends SyntheticExperiment {
     }
 
     @Override
-    public void preBuild() {
+    protected void preBuild() {
       Objects.requireNonNull(nNodes);
       Objects.requireNonNull(transmissionRates);
       Objects.requireNonNull(sendCoefficients);

@@ -45,7 +45,7 @@ public class RuntimeExperiment extends SyntheticExperiment {
     }
 
     @Override
-    public void preBuild() {
+    protected void preBuild() {
       Objects.requireNonNull(nNodesRange);
       super.preBuild();
     }

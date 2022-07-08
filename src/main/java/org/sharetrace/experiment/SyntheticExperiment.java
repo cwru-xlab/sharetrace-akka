@@ -46,7 +46,7 @@ public class SyntheticExperiment extends Experiment {
     }
 
     @Override
-    public void preBuild() {
+    protected void preBuild() {
       generatorFactory = Objects.requireNonNullElseGet(generatorFactory, this::defaultFactory);
       super.preBuild();
     }
