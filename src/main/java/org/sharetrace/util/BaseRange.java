@@ -15,6 +15,10 @@ abstract class BaseRange extends AbstractCollection<Double> {
     return Range.builder().start(value).stop(value + 1).build();
   }
 
+  public static Range single(int value, double scale) {
+    return Range.builder().start(value).stop(value + 1).scale(scale).build();
+  }
+
   public static Range of(int start, int stop, int step) {
     return Range.builder().start(start).stop(stop).step(step).build();
   }
