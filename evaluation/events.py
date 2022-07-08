@@ -8,9 +8,9 @@ import itertools
 import os
 import pathlib
 import tempfile
-import warnings
 import zipfile
 from collections.abc import Callable, Iterable, Collection, Sized
+from json import loads
 from typing import Any
 
 import numpy as np
@@ -247,27 +247,13 @@ class ReachabilityCallback(EventCallback):
 
     def __call__(self, event: dict, **kwargs) -> None:
         if event["name"] == Event.RECEIVE:
-            src, dst, uuid = self._extract(event)
+            src, dst = np.uint32(event["from"]), np.uint32(event["to"])
+            uuid = event["uuid"]
             if src == dst:
-                self._handle_initial(src, uuid)
+                self.msg_idx[uuid] = src
             else:
-                self._handle_propagated(src, dst, uuid)
-
-    @staticmethod
-    def _extract(event: dict) -> tuple:
-        return np.uint32(event["from"]), np.uint32(event["to"]), event["uuid"]
-
-    def _handle_initial(self, src, uuid) -> None:
-        self.msg_idx[uuid] = src
-
-    def _handle_propagated(self, src, dst, uuid) -> None:
-        if uuid in self.msg_idx:
-            origin = self.msg_idx[uuid]
-        else:
-            warnings.warn(
-                f"Unknown origin of message {uuid}; assuming source {src}")
-            origin = src
-        self.msgs[origin].append(np.array([src, dst]))
+                origin = self.msg_idx[uuid]
+                self.msgs[origin].append(np.array([src, dst]))
 
     def on_complete(self) -> None:
         self._to_numpy()
@@ -278,9 +264,7 @@ class ReachabilityCallback(EventCallback):
         self._compute_msg_reaches()
 
     def _to_numpy(self):
-        self.msgs = [
-            np.array(self.msgs[v]) if v in self.msgs else np.array([])
-            for v in range(max(self.msgs) + 1)]
+        self.msgs = [np.array(self.msgs[v]) for v in range(len(self.msgs))]
 
     def influence(self, user: int | None = None) -> int | np.ndarray:
         """Returns the cardinality of the influence set for a given user."""
@@ -348,20 +332,3 @@ def analyze_events(logdir: str, *callbacks: EventCallback) -> None:
         callback(event)
     for callback in callbacks:
         callback.on_complete()
-
-
-if __name__ == '__main__':
-    from evaluation import *
-
-    log = "..//logs//20220708145752"
-
-    settings = load_settings(f"{log}//settings.log")
-    metrics = load_metrics(f"{log}//metrics.log")
-
-    analyze_events(
-        f"{log}//events",
-        counter := EventCounterCallback(),
-        updates := UserUpdatesCallback(),
-        timeline := TimelineCallback(),
-        reachability := ReachabilityCallback()
-    )
