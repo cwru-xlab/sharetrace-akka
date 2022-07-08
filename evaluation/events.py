@@ -4,13 +4,18 @@ import abc
 import collections
 import dataclasses
 import enum
+import itertools
 import os
 import pathlib
+import tempfile
+import warnings
+import zipfile
 from collections.abc import Callable, Iterable, Collection, Sized
 from typing import Any
 
 import numpy as np
 from scipy import sparse
+from scipy.sparse import csgraph
 
 Predicate = Callable[[Any], bool]
 
