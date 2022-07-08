@@ -33,7 +33,6 @@ public class ParametersExperiment extends SyntheticExperiment {
 
   @Override
   public void run() {
-    setDataset();
     for (double tr : transmissionRates) {
       transmissionRate = (float) tr;
       for (double sc : sendCoefficients) {
@@ -48,6 +47,7 @@ public class ParametersExperiment extends SyntheticExperiment {
   protected void setUpIteration() {
     setIteration();
     addMdc();
+    setDataset();
     logDatasetAndSettings();
   }
 

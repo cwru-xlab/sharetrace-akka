@@ -31,17 +31,8 @@ public class RuntimeExperiment extends SyntheticExperiment {
   public void run() {
     for (double n : nNodesRange) {
       nNodes = (int) n;
-      setDataset();
-      setParameters();
       super.run();
     }
-  }
-
-  @Override
-  protected void setUpIteration() {
-    setIteration();
-    addMdc();
-    logDatasetAndSettings();
   }
 
   public static class Builder extends SyntheticExperiment.Builder {
