@@ -64,7 +64,6 @@ class GraphGenerators {
   }
 
   private static RuntimeException missingParameterException(String name, GraphType graphType) {
-    return new IllegalArgumentException(
-        "Missing parameter " + name + " for " + "graph" + graphType);
+    return new IllegalArgumentException("Missing parameter " + name + " for graph " + graphType);
   }
 }
