@@ -217,12 +217,13 @@ class TimelineCallback(EventCallback):
         self.labels = np.array(list(self.labels))
 
     def flatten(self, labeled: bool = False) -> np.ndarray:
-        names = self.labels[self._events] if labeled else self._events
-        return np.repeat(names, self._repeats)
+        return np.repeat(self._get_events(labeled), self._repeats)
 
     def run_length_encoded(self, labeled: bool = False) -> np.ndarray:
-        names = self.labels[self._events] if labeled else self._events
-        return np.array([(n, r) for n, r in zip(names, self._repeats)])
+        return np.array(list(zip(self._get_events(labeled), self._repeats)))
+
+    def _get_events(self, labeled: bool = False) -> np.ndarray:
+        return self.labels[self._events] if labeled else self._events
 
 
 class ReachabilityCallback(EventCallback):
