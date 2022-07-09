@@ -74,17 +74,17 @@ public class ParametersExperiment extends SyntheticExperiment {
     }
 
     @Override
+    public Experiment build() {
+      preBuild();
+      return new ParametersExperiment(this);
+    }
+
+    @Override
     protected void preBuild() {
       Objects.requireNonNull(nNodes);
       Objects.requireNonNull(transmissionRates);
       Objects.requireNonNull(sendCoefficients);
       super.preBuild();
-    }
-
-    @Override
-    public Experiment build() {
-      preBuild();
-      return new ParametersExperiment(this);
     }
   }
 }

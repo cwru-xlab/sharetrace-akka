@@ -48,16 +48,16 @@ public class FileExperiment extends Experiment {
     }
 
     @Override
+    public Experiment build() {
+      preBuild();
+      return new FileExperiment(this);
+    }
+
+    @Override
     protected void preBuild() {
       Objects.requireNonNull(path);
       Objects.requireNonNull(delimiter);
       super.preBuild();
-    }
-
-    @Override
-    public Experiment build() {
-      preBuild();
-      return new FileExperiment(this);
     }
   }
 }

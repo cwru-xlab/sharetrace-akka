@@ -46,15 +46,15 @@ public class SyntheticExperiment extends Experiment {
     }
 
     @Override
-    protected void preBuild() {
-      generatorFactory = Objects.requireNonNullElseGet(generatorFactory, this::defaultFactory);
-      super.preBuild();
-    }
-
-    @Override
     public Experiment build() {
       preBuild();
       return new SyntheticExperiment(this);
+    }
+
+    @Override
+    protected void preBuild() {
+      generatorFactory = Objects.requireNonNullElseGet(generatorFactory, this::defaultFactory);
+      super.preBuild();
     }
 
     protected GraphGeneratorFactory defaultFactory() {

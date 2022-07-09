@@ -24,14 +24,14 @@ abstract class BaseRiskScore implements Comparable<RiskScore> {
   public static final float MAX_VALUE = 1f;
   public static final float VALUE_RANGE = MAX_VALUE - MIN_VALUE;
 
+  public static RiskScore ofMinValue(Instant timestamp) {
+    return RiskScore.of(MIN_VALUE, timestamp);
+  }
+
   @Override
   public int compareTo(RiskScore score) {
     int byValue = Float.compare(value(), score.value());
     return byValue != 0 ? byValue : timestamp().compareTo(score.timestamp());
-  }
-
-  public static RiskScore ofMinValue(Instant timestamp) {
-    return RiskScore.of(MIN_VALUE, timestamp);
   }
 
   /** Returns the magnitude of this risk score; modified during {@link RiskPropagation}. */
