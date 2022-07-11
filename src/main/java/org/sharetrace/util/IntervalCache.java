@@ -33,18 +33,19 @@ import java.util.function.Predicate;
  *
  * @param <T> The type of the cached values.
  */
-public class IntervalCache<T> {
+public class IntervalCache<T extends Comparable<T>> {
 
   public static final int MIN_INTERVALS = 1;
   public static final int DEFAULT_INTERVALS = MIN_INTERVALS;
   public static final int MIN_LOOK_AHEAD = 0;
   public static final int DEFAULT_LOOK_AHEAD = MIN_INTERVALS;
-  public static final Duration DEFAULT_REFRESH_RATE = Duration.ofMinutes(1L);
+  public static final Duration DEFAULT_REFRESH_PERIOD = Duration.ofMinutes(1L);
   public static final Duration DEFAULT_INTERVAL = Duration.ofDays(1L);
   public static final Clock DEFAULT_CLOCK = Clock.systemUTC();
 
   private final Map<Long, T> cache;
   private final BinaryOperator<T> mergeStrategy;
+  private final Comparator<T> comparator;
   private final Clock clock;
   private final long interval;
   private final long lookBack;
@@ -57,13 +58,18 @@ public class IntervalCache<T> {
   private IntervalCache(Builder<T> builder) {
     cache = builder.cache;
     mergeStrategy = builder.mergeStrategy;
+    comparator = builder.comparator;
     clock = builder.clock;
-    interval = builder.interval;
-    lookBack = builder.lookBack;
-    lookAhead = builder.lookAhead;
-    refreshPeriod = builder.refreshPeriod;
+    interval = toLong(builder.interval);
+    lookBack = toLong(builder.lookBack);
+    lookAhead = toLong(builder.lookAhead);
+    refreshPeriod = toLong(builder.refreshPeriod);
     lastRefresh = getTime();
     updateRange();
+  }
+
+  private static long toLong(Duration duration) {
+    return duration.toSeconds();
   }
 
   private long getTime() {
@@ -80,16 +86,12 @@ public class IntervalCache<T> {
     return instant.getEpochSecond();
   }
 
-  public static <T> Builder<T> builder() {
+  public static <T extends Comparable<T>> Builder<T> builder() {
     return new Builder<>();
   }
 
   public static <T> BinaryOperator<T> defaultMergeStrategy() {
     return (oldValue, newValue) -> newValue;
-  }
-
-  private static long toLong(Duration duration) {
-    return duration.toSeconds();
   }
 
   /**
@@ -152,9 +154,8 @@ public class IntervalCache<T> {
    * Prior to retrieving the value, the cache is possibly refreshed if it has been sufficiently long
    * since its previous refresh.
    */
-  public Optional<T> max(Instant timestamp, Comparator<T> comparator) {
+  public Optional<T> max(Instant timestamp) {
     Objects.requireNonNull(timestamp);
-    Objects.requireNonNull(comparator);
     refresh();
     long time = toLong(timestamp);
     return cache.entrySet().stream().filter(isNotAfter(time)).map(Entry::getValue).max(comparator);
@@ -164,27 +165,28 @@ public class IntervalCache<T> {
     return entry -> entry.getKey() <= timestamp;
   }
 
-  public static final class Builder<T> {
+  public static final class Builder<T extends Comparable<T>> {
 
     private BinaryOperator<T> mergeStrategy = defaultMergeStrategy();
+    private Comparator<T> comparator;
     private Clock clock = DEFAULT_CLOCK;
-    private long interval = toLong(DEFAULT_INTERVAL);
+    private Duration interval = DEFAULT_INTERVAL;
     private int nIntervals = DEFAULT_INTERVALS;
     private int nLookAhead = DEFAULT_LOOK_AHEAD;
-    private long lookBack;
-    private long lookAhead;
-    private long refreshPeriod = toLong(DEFAULT_REFRESH_RATE);
+    private Duration lookBack;
+    private Duration lookAhead;
+    private Duration refreshPeriod = DEFAULT_REFRESH_PERIOD;
     private Map<Long, T> cache;
 
     /** Sets duration of each contiguous time interval. */
     public Builder<T> interval(Duration interval) {
-      this.interval = toLong(checkIsPositive(interval, "interval"));
+      this.interval = interval;
       return this;
     }
 
     /** Sets the total number of contiguous time intervals. */
     public Builder<T> nIntervals(int nIntervals) {
-      this.nIntervals = checkIsAtLeast(nIntervals, MIN_INTERVALS, "nIntervals");
+      this.nIntervals = nIntervals;
       return this;
     }
 
@@ -196,29 +198,47 @@ public class IntervalCache<T> {
 
     /** Sets the duration after which the cache will refresh. */
     public Builder<T> refreshPeriod(Duration refreshPeriod) {
-      this.refreshPeriod = toLong(checkIsPositive(refreshPeriod, "refreshPeriod"));
+      this.refreshPeriod = refreshPeriod;
       return this;
     }
 
     /** Sets the clock that the cache will use for its notion of time. */
     public Builder<T> clock(Clock clock) {
-      this.clock = Objects.requireNonNull(clock);
+      this.clock = clock;
       return this;
     }
 
     /** Sets the strategy that will be used when adding values to the cache. */
     public Builder<T> mergeStrategy(BinaryOperator<T> mergeStrategy) {
-      this.mergeStrategy = Objects.requireNonNull(mergeStrategy);
+      this.mergeStrategy = mergeStrategy;
+      return this;
+    }
+
+    /** Sets the {@link Comparator} that will be used when comparing values in the cache. */
+    public Builder<T> comparator(Comparator<T> comparator) {
+      this.comparator = comparator;
       return this;
     }
 
     /** Returns an initialized instance of the cache. */
     public IntervalCache<T> build() {
-      checkInLowerInclusiveRange(nLookAhead, MIN_LOOK_AHEAD, nIntervals, "nLookAhead");
-      lookBack = interval * (nIntervals - nLookAhead);
-      lookAhead = interval * nLookAhead;
+      checkFields();
+      lookBack = interval.multipliedBy(nIntervals - nLookAhead);
+      lookAhead = interval.multipliedBy(nLookAhead);
       cache = newCache();
       return new IntervalCache<>(this);
+    }
+
+    private void checkFields() {
+      Objects.requireNonNull(interval);
+      checkIsPositive(interval, "interval");
+      checkIsAtLeast(nIntervals, MIN_INTERVALS, "nIntervals");
+      checkInLowerInclusiveRange(nLookAhead, MIN_LOOK_AHEAD, nIntervals, "nLookAhead");
+      Objects.requireNonNull(refreshPeriod);
+      checkIsPositive(refreshPeriod, "refreshPeriod");
+      Objects.requireNonNull(clock);
+      Objects.requireNonNull(mergeStrategy);
+      Objects.requireNonNull(comparator);
     }
 
     private Map<Long, T> newCache() {

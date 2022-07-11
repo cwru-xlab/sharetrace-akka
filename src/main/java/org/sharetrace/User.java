@@ -13,7 +13,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -234,12 +233,8 @@ public class User extends AbstractBehavior<UserMessage> {
     }
   }
 
-  private Optional<RiskScoreMessage> maxCached(Instant timestamp) {
-    return cache.max(timestamp, RiskScoreMessage::compareTo);
-  }
-
   private RiskScoreMessage maxCachedOrDefault() {
-    return maxCached(clock.instant()).orElseGet(this::defaultMessage);
+    return cache.max(clock.instant()).orElseGet(this::defaultMessage);
   }
 
   private void addContactIfAlive(ContactMessage message) {
@@ -251,7 +246,7 @@ public class User extends AbstractBehavior<UserMessage> {
 
   private void sendCached(ContactMessage message) {
     Instant buffered = buffered(message.timestamp());
-    maxCached(buffered).ifPresent(cached -> sendCached(message.replyTo(), cached));
+    cache.max(buffered).ifPresent(cached -> sendCached(message.replyTo(), cached));
   }
 
   private Predicate<Entry<ActorRef<UserMessage>, Instant>> isContactRecent(

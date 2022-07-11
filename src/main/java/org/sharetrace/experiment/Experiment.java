@@ -246,6 +246,7 @@ public abstract class Experiment implements Runnable {
             .refreshPeriod(cacheParameters.refreshPeriod())
             .clock(clock())
             .mergeStrategy(this::cacheMerge)
+            .comparator(RiskScoreMessage::compareTo)
             .build();
   }
 
