@@ -7,7 +7,7 @@ import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -139,8 +139,14 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
   }
 
   private Map<Integer, ActorRef<UserMessage>> newUsers() {
-    Map<Integer, ActorRef<UserMessage>> users = new Object2ObjectOpenHashMap<>();
-    contactNetwork.users().forEach(name -> users.put(name, newUser(name)));
+    Map<Integer, ActorRef<UserMessage>> users = newUserMap();
+    Iterable<Integer> names = () -> contactNetwork.users().iterator();
+    ActorRef<UserMessage> user;
+    for (int name : names) {
+      user = getContext().spawn(newUser(), String.valueOf(name));
+      getContext().watch(user);
+      users.put(name, user);
+    }
     return users;
   }
 
@@ -171,14 +177,8 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
     loggables.info(LoggableMetric.KEY, runtimeMetric());
   }
 
-  private ActorRef<UserMessage> newUser(int name) {
-    ActorRef<UserMessage> user = getContext().spawn(newUser(), String.valueOf(name));
-    getContext().watch(user);
-    return user;
-  }
-
-  private TypedSupplier<LoggableMetric> runtimeMetric() {
-    return TypedSupplier.of(RuntimeMetric.class, () -> RuntimeMetric.of(runtime()));
+  private Map<Integer, ActorRef<UserMessage>> newUserMap() {
+    return new Int2ObjectOpenHashMap<>(contactNetwork.nUsers());
   }
 
   private Behavior<UserMessage> newUser() {
@@ -189,6 +189,10 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
         .clock(clock)
         .cache(cacheFactory.getCache())
         .build();
+  }
+
+  private TypedSupplier<LoggableMetric> runtimeMetric() {
+    return TypedSupplier.of(RuntimeMetric.class, () -> RuntimeMetric.of(runtime()));
   }
 
   private float runtime() {
