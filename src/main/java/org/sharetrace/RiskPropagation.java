@@ -119,8 +119,8 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
     Behavior<AlgorithmMessage> behavior = this;
     if (contactNetwork.nUsers() > 0) {
       Map<Integer, ActorRef<UserMessage>> users = newUsers();
-      startedAt = clock.instant();
       sendSymptomScores(users);
+      startedAt = clock.instant();
       sendContacts(users);
     } else {
       behavior = Behaviors.stopped();
