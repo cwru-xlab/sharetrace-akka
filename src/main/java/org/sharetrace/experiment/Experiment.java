@@ -85,12 +85,8 @@ public abstract class Experiment implements Runnable {
     return clock().instant();
   }
 
-  private Sampler<RiskScore> newRiskScoreSampler(Builder builder) {
-    RiskScoreSampler.Builder samplerBuilder = RiskScoreSampler.builder();
-    if (builder.scoreValueDistribution != null) {
-      samplerBuilder.valueDistribution(builder.scoreValueDistribution);
-    }
-    return samplerBuilder.seed(seed).timeSampler(newScoreTimeSampler(builder)).build();
+  protected Duration contactTtl() {
+    return defaultTtl();
   }
 
   private Sampler<Instant> newContactTimeSampler(Builder builder) {
@@ -122,10 +118,6 @@ public abstract class Experiment implements Runnable {
     return Clock.systemUTC();
   }
 
-  protected Sampler<Instant> newScoreTimeSampler(Builder builder) {
-    return newTimeSampler(builder.scoreTimeTtlDistribution, scoreTtl());
-  }
-
   private Sampler<Instant> newTimeSampler(
       @Nullable RealDistribution ttlDistribution, Duration ttl) {
     TimeSampler.Builder builder = TimeSampler.builder();
@@ -135,12 +127,17 @@ public abstract class Experiment implements Runnable {
     return builder.ttl(ttl).seed(seed).referenceTime(referenceTime).build();
   }
 
-  protected Duration contactTtl() {
+  protected Duration scoreTtl() {
     return defaultTtl();
   }
 
-  protected Duration scoreTtl() {
-    return defaultTtl();
+  private Sampler<RiskScore> newRiskScoreSampler(Builder builder) {
+    RiskScoreSampler.Builder samplerBuilder = RiskScoreSampler.builder();
+    if (builder.scoreValueDistribution != null) {
+      samplerBuilder.valueDistribution(builder.scoreValueDistribution);
+    }
+    Sampler<Instant> timeSampler = newTimeSampler(builder.scoreTimeTtlDistribution, scoreTtl());
+    return samplerBuilder.seed(seed).timeSampler(timeSampler).build();
   }
 
   protected Duration defaultTtl() {
