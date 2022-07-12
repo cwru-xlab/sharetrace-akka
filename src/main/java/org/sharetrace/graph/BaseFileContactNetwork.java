@@ -11,7 +11,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -62,11 +61,9 @@ abstract class BaseFileContactNetwork implements ContactNetwork {
   protected abstract Set<Class<? extends Loggable>> loggable();
 
   private void generateGraph(Graph<Integer, Edge<Integer>> target) {
-    List<Integer> users;
-    for (Entry<Set<Integer>, Instant> contact : contactMap().entrySet()) {
-      users = List.copyOf(contact.getKey());
-      Graphs.addEdgeWithVertices(target, users.get(0), users.get(1));
-    }
+    contactMap().keySet().stream()
+        .map(List::copyOf)
+        .forEach(users -> Graphs.addEdgeWithVertices(target, users.get(0), users.get(1)));
   }
 
   @Value.Derived
