@@ -302,6 +302,15 @@ public abstract class Experiment implements Runnable {
         .build();
   }
 
+  private Sampler<RiskScore> newRiskScoreSampler(Builder builder) {
+    RiskScoreSampler.Builder samplerBuilder = RiskScoreSampler.builder();
+    if (builder.scoreValueDistribution != null) {
+      samplerBuilder.valueDistribution(builder.scoreValueDistribution);
+    }
+    Sampler<Instant> timeSampler = newTimeSampler(builder.scoreTimeTtlDistribution, scoreTtl());
+    return samplerBuilder.seed(seed).timeSampler(timeSampler).build();
+  }
+
   private static boolean isHigher(RiskScoreMessage msg1, RiskScoreMessage msg2) {
     return msg1.score().value() > msg2.score().value();
   }
@@ -314,31 +323,12 @@ public abstract class Experiment implements Runnable {
     return Math.abs(msg1.score().value() - msg2.score().value()) < scoreTolerance();
   }
 
-  private Sampler<RiskScore> newRiskScoreSampler(Builder builder) {
-    RiskScoreSampler.Builder samplerBuilder = RiskScoreSampler.builder();
-    if (builder.scoreValueDistribution != null) {
-      samplerBuilder.valueDistribution(builder.scoreValueDistribution);
-    }
-    Sampler<Instant> timeSampler = newTimeSampler(builder.scoreTimeTtlDistribution, scoreTtl());
-    return samplerBuilder.seed(seed).timeSampler(timeSampler).build();
-  }
-
   protected RiskScoreFactory riskScoreFactory() {
     return x -> riskScoreSampler.sample();
   }
 
   protected ContactTimeFactory contactTimeFactory() {
     return (x, xx) -> contactTimeSampler.sample();
-  }
-
-  private boolean isApproxEqualAndOlder(RiskScoreMessage msg1, RiskScoreMessage msg2) {
-    RiskScore score1 = msg1.score();
-    RiskScore score2 = msg2.score();
-    boolean result = false;
-    if (score1.timestamp().isBefore(score2.timestamp())) {
-      result = Math.abs(score1.value() - score2.value()) < scoreTolerance();
-    }
-    return result;
   }
 
   public abstract static class Builder {
