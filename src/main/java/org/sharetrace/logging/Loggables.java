@@ -65,4 +65,9 @@ public final class Loggables {
   public Set<Class<? extends Loggable>> loggable() {
     return loggable;
   }
+
+  @Override
+  public String toString() {
+    return "Loggables{loggable=" + loggable + ", logger=" + logger + '}';
+  }
 }

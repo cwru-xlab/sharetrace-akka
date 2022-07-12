@@ -138,6 +138,11 @@ abstract class BaseFileContactNetwork implements ContactNetwork {
     public void update(Instant timestamp) {
       value = newer(value, timestamp);
     }
+
+    @Override
+    public String toString() {
+      return "LastContactTime{value=" + value + '}';
+    }
   }
 
   private static final class IdIndexer {
@@ -148,6 +153,11 @@ abstract class BaseFileContactNetwork implements ContactNetwork {
     public int index(int id) {
       Integer indexed = index.putIfAbsent(id, currentId);
       return (indexed == null) ? currentId++ : indexed;
+    }
+
+    @Override
+    public String toString() {
+      return "IdIndexer{currentId=" + currentId + '}';
     }
   }
 }
