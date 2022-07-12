@@ -72,18 +72,18 @@ abstract class BaseFileContactNetwork implements ContactNetwork {
   @Value.Derived
   protected Map<Set<Integer>, Instant> contactMap() {
     LastContactTime lastContactTime = new LastContactTime();
-    Map<Set<Integer>, Instant> contacts = newContacts();
+    Map<Set<Integer>, Instant> contactMap = newContactMap();
     IdIndexer indexer = new IdIndexer();
     try (BufferedReader reader = Files.newBufferedReader(path())) {
-      reader.lines().forEach(line -> processLine(line, contacts, indexer, lastContactTime));
+      reader.lines().forEach(line -> processLine(line, contactMap, indexer, lastContactTime));
     } catch (IOException exception) {
       throw new UncheckedIOException(exception);
     }
-    adjustTimestamps(contacts, lastContactTime);
-    return contacts;
+    adjustTimestamps(contactMap, lastContactTime);
+    return contactMap;
   }
 
-  private Map<Set<Integer>, Instant> newContacts() {
+  private Map<Set<Integer>, Instant> newContactMap() {
     return new Object2ObjectOpenHashMap<>();
   }
 
