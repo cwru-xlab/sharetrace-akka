@@ -28,6 +28,10 @@ abstract class BaseRiskScore implements Comparable<RiskScore> {
     return RiskScore.of(MIN_VALUE, timestamp);
   }
 
+  public static RiskScore ofMaxValue(Instant timestamp) {
+    return RiskScore.of(MAX_VALUE, timestamp);
+  }
+
   @Override
   public int compareTo(RiskScore score) {
     int byValue = Float.compare(value(), score.value());
