@@ -9,6 +9,7 @@ import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.BinaryOperator;
 import javax.annotation.Nullable;
 import org.apache.commons.math3.distribution.RealDistribution;
 import org.sharetrace.RiskPropagationBuilder;
@@ -51,6 +52,7 @@ import org.slf4j.MDC;
 
 public abstract class Experiment implements Runnable {
 
+  private final BinaryOperator<RiskScoreMessage> mergeStrategy = this::cacheMerge;
   protected static final Logger logger = Logging.settingLogger();
   protected final Instant referenceTime;
   protected final Sampler<RiskScore> riskScoreSampler;
@@ -131,12 +133,17 @@ public abstract class Experiment implements Runnable {
     return defaultTtl();
   }
 
-  protected RiskScoreMessage cacheMerge(RiskScoreMessage oldMsg, RiskScoreMessage newMsg) {
-    // Simpler to check for higher value first.
-    // Most will likely not be older, which avoids checking for approximate equality.
-    return isHigher(newMsg, oldMsg) || (isOlder(newMsg, oldMsg) && isApproxEqual(newMsg, oldMsg))
-        ? newMsg
-        : oldMsg;
+  protected CacheFactory<RiskScoreMessage> cacheFactory() {
+    return () ->
+        IntervalCache.<RiskScoreMessage>builder()
+            .nIntervals(cacheParameters.nIntervals())
+            .nLookAhead(cacheParameters.nLookAhead())
+            .interval(cacheParameters.interval())
+            .refreshPeriod(cacheParameters.refreshPeriod())
+            .clock(clock())
+            .mergeStrategy(mergeStrategy)
+            .comparator(RiskScoreMessage.comparator())
+            .build();
   }
 
   protected Duration defaultTtl() {
@@ -233,17 +240,12 @@ public abstract class Experiment implements Runnable {
     loggables.info(LoggableSetting.KEY, settings());
   }
 
-  protected CacheFactory<RiskScoreMessage> cacheFactory() {
-    return () ->
-        IntervalCache.<RiskScoreMessage>builder()
-            .nIntervals(cacheParameters.nIntervals())
-            .nLookAhead(cacheParameters.nLookAhead())
-            .interval(cacheParameters.interval())
-            .refreshPeriod(cacheParameters.refreshPeriod())
-            .clock(clock())
-            .mergeStrategy(this::cacheMerge)
-            .comparator(RiskScoreMessage::compareTo)
-            .build();
+  protected RiskScoreMessage cacheMerge(RiskScoreMessage oldMsg, RiskScoreMessage newMsg) {
+    // Simpler to check for higher value first.
+    // Most will likely not be older, which avoids checking for approximate equality.
+    return isHigher(newMsg, oldMsg) || (isOlder(newMsg, oldMsg) && isApproxEqual(newMsg, oldMsg))
+        ? newMsg
+        : oldMsg;
   }
 
   protected float scoreTolerance() {
