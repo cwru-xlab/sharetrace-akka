@@ -1,6 +1,5 @@
 package org.sharetrace.logging;
 
-import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -14,7 +13,7 @@ public final class Loggables {
   private final Supplier<Logger> logger;
 
   private Loggables(Set<Class<? extends Loggable>> loggable, Supplier<Logger> logger) {
-    this.loggable = new HashSet<>(loggable);
+    this.loggable = Set.copyOf(loggable);
     this.logger = Objects.requireNonNull(logger);
   }
 
