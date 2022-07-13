@@ -131,16 +131,14 @@ public class IntervalCache<T extends Comparable<T>> {
    * Map#merge(Object, Object, BiFunction)} with the exception that null values are not permitted.
    *
    * @throws IllegalArgumentException if the timespan does not contain the specified timestamp.
-   * @throws NullPointerException if the value being added to the cache is null.
    */
   public void put(Instant timestamp, T value) {
     Objects.requireNonNull(timestamp);
-    Objects.requireNonNull(value);
     refresh();
     long key = checkedFloorKey(toLong(timestamp));
     T oldValue = cache.get(key);
     T newValue = oldValue == null ? value : mergeStrategy.apply(oldValue, value);
-    cache.put(key, Objects.requireNonNull(newValue));
+    cache.put(key, newValue);
   }
 
   private long checkedFloorKey(long timestamp) {
