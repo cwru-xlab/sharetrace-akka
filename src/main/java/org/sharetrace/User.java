@@ -266,7 +266,8 @@ public class User extends AbstractBehavior<UserMessage> {
       contacts.entrySet().stream()
           .filter(isNotFrom(message))
           .filter(isContactRecent(message))
-          .forEach(contact -> propagate(contact.getKey(), message));
+          .map(Entry::getKey)
+          .forEach(contact -> propagate(contact, message));
     }
   }
 
