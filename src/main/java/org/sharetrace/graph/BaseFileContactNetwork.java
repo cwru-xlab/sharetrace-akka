@@ -1,6 +1,7 @@
 package org.sharetrace.graph;
 
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -118,7 +119,7 @@ abstract class BaseFileContactNetwork implements ContactNetwork {
   }
 
   private static Set<Integer> key(int user1, int user2) {
-    return Set.of(user1, user2);
+    return IntSet.of(user1, user2);
   }
 
   private static Instant newer(Instant timestamp1, Instant timestamp2) {
