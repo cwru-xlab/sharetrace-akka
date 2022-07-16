@@ -32,7 +32,7 @@ import org.sharetrace.util.DescriptiveStats;
 import org.sharetrace.util.TypedSupplier;
 import org.slf4j.Logger;
 
-class ContactNetworkHelper {
+public class ContactNetworkHelper {
 
   private static final Logger logger = Logging.metricLogger();
   private final Graph<Integer, Edge<Integer>> contactNetwork;
@@ -52,7 +52,7 @@ class ContactNetworkHelper {
     return new ContactNetworkHelper(contactNetwork, loggable);
   }
 
-  private static Graph<Integer, Edge<Integer>> newContactNetwork() {
+  public static Graph<Integer, Edge<Integer>> newContactNetwork() {
     return new FastutilMapIntVertexGraph<>(
         userIdFactory(), Edge::new, DefaultGraphType.simple(), false);
   }
