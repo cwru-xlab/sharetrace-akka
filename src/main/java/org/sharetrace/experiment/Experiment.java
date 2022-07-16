@@ -283,7 +283,7 @@ public abstract class Experiment implements Runnable {
   }
 
   protected int cacheIntervals() {
-    return (int) (2 * defaultTtl().toDays());
+    return Math.toIntExact(2 * defaultTtl().toDays());
   }
 
   protected Duration cacheRefreshPeriod() {

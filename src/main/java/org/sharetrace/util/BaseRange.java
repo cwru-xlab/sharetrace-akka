@@ -78,9 +78,10 @@ abstract class BaseRange extends AbstractCollection<Double> {
   public abstract int stop();
 
   @Override
+  @Value.Derived
   public int size() {
     double steps = Math.abs(1d * (stop() - start()) / step());
-    return (int) Math.ceil(steps);
+    return Math.toIntExact((long) Math.ceil(steps));
   }
 
   @Override

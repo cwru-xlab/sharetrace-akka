@@ -55,11 +55,11 @@ public final class GraphStats<V, E> {
   }
 
   public int nNodes() {
-    return (int) graph.iterables().vertexCount();
+    return Math.toIntExact(graph.iterables().vertexCount());
   }
 
   public int nEdges() {
-    return (int) graph.iterables().edgeCount();
+    return Math.toIntExact(graph.iterables().edgeCount());
   }
 
   public int radius() {

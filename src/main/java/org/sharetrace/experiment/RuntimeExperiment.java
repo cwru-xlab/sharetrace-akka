@@ -30,7 +30,7 @@ public class RuntimeExperiment extends SyntheticExperiment {
   @Override
   public void run() {
     for (double n : nNodesRange) {
-      nNodes = (int) n;
+      nNodes = Math.toIntExact((long) n);
       super.run();
     }
   }
