@@ -272,7 +272,7 @@ public class User extends AbstractBehavior<UserMessage> {
   }
 
   private boolean isHighEnough(RiskScoreMessage message) {
-    return message.score().value() > sendThreshold;
+    return message.score().value() >= sendThreshold;
   }
 
   private void logSendCached(ActorRef<UserMessage> contact, RiskScoreMessage message) {
@@ -284,7 +284,8 @@ public class User extends AbstractBehavior<UserMessage> {
   }
 
   private boolean isRecent(Instant timestamp, RiskScoreMessage message) {
-    return buffered(timestamp).isAfter(message.score().timestamp());
+    // Message timestamp is no newer (inclusive) than the buffered timestamp.
+    return !message.score().timestamp().isAfter(buffered(timestamp));
   }
 
   private Instant buffered(Instant timestamp) {
