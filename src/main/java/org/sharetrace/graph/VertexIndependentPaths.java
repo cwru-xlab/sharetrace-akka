@@ -3,7 +3,6 @@ package org.sharetrace.graph;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
@@ -20,17 +19,17 @@ public class VertexIndependentPaths<V, E> {
 
   private static final int MIN_PARALLEL_VERTICES = 50;
   private final Graph<V, E> graph;
-  private final Supplier<Graph<V, E>> emptyGraphFactory;
-  private final Function<Graph<V, E>, ShortestPathAlgorithm<V, E>> shortestPathsFactory;
+  private final EmptyGraphFactory<V, E> emptyGraphFactory;
+  private final ShortestPathsFactory<V, E> shortestPathsFactory;
 
-  public VertexIndependentPaths(Graph<V, E> graph, Supplier<Graph<V, E>> emptyGraphFactory) {
+  public VertexIndependentPaths(Graph<V, E> graph, EmptyGraphFactory<V, E> emptyGraphFactory) {
     this(graph, emptyGraphFactory, BidirectionalDijkstraShortestPath::new);
   }
 
   public VertexIndependentPaths(
       Graph<V, E> graph,
-      Supplier<Graph<V, E>> emptyGraphFactory,
-      Function<Graph<V, E>, ShortestPathAlgorithm<V, E>> shortestPathsFactory) {
+      EmptyGraphFactory<V, E> emptyGraphFactory,
+      ShortestPathsFactory<V, E> shortestPathsFactory) {
     this.graph = graph;
     this.emptyGraphFactory = emptyGraphFactory;
     this.shortestPathsFactory = shortestPathsFactory;
@@ -51,7 +50,7 @@ public class VertexIndependentPaths<V, E> {
 
   private int nontrivialPathCount(V source, V sink, int maxFind) {
     Graph<V, E> graph = copyGraph();
-    ShortestPathAlgorithm<V, E> shortestPaths = shortestPathsFactory.apply(graph);
+    ShortestPathAlgorithm<V, E> shortestPaths = shortestPathsFactory.newShortestPaths(graph);
     GraphPath<V, E> path;
     int nFound = 0;
     do {
@@ -79,7 +78,7 @@ public class VertexIndependentPaths<V, E> {
   }
 
   private Graph<V, E> newEmptyGraph() {
-    Graph<V, E> graph = emptyGraphFactory.get();
+    Graph<V, E> graph = emptyGraphFactory.newEmptyGraph();
     checkIsEmpty(graph);
     checkGraphType(graph);
     return graph;
