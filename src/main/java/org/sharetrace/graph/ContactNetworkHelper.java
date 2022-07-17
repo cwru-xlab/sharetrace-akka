@@ -8,16 +8,13 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.Supplier;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import org.jgrapht.Graph;
 import org.jgrapht.generate.GraphGenerator;
 import org.jgrapht.graph.AsUnmodifiableGraph;
-import org.jgrapht.graph.DefaultGraphType;
 import org.jgrapht.nio.GraphExporter;
 import org.jgrapht.nio.graphml.GraphMLExporter;
-import org.jgrapht.opt.graph.fastutil.FastutilMapIntVertexGraph;
 import org.sharetrace.data.factory.ContactTimeFactory;
 import org.sharetrace.logging.Loggable;
 import org.sharetrace.logging.Loggables;
@@ -52,14 +49,8 @@ public class ContactNetworkHelper {
     return new ContactNetworkHelper(contactNetwork, loggable);
   }
 
-  public static Graph<Integer, Edge<Integer>> newContactNetwork() {
-    return new FastutilMapIntVertexGraph<>(
-        userIdFactory(), Edge::new, DefaultGraphType.simple(), false);
-  }
-
-  private static Supplier<Integer> userIdFactory() {
-    int[] id = new int[] {0};
-    return () -> id[0]++;
+  private static Graph<Integer, Edge<Integer>> newContactNetwork() {
+    return GraphFactory.newUndirectedGraph();
   }
 
   public Stream<Contact> contacts(ContactTimeFactory contactTimeFactory) {
