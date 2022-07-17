@@ -4,9 +4,7 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Supplier;
-import java.util.stream.Collector;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.stream.IntStream;
 import org.jgrapht.Graph;
 import org.jgrapht.GraphPath;
 import org.jgrapht.GraphType;
@@ -15,43 +13,56 @@ import org.jgrapht.alg.interfaces.ShortestPathAlgorithm;
 import org.jgrapht.alg.shortestpath.BidirectionalDijkstraShortestPath;
 import org.sharetrace.util.Preconditions;
 
-public class VertexIndependentPaths<V, E> {
+public class VertexIndependentPaths<E> {
 
   private static final int MIN_PARALLEL_VERTICES = 50;
-  private final Graph<V, E> graph;
-  private final EmptyGraphFactory<V, E> emptyGraphFactory;
-  private final ShortestPathsFactory<V, E> shortestPathsFactory;
+  private final Graph<Integer, E> graph;
+  private final int nVertices;
+  private final boolean isDirected;
+  private final EmptyGraphFactory<Integer, E> emptyGraphFactory;
+  private final ShortestPathsFactory<Integer, E> shortestPathsFactory;
 
-  public VertexIndependentPaths(Graph<V, E> graph, EmptyGraphFactory<V, E> emptyGraphFactory) {
+  public VertexIndependentPaths(
+      Graph<Integer, E> graph, EmptyGraphFactory<Integer, E> emptyGraphFactory) {
     this(graph, emptyGraphFactory, BidirectionalDijkstraShortestPath::new);
   }
 
   public VertexIndependentPaths(
-      Graph<V, E> graph,
-      EmptyGraphFactory<V, E> emptyGraphFactory,
-      ShortestPathsFactory<V, E> shortestPathsFactory) {
+      Graph<Integer, E> graph,
+      EmptyGraphFactory<Integer, E> emptyGraphFactory,
+      ShortestPathsFactory<Integer, E> shortestPathsFactory) {
     this.graph = graph;
+    this.nVertices = graph.vertexSet().size();
+    this.isDirected = graph.getType().isDirected();
     this.emptyGraphFactory = emptyGraphFactory;
     this.shortestPathsFactory = shortestPathsFactory;
   }
 
-  public int getPathCount(V source, V sink) {
+  public int getPathCount(int source, int sink) {
     return getPathCount(source, sink, Integer.MAX_VALUE);
   }
 
-  public int getPathCount(V source, V sink, int maxFind) {
+  public int getPathCount(int source, int sink, int maxFind) {
     int stopAt = Math.min(maxFind, maxPossiblePaths(source, sink));
     return stopAt > 0 ? nontrivialPathCount(source, sink, stopAt) : 0;
   }
 
-  private int maxPossiblePaths(V source, V sink) {
-    return isValidPair(source, sink) ? Math.min(graph.degreeOf(source), graph.degreeOf(sink)) : 0;
+  private int maxPossiblePaths(int source, int sink) {
+    int nPaths = 0;
+    if (isPairValid(source, sink)) {
+      if (isDirected) {
+        nPaths = Math.min(graph.outDegreeOf(source), graph.inDegreeOf(sink));
+      } else {
+        nPaths = Math.min(graph.degreeOf(source), graph.degreeOf(sink));
+      }
+    }
+    return nPaths;
   }
 
-  private int nontrivialPathCount(V source, V sink, int maxFind) {
-    Graph<V, E> graph = copyGraph();
-    ShortestPathAlgorithm<V, E> shortestPaths = shortestPathsFactory.newShortestPaths(graph);
-    GraphPath<V, E> path;
+  private int nontrivialPathCount(int source, int sink, int maxFind) {
+    Graph<Integer, E> graph = copyGraph();
+    ShortestPathAlgorithm<Integer, E> shortestPaths = shortestPathsFactory.newShortestPaths(graph);
+    GraphPath<Integer, E> path;
     int nFound = 0;
     do {
       if ((path = shortestPaths.getPath(source, sink)) != null) {
@@ -62,34 +73,34 @@ public class VertexIndependentPaths<V, E> {
     return nFound;
   }
 
-  private boolean isValidPair(V source, V sink) {
-    return !source.equals(sink) && graph.getEdge(source, sink) == null;
+  private boolean isPairValid(int source, int sink) {
+    return source != sink && graph.getEdge(source, sink) == null;
   }
 
-  private Graph<V, E> copyGraph() {
-    Graph<V, E> copy = newEmptyGraph();
+  private Graph<Integer, E> copyGraph() {
+    Graph<Integer, E> copy = newEmptyGraph();
     Graphs.addGraph(copy, graph);
     return copy;
   }
 
-  private List<V> withoutSourceAndSink(GraphPath<V, E> path) {
-    List<V> vertices = path.getVertexList();
+  private List<Integer> withoutSourceAndSink(GraphPath<Integer, E> path) {
+    List<Integer> vertices = path.getVertexList();
     return vertices.size() < 3 ? List.of() : vertices.subList(1, vertices.size() - 1);
   }
 
-  private Graph<V, E> newEmptyGraph() {
-    Graph<V, E> graph = emptyGraphFactory.newEmptyGraph();
+  private Graph<Integer, E> newEmptyGraph() {
+    Graph<Integer, E> graph = emptyGraphFactory.newEmptyGraph();
     checkIsEmpty(graph);
     checkGraphType(graph);
     return graph;
   }
 
-  private void checkIsEmpty(Graph<V, E> supplied) {
+  private void checkIsEmpty(Graph<?, ?> supplied) {
     Preconditions.checkState(
         supplied.vertexSet().isEmpty(), () -> "'emptyGraphFactory' provided a non-empty graph");
   }
 
-  private void checkGraphType(Graph<V, E> supplied) {
+  private void checkGraphType(Graph<?, ?> supplied) {
     GraphType suppliedType = supplied.getType();
     GraphType expectedType = graph.getType();
     Supplier<String> message = () -> graphTypeMessage(expectedType, suppliedType);
@@ -113,36 +124,33 @@ public class VertexIndependentPaths<V, E> {
         && type1.isAllowingCycles() == type2.isAllowingCycles();
   }
 
-  public List<Integer> getPathCounts(V source) {
+  public List<Integer> getPathCounts(int source) {
     return getPathCounts(source, Integer.MAX_VALUE);
   }
 
-  public List<Integer> getPathCounts(V source, int maxFind) {
+  public List<Integer> getPathCounts(int source, int maxFind) {
     return getPathCounts(source, maxFind, true);
   }
 
-  public List<Integer> getPathCounts(V source, int maxFind, boolean allowParallel) {
+  public List<Integer> getPathCounts(int source, int maxFind, boolean allowParallel) {
+    int nCounts = nVertices - graph.degreeOf(source) - 1; // Ignore adjacent vertices and source.
     return vertices(allowParallel)
-        .filter(sink -> isValidPair(source, sink))
+        .filter(sink -> isPairValid(source, sink))
         .map(sink -> getPathCount(source, sink, maxFind))
-        .collect(countCollector(nVertices() - 1));
+        .collect(newCounts(nCounts), Collection::add, Collection::addAll);
   }
 
-  private Stream<V> vertices(boolean allowParallel) {
-    return nVertices() > MIN_PARALLEL_VERTICES && allowParallel
-        ? graph.vertexSet().parallelStream()
-        : graph.vertexSet().stream();
+  private IntStream vertices(boolean allowParallel) {
+    return nVertices > MIN_PARALLEL_VERTICES && allowParallel
+        ? graph.vertexSet().parallelStream().mapToInt(Integer::valueOf)
+        : graph.vertexSet().stream().mapToInt(Integer::valueOf);
   }
 
-  private static Collector<Integer, ?, List<Integer>> countCollector(int size) {
-    return Collectors.toCollection(() -> new IntArrayList(size));
+  private Supplier<List<Integer>> newCounts(int size) {
+    return () -> new IntArrayList(size);
   }
 
-  private int nVertices() {
-    return graph.vertexSet().size();
-  }
-
-  public List<Integer> getPathCounts(V source, boolean allowParallel) {
+  public List<Integer> getPathCounts(int source, boolean allowParallel) {
     return getPathCounts(source, Integer.MAX_VALUE, allowParallel);
   }
 
@@ -151,11 +159,20 @@ public class VertexIndependentPaths<V, E> {
   }
 
   public List<Integer> getAllPathCounts(int maxFind, boolean allowParallel) {
-    int nPairs = nVertices() * (nVertices() - 1);
+    int nPairs = isDirected ? nVertices * (nVertices - 1) : nVertices * (nVertices - 1) / 2;
     return vertices(allowParallel)
-        .map(source -> getPathCounts(source, maxFind, false))
-        .flatMap(Collection::stream)
-        .collect(countCollector(nPairs));
+        .flatMap(source -> uniqueSourceCounts(source, maxFind))
+        .collect(newCounts(nPairs), Collection::add, Collection::addAll);
+  }
+
+  private IntStream uniqueSourceCounts(int source, int maxFind) {
+    return vertices(false)
+        .filter(sink -> isPairUnique(source, sink) && isPairValid(source, sink))
+        .map(sink -> getPathCount(source, sink, maxFind));
+  }
+
+  private boolean isPairUnique(int source, int sink) {
+    return isDirected ? source != sink : source < sink;
   }
 
   public List<Integer> getAllPathCounts() {
