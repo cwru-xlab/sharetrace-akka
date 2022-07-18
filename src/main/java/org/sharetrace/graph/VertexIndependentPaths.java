@@ -18,6 +18,7 @@ public class VertexIndependentPaths {
   private final Graph<Integer, Edge<Integer>> graph;
   private final boolean isDirected;
   private final int nVertices;
+  private final int nPairs;
   private final Graph<Integer, Edge<Integer>> directed;
   private final ShortestPathsFactory<Integer, Edge<Integer>> shortestPathsFactory;
 
@@ -31,6 +32,7 @@ public class VertexIndependentPaths {
     this.graph = graph;
     this.isDirected = graph.getType().isDirected();
     this.nVertices = graph.vertexSet().size();
+    this.nPairs = isDirected ? nVertices * (nVertices - 1) : nVertices * (nVertices - 1) / 2;
     this.directed = GraphFactory.toDirected(graph);
     this.shortestPathsFactory = shortestPathsFactory;
   }
@@ -147,12 +149,12 @@ public class VertexIndependentPaths {
   public List<Integer> getAllPathCounts(int maxFind, boolean allowParallel) {
     return vertices(allowParallel)
         .flatMap(source -> uniqueSourceCounts(source, maxFind))
-        .collect(newCounts(nVertices * (nVertices - 1) / 2), Collection::add, Collection::addAll);
+        .collect(newCounts(nPairs), Collection::add, Collection::addAll);
   }
 
   private IntStream uniqueSourceCounts(int source, int maxFind) {
     return vertices(false)
-        .filter(target -> source < target)
+        .filter(target -> isDirected ? source != target : source < target)
         .map(target -> getPathCount(source, target, maxFind));
   }
 
