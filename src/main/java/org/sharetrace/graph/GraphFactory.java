@@ -15,7 +15,7 @@ public final class GraphFactory {
   public static Graph<Integer, Edge<Integer>> toDirected(Graph<Integer, Edge<Integer>> graph) {
     Graph<Integer, Edge<Integer>> directed;
     if (graph.getType().isDirected()) {
-      directed = copyDirected(graph);
+      directed = graph;
     } else {
       directed = newDirectedGraph();
       for (Edge<Integer> edge : graph.edgeSet()) {

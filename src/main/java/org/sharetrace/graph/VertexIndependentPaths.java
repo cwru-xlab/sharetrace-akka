@@ -11,15 +11,15 @@ import org.jgrapht.alg.interfaces.KShortestPathAlgorithm;
 import org.jgrapht.alg.interfaces.ShortestPathAlgorithm;
 import org.jgrapht.alg.shortestpath.BidirectionalDijkstraShortestPath;
 import org.jgrapht.alg.shortestpath.SuurballeKDisjointShortestPaths;
-import org.sharetrace.util.Preconditions;
 
 public class VertexIndependentPaths {
 
   private static final int MIN_PARALLEL_VERTICES = 50;
   private final Graph<Integer, Edge<Integer>> graph;
+  private final boolean isDirected;
   private final int nVertices;
+  private final Graph<Integer, Edge<Integer>> directed;
   private final ShortestPathsFactory<Integer, Edge<Integer>> shortestPathsFactory;
-  private Graph<Integer, Edge<Integer>> directed;
 
   public VertexIndependentPaths(Graph<Integer, Edge<Integer>> graph) {
     this(graph, BidirectionalDijkstraShortestPath::new);
@@ -28,14 +28,11 @@ public class VertexIndependentPaths {
   public VertexIndependentPaths(
       Graph<Integer, Edge<Integer>> graph,
       ShortestPathsFactory<Integer, Edge<Integer>> shortestPathsFactory) {
-    checkIsUndirected(graph, () -> "'graph' must be undirected");
     this.graph = graph;
+    this.isDirected = graph.getType().isDirected();
     this.nVertices = graph.vertexSet().size();
+    this.directed = GraphFactory.toDirected(graph);
     this.shortestPathsFactory = shortestPathsFactory;
-  }
-
-  private static void checkIsUndirected(Graph<?, ?> graph, Supplier<String> message) {
-    Preconditions.checkState(graph.getType().isUndirected(), message);
   }
 
   public int getPathCount(int source, int target) {
@@ -47,8 +44,8 @@ public class VertexIndependentPaths {
     return stopAt > 0 ? nontrivialPathCount(source, target, stopAt) : 0;
   }
 
-  private int maxPossiblePaths(int source, int target) {
-    return source == target ? 0 : Math.min(graph.degreeOf(source), graph.degreeOf(target));
+  private static Supplier<List<Integer>> newCounts(int size) {
+    return () -> new IntArrayList(size);
   }
 
   private int nontrivialPathCount(int source, int target, int maxFind) {
@@ -61,11 +58,23 @@ public class VertexIndependentPaths {
     return graph.getEdge(v1, v2) != null;
   }
 
+  private int maxPossiblePaths(int source, int target) {
+    int nPaths;
+    if (source == target) {
+      nPaths = 0;
+    } else if (isDirected) {
+      nPaths = Math.min(graph.outDegreeOf(source), graph.inDegreeOf(target));
+    } else {
+      nPaths = Math.min(graph.degreeOf(source), graph.degreeOf(target));
+    }
+    return nPaths;
+  }
+
   private int adjacentPathCount(int source, int target, int maxFind) {
     Graph<Integer, Edge<Integer>> copy = GraphFactory.copyDirected(directed);
     KShortestPathAlgorithm<Integer, Edge<Integer>> shortestPaths = newKShortestPaths(copy);
     List<GraphPath<Integer, Edge<Integer>>> paths;
-    int nFound = 1;
+    int nFound = 1; // Trivial path along edge incident to source and target.
     do {
       if ((paths = shortestPaths.getPaths(source, target, 2)).size() == 2) {
         nFound++;
@@ -78,11 +87,20 @@ public class VertexIndependentPaths {
     return nFound;
   }
 
+  private static <V, E> KShortestPathAlgorithm<V, E> newKShortestPaths(Graph<V, E> graph) {
+    // Suurballe provides a simpler implementation since it ensures no loops.
+    return new SuurballeKDisjointShortestPaths<>(graph);
+  }
+
+  private List<Integer> withoutEndpoints(GraphPath<Integer, ?> path) {
+    List<Integer> vertices = path.getVertexList();
+    return vertices.size() < 3 ? List.of() : vertices.subList(1, vertices.size() - 1);
+  }
+
   private int nonadjacentPathCount(int source, int target, int maxFind) {
-    Graph<Integer, Edge<Integer>> copy = GraphFactory.copyUndirected(graph);
-    ShortestPathAlgorithm<Integer, Edge<Integer>> shortestPaths =
-        shortestPathsFactory.newShortestPaths(copy);
-    GraphPath<Integer, Edge<Integer>> path;
+    Graph<Integer, Edge<Integer>> copy = copyGraph();
+    ShortestPathAlgorithm<Integer, ?> shortestPaths = shortestPathsFactory.newShortestPaths(copy);
+    GraphPath<Integer, ?> path;
     int nFound = 0;
     do {
       if ((path = shortestPaths.getPath(source, target)) != null) {
@@ -91,16 +109,6 @@ public class VertexIndependentPaths {
       }
     } while (path != null && nFound < maxFind);
     return nFound;
-  }
-
-  private static <V, E> KShortestPathAlgorithm<V, E> newKShortestPaths(Graph<V, E> graph) {
-    // Suurballe provides a simpler implementation since it ensures no loops.
-    return new SuurballeKDisjointShortestPaths<>(graph);
-  }
-
-  private List<Integer> withoutEndpoints(GraphPath<Integer, Edge<Integer>> path) {
-    List<Integer> vertices = path.getVertexList();
-    return vertices.size() < 3 ? List.of() : vertices.subList(1, vertices.size() - 1);
   }
 
   public List<Integer> getPathCounts(int source) {
@@ -112,17 +120,10 @@ public class VertexIndependentPaths {
   }
 
   public List<Integer> getPathCounts(int source, int maxFind, boolean allowParallel) {
-    setDirected();
     return vertices(allowParallel)
         .filter(target -> source != target)
         .map(target -> getPathCount(source, target, maxFind))
         .collect(newCounts(nVertices - 1), Collection::add, Collection::addAll);
-  }
-
-  private void setDirected() {
-    if (directed == null) {
-      directed = GraphFactory.toDirected(graph);
-    }
   }
 
   private IntStream vertices(boolean allowParallel) {
@@ -131,8 +132,8 @@ public class VertexIndependentPaths {
         : graph.vertexSet().stream().mapToInt(Integer::valueOf);
   }
 
-  private Supplier<List<Integer>> newCounts(int size) {
-    return () -> new IntArrayList(size);
+  private Graph<Integer, Edge<Integer>> copyGraph() {
+    return isDirected ? GraphFactory.copyDirected(graph) : GraphFactory.copyUndirected(graph);
   }
 
   public List<Integer> getPathCounts(int source, boolean allowParallel) {
@@ -144,7 +145,6 @@ public class VertexIndependentPaths {
   }
 
   public List<Integer> getAllPathCounts(int maxFind, boolean allowParallel) {
-    setDirected();
     return vertices(allowParallel)
         .flatMap(source -> uniqueSourceCounts(source, maxFind))
         .collect(newCounts(nVertices * (nVertices - 1) / 2), Collection::add, Collection::addAll);
