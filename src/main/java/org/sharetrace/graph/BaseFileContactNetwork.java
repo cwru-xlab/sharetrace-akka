@@ -25,6 +25,8 @@ import org.sharetrace.logging.Loggable;
 @Value.Immutable
 abstract class BaseFileContactNetwork implements ContactNetwork {
 
+  public static final String WHITESPACE_DELIMITER = "\\s+";
+
   @Override
   public int nUsers() {
     return helper().nUsers();
@@ -48,6 +50,11 @@ abstract class BaseFileContactNetwork implements ContactNetwork {
   @Override
   public void logMetrics() {
     helper().logMetrics();
+  }
+
+  @Override
+  public Graph<Integer, Edge<Integer>> topology() {
+    return helper().contactNetwork();
   }
 
   @Value.Derived
@@ -108,7 +115,10 @@ abstract class BaseFileContactNetwork implements ContactNetwork {
     contacts.replaceAll((users, timestamp) -> timestamp.plus(offset));
   }
 
-  protected abstract String delimiter();
+  @Value.Default
+  protected String delimiter() {
+    return WHITESPACE_DELIMITER;
+  }
 
   private static int parseAndIndexUser(String user, IdIndexer indexer) {
     return indexer.index(Integer.parseInt(user.strip()));
@@ -126,7 +136,10 @@ abstract class BaseFileContactNetwork implements ContactNetwork {
     return timestamp1.isAfter(timestamp2) ? timestamp1 : timestamp2;
   }
 
-  protected abstract Instant referenceTime();
+  @Value.Default
+  protected Instant referenceTime() {
+    return Instant.now();
+  }
 
   private ContactTimeFactory contactTimeFactory() {
     return (user1, user2) -> contactMap().get(key(user1, user2));

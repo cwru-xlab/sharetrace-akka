@@ -2,6 +2,7 @@ package org.sharetrace.graph;
 
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
+import org.jgrapht.Graph;
 import org.sharetrace.RiskPropagation;
 import org.sharetrace.User;
 
@@ -25,4 +26,6 @@ public interface ContactNetwork {
   Stream<Contact> contacts();
 
   void logMetrics();
+
+  Graph<Integer, Edge<Integer>> topology();
 }
