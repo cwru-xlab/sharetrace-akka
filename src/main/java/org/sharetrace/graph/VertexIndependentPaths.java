@@ -44,20 +44,6 @@ public class VertexIndependentPaths {
     return stopAt > 0 ? nontrivialPathCount(source, target, stopAt) : 0;
   }
 
-  private static Supplier<List<Integer>> newCounts(int size) {
-    return () -> new IntArrayList(size);
-  }
-
-  private int nontrivialPathCount(int source, int target, int maxFind) {
-    return isAdjacent(source, target)
-        ? adjacentPathCount(source, target, maxFind)
-        : nonadjacentPathCount(source, target, maxFind);
-  }
-
-  private boolean isAdjacent(int v1, int v2) {
-    return graph.getEdge(v1, v2) != null;
-  }
-
   private int maxPossiblePaths(int source, int target) {
     int nPaths;
     if (source == target) {
@@ -68,6 +54,16 @@ public class VertexIndependentPaths {
       nPaths = Math.min(graph.degreeOf(source), graph.degreeOf(target));
     }
     return nPaths;
+  }
+
+  private static <V, E> KShortestPathAlgorithm<V, E> newKShortestPaths(Graph<V, E> graph) {
+    // Suurballe provides a simpler implementation since it ensures no loops.
+    return new SuurballeKDisjointShortestPaths<>(graph);
+  }
+
+  private static List<Integer> withoutEndpoints(GraphPath<Integer, ?> path) {
+    List<Integer> vertices = path.getVertexList();
+    return vertices.size() < 3 ? List.of() : vertices.subList(1, vertices.size() - 1);
   }
 
   private int adjacentPathCount(int source, int target, int maxFind) {
@@ -87,16 +83,6 @@ public class VertexIndependentPaths {
     return nFound;
   }
 
-  private static <V, E> KShortestPathAlgorithm<V, E> newKShortestPaths(Graph<V, E> graph) {
-    // Suurballe provides a simpler implementation since it ensures no loops.
-    return new SuurballeKDisjointShortestPaths<>(graph);
-  }
-
-  private List<Integer> withoutEndpoints(GraphPath<Integer, ?> path) {
-    List<Integer> vertices = path.getVertexList();
-    return vertices.size() < 3 ? List.of() : vertices.subList(1, vertices.size() - 1);
-  }
-
   private int nonadjacentPathCount(int source, int target, int maxFind) {
     Graph<Integer, Edge<Integer>> copy = copyGraph();
     ShortestPathAlgorithm<Integer, ?> shortestPaths = shortestPathsFactory.newShortestPaths(copy);
@@ -109,6 +95,20 @@ public class VertexIndependentPaths {
       }
     } while (path != null && nFound < maxFind);
     return nFound;
+  }
+
+  private static Supplier<List<Integer>> newCounts(int size) {
+    return () -> new IntArrayList(size);
+  }
+
+  private int nontrivialPathCount(int source, int target, int maxFind) {
+    return isAdjacent(source, target)
+        ? adjacentPathCount(source, target, maxFind)
+        : nonadjacentPathCount(source, target, maxFind);
+  }
+
+  private boolean isAdjacent(int v1, int v2) {
+    return graph.getEdge(v1, v2) != null;
   }
 
   public List<Integer> getPathCounts(int source) {
