@@ -11,6 +11,7 @@ import org.jgrapht.alg.interfaces.KShortestPathAlgorithm;
 import org.jgrapht.alg.interfaces.ShortestPathAlgorithm;
 import org.jgrapht.alg.shortestpath.BidirectionalDijkstraShortestPath;
 import org.jgrapht.alg.shortestpath.SuurballeKDisjointShortestPaths;
+import org.jheaps.tree.FibonacciHeap;
 
 public class VertexIndependentPaths {
 
@@ -23,7 +24,7 @@ public class VertexIndependentPaths {
   private final ShortestPathsFactory<Integer, Edge<Integer>> shortestPathsFactory;
 
   public VertexIndependentPaths(Graph<Integer, Edge<Integer>> graph) {
-    this(graph, BidirectionalDijkstraShortestPath::new);
+    this(graph, VertexIndependentPaths::defaultShortestPaths);
   }
 
   public VertexIndependentPaths(
@@ -35,6 +36,11 @@ public class VertexIndependentPaths {
     this.nPairs = isDirected ? nVertices * (nVertices - 1) : nVertices * (nVertices - 1) / 2;
     this.directed = GraphFactory.toDirected(graph);
     this.shortestPathsFactory = shortestPathsFactory;
+  }
+
+  private static <V, E> ShortestPathAlgorithm<V, E> defaultShortestPaths(Graph<V, E> graph) {
+    // Fibonacci heap provides O(1) insert vs. pairing heap O(log n).
+    return new BidirectionalDijkstraShortestPath<>(graph, FibonacciHeap::new);
   }
 
   public int getPathCount(int source, int target) {
