@@ -27,7 +27,7 @@ public class VertexIndependentPaths {
     this.graph = GraphFactory.toIntGraph(graph);
     this.isDirected = graph.getType().isDirected();
     this.nVertices = graph.vertexSet().size();
-    this.nPairs = isDirected ? nVertices * (nVertices - 1) : nVertices * (nVertices - 1) / 2;
+    this.nPairs = nVertices * (nVertices - 1) / (isDirected ? 1 : 2);
     this.directed = GraphFactory.toDirected(this.graph);
   }
 
