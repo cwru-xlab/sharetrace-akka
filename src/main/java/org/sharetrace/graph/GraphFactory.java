@@ -12,6 +12,10 @@ public final class GraphFactory {
 
   private GraphFactory() {}
 
+  public static Graph<Integer, Edge<Integer>> copyGraph(Graph<Integer, Edge<Integer>> graph) {
+    return graph.getType().isDirected() ? copyDirected(graph) : copyUndirected(graph);
+  }
+
   public static Graph<Integer, Edge<Integer>> toDirected(Graph<Integer, Edge<Integer>> graph) {
     Graph<Integer, Edge<Integer>> directed;
     if (graph.getType().isDirected()) {
@@ -30,6 +34,15 @@ public final class GraphFactory {
     return newGraph(DefaultGraphType.directedSimple());
   }
 
+  private static Graph<Integer, Edge<Integer>> newGraph(GraphType graphType) {
+    return new FastutilMapIntVertexGraph<>(vertexIdFactory(), Edge::new, graphType, false);
+  }
+
+  private static Supplier<Integer> vertexIdFactory() {
+    int[] id = new int[] {0};
+    return () -> id[0]++;
+  }
+
   public static Graph<Integer, Edge<Integer>> copyDirected(Graph<Integer, Edge<Integer>> directed) {
     Graph<Integer, Edge<Integer>> copy = newDirectedGraph();
     Graphs.addGraph(copy, GraphTests.requireDirected(directed));
@@ -45,14 +58,5 @@ public final class GraphFactory {
 
   public static Graph<Integer, Edge<Integer>> newUndirectedGraph() {
     return newGraph(DefaultGraphType.simple());
-  }
-
-  private static Graph<Integer, Edge<Integer>> newGraph(GraphType graphType) {
-    return new FastutilMapIntVertexGraph<>(vertexIdFactory(), Edge::new, graphType, false);
-  }
-
-  private static Supplier<Integer> vertexIdFactory() {
-    int[] id = new int[] {0};
-    return () -> id[0]++;
   }
 }
