@@ -31,14 +31,14 @@ public final class GraphFactory {
   }
 
   public static Graph<Integer, Edge<Integer>> copyDirected(Graph<Integer, Edge<Integer>> directed) {
-    Graph<Integer, Edge<Integer>> copy = GraphFactory.newDirectedGraph();
+    Graph<Integer, Edge<Integer>> copy = newDirectedGraph();
     Graphs.addGraph(copy, GraphTests.requireDirected(directed));
     return copy;
   }
 
   public static Graph<Integer, Edge<Integer>> copyUndirected(
       Graph<Integer, Edge<Integer>> undirected) {
-    Graph<Integer, Edge<Integer>> copy = GraphFactory.newUndirectedGraph();
+    Graph<Integer, Edge<Integer>> copy = newUndirectedGraph();
     Graphs.addGraph(copy, GraphTests.requireUndirected(undirected));
     return copy;
   }
