@@ -21,6 +21,7 @@ import org.jgrapht.Graphs;
 import org.jgrapht.generate.GraphGenerator;
 import org.sharetrace.data.factory.ContactTimeFactory;
 import org.sharetrace.logging.Loggable;
+import org.sharetrace.util.Indexer;
 
 @Value.Immutable
 abstract class BaseFileContactNetwork implements ContactNetwork {
@@ -159,19 +160,11 @@ abstract class BaseFileContactNetwork implements ContactNetwork {
     }
   }
 
-  private static final class IdIndexer {
-
-    private final Map<Integer, Integer> index = new Int2IntOpenHashMap();
-    private int currentId = 0;
-
-    public int index(int id) {
-      Integer indexed = index.putIfAbsent(id, currentId);
-      return (indexed == null) ? currentId++ : indexed;
-    }
+  private static final class IdIndexer extends Indexer<Integer> {
 
     @Override
-    public String toString() {
-      return "IdIndexer{currentId=" + currentId + '}';
+    protected Map<Integer, Integer> newIndex(int capacity) {
+      return new Int2IntOpenHashMap(capacity);
     }
   }
 }
