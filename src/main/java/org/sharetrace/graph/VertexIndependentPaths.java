@@ -11,36 +11,24 @@ import org.jgrapht.alg.interfaces.KShortestPathAlgorithm;
 import org.jgrapht.alg.interfaces.ShortestPathAlgorithm;
 import org.jgrapht.alg.shortestpath.BidirectionalDijkstraShortestPath;
 import org.jgrapht.alg.shortestpath.SuurballeKDisjointShortestPaths;
+import org.jgrapht.graph.DefaultEdge;
 import org.jheaps.tree.FibonacciHeap;
 
 public class VertexIndependentPaths {
 
   private static final int MIN_PARALLEL_VERTICES = 50;
-  private final Graph<Integer, Edge<Integer>> graph;
+  private final Graph<Integer, DefaultEdge> graph;
   private final boolean isDirected;
   private final int nVertices;
   private final int nPairs;
-  private final Graph<Integer, Edge<Integer>> directed;
-  private final ShortestPathsFactory<Integer, Edge<Integer>> shortestPathsFactory;
+  private final Graph<Integer, DefaultEdge> directed;
 
-  public VertexIndependentPaths(Graph<Integer, Edge<Integer>> graph) {
-    this(graph, VertexIndependentPaths::defaultShortestPaths);
-  }
-
-  public VertexIndependentPaths(
-      Graph<Integer, Edge<Integer>> graph,
-      ShortestPathsFactory<Integer, Edge<Integer>> shortestPathsFactory) {
-    this.graph = graph;
+  public <V, E> VertexIndependentPaths(Graph<V, E> graph) {
+    this.graph = GraphFactory.toIntGraph(graph);
     this.isDirected = graph.getType().isDirected();
     this.nVertices = graph.vertexSet().size();
     this.nPairs = isDirected ? nVertices * (nVertices - 1) : nVertices * (nVertices - 1) / 2;
-    this.directed = GraphFactory.toDirected(graph);
-    this.shortestPathsFactory = shortestPathsFactory;
-  }
-
-  private static <V, E> ShortestPathAlgorithm<V, E> defaultShortestPaths(Graph<V, E> graph) {
-    // Fibonacci heap provides O(1) insert vs. pairing heap O(log n).
-    return new BidirectionalDijkstraShortestPath<>(graph, FibonacciHeap::new);
+    this.directed = GraphFactory.toDirected(this.graph);
   }
 
   public int getPathCount(int source, int target) {
@@ -64,20 +52,20 @@ public class VertexIndependentPaths {
     return nPaths;
   }
 
-  private static <V, E> KShortestPathAlgorithm<V, E> newKShortestPaths(Graph<V, E> graph) {
-    // Suurballe provides a simpler implementation since it ensures no loops.
-    return new SuurballeKDisjointShortestPaths<>(graph);
+  private int nontrivialPathCount(int source, int target, int maxFind) {
+    return isAdjacent(source, target)
+        ? adjacentPathCount(source, target, maxFind)
+        : nonadjacentPathCount(source, target, maxFind);
   }
 
-  private static List<Integer> withoutEndpoints(GraphPath<Integer, ?> path) {
-    List<Integer> vertices = path.getVertexList();
-    return vertices.size() < 3 ? List.of() : vertices.subList(1, vertices.size() - 1);
+  private boolean isAdjacent(int v1, int v2) {
+    return graph.getEdge(v1, v2) != null;
   }
 
   private int adjacentPathCount(int source, int target, int maxFind) {
-    Graph<Integer, Edge<Integer>> graph = GraphFactory.copyDirected(directed);
-    KShortestPathAlgorithm<Integer, Edge<Integer>> shortestPaths = newKShortestPaths(graph);
-    List<GraphPath<Integer, Edge<Integer>>> paths;
+    Graph<Integer, ?> graph = GraphFactory.copyDirected(directed);
+    KShortestPathAlgorithm<Integer, ?> shortestPaths = newKShortestPaths(graph);
+    List<? extends GraphPath<Integer, ?>> paths;
     int nFound = 1; // Trivial path along edge incident to source and target.
     do {
       if ((paths = shortestPaths.getPaths(source, target, 2)).size() == 2) {
@@ -92,8 +80,8 @@ public class VertexIndependentPaths {
   }
 
   private int nonadjacentPathCount(int source, int target, int maxFind) {
-    Graph<Integer, Edge<Integer>> graph = copyGraph();
-    ShortestPathAlgorithm<Integer, ?> shortestPaths = shortestPathsFactory.newShortestPaths(graph);
+    Graph<Integer, ?> graph = GraphFactory.copyGraph(this.graph);
+    ShortestPathAlgorithm<Integer, ?> shortestPaths = newShortestPaths(graph);
     GraphPath<Integer, ?> path;
     int nFound = 0;
     do {
@@ -105,18 +93,19 @@ public class VertexIndependentPaths {
     return nFound;
   }
 
-  private static Supplier<List<Integer>> newCounts(int size) {
-    return () -> new IntArrayList(size);
+  private static <V, E> KShortestPathAlgorithm<V, E> newKShortestPaths(Graph<V, E> graph) {
+    // Suurballe provides a simpler implementation since it ensures no loops.
+    return new SuurballeKDisjointShortestPaths<>(graph);
   }
 
-  private int nontrivialPathCount(int source, int target, int maxFind) {
-    return isAdjacent(source, target)
-        ? adjacentPathCount(source, target, maxFind)
-        : nonadjacentPathCount(source, target, maxFind);
+  private static List<Integer> withoutEndpoints(GraphPath<Integer, ?> path) {
+    List<Integer> vertices = path.getVertexList();
+    return vertices.size() < 3 ? List.of() : vertices.subList(1, vertices.size() - 1);
   }
 
-  private boolean isAdjacent(int v1, int v2) {
-    return graph.getEdge(v1, v2) != null;
+  private static <V, E> ShortestPathAlgorithm<V, E> newShortestPaths(Graph<V, E> graph) {
+    // Fibonacci heap provides O(1) insert vs. pairing heap O(log n).
+    return new BidirectionalDijkstraShortestPath<>(graph, FibonacciHeap::new);
   }
 
   public List<Integer> getPathCounts(int source) {
@@ -140,8 +129,8 @@ public class VertexIndependentPaths {
         : graph.vertexSet().stream().mapToInt(Integer::valueOf);
   }
 
-  private Graph<Integer, Edge<Integer>> copyGraph() {
-    return isDirected ? GraphFactory.copyDirected(graph) : GraphFactory.copyUndirected(graph);
+  private static Supplier<List<Integer>> newCounts(int size) {
+    return () -> new IntArrayList(size);
   }
 
   public List<Integer> getPathCounts(int source, boolean allowParallel) {
