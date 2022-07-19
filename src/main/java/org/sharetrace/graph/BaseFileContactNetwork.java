@@ -1,6 +1,5 @@
 package org.sharetrace.graph;
 
-import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import java.io.BufferedReader;
@@ -123,7 +122,7 @@ abstract class BaseFileContactNetwork implements ContactNetwork {
   }
 
   private static int parseAndIndexUser(String user, IdIndexer indexer) {
-    return indexer.index(Integer.parseInt(user.strip()));
+    return indexer.index(user.strip());
   }
 
   private static Instant parseTimestamp(String timestamp) {
@@ -161,11 +160,5 @@ abstract class BaseFileContactNetwork implements ContactNetwork {
     }
   }
 
-  private static final class IdIndexer extends Indexer<Integer> {
-
-    @Override
-    protected Map<Integer, Integer> newIndex(int capacity) {
-      return new Int2IntOpenHashMap(capacity);
-    }
-  }
+  private static final class IdIndexer extends Indexer<String> {}
 }
