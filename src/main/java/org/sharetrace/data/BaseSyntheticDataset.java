@@ -3,10 +3,10 @@ package org.sharetrace.data;
 import java.util.Set;
 import org.immutables.value.Value;
 import org.jgrapht.generate.GraphGenerator;
+import org.jgrapht.graph.DefaultEdge;
 import org.sharetrace.data.factory.ContactTimeFactory;
 import org.sharetrace.data.factory.RiskScoreFactory;
 import org.sharetrace.graph.ContactNetwork;
-import org.sharetrace.graph.Edge;
 import org.sharetrace.graph.SyntheticContactNetwork;
 import org.sharetrace.logging.Loggable;
 import org.sharetrace.message.RiskScore;
@@ -33,7 +33,7 @@ abstract class BaseSyntheticDataset implements Dataset {
 
   protected abstract Set<Class<? extends Loggable>> loggable();
 
-  protected abstract GraphGenerator<Integer, Edge<Integer>, ?> graphGenerator();
+  protected abstract GraphGenerator<Integer, DefaultEdge, ?> graphGenerator();
 
   protected abstract ContactTimeFactory contactTimeFactory();
 }

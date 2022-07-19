@@ -7,6 +7,7 @@ import java.util.stream.Stream;
 import org.immutables.value.Value;
 import org.jgrapht.Graph;
 import org.jgrapht.generate.GraphGenerator;
+import org.jgrapht.graph.DefaultEdge;
 import org.sharetrace.data.factory.ContactTimeFactory;
 import org.sharetrace.logging.Loggable;
 
@@ -39,7 +40,7 @@ abstract class BaseSyntheticContactNetwork implements ContactNetwork {
   }
 
   @Override
-  public Graph<Integer, Edge<Integer>> topology() {
+  public Graph<Integer, DefaultEdge> topology() {
     return helper().contactNetwork();
   }
 
@@ -57,7 +58,7 @@ abstract class BaseSyntheticContactNetwork implements ContactNetwork {
     return ContactNetworkHelper.create(graphGenerator(), loggable());
   }
 
-  protected abstract GraphGenerator<Integer, Edge<Integer>, ?> graphGenerator();
+  protected abstract GraphGenerator<Integer, DefaultEdge, ?> graphGenerator();
 
   protected abstract Set<Class<? extends Loggable>> loggable();
 }

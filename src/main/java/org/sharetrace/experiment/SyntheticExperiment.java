@@ -2,10 +2,10 @@ package org.sharetrace.experiment;
 
 import java.util.Objects;
 import org.jgrapht.generate.GraphGenerator;
+import org.jgrapht.graph.DefaultEdge;
 import org.sharetrace.data.SyntheticDataset;
 import org.sharetrace.data.factory.GraphGeneratorBuilder;
 import org.sharetrace.data.factory.GraphGeneratorFactory;
-import org.sharetrace.graph.Edge;
 
 public class SyntheticExperiment extends Experiment {
 
@@ -32,7 +32,7 @@ public class SyntheticExperiment extends Experiment {
             .build();
   }
 
-  protected GraphGenerator<Integer, Edge<Integer>, ?> getGraphGenerator() {
+  protected GraphGenerator<Integer, DefaultEdge, ?> getGraphGenerator() {
     return graphGeneratorFactory.getGraphGenerator(nNodes);
   }
 
@@ -59,7 +59,7 @@ public class SyntheticExperiment extends Experiment {
 
     protected GraphGeneratorFactory defaultFactory() {
       return nNodes ->
-          GraphGeneratorBuilder.<Integer, Edge<Integer>>create(graphType, nNodes, seed)
+          GraphGeneratorBuilder.<Integer, DefaultEdge>create(graphType, nNodes, seed)
               .nEdges(nNodes * 2)
               .degree(4)
               .kNearestNeighbors(2)

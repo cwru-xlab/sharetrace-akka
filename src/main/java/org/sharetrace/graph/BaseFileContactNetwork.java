@@ -19,6 +19,7 @@ import org.immutables.value.Value;
 import org.jgrapht.Graph;
 import org.jgrapht.Graphs;
 import org.jgrapht.generate.GraphGenerator;
+import org.jgrapht.graph.DefaultEdge;
 import org.sharetrace.data.factory.ContactTimeFactory;
 import org.sharetrace.logging.Loggable;
 import org.sharetrace.util.Indexer;
@@ -54,7 +55,7 @@ abstract class BaseFileContactNetwork implements ContactNetwork {
   }
 
   @Override
-  public Graph<Integer, Edge<Integer>> topology() {
+  public Graph<Integer, DefaultEdge> topology() {
     return helper().contactNetwork();
   }
 
@@ -63,13 +64,13 @@ abstract class BaseFileContactNetwork implements ContactNetwork {
     return ContactNetworkHelper.create(graphGenerator(), loggable());
   }
 
-  private GraphGenerator<Integer, Edge<Integer>, Integer> graphGenerator() {
+  private GraphGenerator<Integer, DefaultEdge, Integer> graphGenerator() {
     return (target, x) -> generateGraph(target);
   }
 
   protected abstract Set<Class<? extends Loggable>> loggable();
 
-  private void generateGraph(Graph<Integer, Edge<Integer>> target) {
+  private void generateGraph(Graph<Integer, DefaultEdge> target) {
     contactMap().keySet().stream()
         .map(List::copyOf)
         .forEach(users -> Graphs.addEdgeWithVertices(target, users.get(0), users.get(1)));

@@ -13,6 +13,7 @@ import java.util.stream.Stream;
 import org.jgrapht.Graph;
 import org.jgrapht.generate.GraphGenerator;
 import org.jgrapht.graph.AsUnmodifiableGraph;
+import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.nio.GraphExporter;
 import org.jgrapht.nio.graphml.GraphMLExporter;
 import org.sharetrace.data.factory.ContactTimeFactory;
@@ -32,24 +33,23 @@ import org.slf4j.Logger;
 public class ContactNetworkHelper {
 
   private static final Logger logger = Logging.metricLogger();
-  private final Graph<Integer, Edge<Integer>> contactNetwork;
+  private final Graph<Integer, DefaultEdge> contactNetwork;
   private final Loggables loggables;
 
   private ContactNetworkHelper(
-      Graph<Integer, Edge<Integer>> contactNetwork, Set<Class<? extends Loggable>> loggable) {
+      Graph<Integer, DefaultEdge> contactNetwork, Set<Class<? extends Loggable>> loggable) {
     this.contactNetwork = new AsUnmodifiableGraph<>(contactNetwork);
     this.loggables = Loggables.create(loggable, logger);
   }
 
   public static ContactNetworkHelper create(
-      GraphGenerator<Integer, Edge<Integer>, ?> generator,
-      Set<Class<? extends Loggable>> loggable) {
-    Graph<Integer, Edge<Integer>> contactNetwork = newContactNetwork();
+      GraphGenerator<Integer, DefaultEdge, ?> generator, Set<Class<? extends Loggable>> loggable) {
+    Graph<Integer, DefaultEdge> contactNetwork = newContactNetwork();
     generator.generateGraph(contactNetwork);
     return new ContactNetworkHelper(contactNetwork, loggable);
   }
 
-  private static Graph<Integer, Edge<Integer>> newContactNetwork() {
+  private static Graph<Integer, DefaultEdge> newContactNetwork() {
     return GraphFactory.newUndirectedGraph();
   }
 
@@ -57,9 +57,9 @@ public class ContactNetworkHelper {
     return contactNetwork.edgeSet().stream().map(edge -> toContact(edge, contactTimeFactory));
   }
 
-  private static Contact toContact(Edge<Integer> edge, ContactTimeFactory contactTimeFactory) {
-    int user1 = edge.source();
-    int user2 = edge.target();
+  private Contact toContact(DefaultEdge edge, ContactTimeFactory contactTimeFactory) {
+    int user1 = contactNetwork.getEdgeSource(edge);
+    int user2 = contactNetwork.getEdgeTarget(edge);
     Instant contactTime = contactTimeFactory.getContactTime(user1, user2);
     return Contact.builder().user1(user1).user2(user2).timestamp(contactTime).build();
   }
@@ -68,7 +68,7 @@ public class ContactNetworkHelper {
     return contactNetwork.vertexSet().size();
   }
 
-  public Graph<Integer, Edge<Integer>> contactNetwork() {
+  public Graph<Integer, DefaultEdge> contactNetwork() {
     return contactNetwork;
   }
 
@@ -158,8 +158,8 @@ public class ContactNetworkHelper {
     return Files.newBufferedWriter(filePath);
   }
 
-  private static GraphExporter<Integer, Edge<Integer>> newGraphExporter() {
-    GraphMLExporter<Integer, Edge<Integer>> exporter = new GraphMLExporter<>();
+  private static GraphExporter<Integer, DefaultEdge> newGraphExporter() {
+    GraphMLExporter<Integer, DefaultEdge> exporter = new GraphMLExporter<>();
     exporter.setVertexIdProvider(String::valueOf);
     return exporter;
   }
