@@ -36,14 +36,14 @@ public final class GraphFactory {
     return intGraph;
   }
 
-  public static <E> Graph<Integer, DefaultEdge> toDirected(Graph<Integer, E> graph) {
+  public static Graph<Integer, DefaultEdge> toDirected(Graph<Integer, DefaultEdge> graph) {
     Graph<Integer, DefaultEdge> directed;
     if (graph.getType().isDirected()) {
-      directed = toIntGraph(graph);
+      directed = graph;
     } else {
       directed = newDirectedGraph();
       int source, target;
-      for (E edge : graph.edgeSet()) {
+      for (DefaultEdge edge : graph.edgeSet()) {
         source = graph.getEdgeSource(edge);
         target = graph.getEdgeTarget(edge);
         directed.addVertex(source);
@@ -57,6 +57,15 @@ public final class GraphFactory {
 
   public static Graph<Integer, DefaultEdge> newDirectedGraph() {
     return newGraph(DefaultGraphType.directedSimple());
+  }
+
+  private static Graph<Integer, DefaultEdge> newGraph(GraphType graphType) {
+    return new FastutilMapIntVertexGraph<>(vertexIdFactory(), DefaultEdge::new, graphType, false);
+  }
+
+  private static Supplier<Integer> vertexIdFactory() {
+    int[] id = new int[] {0};
+    return () -> id[0]++;
   }
 
   public static Graph<Integer, DefaultEdge> copyDirected(Graph<Integer, DefaultEdge> directed) {
@@ -73,15 +82,6 @@ public final class GraphFactory {
 
   public static Graph<Integer, DefaultEdge> newUndirectedGraph() {
     return newGraph(DefaultGraphType.simple());
-  }
-
-  private static Graph<Integer, DefaultEdge> newGraph(GraphType graphType) {
-    return new FastutilMapIntVertexGraph<>(vertexIdFactory(), DefaultEdge::new, graphType, false);
-  }
-
-  private static Supplier<Integer> vertexIdFactory() {
-    int[] id = new int[] {0};
-    return () -> id[0]++;
   }
 
   private static Graph<Integer, DefaultEdge> newGraphFor(Graph<?, ?> graph) {
