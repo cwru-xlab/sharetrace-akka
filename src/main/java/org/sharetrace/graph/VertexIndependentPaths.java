@@ -98,8 +98,8 @@ public class VertexIndependentPaths {
     return new SuurballeKDisjointShortestPaths<>(graph);
   }
 
-  private static List<Integer> withoutEndpoints(GraphPath<Integer, ?> path) {
-    List<Integer> vertices = path.getVertexList();
+  private static <V> List<V> withoutEndpoints(GraphPath<V, ?> path) {
+    List<V> vertices = path.getVertexList();
     return vertices.size() < 3 ? List.of() : vertices.subList(1, vertices.size() - 1);
   }
 
