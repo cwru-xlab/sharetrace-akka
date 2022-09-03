@@ -9,8 +9,9 @@ import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
-import javax.annotation.Nullable;
 import org.apache.commons.math3.distribution.RealDistribution;
+import org.apache.commons.math3.distribution.UniformRealDistribution;
+import org.apache.commons.math3.random.Well512a;
 import org.sharetrace.RiskPropagationBuilder;
 import org.sharetrace.Runner;
 import org.sharetrace.data.Dataset;
@@ -86,12 +87,10 @@ public abstract class Experiment implements Runnable {
   }
 
   private Sampler<RiskScore> newRiskScoreSampler(Builder builder) {
-    RiskScoreSampler.Builder samplerBuilder = RiskScoreSampler.builder();
-    if (builder.scoreValueDistribution != null) {
-      samplerBuilder.valueDistribution(builder.scoreValueDistribution);
-    }
-    Sampler<Instant> timeSampler = newTimeSampler(builder.scoreTimeTtlDistribution, scoreTtl());
-    return samplerBuilder.seed(seed).timeSampler(timeSampler).build();
+    return RiskScoreSampler.builder()
+        .valueDistribution(builder.scoreValueDistribution)
+        .timeSampler(newTimeSampler(builder.scoreTimeTtlDistribution, scoreTtl()))
+        .build();
   }
 
   private Sampler<Instant> newContactTimeSampler(Builder builder) {
@@ -123,13 +122,12 @@ public abstract class Experiment implements Runnable {
     return Clock.systemUTC();
   }
 
-  private Sampler<Instant> newTimeSampler(
-      @Nullable RealDistribution ttlDistribution, Duration ttl) {
-    TimeSampler.Builder builder = TimeSampler.builder();
-    if (ttlDistribution != null) {
-      builder.ttlDistribution(ttlDistribution);
-    }
-    return builder.ttl(ttl).seed(seed).referenceTime(referenceTime).build();
+  private Sampler<Instant> newTimeSampler(RealDistribution ttlDistribution, Duration ttl) {
+    return TimeSampler.builder()
+        .ttlDistribution(ttlDistribution)
+        .ttl(ttl)
+        .referenceTime(referenceTime)
+        .build();
   }
 
   protected Duration scoreTtl() {
@@ -178,22 +176,6 @@ public abstract class Experiment implements Runnable {
 
   protected abstract void setDataset();
 
-  protected Behavior<AlgorithmMessage> newAlgorithm() {
-    return RiskPropagationBuilder.create()
-        .addAllLoggable(loggable())
-        .putAllMdc(mdc())
-        .contactNetwork(dataset.getContactNetwork())
-        .parameters(userParameters)
-        .clock(clock())
-        .riskScoreFactory(dataset)
-        .cacheFactory(cacheFactory())
-        .build();
-  }
-
-  private Map<String, String> mdc() {
-    return Logging.mdc(iteration, graphType);
-  }
-
   protected void setUserParameters() {
     userParameters =
         UserParameters.builder()
@@ -226,17 +208,20 @@ public abstract class Experiment implements Runnable {
     loggables.log(LoggableSetting.KEY, settings());
   }
 
-  protected CacheFactory<RiskScoreMessage> cacheFactory() {
-    return () ->
-        IntervalCache.<RiskScoreMessage>builder()
-            .nIntervals(cacheParameters.nIntervals())
-            .nLookAhead(cacheParameters.nLookAhead())
-            .interval(cacheParameters.interval())
-            .refreshPeriod(cacheParameters.refreshPeriod())
-            .clock(clock())
-            .mergeStrategy(this::cacheMerge)
-            .comparator(RiskScoreMessage.comparator())
-            .build();
+  protected Behavior<AlgorithmMessage> newAlgorithm() {
+    return RiskPropagationBuilder.create()
+        .addAllLoggable(loggable())
+        .putAllMdc(mdc())
+        .contactNetwork(dataset.getContactNetwork())
+        .parameters(userParameters)
+        .clock(clock())
+        .riskScoreFactory(dataset)
+        .cacheFactory(cacheFactory())
+        .build();
+  }
+
+  private Map<String, String> mdc() {
+    return Logging.mdc(iteration, graphType);
   }
 
   protected float scoreTolerance() {
@@ -295,6 +280,19 @@ public abstract class Experiment implements Runnable {
         .build();
   }
 
+  protected CacheFactory<RiskScoreMessage> cacheFactory() {
+    return () ->
+        IntervalCache.<RiskScoreMessage>builder()
+            .nIntervals(cacheParameters.nIntervals())
+            .nLookAhead(cacheParameters.nLookAhead())
+            .interval(cacheParameters.interval())
+            .refreshPeriod(cacheParameters.refreshPeriod())
+            .clock(clock())
+            .mergeStrategy(this::cacheMerge)
+            .comparator(RiskScoreMessage.comparator())
+            .build();
+  }
+
   protected RiskScoreMessage cacheMerge(RiskScoreMessage oldMsg, RiskScoreMessage newMsg) {
     // Simpler to check for higher value first.
     // Most will likely not be older, which avoids checking for approximate equality.
@@ -328,9 +326,9 @@ public abstract class Experiment implements Runnable {
     protected GraphType graphType;
     protected int nIterations = 1;
     protected long seed = new Random().nextLong();
-    private RealDistribution scoreValueDistribution;
-    private RealDistribution scoreTimeTtlDistribution;
-    private RealDistribution contactTimeTtlDistribution;
+    private RealDistribution scoreValueDistribution = defaultDistribution();
+    private RealDistribution scoreTimeTtlDistribution = defaultDistribution();
+    private RealDistribution contactTimeTtlDistribution = defaultDistribution();
     private boolean preBuildCalled = false;
 
     public Builder graphType(GraphType graphType) {
@@ -339,7 +337,7 @@ public abstract class Experiment implements Runnable {
     }
 
     public Builder nIterations(int nIterations) {
-      this.nIterations = nIterations;
+      this.nIterations = Checks.greaterThan(nIterations, 0, "nIterations");
       return this;
     }
 
@@ -349,17 +347,17 @@ public abstract class Experiment implements Runnable {
     }
 
     public Builder scoreValueDistribution(RealDistribution scoreValueDistribution) {
-      this.scoreValueDistribution = scoreValueDistribution;
+      this.scoreValueDistribution = Objects.requireNonNull(scoreValueDistribution);
       return this;
     }
 
     public Builder scoreTimeTtlDistribution(RealDistribution scoreTimeTtlDistribution) {
-      this.scoreTimeTtlDistribution = scoreTimeTtlDistribution;
+      this.scoreTimeTtlDistribution = Objects.requireNonNull(scoreTimeTtlDistribution);
       return this;
     }
 
     public Builder contactTimeTtlDistribution(RealDistribution contactTimeTtlDistribution) {
-      this.contactTimeTtlDistribution = contactTimeTtlDistribution;
+      this.contactTimeTtlDistribution = Objects.requireNonNull(contactTimeTtlDistribution);
       return this;
     }
 
@@ -367,8 +365,11 @@ public abstract class Experiment implements Runnable {
 
     protected void preBuild() {
       Objects.requireNonNull(graphType);
-      Checks.greaterThan(nIterations, 0, "nIterations");
       preBuildCalled = true;
+    }
+
+    private RealDistribution defaultDistribution() {
+      return new UniformRealDistribution(new Well512a(seed), 0d, 1d);
     }
   }
 }
