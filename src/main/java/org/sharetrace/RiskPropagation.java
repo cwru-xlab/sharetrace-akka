@@ -59,7 +59,7 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
   private final Clock clock;
   private final RiskScoreFactory riskScoreFactory;
   private final CacheFactory<RiskScoreMessage> cacheFactory;
-  private StopWatch runtime;
+  private final StopWatch runtime;
   private int nStopped;
 
   private RiskPropagation(
@@ -79,6 +79,7 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
     this.clock = clock;
     this.cacheFactory = cacheFactory;
     this.riskScoreFactory = riskScoreFactory;
+    this.runtime = new StopWatch();
     this.nStopped = 0;
   }
 
@@ -119,7 +120,7 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
     if (contactNetwork.nUsers() > 0) {
       Map<Integer, ActorRef<UserMessage>> users = newUsers();
       sendSymptomScores(users);
-      runtime = StopWatch.createStarted();
+      runtime.start();
       sendContacts(users);
     } else {
       behavior = Behaviors.stopped();
