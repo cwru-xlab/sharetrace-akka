@@ -3,7 +3,7 @@ package org.sharetrace.logging.metrics;
 import org.immutables.value.Value;
 
 @Value.Immutable
-interface BaseGraphCycleMetrics extends LoggableMetric {
+interface BaseCycleMetrics extends LoggableMetric {
 
   int girth();
 

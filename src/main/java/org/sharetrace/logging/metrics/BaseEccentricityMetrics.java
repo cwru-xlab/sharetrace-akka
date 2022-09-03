@@ -3,7 +3,7 @@ package org.sharetrace.logging.metrics;
 import org.immutables.value.Value;
 
 @Value.Immutable
-interface BaseGraphEccentricityMetrics extends LoggableMetric {
+interface BaseEccentricityMetrics extends LoggableMetric {
 
   int radius();
 

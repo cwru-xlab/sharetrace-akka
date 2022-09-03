@@ -1,6 +1,7 @@
 package org.sharetrace.experiment;
 
 import akka.actor.typed.Behavior;
+import com.google.common.math.DoubleMath;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -17,6 +18,7 @@ import org.sharetrace.Runner;
 import org.sharetrace.data.Dataset;
 import org.sharetrace.data.factory.CacheFactory;
 import org.sharetrace.data.factory.ContactTimeFactory;
+import org.sharetrace.data.factory.PdfFactory;
 import org.sharetrace.data.factory.RiskScoreFactory;
 import org.sharetrace.data.sampling.RiskScoreSampler;
 import org.sharetrace.data.sampling.Sampler;
@@ -31,12 +33,12 @@ import org.sharetrace.logging.events.ReceiveEvent;
 import org.sharetrace.logging.events.SendCachedEvent;
 import org.sharetrace.logging.events.SendCurrentEvent;
 import org.sharetrace.logging.events.UpdateEvent;
-import org.sharetrace.logging.metrics.GraphCycleMetrics;
-import org.sharetrace.logging.metrics.GraphEccentricityMetrics;
-import org.sharetrace.logging.metrics.GraphScoringMetrics;
-import org.sharetrace.logging.metrics.GraphSizeMetrics;
-import org.sharetrace.logging.metrics.GraphTopologyMetric;
+import org.sharetrace.logging.metrics.CycleMetrics;
+import org.sharetrace.logging.metrics.EccentricityMetrics;
 import org.sharetrace.logging.metrics.RuntimeMetric;
+import org.sharetrace.logging.metrics.ScoringMetrics;
+import org.sharetrace.logging.metrics.SizeMetrics;
+import org.sharetrace.logging.metrics.TopologyMetric;
 import org.sharetrace.logging.settings.ExperimentSettings;
 import org.sharetrace.logging.settings.LoggableSetting;
 import org.sharetrace.message.AlgorithmMessage;
@@ -81,13 +83,13 @@ public abstract class Experiment implements Runnable {
 
   private Sampler<RiskScore> newRiskScoreSampler(Builder builder) {
     return RiskScoreSampler.builder()
-        .valueDistribution(builder.scoreValueDistribution)
-        .timeSampler(newTimeSampler(builder.scoreTimeTtlDistribution, scoreTtl()))
+        .valueDistribution(builder.scoreValuePdf)
+        .timeSampler(newTimeSampler(builder.scoreTimeTtlPdf, scoreTtl()))
         .build();
   }
 
   private Sampler<Instant> newContactTimeSampler(Builder builder) {
-    return newTimeSampler(builder.contactTimeTtlDistribution, contactTtl());
+    return newTimeSampler(builder.contactTimeTtlPdf, contactTtl());
   }
 
   protected Set<Class<? extends Loggable>> loggable() {
@@ -101,12 +103,12 @@ public abstract class Experiment implements Runnable {
         SendCurrentEvent.class,
         UpdateEvent.class,
         // Metrics
-        GraphCycleMetrics.class,
-        GraphEccentricityMetrics.class,
-        GraphScoringMetrics.class,
-        GraphSizeMetrics.class,
+        CycleMetrics.class,
+        EccentricityMetrics.class,
+        ScoringMetrics.class,
+        SizeMetrics.class,
         RuntimeMetric.class,
-        GraphTopologyMetric.class,
+        TopologyMetric.class,
         // Settings
         ExperimentSettings.class);
   }
@@ -282,7 +284,7 @@ public abstract class Experiment implements Runnable {
             .refreshPeriod(cacheParameters.refreshPeriod())
             .clock(clock())
             .mergeStrategy(this::cacheMerge)
-            .comparator(RiskScoreMessage.comparator())
+            .comparator(RiskScoreMessage::compareTo)
             .build();
   }
 
@@ -303,7 +305,7 @@ public abstract class Experiment implements Runnable {
   }
 
   private boolean isApproxEqual(RiskScoreMessage msg1, RiskScoreMessage msg2) {
-    return Math.abs(msg1.score().value() - msg2.score().value()) < scoreTolerance();
+    return DoubleMath.fuzzyEquals(msg1.score().value(), msg2.score().value(), scoreTolerance());
   }
 
   protected RiskScoreFactory riskScoreFactory() {
@@ -319,9 +321,12 @@ public abstract class Experiment implements Runnable {
     protected GraphType graphType;
     protected int nIterations = 1;
     protected long seed = new Random().nextLong();
-    private RealDistribution scoreValueDistribution = defaultDistribution();
-    private RealDistribution scoreTimeTtlDistribution = defaultDistribution();
-    private RealDistribution contactTimeTtlDistribution = defaultDistribution();
+    private PdfFactory scoreValuePdfFactory = defaultPdfFactory();
+    private PdfFactory scoreTimeTtlPdfFactory = defaultPdfFactory();
+    private PdfFactory contactTimeTtlPdfFactory = defaultPdfFactory();
+    private RealDistribution scoreValuePdf;
+    private RealDistribution scoreTimeTtlPdf;
+    private RealDistribution contactTimeTtlPdf;
 
     public Builder graphType(GraphType graphType) {
       this.graphType = graphType;
@@ -338,18 +343,18 @@ public abstract class Experiment implements Runnable {
       return this;
     }
 
-    public Builder scoreValueDistribution(RealDistribution scoreValueDistribution) {
-      this.scoreValueDistribution = Objects.requireNonNull(scoreValueDistribution);
+    public Builder scoreValuePdfFactory(PdfFactory scoreValuePdfFactory) {
+      this.scoreValuePdfFactory = Objects.requireNonNull(scoreValuePdfFactory);
       return this;
     }
 
-    public Builder scoreTimeTtlDistribution(RealDistribution scoreTimeTtlDistribution) {
-      this.scoreTimeTtlDistribution = Objects.requireNonNull(scoreTimeTtlDistribution);
+    public Builder scoreTimeTtlPdfFactory(PdfFactory scoreTimeTtlPdfFactory) {
+      this.scoreTimeTtlPdfFactory = Objects.requireNonNull(scoreTimeTtlPdfFactory);
       return this;
     }
 
-    public Builder contactTimeTtlDistribution(RealDistribution contactTimeTtlDistribution) {
-      this.contactTimeTtlDistribution = Objects.requireNonNull(contactTimeTtlDistribution);
+    public Builder contactTimeTtlPdfFactory(PdfFactory contactTimeTtlPdfFactory) {
+      this.contactTimeTtlPdfFactory = Objects.requireNonNull(contactTimeTtlPdfFactory);
       return this;
     }
 
@@ -359,10 +364,13 @@ public abstract class Experiment implements Runnable {
 
     protected void checkFields() {
       Objects.requireNonNull(graphType);
+      scoreValuePdf = scoreValuePdfFactory.getPdf(seed);
+      scoreTimeTtlPdf = scoreTimeTtlPdfFactory.getPdf(seed);
+      contactTimeTtlPdf = contactTimeTtlPdfFactory.getPdf(seed);
     }
 
-    private RealDistribution defaultDistribution() {
-      return new UniformRealDistribution(new Well512a(seed), 0d, 1d);
+    private PdfFactory defaultPdfFactory() {
+      return s -> new UniformRealDistribution(new Well512a(s), 0d, 1d);
     }
   }
 }

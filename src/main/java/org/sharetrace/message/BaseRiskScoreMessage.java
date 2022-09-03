@@ -1,7 +1,6 @@
 package org.sharetrace.message;
 
 import akka.actor.typed.ActorRef;
-import java.util.Comparator;
 import java.util.UUID;
 import org.immutables.value.Value;
 import org.sharetrace.RiskPropagation;
@@ -10,10 +9,6 @@ import org.sharetrace.graph.ContactNetwork;
 
 @Value.Immutable
 abstract class BaseRiskScoreMessage implements UserMessage, Comparable<RiskScoreMessage> {
-
-  public static Comparator<RiskScoreMessage> comparator() {
-    return RiskScoreMessage::compareTo;
-  }
 
   @Override
   public int compareTo(RiskScoreMessage message) {

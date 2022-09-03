@@ -15,21 +15,17 @@ import org.jgrapht.alg.scoring.EigenvectorCentrality;
 import org.jgrapht.alg.scoring.KatzCentrality;
 import org.jgrapht.alg.shortestpath.FloydWarshallShortestPaths;
 import org.jgrapht.alg.shortestpath.GraphMeasurer;
+import org.sharetrace.logging.metrics.CycleMetrics;
+import org.sharetrace.logging.metrics.EccentricityMetrics;
+import org.sharetrace.logging.metrics.ScoringMetrics;
+import org.sharetrace.logging.metrics.SizeMetrics;
+import org.sharetrace.util.DescriptiveStats;
 
 @Value.Immutable
 abstract class BaseGraphStats<V, E> {
 
-  @Value.Lazy
-  public int girth() {
-    return GraphMetrics.getGirth(graph());
-  }
-
-  @Value.Parameter
-  protected abstract Graph<V, E> graph();
-
-  @Value.Lazy
-  public long nTriangles() {
-    return GraphMetrics.getNumberOfTriangles(graph());
+  public SizeMetrics sizeMetrics() {
+    return SizeMetrics.builder().nNodes(nNodes()).nEdges(nEdges()).build();
   }
 
   @Value.Lazy
@@ -42,19 +38,85 @@ abstract class BaseGraphStats<V, E> {
     return graph().edgeSet().size();
   }
 
-  @Value.Lazy
-  public int radius() {
-    return (int) graphMeasurer().getRadius();
+  @Value.Parameter
+  protected abstract Graph<V, E> graph();
+
+  public CycleMetrics cycleMetrics() {
+    return CycleMetrics.builder().nTriangles(nTriangles()).girth(girth()).build();
   }
 
   @Value.Lazy
-  protected GraphMeasurer<V, E> graphMeasurer() {
-    return new GraphMeasurer<>(graph(), shortestPath());
+  public long nTriangles() {
+    return GraphMetrics.getNumberOfTriangles(graph());
+  }
+
+  @Value.Lazy
+  public int girth() {
+    return GraphMetrics.getGirth(graph());
+  }
+
+  public EccentricityMetrics eccentricityMetrics() {
+    return EccentricityMetrics.builder()
+        .radius(radius())
+        .diameter(diameter())
+        .center(center())
+        .periphery(periphery())
+        .build();
+  }
+
+  public ScoringMetrics scoringMetrics() {
+    return ScoringMetrics.builder()
+        .degeneracy(degeneracy())
+        .globalClusteringCoefficient(globalClusteringCoefficient())
+        .localClusteringCoefficient(DescriptiveStats.of(localClusteringCoefficients()))
+        .harmonicCentrality(DescriptiveStats.of(harmonicCentralities()))
+        .katzCentrality(DescriptiveStats.of(katzCentralities()))
+        .eigenvectorCentrality(DescriptiveStats.of(eigenvectorCentralities()))
+        .build();
+  }
+
+  @Value.Lazy
+  public int degeneracy() {
+    return new Coreness<>(graph()).getDegeneracy();
+  }
+
+  @Value.Lazy
+  public float globalClusteringCoefficient() {
+    return (float) new ClusteringCoefficient<>(graph()).getGlobalClusteringCoefficient();
+  }
+
+  @Value.Lazy
+  public float[] localClusteringCoefficients() {
+    return getScores(new ClusteringCoefficient<>(graph()));
+  }
+
+  @Value.Lazy
+  public float[] harmonicCentralities() {
+    return getScores(new HarmonicCentrality<>(graph(), shortestPath()));
+  }
+
+  @Value.Lazy
+  public float[] katzCentralities() {
+    return getScores(new KatzCentrality<>(graph()));
+  }
+
+  @Value.Lazy
+  public float[] eigenvectorCentralities() {
+    return getScores(new EigenvectorCentrality<>(graph()));
+  }
+
+  private static float[] getScores(VertexScoringAlgorithm<?, Double> algorithm) {
+    return Floats.toArray(algorithm.getScores().values());
   }
 
   @Value.Derived
   protected ShortestPathAlgorithm<V, E> shortestPath() {
     return new FloydWarshallShortestPaths<>(graph());
+  }
+
+  @Value.Lazy
+  public int radius() {
+    return (int) graphMeasurer().getRadius();
   }
 
   @Value.Lazy
@@ -73,37 +135,8 @@ abstract class BaseGraphStats<V, E> {
   }
 
   @Value.Lazy
-  public float[] harmonicCentralities() {
-    return getScores(new HarmonicCentrality<>(graph(), shortestPath()));
-  }
-
-  private static float[] getScores(VertexScoringAlgorithm<?, Double> algorithm) {
-    return Floats.toArray(algorithm.getScores().values());
-  }
-
-  @Value.Lazy
-  public float globalClusteringCoefficient() {
-    return (float) new ClusteringCoefficient<>(graph()).getGlobalClusteringCoefficient();
-  }
-
-  @Value.Lazy
-  public float[] localClusteringCoefficients() {
-    return getScores(new ClusteringCoefficient<>(graph()));
-  }
-
-  @Value.Lazy
-  public float[] katzCentralities() {
-    return getScores(new KatzCentrality<>(graph()));
-  }
-
-  @Value.Lazy
-  public float[] eigenvectorCentralities() {
-    return getScores(new EigenvectorCentrality<>(graph()));
-  }
-
-  @Value.Lazy
-  public int degeneracy() {
-    return new Coreness<>(graph()).getDegeneracy();
+  protected GraphMeasurer<V, E> graphMeasurer() {
+    return new GraphMeasurer<>(graph(), shortestPath());
   }
 
   // Copied from JGraphT's implementation, but reuses a ShortestPathAlgorithm instance.

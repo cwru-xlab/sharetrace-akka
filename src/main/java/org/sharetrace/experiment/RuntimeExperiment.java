@@ -3,8 +3,8 @@ package org.sharetrace.experiment;
 import java.util.Objects;
 import java.util.Set;
 import org.sharetrace.logging.Loggable;
-import org.sharetrace.logging.metrics.GraphSizeMetrics;
 import org.sharetrace.logging.metrics.RuntimeMetric;
+import org.sharetrace.logging.metrics.SizeMetrics;
 import org.sharetrace.logging.settings.ExperimentSettings;
 import org.sharetrace.util.Range;
 
@@ -24,7 +24,7 @@ public class RuntimeExperiment extends SyntheticExperiment {
   @Override
   protected Set<Class<? extends Loggable>> loggable() {
     // Events and path-based graph metrics becomes too expensive for large graphs
-    return Set.of(GraphSizeMetrics.class, RuntimeMetric.class, ExperimentSettings.class);
+    return Set.of(SizeMetrics.class, RuntimeMetric.class, ExperimentSettings.class);
   }
 
   @Override

@@ -4,7 +4,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.sharetrace.logging.Loggable;
-import org.sharetrace.logging.metrics.GraphTopologyMetric;
+import org.sharetrace.logging.metrics.TopologyMetric;
 import org.sharetrace.util.Range;
 
 public class ParametersExperiment extends SyntheticExperiment {
@@ -27,7 +27,7 @@ public class ParametersExperiment extends SyntheticExperiment {
 
   protected Set<Class<? extends Loggable>> loggable() {
     return super.loggable().stream()
-        .filter(loggable -> !loggable.equals(GraphTopologyMetric.class))
+        .filter(loggable -> !loggable.equals(TopologyMetric.class))
         .collect(Collectors.toUnmodifiableSet());
   }
 
