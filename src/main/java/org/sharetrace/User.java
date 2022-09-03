@@ -366,7 +366,7 @@ public class User extends AbstractBehavior<UserMessage> {
   }
 
   private <T extends Loggable> void logEvent(Class<T> type, Supplier<T> supplier) {
-    loggables.info(LoggableEvent.KEY, TypedSupplier.of(type, supplier));
+    loggables.log(LoggableEvent.KEY, TypedSupplier.of(type, supplier));
   }
 
   private UpdateEvent updateEvent() {

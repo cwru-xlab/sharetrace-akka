@@ -9,11 +9,10 @@ import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import java.time.Clock;
-import java.time.Duration;
-import java.time.Instant;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import org.apache.commons.lang3.time.StopWatch;
 import org.immutables.builder.Builder;
 import org.sharetrace.data.factory.CacheFactory;
 import org.sharetrace.data.factory.RiskScoreFactory;
@@ -60,7 +59,7 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
   private final Clock clock;
   private final RiskScoreFactory riskScoreFactory;
   private final CacheFactory<RiskScoreMessage> cacheFactory;
-  private Instant startedAt;
+  private StopWatch runtime;
   private int nStopped;
 
   private RiskPropagation(
@@ -120,7 +119,7 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
     if (contactNetwork.nUsers() > 0) {
       Map<Integer, ActorRef<UserMessage>> users = newUsers();
       sendSymptomScores(users);
-      startedAt = clock.instant();
+      runtime = StopWatch.createStarted();
       sendContacts(users);
     } else {
       behavior = Behaviors.stopped();
@@ -174,7 +173,7 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
   }
 
   private void logMetrics() {
-    loggables.info(LoggableMetric.KEY, runtimeMetric());
+    loggables.log(LoggableMetric.KEY, runtimeMetric());
   }
 
   private Map<Integer, ActorRef<UserMessage>> newUserMap() {
@@ -196,6 +195,7 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
   }
 
   private float runtime() {
-    return Duration.between(startedAt, clock.instant()).toNanos() / 1e9f;
+    runtime.stop();
+    return (float) (runtime.getNanoTime() / 1e9);
   }
 }

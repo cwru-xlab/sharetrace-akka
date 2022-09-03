@@ -78,10 +78,20 @@ abstract class BaseFileContactNetwork implements ContactNetwork {
   @Value.Derived
   protected Map<Set<Integer>, Instant> contactMap() {
     LastContactTime lastContactTime = new LastContactTime();
-    Map<Set<Integer>, Instant> contactMap = newContactMap();
+    Map<Set<Integer>, Instant> contactMap = new Object2ObjectOpenHashMap<>();
     IdIndexer indexer = new IdIndexer();
     try (BufferedReader reader = Files.newBufferedReader(path())) {
-      reader.lines().forEach(line -> processLine(line, contactMap, indexer, lastContactTime));
+      Iterable<String> lines = () -> reader.lines().iterator();
+      for (String line : lines) {
+        String[] args = line.split(delimiter());
+        int user1 = parseAndIndexUser(args[1], indexer);
+        int user2 = parseAndIndexUser(args[2], indexer);
+        if (user1 != user2) {
+          Instant timestamp = parseTimestamp(args[0]);
+          contactMap.merge(key(user1, user2), timestamp, BaseFileContactNetwork::newer);
+          lastContactTime.update(timestamp);
+        }
+      }
     } catch (IOException exception) {
       throw new UncheckedIOException(exception);
     }
@@ -89,32 +99,7 @@ abstract class BaseFileContactNetwork implements ContactNetwork {
     return contactMap;
   }
 
-  private Map<Set<Integer>, Instant> newContactMap() {
-    return new Object2ObjectOpenHashMap<>();
-  }
-
   protected abstract Path path();
-
-  private void processLine(
-      String line,
-      Map<Set<Integer>, Instant> contacts,
-      IdIndexer indexer,
-      LastContactTime lastContactTime) {
-    String[] args = line.split(delimiter());
-    int user1 = parseAndIndexUser(args[1], indexer);
-    int user2 = parseAndIndexUser(args[2], indexer);
-    if (user1 != user2) {
-      Instant timestamp = parseTimestamp(args[0]);
-      contacts.merge(key(user1, user2), timestamp, BaseFileContactNetwork::newer);
-      lastContactTime.update(timestamp);
-    }
-  }
-
-  private void adjustTimestamps(
-      Map<Set<Integer>, Instant> contacts, LastContactTime lastContactTime) {
-    Duration offset = Duration.between(lastContactTime.value, referenceTime());
-    contacts.replaceAll((users, timestamp) -> timestamp.plus(offset));
-  }
 
   @Value.Default
   protected String delimiter() {
@@ -137,6 +122,12 @@ abstract class BaseFileContactNetwork implements ContactNetwork {
     return timestamp1.isAfter(timestamp2) ? timestamp1 : timestamp2;
   }
 
+  private void adjustTimestamps(
+      Map<Set<Integer>, Instant> contacts, LastContactTime lastContactTime) {
+    Duration offset = Duration.between(lastContactTime.value, referenceTime());
+    contacts.replaceAll((users, timestamp) -> timestamp.plus(offset));
+  }
+
   @Value.Default
   protected Instant referenceTime() {
     return Instant.now();
@@ -152,11 +143,6 @@ abstract class BaseFileContactNetwork implements ContactNetwork {
 
     public void update(Instant timestamp) {
       value = newer(value, timestamp);
-    }
-
-    @Override
-    public String toString() {
-      return "LastContactTime{value=" + value + '}';
     }
   }
 

@@ -1,12 +1,12 @@
 package org.sharetrace.message;
 
-import static org.sharetrace.util.Checks.checkInClosedRange;
 import com.google.common.collect.ComparisonChain;
 import java.time.Instant;
 import org.immutables.value.Value;
 import org.sharetrace.RiskPropagation;
 import org.sharetrace.User;
 import org.sharetrace.graph.ContactNetwork;
+import org.sharetrace.util.Checks;
 
 /**
  * A timestamped probability of infection. As a message, a risk score is propagated through the
@@ -29,10 +29,6 @@ abstract class BaseRiskScore implements Comparable<RiskScore> {
     return RiskScore.of(MIN_VALUE, timestamp);
   }
 
-  public static RiskScore ofMaxValue(Instant timestamp) {
-    return RiskScore.of(MAX_VALUE, timestamp);
-  }
-
   @Override
   public int compareTo(RiskScore score) {
     return ComparisonChain.start()
@@ -53,6 +49,6 @@ abstract class BaseRiskScore implements Comparable<RiskScore> {
 
   @Value.Check
   protected void check() {
-    checkInClosedRange(value(), MIN_VALUE, MAX_VALUE, "value");
+    Checks.inClosedRange(value(), MIN_VALUE, MAX_VALUE, "value");
   }
 }

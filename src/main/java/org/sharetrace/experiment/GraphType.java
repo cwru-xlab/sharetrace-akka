@@ -1,5 +1,6 @@
 package org.sharetrace.experiment;
 
+import java.util.EnumSet;
 import java.util.Set;
 
 public enum GraphType {
@@ -23,11 +24,11 @@ public enum GraphType {
   }
 
   public static Set<GraphType> synthetic() {
-    return Set.of(BARABASI_ALBERT, GNM_RANDOM, RANDOM_REGULAR, SCALE_FREE, WATTS_STROGATZ);
+    return EnumSet.of(BARABASI_ALBERT, GNM_RANDOM, RANDOM_REGULAR, SCALE_FREE, WATTS_STROGATZ);
   }
 
   public static Set<GraphType> socioPatterns() {
-    return Set.of(INVS13, INVS15, LH10, LYON_SCHOOL, SFHH, THIERS11, THIERS12);
+    return EnumSet.of(INVS13, INVS15, LH10, LYON_SCHOOL, SFHH, THIERS11, THIERS12);
   }
 
   public String toString() {

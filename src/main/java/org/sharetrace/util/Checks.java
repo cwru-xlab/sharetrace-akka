@@ -1,151 +1,44 @@
 package org.sharetrace.util;
 
-import java.time.Duration;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Range;
 import java.util.Objects;
-import java.util.function.Supplier;
 
 /** A collection of utility methods for checking conditions and verifying assumptions. */
 public final class Checks {
 
+  private static final String RANGE_MSG = "%s must be in the range %s; got %s";
+  private static final String IS_NOT_MSG = "%s must not be %s";
+
   private Checks() {}
 
-  public static double checkInClosedRange(
-      double value, double lowerBound, double upperBound, String name) {
-    Supplier<String> message = () -> closedRangeMessage(name, lowerBound, upperBound, value);
-    return checkInClosedRange(value, lowerBound, upperBound, message);
+  public static <T extends Comparable<T>> T atLeast(T value, T atLeast, String name) {
+    return inRange(value, Range.atLeast(atLeast), name);
   }
 
-  private static <T> String closedRangeMessage(String name, T lowerBound, T upperBound, T value) {
-    return "'"
-        + name
-        + "' must be between "
-        + lowerBound
-        + " and "
-        + upperBound
-        + ", inclusive; got "
-        + value;
-  }
-
-  public static double checkInClosedRange(
-      double value, double lowerBound, double upperBound, Supplier<String> message) {
-    checkArgument(value >= lowerBound && value <= upperBound, message);
+  public static <T extends Comparable<T>> T inRange(T value, Range<T> range, String name) {
+    checkArgument(range.contains(value), RANGE_MSG, name, range, value);
     return value;
   }
 
-  public static void checkArgument(boolean condition, Supplier<String> message) {
-    if (!condition) {
-      throw new IllegalArgumentException(Objects.requireNonNull(message).get());
-    }
+  public static void checkArgument(boolean condition, String messageTemplate, Object... args) {
+    Preconditions.checkArgument(condition, messageTemplate, args);
   }
 
-  public static void checkState(boolean condition, Supplier<String> message) {
-    if (!condition) {
-      throw new IllegalStateException(Objects.requireNonNull(message).get());
-    }
+  public static <T extends Comparable<T>> T greaterThan(T value, T greaterThan, String name) {
+    return inRange(value, Range.greaterThan(greaterThan), name);
   }
 
-  public static <N extends Number> N checkInLowerInclusiveRange(
-      N value, N lowerBound, N upperBound, String name) {
-    Supplier<String> message = () -> lowerInclusiveMessage(name, lowerBound, upperBound, value);
-    return checkInLowerInclusiveRange(value, lowerBound, upperBound, message);
+  public static <T extends Comparable<T>> T inClosedRange(T value, T lower, T upper, String name) {
+    return inRange(value, Range.closed(lower, upper), name);
   }
 
-  private static <T> String lowerInclusiveMessage(
-      String name, T lowerBound, T upperBound, T value) {
-    return "'"
-        + name
-        + "' must be at least "
-        + lowerBound
-        + " and less than "
-        + upperBound
-        + "; got "
-        + value;
+  public static <T extends Comparable<T>> T closedOpen(T value, T lower, T upper, String name) {
+    return inRange(value, Range.closedOpen(lower, upper), name);
   }
 
-  public static <N extends Number> N checkInLowerInclusiveRange(
-      N value, N lowerBound, N upperBound, Supplier<String> message) {
-    boolean isLowerBounded = value.doubleValue() >= lowerBound.doubleValue();
-    boolean isUpperBounded = value.doubleValue() < upperBound.doubleValue();
-    checkArgument(isLowerBounded && isUpperBounded, message);
+  public static <T> T isNot(T value, T not, String name) {
+    checkArgument(!Objects.equals(value, not), IS_NOT_MSG, name, not);
     return value;
-  }
-
-  public static int checkIsAtLeast(int value, int lowerBound, Supplier<String> message) {
-    checkArgument(value >= lowerBound, message);
-    return value;
-  }
-
-  public static <N extends Number> N checkIsAtLeast(N value, N lowerBound, String name) {
-    return checkIsAtLeast(value, lowerBound, () -> atLeastMessage(name, lowerBound, value));
-  }
-
-  public static <N extends Number> N checkIsAtLeast(
-      N value, N lowerBound, Supplier<String> message) {
-    checkArgument(value.doubleValue() >= lowerBound.doubleValue(), message);
-    return value;
-  }
-
-  private static <T> String atLeastMessage(String name, T lowerBound, T value) {
-    return "'" + name + "' must be at least " + lowerBound + "; got " + value;
-  }
-
-  public static <N extends Number> N checkIsNonNegative(N value, String name) {
-    return checkIsNonNegative(value, () -> nonNegativeMessage(name, value));
-  }
-
-  public static <N extends Number> N checkIsNonNegative(N value, Supplier<String> message) {
-    checkArgument(Objects.requireNonNull(value).doubleValue() >= 0, message);
-    return value;
-  }
-
-  private static <T> String nonNegativeMessage(String name, T value) {
-    return "'" + name + "' must be non-negative; got " + value;
-  }
-
-  public static Duration checkIsNonNegative(Duration duration, String name) {
-    return checkIsNonNegative(duration, () -> nonNegativeMessage(name, duration));
-  }
-
-  public static Duration checkIsNonNegative(Duration duration, Supplier<String> message) {
-    checkArgument(!Objects.requireNonNull(duration).isNegative(), message);
-    return duration;
-  }
-
-  public static <N extends Number> N checkIsPositive(N value, String name) {
-    return checkIsPositive(value, () -> positiveMessage(name, value));
-  }
-
-  public static <N extends Number> N checkIsPositive(N value, Supplier<String> message) {
-    Objects.requireNonNull(value);
-    checkArgument(value.doubleValue() > 0, message);
-    return value;
-  }
-
-  private static <T> String positiveMessage(String name, T value) {
-    return "'" + name + "' must be positive; got " + value;
-  }
-
-  public static Duration checkIsPositive(Duration duration, String name) {
-    return checkIsPositive(duration, () -> positiveMessage(name, duration));
-  }
-
-  public static Duration checkIsPositive(Duration duration, Supplier<String> message) {
-    Objects.requireNonNull(duration);
-    checkArgument(!duration.isNegative() && !duration.isZero(), message);
-    return duration;
-  }
-
-  public static <N extends Number> N checkIsNonzero(N value, String name) {
-    return checkIsNonzero(value, () -> nonzeroMessage(name, value));
-  }
-
-  public static <N extends Number> N checkIsNonzero(N value, Supplier<String> message) {
-    Objects.requireNonNull(value);
-    checkArgument(value.doubleValue() != 0, message);
-    return value;
-  }
-
-  private static <T> String nonzeroMessage(String name, T value) {
-    return "'" + name + "' must be nonzero; got " + value;
   }
 }

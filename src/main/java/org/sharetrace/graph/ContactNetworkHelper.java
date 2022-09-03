@@ -82,10 +82,10 @@ public class ContactNetworkHelper {
 
   public void logMetrics() {
     GraphStats<?, ?> stats = GraphStats.of(contactNetwork);
-    loggables.info(LoggableMetric.KEY, sizeMetrics(stats));
-    loggables.info(LoggableMetric.KEY, cycleMetrics(stats));
-    loggables.info(LoggableMetric.KEY, eccentricityMetrics(stats));
-    loggables.info(LoggableMetric.KEY, scoringMetrics(stats));
+    loggables.log(LoggableMetric.KEY, sizeMetrics(stats));
+    loggables.log(LoggableMetric.KEY, cycleMetrics(stats));
+    loggables.log(LoggableMetric.KEY, eccentricityMetrics(stats));
+    loggables.log(LoggableMetric.KEY, scoringMetrics(stats));
     logContactNetwork();
   }
 
@@ -108,7 +108,7 @@ public class ContactNetworkHelper {
   private void logContactNetwork() {
     if (loggables.loggable().contains(GraphTopologyMetric.class)) {
       String graphLabel = newGraphLabel();
-      loggables.info(LoggableMetric.KEY, GraphTopologyMetric.of(graphLabel));
+      loggables.log(LoggableMetric.KEY, GraphTopologyMetric.of(graphLabel));
       try (Writer writer = newGraphWriter(graphLabel)) {
         newGraphExporter().exportGraph(contactNetwork, writer);
       } catch (IOException exception) {

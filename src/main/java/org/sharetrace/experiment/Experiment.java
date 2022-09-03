@@ -9,7 +9,6 @@ import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
-import java.util.function.BinaryOperator;
 import javax.annotation.Nullable;
 import org.apache.commons.math3.distribution.RealDistribution;
 import org.sharetrace.RiskPropagationBuilder;
@@ -44,15 +43,14 @@ import org.sharetrace.message.RiskScore;
 import org.sharetrace.message.RiskScoreMessage;
 import org.sharetrace.message.UserParameters;
 import org.sharetrace.util.CacheParameters;
-import org.sharetrace.util.IntervalCache;
 import org.sharetrace.util.Checks;
+import org.sharetrace.util.IntervalCache;
 import org.sharetrace.util.Range;
 import org.slf4j.Logger;
 import org.slf4j.MDC;
 
 public abstract class Experiment implements Runnable {
 
-  private final BinaryOperator<RiskScoreMessage> mergeStrategy = this::cacheMerge;
   protected static final Logger logger = Logging.settingLogger();
   protected final Instant referenceTime;
   protected final Sampler<RiskScore> riskScoreSampler;
@@ -87,8 +85,13 @@ public abstract class Experiment implements Runnable {
     return clock().instant();
   }
 
-  protected Duration contactTtl() {
-    return defaultTtl();
+  private Sampler<RiskScore> newRiskScoreSampler(Builder builder) {
+    RiskScoreSampler.Builder samplerBuilder = RiskScoreSampler.builder();
+    if (builder.scoreValueDistribution != null) {
+      samplerBuilder.valueDistribution(builder.scoreValueDistribution);
+    }
+    Sampler<Instant> timeSampler = newTimeSampler(builder.scoreTimeTtlDistribution, scoreTtl());
+    return samplerBuilder.seed(seed).timeSampler(timeSampler).build();
   }
 
   private Sampler<Instant> newContactTimeSampler(Builder builder) {
@@ -133,17 +136,8 @@ public abstract class Experiment implements Runnable {
     return defaultTtl();
   }
 
-  protected CacheFactory<RiskScoreMessage> cacheFactory() {
-    return () ->
-        IntervalCache.<RiskScoreMessage>builder()
-            .nIntervals(cacheParameters.nIntervals())
-            .nLookAhead(cacheParameters.nLookAhead())
-            .interval(cacheParameters.interval())
-            .refreshPeriod(cacheParameters.refreshPeriod())
-            .clock(clock())
-            .mergeStrategy(mergeStrategy)
-            .comparator(RiskScoreMessage.comparator())
-            .build();
+  protected Duration contactTtl() {
+    return defaultTtl();
   }
 
   protected Duration defaultTtl() {
@@ -237,15 +231,20 @@ public abstract class Experiment implements Runnable {
   }
 
   protected void logSettings() {
-    loggables.info(LoggableSetting.KEY, settings());
+    loggables.log(LoggableSetting.KEY, settings());
   }
 
-  protected RiskScoreMessage cacheMerge(RiskScoreMessage oldMsg, RiskScoreMessage newMsg) {
-    // Simpler to check for higher value first.
-    // Most will likely not be older, which avoids checking for approximate equality.
-    return isHigher(newMsg, oldMsg) || (isOlder(newMsg, oldMsg) && isApproxEqual(newMsg, oldMsg))
-        ? newMsg
-        : oldMsg;
+  protected CacheFactory<RiskScoreMessage> cacheFactory() {
+    return () ->
+        IntervalCache.<RiskScoreMessage>builder()
+            .nIntervals(cacheParameters.nIntervals())
+            .nLookAhead(cacheParameters.nLookAhead())
+            .interval(cacheParameters.interval())
+            .refreshPeriod(cacheParameters.refreshPeriod())
+            .clock(clock())
+            .mergeStrategy(this::cacheMerge)
+            .comparator(RiskScoreMessage.comparator())
+            .build();
   }
 
   protected float scoreTolerance() {
@@ -304,13 +303,12 @@ public abstract class Experiment implements Runnable {
         .build();
   }
 
-  private Sampler<RiskScore> newRiskScoreSampler(Builder builder) {
-    RiskScoreSampler.Builder samplerBuilder = RiskScoreSampler.builder();
-    if (builder.scoreValueDistribution != null) {
-      samplerBuilder.valueDistribution(builder.scoreValueDistribution);
-    }
-    Sampler<Instant> timeSampler = newTimeSampler(builder.scoreTimeTtlDistribution, scoreTtl());
-    return samplerBuilder.seed(seed).timeSampler(timeSampler).build();
+  protected RiskScoreMessage cacheMerge(RiskScoreMessage oldMsg, RiskScoreMessage newMsg) {
+    // Simpler to check for higher value first.
+    // Most will likely not be older, which avoids checking for approximate equality.
+    return isHigher(newMsg, oldMsg) || (isOlder(newMsg, oldMsg) && isApproxEqual(newMsg, oldMsg))
+        ? newMsg
+        : oldMsg;
   }
 
   private static boolean isHigher(RiskScoreMessage msg1, RiskScoreMessage msg2) {
@@ -326,11 +324,11 @@ public abstract class Experiment implements Runnable {
   }
 
   protected RiskScoreFactory riskScoreFactory() {
-    return x -> riskScoreSampler.sample();
+    return RiskScoreFactory.fromSupplier(riskScoreSampler::sample);
   }
 
   protected ContactTimeFactory contactTimeFactory() {
-    return (x, xx) -> contactTimeSampler.sample();
+    return ContactTimeFactory.fromSupplier(contactTimeSampler::sample);
   }
 
   public abstract static class Builder {
@@ -377,7 +375,7 @@ public abstract class Experiment implements Runnable {
 
     protected void preBuild() {
       Objects.requireNonNull(graphType);
-      Checks.checkIsPositive(nIterations, "nIterations");
+      Checks.greaterThan(nIterations, 0, "nIterations");
       preBuildCalled = true;
     }
   }

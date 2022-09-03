@@ -3,6 +3,7 @@ package org.sharetrace.util;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import it.unimi.dsi.fastutil.floats.FloatArrayList;
 import it.unimi.dsi.fastutil.floats.FloatCollection;
+import java.util.Arrays;
 import java.util.Collection;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.immutables.value.Value;
@@ -10,17 +11,13 @@ import org.immutables.value.Value;
 @Value.Immutable
 abstract class BaseDescriptiveStats {
 
-  public static DescriptiveStats of(Collection<? extends Number> values) {
-    DescriptiveStatistics statistics = new DescriptiveStatistics();
-    values.stream().mapToDouble(Number::doubleValue).forEach(statistics::addValue);
-    return DescriptiveStats.builder().statistics(statistics).build();
+  public static DescriptiveStats of(float[] values) {
+    return of(FloatArrayList.of(values));
   }
 
-  public static DescriptiveStats of(float[] values) {
+  public static DescriptiveStats of(FloatCollection values) {
     DescriptiveStatistics statistics = new DescriptiveStatistics();
-    for (float value : values) {
-      statistics.addValue(value);
-    }
+    values.doubleStream().forEach(statistics::addValue);
     return DescriptiveStats.builder().statistics(statistics).build();
   }
 
@@ -89,13 +86,10 @@ abstract class BaseDescriptiveStats {
 
   @Value.Derived
   public float[] outliers() {
-    double[] values = statistics().getValues();
-    FloatCollection outliers = new FloatArrayList(values.length);
-    for (double value : values) {
-      if (value < lowerWhisker() || value > upperWhisker()) {
-        outliers.add((float) value);
-      }
-    }
-    return outliers.toFloatArray();
+    return Arrays.stream(statistics().getValues())
+        .filter(v -> v < lowerWhisker() || v > upperWhisker())
+        .mapToObj(v -> (float) v)
+        .collect(FloatArrayList::new, Collection::add, Collection::addAll)
+        .toFloatArray();
   }
 }

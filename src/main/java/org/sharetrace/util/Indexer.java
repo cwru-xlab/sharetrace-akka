@@ -1,5 +1,6 @@
 package org.sharetrace.util;
 
+import com.google.common.base.MoreObjects;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import java.util.Map;
 
@@ -25,10 +26,5 @@ public class Indexer<T> {
   public int index(T value) {
     Integer indexed = index.putIfAbsent(value, this.value);
     return (indexed == null) ? this.value++ : indexed;
-  }
-
-  @Override
-  public String toString() {
-    return getClass().getSimpleName() + "{value=" + value + '}';
   }
 }

@@ -33,6 +33,6 @@ abstract class BaseTimeSampler extends BaseSampler<Instant> {
 
   @Value.Check
   protected void check() {
-    Checks.checkIsPositive(ttl(), "ttl");
+    Checks.greaterThan(ttl(), Duration.ZERO, "ttl");
   }
 }

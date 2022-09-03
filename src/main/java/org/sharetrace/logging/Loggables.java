@@ -25,48 +25,21 @@ public final class Loggables {
     return new Loggables(loggable, logger);
   }
 
-  public void info(String message, String key, Loggable value) {
-    info(message, key, TypedSupplier.of(value));
+  public void log(String messageAndKey, Loggable value) {
+    log(messageAndKey, messageAndKey, TypedSupplier.of(value));
   }
 
-  public void info(String message, String key, TypedSupplier<? extends Loggable> supplier) {
+  public void log(String message, String key, TypedSupplier<? extends Loggable> supplier) {
     if (loggable.contains(supplier.getType())) {
       logger.get().info(message, StructuredArguments.value(key, supplier.get()));
     }
   }
 
-  public void info(String messageAndKey, Loggable value) {
-    info(messageAndKey, messageAndKey, TypedSupplier.of(value));
-  }
-
-  public void info(String messageAndKey, TypedSupplier<? extends Loggable> supplier) {
-    info(messageAndKey, messageAndKey, supplier);
-  }
-
-  public void debug(String message, String key, Loggable value) {
-    debug(message, key, TypedSupplier.of(value));
-  }
-
-  public void debug(String message, String key, TypedSupplier<? extends Loggable> supplier) {
-    if (loggable.contains(supplier.getType())) {
-      logger.get().debug(message, StructuredArguments.value(key, supplier.get()));
-    }
-  }
-
-  public void debug(String messageAndKey, Loggable value) {
-    debug(messageAndKey, messageAndKey, TypedSupplier.of(value));
-  }
-
-  public void debug(String messageAndKey, TypedSupplier<? extends Loggable> supplier) {
-    debug(messageAndKey, messageAndKey, supplier);
+  public void log(String messageAndKey, TypedSupplier<? extends Loggable> supplier) {
+    log(messageAndKey, messageAndKey, supplier);
   }
 
   public Set<Class<? extends Loggable>> loggable() {
     return loggable;
-  }
-
-  @Override
-  public String toString() {
-    return "Loggables{loggable=" + loggable + ", logger=" + logger + '}';
   }
 }

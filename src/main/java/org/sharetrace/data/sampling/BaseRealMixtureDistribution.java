@@ -1,9 +1,7 @@
 package org.sharetrace.data.sampling;
 
-import static org.sharetrace.util.Checks.checkArgument;
 import java.util.List;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 import java.util.function.ToDoubleFunction;
 import java.util.stream.IntStream;
 import org.apache.commons.math3.distribution.IntegerDistribution;
@@ -11,9 +9,16 @@ import org.apache.commons.math3.distribution.RealDistribution;
 import org.apache.commons.math3.exception.NumberIsTooLargeException;
 import org.apache.commons.math3.exception.OutOfRangeException;
 import org.immutables.value.Value;
+import org.sharetrace.util.Checks;
 
 @Value.Immutable
 abstract class BaseRealMixtureDistribution implements RealDistribution {
+
+  private static final String LOWER_SUPPORT_BOUND_MSG =
+      "'componentDistribution' must have a lower support bound of 0; got %s";
+
+  private static final String UPPER_SUPPORT_BOUND_MSG =
+      "'componentDistribution' must have an upper support bound of %s; got %s";
 
   @Override
   public double probability(double x) {
@@ -129,24 +134,13 @@ abstract class BaseRealMixtureDistribution implements RealDistribution {
 
   private void checkLowerBound() {
     int lowerBound = componentDistribution().getSupportLowerBound();
-    checkArgument(lowerBound == 0, lowerSupportBoundMessage(lowerBound));
+    Checks.checkArgument(lowerBound == 0, LOWER_SUPPORT_BOUND_MSG, lowerBound);
   }
 
   private void checkUpperBound() {
     int nComponents = components().size();
     int upperBound = componentDistribution().getSupportUpperBound();
-    checkArgument(nComponents == upperBound - 1, upperSupportBoundMessage(nComponents, upperBound));
-  }
-
-  private static Supplier<String> lowerSupportBoundMessage(int lowerBound) {
-    return () -> "'componentDistribution' must have a lower support bound of 0; got " + lowerBound;
-  }
-
-  private static Supplier<String> upperSupportBoundMessage(int nComponents, int upperBound) {
-    return () ->
-        "'componentDistribution' must have an upper support bound of "
-            + (nComponents - 1)
-            + "; got "
-            + upperBound;
+    Checks.checkArgument(
+        nComponents == upperBound - 1, UPPER_SUPPORT_BOUND_MSG, nComponents, upperBound);
   }
 }

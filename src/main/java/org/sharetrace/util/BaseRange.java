@@ -1,15 +1,13 @@
 package org.sharetrace.util;
 
-import static org.sharetrace.util.Checks.checkIsAtLeast;
-import static org.sharetrace.util.Checks.checkIsNonzero;
-import static org.sharetrace.util.Checks.checkIsPositive;
+import com.google.common.base.MoreObjects;
+import it.unimi.dsi.fastutil.doubles.AbstractDoubleCollection;
+import it.unimi.dsi.fastutil.doubles.DoubleIterator;
 import java.math.BigDecimal;
-import java.util.AbstractCollection;
-import java.util.Iterator;
 import org.immutables.value.Value;
 
 @Value.Immutable
-abstract class BaseRange extends AbstractCollection<Double> {
+abstract class BaseRange extends AbstractDoubleCollection {
 
   public static Range single(int value) {
     return Range.builder().start(value).stop(value + 1).build();
@@ -32,8 +30,8 @@ abstract class BaseRange extends AbstractCollection<Double> {
   }
 
   @Override
-  public Iterator<Double> iterator() {
-    return new Iterator<>() {
+  public DoubleIterator iterator() {
+    return new DoubleIterator() {
 
       private final BigDecimal scale = BigDecimal.valueOf(scale());
       private int next = start();
@@ -44,10 +42,14 @@ abstract class BaseRange extends AbstractCollection<Double> {
       }
 
       @Override
-      public Double next() {
-        double nxt = BigDecimal.valueOf(next).multiply(scale).doubleValue();
+      public double nextDouble() {
+        double nxt = computeNext();
         next += step();
         return nxt;
+      }
+
+      private double computeNext() {
+        return BigDecimal.valueOf(next).multiply(scale).doubleValue();
       }
     };
   }
@@ -74,32 +76,30 @@ abstract class BaseRange extends AbstractCollection<Double> {
   public abstract int stop();
 
   @Override
-  @Value.Derived
-  public int size() {
-    double steps = Math.abs(1d * (stop() - start()) / step());
-    return Math.toIntExact((long) Math.ceil(steps));
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("start", start())
+        .add("stop", stop())
+        .add("step", step())
+        .add("scale", scale())
+        .toString();
   }
 
   @Override
-  public String toString() {
-    return "Range{start="
-        + start()
-        + ", stop="
-        + stop()
-        + ", step="
-        + step()
-        + ", scale="
-        + scale()
-        + "}";
+  @Value.Derived
+  public int size() {
+    double range = stop() - start();
+    double steps = Math.abs(range / step());
+    return Math.toIntExact((long) Math.ceil(steps));
   }
 
   @Value.Check
   protected void check() {
-    if (checkIsNonzero(step(), "step") > 0) {
-      checkIsAtLeast(stop(), start(), "stop");
+    if (Checks.isNot(step(), 0, "step") > 0) {
+      Checks.atLeast(stop(), start(), "stop");
     } else {
-      checkIsAtLeast(start(), stop(), "start");
+      Checks.atLeast(start(), stop(), "start");
     }
-    checkIsPositive(scale(), "scale");
+    Checks.greaterThan(scale(), 0d, "scale");
   }
 }

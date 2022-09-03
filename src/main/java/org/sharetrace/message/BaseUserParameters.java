@@ -1,14 +1,11 @@
 package org.sharetrace.message;
 
-import static org.sharetrace.util.Checks.checkInClosedRange;
-import static org.sharetrace.util.Checks.checkIsAtLeast;
-import static org.sharetrace.util.Checks.checkIsNonNegative;
-import static org.sharetrace.util.Checks.checkIsPositive;
 import java.time.Duration;
 import org.immutables.value.Value;
 import org.sharetrace.RiskPropagation;
 import org.sharetrace.User;
 import org.sharetrace.graph.ContactNetwork;
+import org.sharetrace.util.Checks;
 
 /**
  * A collection of values that modify the behavior of a {@link User} while passing messages during
@@ -23,15 +20,15 @@ abstract class BaseUserParameters implements UserMessage {
 
   @Value.Check
   protected void check() {
-    checkInClosedRange(
+    Checks.inClosedRange(
         transmissionRate(), MIN_TRANSMISSION_RATE, MAX_TRANSMISSION_RATE, "transmissionRate");
-    checkIsAtLeast(sendCoefficient(), MIN_SEND_COEFFICIENT, "sendCoefficient");
-    checkIsNonNegative(timeBuffer(), "timeBuffer");
-    checkIsPositive(scoreTtl(), "scoreTtl");
-    checkIsPositive(contactTtl(), "contactTtl");
-    checkIsPositive(idleTimeout(), "idleTimeout");
-    checkIsPositive(refreshPeriod(), "refreshPeriod");
-    checkIsNonNegative(scoreTolerance(), "scoreTolerance");
+    Checks.atLeast(sendCoefficient(), MIN_SEND_COEFFICIENT, "sendCoefficient");
+    Checks.atLeast(timeBuffer(), Duration.ZERO, "timeBuffer");
+    Checks.greaterThan(scoreTtl(), Duration.ZERO, "scoreTtl");
+    Checks.greaterThan(contactTtl(), Duration.ZERO, "contactTtl");
+    Checks.greaterThan(idleTimeout(), Duration.ZERO, "idleTimeout");
+    Checks.greaterThan(refreshPeriod(), Duration.ZERO, "refreshPeriod");
+    Checks.atLeast(scoreTolerance(), 0f, "scoreTolerance");
   }
 
   /**

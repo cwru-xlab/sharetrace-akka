@@ -1,8 +1,5 @@
 package org.sharetrace.util;
 
-import static org.sharetrace.util.Checks.checkInLowerInclusiveRange;
-import static org.sharetrace.util.Checks.checkIsAtLeast;
-import static org.sharetrace.util.Checks.checkIsPositive;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import java.time.Clock;
 import java.time.Duration;
@@ -142,7 +139,7 @@ public class IntervalCache<T extends Comparable<T>> {
   }
 
   private long checkedFloorKey(long timestamp) {
-    return floorKey(checkInLowerInclusiveRange(timestamp, rangeStart, rangeEnd, "timestamp"));
+    return floorKey(Checks.closedOpen(timestamp, rangeStart, rangeEnd, "timestamp"));
   }
 
   /**
@@ -155,12 +152,15 @@ public class IntervalCache<T extends Comparable<T>> {
   public Optional<T> max(Instant timestamp) {
     Objects.requireNonNull(timestamp);
     refresh();
-    long time = toLong(timestamp);
-    return cache.entrySet().stream().filter(isNotAfter(time)).map(Entry::getValue).max(comparator);
+    return cache.entrySet().stream()
+        .filter(isNotAfter(timestamp))
+        .map(Entry::getValue)
+        .max(comparator);
   }
 
-  private static Predicate<Entry<Long, ?>> isNotAfter(long timestamp) {
-    return entry -> entry.getKey() <= timestamp;
+  private static Predicate<Entry<Long, ?>> isNotAfter(Instant timestamp) {
+    long time = toLong(timestamp);
+    return entry -> entry.getKey() <= time;
   }
 
   public static final class Builder<T extends Comparable<T>> {
@@ -223,24 +223,20 @@ public class IntervalCache<T extends Comparable<T>> {
       checkFields();
       lookBack = interval.multipliedBy(nIntervals - nLookAhead);
       lookAhead = interval.multipliedBy(nLookAhead);
-      cache = newCache();
+      cache = new Long2ObjectOpenHashMap<>();
       return new IntervalCache<>(this);
     }
 
     private void checkFields() {
       Objects.requireNonNull(interval);
-      checkIsPositive(interval, "interval");
-      checkIsAtLeast(nIntervals, MIN_INTERVALS, "nIntervals");
-      checkInLowerInclusiveRange(nLookAhead, MIN_LOOK_AHEAD, nIntervals, "nLookAhead");
       Objects.requireNonNull(refreshPeriod);
-      checkIsPositive(refreshPeriod, "refreshPeriod");
       Objects.requireNonNull(clock);
       Objects.requireNonNull(mergeStrategy);
       Objects.requireNonNull(comparator);
-    }
-
-    private Map<Long, T> newCache() {
-      return new Long2ObjectOpenHashMap<>();
+      Checks.atLeast(interval, Duration.ZERO, "interval");
+      Checks.atLeast(nIntervals, MIN_INTERVALS, "nIntervals");
+      Checks.closedOpen(nLookAhead, MIN_LOOK_AHEAD, nIntervals, "nLookAhead");
+      Checks.atLeast(refreshPeriod, Duration.ZERO, "refreshPeriod");
     }
   }
 }

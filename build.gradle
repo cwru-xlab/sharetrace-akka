@@ -9,10 +9,6 @@ repositories {
     mavenCentral()
 }
 
-compileJava {
-    options.compilerArgs += ["-Aproject=${project.group}/${project.name}"]
-}
-
 def versions = [
         akkaScala  : "2.13",
         akka       : "2.6.19",
