@@ -1,6 +1,6 @@
 package org.sharetrace.data.sampling;
 
-import static org.sharetrace.util.Preconditions.checkArgument;
+import static org.sharetrace.util.Checks.checkArgument;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.function.Supplier;

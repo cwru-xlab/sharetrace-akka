@@ -45,7 +45,7 @@ import org.sharetrace.message.RiskScoreMessage;
 import org.sharetrace.message.UserParameters;
 import org.sharetrace.util.CacheParameters;
 import org.sharetrace.util.IntervalCache;
-import org.sharetrace.util.Preconditions;
+import org.sharetrace.util.Checks;
 import org.sharetrace.util.Range;
 import org.slf4j.Logger;
 import org.slf4j.MDC;
@@ -377,7 +377,7 @@ public abstract class Experiment implements Runnable {
 
     protected void preBuild() {
       Objects.requireNonNull(graphType);
-      Preconditions.checkIsPositive(nIterations, "nIterations");
+      Checks.checkIsPositive(nIterations, "nIterations");
       preBuildCalled = true;
     }
   }

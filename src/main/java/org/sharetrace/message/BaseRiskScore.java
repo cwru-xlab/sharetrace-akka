@@ -1,6 +1,7 @@
 package org.sharetrace.message;
 
-import static org.sharetrace.util.Preconditions.checkInClosedRange;
+import static org.sharetrace.util.Checks.checkInClosedRange;
+import com.google.common.collect.ComparisonChain;
 import java.time.Instant;
 import org.immutables.value.Value;
 import org.sharetrace.RiskPropagation;
@@ -34,8 +35,10 @@ abstract class BaseRiskScore implements Comparable<RiskScore> {
 
   @Override
   public int compareTo(RiskScore score) {
-    int byValue = Float.compare(value(), score.value());
-    return byValue != 0 ? byValue : timestamp().compareTo(score.timestamp());
+    return ComparisonChain.start()
+        .compare(value(), score.value())
+        .compare(timestamp(), score.timestamp())
+        .result();
   }
 
   /** Returns the magnitude of this risk score; modified during {@link RiskPropagation}. */

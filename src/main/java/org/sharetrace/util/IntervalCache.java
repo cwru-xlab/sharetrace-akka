@@ -1,8 +1,8 @@
 package org.sharetrace.util;
 
-import static org.sharetrace.util.Preconditions.checkInLowerInclusiveRange;
-import static org.sharetrace.util.Preconditions.checkIsAtLeast;
-import static org.sharetrace.util.Preconditions.checkIsPositive;
+import static org.sharetrace.util.Checks.checkInLowerInclusiveRange;
+import static org.sharetrace.util.Checks.checkIsAtLeast;
+import static org.sharetrace.util.Checks.checkIsPositive;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import java.time.Clock;
 import java.time.Duration;

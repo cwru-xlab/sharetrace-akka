@@ -5,9 +5,9 @@ import java.util.Objects;
 import java.util.function.Supplier;
 
 /** A collection of utility methods for checking conditions and verifying assumptions. */
-public final class Preconditions {
+public final class Checks {
 
-  private Preconditions() {}
+  private Checks() {}
 
   public static double checkInClosedRange(
       double value, double lowerBound, double upperBound, String name) {

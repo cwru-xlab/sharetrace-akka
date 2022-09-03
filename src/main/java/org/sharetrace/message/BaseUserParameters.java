@@ -1,9 +1,9 @@
 package org.sharetrace.message;
 
-import static org.sharetrace.util.Preconditions.checkInClosedRange;
-import static org.sharetrace.util.Preconditions.checkIsAtLeast;
-import static org.sharetrace.util.Preconditions.checkIsNonNegative;
-import static org.sharetrace.util.Preconditions.checkIsPositive;
+import static org.sharetrace.util.Checks.checkInClosedRange;
+import static org.sharetrace.util.Checks.checkIsAtLeast;
+import static org.sharetrace.util.Checks.checkIsNonNegative;
+import static org.sharetrace.util.Checks.checkIsPositive;
 import java.time.Duration;
 import org.immutables.value.Value;
 import org.sharetrace.RiskPropagation;

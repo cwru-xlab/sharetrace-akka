@@ -5,7 +5,7 @@ import java.time.Instant;
 import org.apache.commons.math3.distribution.RealDistribution;
 import org.apache.commons.math3.distribution.UniformRealDistribution;
 import org.immutables.value.Value;
-import org.sharetrace.util.Preconditions;
+import org.sharetrace.util.Checks;
 
 @Value.Immutable
 abstract class BaseTimeSampler extends BaseSampler<Instant> {
@@ -33,6 +33,6 @@ abstract class BaseTimeSampler extends BaseSampler<Instant> {
 
   @Value.Check
   protected void check() {
-    Preconditions.checkIsPositive(ttl(), "ttl");
+    Checks.checkIsPositive(ttl(), "ttl");
   }
 }

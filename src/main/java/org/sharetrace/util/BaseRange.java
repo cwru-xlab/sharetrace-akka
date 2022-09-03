@@ -1,8 +1,8 @@
 package org.sharetrace.util;
 
-import static org.sharetrace.util.Preconditions.checkIsAtLeast;
-import static org.sharetrace.util.Preconditions.checkIsNonzero;
-import static org.sharetrace.util.Preconditions.checkIsPositive;
+import static org.sharetrace.util.Checks.checkIsAtLeast;
+import static org.sharetrace.util.Checks.checkIsNonzero;
+import static org.sharetrace.util.Checks.checkIsPositive;
 import java.math.BigDecimal;
 import java.util.AbstractCollection;
 import java.util.Iterator;
@@ -45,13 +45,9 @@ abstract class BaseRange extends AbstractCollection<Double> {
 
       @Override
       public Double next() {
-        double nxt = computeNext();
+        double nxt = BigDecimal.valueOf(next).multiply(scale).doubleValue();
         next += step();
         return nxt;
-      }
-
-      private double computeNext() {
-        return BigDecimal.valueOf(next).multiply(scale).doubleValue();
       }
     };
   }
