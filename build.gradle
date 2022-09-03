@@ -18,15 +18,14 @@ def versions = [
         akka       : "2.6.19",
         commonsMath: "3.6.1",
         fastutil   : "8.5.8",
+        guava      : "31.1",
         immutables : "2.9.0",
         jackson    : "2.13.2",
         jgrapht    : "1.5.1",
         junit      : "5.8.2",
         logback    : "1.2.11",
         logstash   : "7.1.1",
-        picoli     : "4.6.3", // TODO Remove if unused
         slf4j      : "1.7.36",
-        spotBugs   : "4.6.0" // TODO Remove
 ]
 
 dependencies {
@@ -43,6 +42,7 @@ dependencies {
     implementation "org.immutables:value:$versions.immutables"
     implementation "org.immutables:builder:$versions.immutables"
     // Data structures and utilities
+    implementation "com.google.guava:guava:$versions.guava-jre"
     implementation "it.unimi.dsi:fastutil:$versions.fastutil"
     implementation "org.apache.commons:commons-math3:$versions.commonsMath"
     implementation "org.jgrapht:jgrapht-core:$versions.jgrapht"
@@ -50,11 +50,7 @@ dependencies {
     implementation "org.jgrapht:jgrapht-opt:$versions.jgrapht"
     // Akka
     implementation "com.typesafe.akka:akka-actor-typed_$versions.akkaScala:$versions.akka"
-    // CLI
-    implementation "info.picocli:picocli:$versions.picoli"
-    annotationProcessor "info.picocli:picocli-codegen:$versions.picoli"
     // Testing
-    compileOnly "com.github.spotbugs:spotbugs-annotations:$versions.spotBugs"
     testImplementation "org.junit.jupiter:junit-jupiter-api:$versions.junit"
     testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:$versions.junit"
 }
