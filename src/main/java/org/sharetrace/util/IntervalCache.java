@@ -33,12 +33,7 @@ import java.util.function.Predicate;
 public class IntervalCache<T extends Comparable<T>> {
 
   public static final int MIN_INTERVALS = 1;
-  public static final int DEFAULT_INTERVALS = MIN_INTERVALS;
   public static final int MIN_LOOK_AHEAD = 0;
-  public static final int DEFAULT_LOOK_AHEAD = MIN_INTERVALS;
-  public static final Duration DEFAULT_REFRESH_PERIOD = Duration.ofMinutes(1L);
-  public static final Duration DEFAULT_INTERVAL = Duration.ofDays(1L);
-  public static final Clock DEFAULT_CLOCK = Clock.systemUTC();
 
   private final Map<Long, T> cache;
   private final BinaryOperator<T> mergeStrategy;
@@ -85,10 +80,6 @@ public class IntervalCache<T extends Comparable<T>> {
 
   public static <T extends Comparable<T>> Builder<T> builder() {
     return new Builder<>();
-  }
-
-  public static <T> BinaryOperator<T> defaultMergeStrategy() {
-    return (oldValue, newValue) -> newValue;
   }
 
   /**
@@ -165,15 +156,15 @@ public class IntervalCache<T extends Comparable<T>> {
 
   public static final class Builder<T extends Comparable<T>> {
 
-    private BinaryOperator<T> mergeStrategy = defaultMergeStrategy();
+    private BinaryOperator<T> mergeStrategy;
     private Comparator<T> comparator;
-    private Clock clock = DEFAULT_CLOCK;
-    private Duration interval = DEFAULT_INTERVAL;
-    private int nIntervals = DEFAULT_INTERVALS;
-    private int nLookAhead = DEFAULT_LOOK_AHEAD;
+    private Clock clock;
+    private Duration interval;
+    private int nIntervals;
+    private int nLookAhead;
     private Duration lookBack;
     private Duration lookAhead;
-    private Duration refreshPeriod = DEFAULT_REFRESH_PERIOD;
+    private Duration refreshPeriod;
     private Map<Long, T> cache;
 
     /** Sets duration of each contiguous time interval. */
