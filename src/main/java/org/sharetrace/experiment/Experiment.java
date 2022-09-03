@@ -158,8 +158,10 @@ public abstract class Experiment implements Runnable {
     setIteration();
     addMdc();
     setDataset();
-    setParameters();
-    logDatasetAndSettings();
+    setUserParameters();
+    setCacheParameters();
+    logDataset();
+    logSettings();
   }
 
   protected void runAlgorithm() {
@@ -175,16 +177,6 @@ public abstract class Experiment implements Runnable {
   }
 
   protected abstract void setDataset();
-
-  protected void setParameters() {
-    setUserParameters();
-    setCacheParameters();
-  }
-
-  protected void logDatasetAndSettings() {
-    logDataset();
-    logSettings();
-  }
 
   protected Behavior<AlgorithmMessage> newAlgorithm() {
     return RiskPropagationBuilder.create()
