@@ -15,10 +15,15 @@ public final class Preconditions {
     return checkInClosedRange(value, lowerBound, upperBound, message);
   }
 
-  public static long checkInLowerInclusiveRange(
-      long value, long lowerBound, long upperBound, String name) {
-    Supplier<String> message = () -> lowerInclusiveMessage(name, lowerBound, upperBound, value);
-    return checkInLowerInclusiveRange(value, lowerBound, upperBound, message);
+  private static <T> String closedRangeMessage(String name, T lowerBound, T upperBound, T value) {
+    return "'"
+        + name
+        + "' must be between "
+        + lowerBound
+        + " and "
+        + upperBound
+        + ", inclusive; got "
+        + value;
   }
 
   public static double checkInClosedRange(
@@ -33,9 +38,16 @@ public final class Preconditions {
     }
   }
 
-  public static int checkIsAtLeast(int value, int lowerBound, Supplier<String> message) {
-    checkArgument(value >= lowerBound, message);
-    return value;
+  public static void checkState(boolean condition, Supplier<String> message) {
+    if (!condition) {
+      throw new IllegalStateException(Objects.requireNonNull(message).get());
+    }
+  }
+
+  public static <N extends Number> N checkInLowerInclusiveRange(
+      N value, N lowerBound, N upperBound, String name) {
+    Supplier<String> message = () -> lowerInclusiveMessage(name, lowerBound, upperBound, value);
+    return checkInLowerInclusiveRange(value, lowerBound, upperBound, message);
   }
 
   private static <T> String lowerInclusiveMessage(
@@ -44,20 +56,22 @@ public final class Preconditions {
         + name
         + "' must be at least "
         + lowerBound
-        + " and "
+        + " and less than "
         + upperBound
-        + "less than; got "
+        + "; got "
         + value;
   }
 
-  public static long checkInLowerInclusiveRange(
-      long value, long lowerBound, long upperBound, Supplier<String> message) {
-    checkArgument(value >= lowerBound && value < upperBound, message);
+  public static <N extends Number> N checkInLowerInclusiveRange(
+      N value, N lowerBound, N upperBound, Supplier<String> message) {
+    boolean isLowerBounded = value.doubleValue() >= lowerBound.doubleValue();
+    boolean isUpperBounded = value.doubleValue() < upperBound.doubleValue();
+    checkArgument(isLowerBounded && isUpperBounded, message);
     return value;
   }
 
-  public static <N extends Number> N checkIsNonNegative(N value, Supplier<String> message) {
-    checkArgument(Objects.requireNonNull(value).doubleValue() >= 0, message);
+  public static int checkIsAtLeast(int value, int lowerBound, Supplier<String> message) {
+    checkArgument(value >= lowerBound, message);
     return value;
   }
 
@@ -79,21 +93,13 @@ public final class Preconditions {
     return checkIsNonNegative(value, () -> nonNegativeMessage(name, value));
   }
 
-  public static <N extends Number> N checkIsPositive(N value, Supplier<String> message) {
-    Objects.requireNonNull(value);
-    checkArgument(value.doubleValue() > 0, message);
+  public static <N extends Number> N checkIsNonNegative(N value, Supplier<String> message) {
+    checkArgument(Objects.requireNonNull(value).doubleValue() >= 0, message);
     return value;
   }
 
-  private static <T> String closedRangeMessage(String name, T lowerBound, T upperBound, T value) {
-    return "'"
-        + name
-        + "' must be between "
-        + lowerBound
-        + " and "
-        + upperBound
-        + ", inclusive; got "
-        + value;
+  private static <T> String nonNegativeMessage(String name, T value) {
+    return "'" + name + "' must be non-negative; got " + value;
   }
 
   public static Duration checkIsNonNegative(Duration duration, String name) {
@@ -109,8 +115,10 @@ public final class Preconditions {
     return checkIsPositive(value, () -> positiveMessage(name, value));
   }
 
-  private static <T> String nonNegativeMessage(String name, T value) {
-    return "'" + name + "' must be non-negative; got " + value;
+  public static <N extends Number> N checkIsPositive(N value, Supplier<String> message) {
+    Objects.requireNonNull(value);
+    checkArgument(value.doubleValue() > 0, message);
+    return value;
   }
 
   private static <T> String positiveMessage(String name, T value) {
