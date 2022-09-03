@@ -25,18 +25,21 @@ public final class Loggables {
     return new Loggables(loggable, logger);
   }
 
-  public void log(String messageAndKey, Loggable value) {
-    log(messageAndKey, messageAndKey, TypedSupplier.of(value));
+  public boolean log(String messageAndKey, Loggable value) {
+    return log(messageAndKey, messageAndKey, TypedSupplier.of(value));
   }
 
-  public void log(String message, String key, TypedSupplier<? extends Loggable> supplier) {
+  public boolean log(String message, String key, TypedSupplier<? extends Loggable> supplier) {
+    boolean logged = false;
     if (loggable.contains(supplier.getType())) {
       logger.get().info(message, StructuredArguments.value(key, supplier.get()));
+      logged = true;
     }
+    return logged;
   }
 
-  public void log(String messageAndKey, TypedSupplier<? extends Loggable> supplier) {
-    log(messageAndKey, messageAndKey, supplier);
+  public boolean log(String messageAndKey, TypedSupplier<? extends Loggable> supplier) {
+    return log(messageAndKey, messageAndKey, supplier);
   }
 
   public Set<Class<? extends Loggable>> loggable() {

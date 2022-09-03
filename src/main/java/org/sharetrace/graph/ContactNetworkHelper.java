@@ -43,13 +43,9 @@ public class ContactNetworkHelper {
 
   public static ContactNetworkHelper create(
       GraphGenerator<Integer, DefaultEdge, ?> generator, Set<Class<? extends Loggable>> loggable) {
-    Graph<Integer, DefaultEdge> contactNetwork = newContactNetwork();
+    Graph<Integer, DefaultEdge> contactNetwork = GraphFactory.newUndirectedGraph();
     generator.generateGraph(contactNetwork);
     return new ContactNetworkHelper(contactNetwork, loggable);
-  }
-
-  private static Graph<Integer, DefaultEdge> newContactNetwork() {
-    return GraphFactory.newUndirectedGraph();
   }
 
   public Stream<Contact> contacts(ContactTimeFactory contactTimeFactory) {
@@ -80,37 +76,37 @@ public class ContactNetworkHelper {
   }
 
   public void logMetrics() {
+    logStats();
+    logTopology();
+  }
+
+  private void logStats() {
     GraphStats<?, ?> stats = GraphStats.of(contactNetwork);
     String key = LoggableMetric.KEY;
     loggables.log(key, TypedSupplier.of(SizeMetrics.class, stats::sizeMetrics));
     loggables.log(key, TypedSupplier.of(CycleMetrics.class, stats::cycleMetrics));
     loggables.log(key, TypedSupplier.of(EccentricityMetrics.class, stats::eccentricityMetrics));
     loggables.log(key, TypedSupplier.of(ScoringMetrics.class, stats::scoringMetrics));
-    logContactNetwork();
   }
 
-  private void logContactNetwork() {
-    if (loggables.loggable().contains(TopologyMetric.class)) {
-      String graphLabel = newGraphLabel();
-      loggables.log(LoggableMetric.KEY, TopologyMetric.of(graphLabel));
-      try (Writer writer = newGraphWriter(graphLabel)) {
-        newGraphExporter().exportGraph(contactNetwork, writer);
-      } catch (IOException exception) {
-        throw new UncheckedIOException(exception);
-      }
+  private void logTopology() {
+    String graphLabel = UUID.randomUUID().toString();
+    boolean logged = loggables.log(LoggableMetric.KEY, TopologyMetric.of(graphLabel));
+    if (logged) {
+      saveGraph(graphLabel);
     }
   }
 
-  private static String newGraphLabel() {
-    return UUID.randomUUID().toString();
+  private void saveGraph(String graphLabel) {
+    try (Writer writer = newGraphWriter(graphLabel)) {
+      newGraphExporter().exportGraph(contactNetwork, writer);
+    } catch (IOException exception) {
+      throw new UncheckedIOException(exception);
+    }
   }
 
   private static Writer newGraphWriter(String graphLabel) throws IOException {
-    Path graphsPath = Logging.graphsLogPath();
-    if (!Files.exists(graphsPath)) {
-      Files.createDirectories(graphsPath);
-    }
-    Path filePath = Path.of(graphsPath.toString(), graphLabel + ".graphml");
+    Path filePath = Path.of(graphsPath().toString(), graphLabel + ".graphml");
     return Files.newBufferedWriter(filePath);
   }
 
@@ -118,5 +114,13 @@ public class ContactNetworkHelper {
     GraphMLExporter<Integer, DefaultEdge> exporter = new GraphMLExporter<>();
     exporter.setVertexIdProvider(String::valueOf);
     return exporter;
+  }
+
+  private static Path graphsPath() throws IOException {
+    Path graphsPath = Logging.graphsLogPath();
+    if (!Files.exists(graphsPath)) {
+      Files.createDirectories(graphsPath);
+    }
+    return graphsPath;
   }
 }
