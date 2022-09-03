@@ -38,26 +38,20 @@ public class SyntheticExperiment extends Experiment {
 
   public static class Builder extends Experiment.Builder {
 
-    protected GraphGeneratorFactory generatorFactory;
+    private GraphGeneratorFactory generatorFactory = defaultFactory();
 
     public Builder graphGeneratorFactory(GraphGeneratorFactory generatorFactory) {
-      this.generatorFactory = generatorFactory;
+      this.generatorFactory = Objects.requireNonNull(generatorFactory);
       return this;
     }
 
     @Override
-    public Experiment build() {
-      preBuild();
+    public SyntheticExperiment build() {
+      checkFields();
       return new SyntheticExperiment(this);
     }
 
-    @Override
-    protected void preBuild() {
-      generatorFactory = Objects.requireNonNullElseGet(generatorFactory, this::defaultFactory);
-      super.preBuild();
-    }
-
-    protected GraphGeneratorFactory defaultFactory() {
+    private GraphGeneratorFactory defaultFactory() {
       return nNodes ->
           GraphGeneratorBuilder.<Integer, DefaultEdge>create(graphType, nNodes, seed)
               .nEdges(nNodes * 2)

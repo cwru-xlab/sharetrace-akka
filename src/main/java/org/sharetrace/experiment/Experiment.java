@@ -66,7 +66,6 @@ public abstract class Experiment implements Runnable {
   protected String iteration;
 
   protected Experiment(Builder builder) {
-    checkBuilder(builder);
     this.graphType = builder.graphType;
     this.nIterations = builder.nIterations;
     this.seed = builder.seed;
@@ -74,12 +73,6 @@ public abstract class Experiment implements Runnable {
     this.riskScoreSampler = newRiskScoreSampler(builder);
     this.contactTimeSampler = newContactTimeSampler(builder);
     this.loggables = Loggables.create(loggable(), logger);
-  }
-
-  private static void checkBuilder(Builder builder) {
-    if (!builder.preBuildCalled) {
-      throw new IllegalStateException("preBuild() must be called prior to calling build()");
-    }
   }
 
   protected Instant newReferenceTime() {
@@ -321,7 +314,7 @@ public abstract class Experiment implements Runnable {
     return ContactTimeFactory.fromSupplier(contactTimeSampler::sample);
   }
 
-  public abstract static class Builder {
+  public static class Builder {
 
     protected GraphType graphType;
     protected int nIterations = 1;
@@ -329,7 +322,6 @@ public abstract class Experiment implements Runnable {
     private RealDistribution scoreValueDistribution = defaultDistribution();
     private RealDistribution scoreTimeTtlDistribution = defaultDistribution();
     private RealDistribution contactTimeTtlDistribution = defaultDistribution();
-    private boolean preBuildCalled = false;
 
     public Builder graphType(GraphType graphType) {
       this.graphType = graphType;
@@ -361,11 +353,12 @@ public abstract class Experiment implements Runnable {
       return this;
     }
 
-    public abstract Experiment build();
+    public Experiment build() {
+      throw new UnsupportedOperationException();
+    }
 
-    protected void preBuild() {
+    protected void checkFields() {
       Objects.requireNonNull(graphType);
-      preBuildCalled = true;
     }
 
     private RealDistribution defaultDistribution() {

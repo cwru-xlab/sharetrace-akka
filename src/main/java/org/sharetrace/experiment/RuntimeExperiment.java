@@ -45,15 +45,15 @@ public class RuntimeExperiment extends SyntheticExperiment {
     }
 
     @Override
-    protected void preBuild() {
-      Objects.requireNonNull(nNodesRange);
-      super.preBuild();
+    public RuntimeExperiment build() {
+      checkFields();
+      return new RuntimeExperiment(this);
     }
 
     @Override
-    public Experiment build() {
-      preBuild();
-      return new RuntimeExperiment(this);
+    protected void checkFields() {
+      super.checkFields();
+      Objects.requireNonNull(nNodesRange);
     }
   }
 }

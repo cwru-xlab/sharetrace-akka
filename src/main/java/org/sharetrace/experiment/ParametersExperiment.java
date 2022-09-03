@@ -64,27 +64,25 @@ public class ParametersExperiment extends SyntheticExperiment {
     }
 
     public Builder transmissionRates(Range transmissionRates) {
-      this.transmissionRates = transmissionRates;
+      this.transmissionRates = Objects.requireNonNull(transmissionRates);
       return this;
     }
 
     public Builder sendCoefficients(Range sendCoefficients) {
-      this.sendCoefficients = sendCoefficients;
+      this.sendCoefficients = Objects.requireNonNull(sendCoefficients);
       return this;
     }
 
     @Override
-    public Experiment build() {
-      preBuild();
+    public ParametersExperiment build() {
+      checkFields();
       return new ParametersExperiment(this);
     }
 
     @Override
-    protected void preBuild() {
+    protected void checkFields() {
+      super.checkFields();
       Objects.requireNonNull(nNodes);
-      Objects.requireNonNull(transmissionRates);
-      Objects.requireNonNull(sendCoefficients);
-      super.preBuild();
     }
   }
 }

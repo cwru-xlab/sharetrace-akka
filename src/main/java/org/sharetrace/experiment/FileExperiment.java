@@ -43,21 +43,20 @@ public class FileExperiment extends Experiment {
     }
 
     public Builder delimiter(String delimiter) {
-      this.delimiter = delimiter;
+      this.delimiter = Objects.requireNonNull(delimiter);
       return this;
     }
 
     @Override
-    public Experiment build() {
-      preBuild();
+    public FileExperiment build() {
+      checkFields();
       return new FileExperiment(this);
     }
 
     @Override
-    protected void preBuild() {
+    protected void checkFields() {
+      super.checkFields();
       Objects.requireNonNull(path);
-      Objects.requireNonNull(delimiter);
-      super.preBuild();
     }
   }
 }
