@@ -68,13 +68,13 @@ public abstract class Experiment implements Runnable {
   protected String iteration;
 
   protected Experiment(Builder builder) {
-    this.graphType = builder.graphType;
-    this.nIterations = builder.nIterations;
-    this.seed = builder.seed;
-    this.referenceTime = newReferenceTime();
-    this.riskScoreSampler = newRiskScoreSampler(builder);
-    this.contactTimeSampler = newContactTimeSampler(builder);
-    this.loggables = Loggables.create(loggable(), logger);
+    graphType = builder.graphType;
+    nIterations = builder.nIterations;
+    seed = builder.seed;
+    referenceTime = newReferenceTime();
+    riskScoreSampler = newRiskScoreSampler(builder);
+    contactTimeSampler = newContactTimeSampler(builder);
+    loggables = Loggables.create(loggable(), logger);
   }
 
   protected Instant newReferenceTime() {
