@@ -27,7 +27,7 @@ abstract class BaseRiskScoreMessage implements UserMessage, Comparable<RiskScore
    * propagate through the {@link ContactNetwork} during {@link RiskPropagation}.
    */
   @Value.Default
-  public String uuid() {
+  public String id() {
     return UUID.randomUUID().toString();
   }
 }

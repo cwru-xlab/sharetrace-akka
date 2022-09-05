@@ -18,37 +18,37 @@ class GraphGenerators {
   @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
   public static <V, E> GraphGenerator<V, E, ?> graphGenerator(
       @Builder.Parameter GraphType graphType,
-      @Builder.Parameter int nNodes,
+      @Builder.Parameter int numNodes,
       @Builder.Parameter long seed,
-      Optional<Integer> nInitialNodes,
-      Optional<Integer> nNewEdges,
-      Optional<Integer> nEdges,
+      Optional<Integer> numInitialNodes,
+      Optional<Integer> numNewEdges,
+      Optional<Integer> numEdges,
       Optional<Integer> degree,
-      Optional<Integer> kNearestNeighbors,
+      Optional<Integer> numNearestNeighbors,
       Optional<Double> rewiringProbability) {
     switch (graphType) {
         // Random
       case GNM_RANDOM:
         return new GnmRandomGraphGenerator<>(
-            nNodes, getOrThrow(nEdges, "nEdges", GraphType.GNM_RANDOM), seed, false, false);
+            numNodes, getOrThrow(numEdges, "numEdges", GraphType.GNM_RANDOM), seed, false, false);
       case RANDOM_REGULAR:
         return new RandomRegularGraphGenerator<>(
-            nNodes, getOrThrow(degree, "degree", GraphType.RANDOM_REGULAR), seed);
+            numNodes, getOrThrow(degree, "degree", GraphType.RANDOM_REGULAR), seed);
         // Non-random
       case BARABASI_ALBERT:
         return new BarabasiAlbertGraphGenerator<>(
-            getOrThrow(nInitialNodes, "nInitialNodes", GraphType.BARABASI_ALBERT),
-            getOrThrow(nNewEdges, "nNewEdges", GraphType.BARABASI_ALBERT),
-            nNodes,
+            getOrThrow(numInitialNodes, "numInitialNodes", GraphType.BARABASI_ALBERT),
+            getOrThrow(numNewEdges, "numNewEdges", GraphType.BARABASI_ALBERT),
+            numNodes,
             seed);
       case WATTS_STROGATZ:
         return new WattsStrogatzGraphGenerator<>(
-            nNodes,
-            getOrThrow(kNearestNeighbors, "kNearestNeighbors", GraphType.WATTS_STROGATZ),
+            numNodes,
+            getOrThrow(numNearestNeighbors, "numNearestNeighbors", GraphType.WATTS_STROGATZ),
             getOrThrow(rewiringProbability, "rewiringProbability", GraphType.WATTS_STROGATZ),
             seed);
       case SCALE_FREE:
-        return new ScaleFreeGraphGenerator<>(nNodes, seed);
+        return new ScaleFreeGraphGenerator<>(numNodes, seed);
       default:
         throw generatorCreationFailedException(graphType);
     }

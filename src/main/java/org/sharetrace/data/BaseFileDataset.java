@@ -5,12 +5,12 @@ import java.time.Instant;
 import java.util.Set;
 import org.immutables.value.Value;
 import org.sharetrace.data.factory.RiskScoreFactory;
-import org.sharetrace.graph.ContactNetwork;
 import org.sharetrace.graph.FileContactNetwork;
 import org.sharetrace.logging.Loggable;
 import org.sharetrace.message.RiskScore;
 
-@Value.Immutable
+@SuppressWarnings("DefaultAnnotationParam")
+@Value.Immutable(copy = true)
 abstract class BaseFileDataset implements Dataset {
 
   @Override
@@ -22,7 +22,7 @@ abstract class BaseFileDataset implements Dataset {
 
   @Override
   @Value.Derived
-  public ContactNetwork getContactNetwork() {
+  public FileContactNetwork getContactNetwork() {
     return FileContactNetwork.builder()
         .addAllLoggable(loggable())
         .delimiter(delimiter())

@@ -7,5 +7,5 @@ interface BaseCycleMetrics extends LoggableMetric {
 
   int girth();
 
-  long nTriangles();
+  long numTriangles();
 }

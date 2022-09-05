@@ -160,8 +160,8 @@ public class IntervalCache<T extends Comparable<T>> {
     private Comparator<T> comparator;
     private Clock clock;
     private Duration interval;
-    private int nIntervals;
-    private int nLookAhead;
+    private int numIntervals;
+    private int numLookAhead;
     private Duration lookBack;
     private Duration lookAhead;
     private Duration refreshPeriod;
@@ -175,13 +175,13 @@ public class IntervalCache<T extends Comparable<T>> {
 
     /** Sets the total number of contiguous time intervals. */
     public Builder<T> nIntervals(int nIntervals) {
-      this.nIntervals = nIntervals;
+      this.numIntervals = nIntervals;
       return this;
     }
 
     /** Sets the number of "future" time intervals. */
     public Builder<T> nLookAhead(int nLookAhead) {
-      this.nLookAhead = nLookAhead;
+      this.numLookAhead = nLookAhead;
       return this;
     }
 
@@ -212,8 +212,8 @@ public class IntervalCache<T extends Comparable<T>> {
     /** Returns an initialized instance of the cache. */
     public IntervalCache<T> build() {
       checkFields();
-      lookBack = interval.multipliedBy(nIntervals - nLookAhead);
-      lookAhead = interval.multipliedBy(nLookAhead);
+      lookBack = interval.multipliedBy(numIntervals - numLookAhead);
+      lookAhead = interval.multipliedBy(numLookAhead);
       cache = new Long2ObjectOpenHashMap<>();
       return new IntervalCache<>(this);
     }
@@ -225,8 +225,8 @@ public class IntervalCache<T extends Comparable<T>> {
       Objects.requireNonNull(mergeStrategy);
       Objects.requireNonNull(comparator);
       Checks.atLeast(interval, Duration.ZERO, "interval");
-      Checks.atLeast(nIntervals, MIN_INTERVALS, "nIntervals");
-      Checks.closedOpen(nLookAhead, MIN_LOOK_AHEAD, nIntervals, "nLookAhead");
+      Checks.atLeast(numIntervals, MIN_INTERVALS, "numIntervals");
+      Checks.closedOpen(numLookAhead, MIN_LOOK_AHEAD, numIntervals, "numLookAhead");
       Checks.atLeast(refreshPeriod, Duration.ZERO, "refreshPeriod");
     }
   }

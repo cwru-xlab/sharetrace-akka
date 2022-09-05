@@ -25,6 +25,7 @@ import org.sharetrace.logging.metrics.LoggableMetric;
 import org.sharetrace.logging.metrics.RuntimeMetric;
 import org.sharetrace.message.AlgorithmMessage;
 import org.sharetrace.message.ContactMessage;
+import org.sharetrace.message.MessageParameters;
 import org.sharetrace.message.RiskScore;
 import org.sharetrace.message.RiskScoreMessage;
 import org.sharetrace.message.RunMessage;
@@ -54,7 +55,8 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
 
   private final Loggables loggables;
   private final Map<String, String> mdc;
-  private final UserParameters parameters;
+  private final UserParameters userParameters;
+  private final MessageParameters messageParameters;
   private final ContactNetwork contactNetwork;
   private final Clock clock;
   private final RiskScoreFactory riskScoreFactory;
@@ -67,7 +69,8 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
       Set<Class<? extends Loggable>> loggable,
       Map<String, String> mdc,
       ContactNetwork contactNetwork,
-      UserParameters parameters,
+      UserParameters userParameters,
+      MessageParameters messageParameters,
       Clock clock,
       CacheFactory<RiskScoreMessage> cacheFactory,
       RiskScoreFactory riskScoreFactory) {
@@ -75,7 +78,8 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
     this.loggables = Loggables.create(loggable, () -> getContext().getLog());
     this.mdc = mdc;
     this.contactNetwork = contactNetwork;
-    this.parameters = parameters;
+    this.userParameters = userParameters;
+    this.messageParameters = messageParameters;
     this.clock = clock;
     this.cacheFactory = cacheFactory;
     this.riskScoreFactory = riskScoreFactory;
@@ -88,7 +92,8 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
       ContactNetwork contactNetwork,
       Set<Class<? extends Loggable>> loggable,
       Map<String, String> mdc,
-      UserParameters parameters,
+      UserParameters userParameters,
+      MessageParameters messageParameters,
       Clock clock,
       CacheFactory<RiskScoreMessage> cacheFactory,
       RiskScoreFactory riskScoreFactory) {
@@ -100,7 +105,8 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
               loggable,
               mdc,
               contactNetwork,
-              parameters,
+              userParameters,
+              messageParameters,
               clock,
               cacheFactory,
               riskScoreFactory);
@@ -117,7 +123,7 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
 
   private Behavior<AlgorithmMessage> onRunMessage(RunMessage message) {
     Behavior<AlgorithmMessage> behavior = this;
-    if (contactNetwork.nUsers() > 0) {
+    if (contactNetwork.numUsers() > 0) {
       Map<Integer, ActorRef<UserMessage>> users = newUsers();
       sendSymptomScores(users);
       runtime.start();
@@ -130,7 +136,7 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
 
   private Behavior<AlgorithmMessage> onTerminate(Terminated terminated) {
     Behavior<AlgorithmMessage> behavior = this;
-    if (++nStopped == contactNetwork.nUsers()) {
+    if (++nStopped == contactNetwork.numUsers()) {
       mdc.forEach(MDC::put);
       logMetrics();
       behavior = Behaviors.stopped();
@@ -178,14 +184,15 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
   }
 
   private Map<Integer, ActorRef<UserMessage>> newUserMap() {
-    return new Int2ObjectOpenHashMap<>(contactNetwork.nUsers());
+    return new Int2ObjectOpenHashMap<>(contactNetwork.numUsers());
   }
 
   private Behavior<UserMessage> newUser() {
     return UserBuilder.create()
         .putAllMdc(mdc)
         .addAllLoggable(loggables.loggable())
-        .parameters(parameters)
+        .userParameters(userParameters)
+        .messageParameters(messageParameters)
         .clock(clock)
         .cache(cacheFactory.getCache())
         .build();

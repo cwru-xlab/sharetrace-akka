@@ -31,6 +31,7 @@ import org.sharetrace.logging.events.SendCachedEvent;
 import org.sharetrace.logging.events.SendCurrentEvent;
 import org.sharetrace.logging.events.UpdateEvent;
 import org.sharetrace.message.ContactMessage;
+import org.sharetrace.message.MessageParameters;
 import org.sharetrace.message.RefreshMessage;
 import org.sharetrace.message.RiskScore;
 import org.sharetrace.message.RiskScoreMessage;
@@ -51,7 +52,8 @@ public class User extends AbstractBehavior<UserMessage> {
   private final TimerScheduler<UserMessage> timers;
   private final Loggables loggables;
   private final Map<ActorRef<UserMessage>, Instant> contacts;
-  private final UserParameters parameters;
+  private final UserParameters userParameters;
+  private final MessageParameters messageParameters;
   private final Clock clock;
   private final IntervalCache<RiskScoreMessage> cache;
   private RiskScoreMessage previous;
@@ -63,14 +65,16 @@ public class User extends AbstractBehavior<UserMessage> {
       ActorContext<UserMessage> context,
       TimerScheduler<UserMessage> timers,
       Set<Class<? extends Loggable>> loggable,
-      UserParameters parameters,
+      UserParameters userParameters,
+      MessageParameters msgParameters,
       Clock clock,
       IntervalCache<RiskScoreMessage> cache) {
     super(context);
     this.timers = timers;
     this.loggables = Loggables.create(loggable, () -> getContext().getLog());
     this.contacts = new Object2ObjectOpenHashMap<>();
-    this.parameters = parameters;
+    this.userParameters = userParameters;
+    this.messageParameters = msgParameters;
     this.clock = clock;
     this.cache = cache;
     this.current = defaultMessage();
@@ -89,24 +93,24 @@ public class User extends AbstractBehavior<UserMessage> {
     previous = current;
     current = newCurrent;
     transmitted = transmitted(current);
-    sendThreshold = current.score().value() * parameters.sendCoefficient();
+    sendThreshold = current.score().value() * messageParameters.sendCoefficient();
   }
 
   private void startRefreshTimer() {
-    timers.startTimerWithFixedDelay(RefreshMessage.INSTANCE, parameters.refreshPeriod());
+    timers.startTimerWithFixedDelay(RefreshMessage.INSTANCE, userParameters.refreshPeriod());
   }
 
   private RiskScoreMessage transmitted(RiskScoreMessage received) {
     return RiskScoreMessage.builder()
         .replyTo(getContext().getSelf())
         .score(transmittedScore(received))
-        .uuid(received.uuid())
+        .id(received.id())
         .build();
   }
 
   private RiskScore transmittedScore(RiskScoreMessage received) {
     return RiskScore.builder()
-        .value(received.score().value() * parameters.transmissionRate())
+        .value(received.score().value() * messageParameters.transmissionRate())
         .timestamp(received.score().timestamp())
         .build();
   }
@@ -115,7 +119,8 @@ public class User extends AbstractBehavior<UserMessage> {
   static Behavior<UserMessage> user(
       Map<String, String> mdc,
       Set<Class<? extends Loggable>> loggable,
-      UserParameters parameters,
+      UserParameters userParameters,
+      MessageParameters messageParameters,
       Clock clock,
       IntervalCache<RiskScoreMessage> cache) {
     return Behaviors.setup(
@@ -123,7 +128,15 @@ public class User extends AbstractBehavior<UserMessage> {
           context.setLoggerName(Logging.EVENT_LOGGER_NAME);
           Behavior<UserMessage> user =
               Behaviors.withTimers(
-                  timers -> new User(context, timers, loggable, parameters, clock, cache));
+                  timers ->
+                      new User(
+                          context,
+                          timers,
+                          loggable,
+                          userParameters,
+                          messageParameters,
+                          clock,
+                          cache));
           return Behaviors.withMdc(UserMessage.class, message -> mdc, user);
         });
   }
@@ -139,7 +152,7 @@ public class User extends AbstractBehavior<UserMessage> {
         .from(name(message.replyTo()))
         .to(name(contact))
         .score(message.score())
-        .uuid(message.uuid())
+        .uuid(message.id())
         .build();
   }
 
@@ -149,7 +162,7 @@ public class User extends AbstractBehavior<UserMessage> {
         .from(name(message.replyTo()))
         .to(name(contact))
         .score(message.score())
-        .uuid(message.uuid())
+        .uuid(message.id())
         .build();
   }
 
@@ -159,7 +172,7 @@ public class User extends AbstractBehavior<UserMessage> {
         .from(name(message.replyTo()))
         .to(name(contact))
         .score(message.score())
-        .uuid(message.uuid())
+        .uuid(message.id())
         .build();
   }
 
@@ -211,7 +224,7 @@ public class User extends AbstractBehavior<UserMessage> {
   }
 
   private void resetTimeout() {
-    timers.startSingleTimer(TimeoutMessage.INSTANCE, parameters.idleTimeout());
+    timers.startSingleTimer(TimeoutMessage.INSTANCE, userParameters.idleTimeout());
   }
 
   private void logSendCurrent(ActorRef<UserMessage> contact) {
@@ -289,15 +302,15 @@ public class User extends AbstractBehavior<UserMessage> {
   }
 
   private Instant buffered(Instant timestamp) {
-    return timestamp.plus(parameters.timeBuffer());
+    return timestamp.plus(messageParameters.timeBuffer());
   }
 
   private boolean isContactAlive(Instant timestamp) {
-    return isAlive(timestamp, parameters.contactTtl());
+    return isAlive(timestamp, messageParameters.contactTtl());
   }
 
   private boolean isScoreAlive(RiskScoreMessage message) {
-    return isAlive(message.score().timestamp(), parameters.scoreTtl());
+    return isAlive(message.score().timestamp(), messageParameters.scoreTtl());
   }
 
   private void propagate(ActorRef<UserMessage> contact, RiskScoreMessage message) {
@@ -334,8 +347,8 @@ public class User extends AbstractBehavior<UserMessage> {
         .of(name())
         .oldScore(previous.score())
         .newScore(current.score())
-        .oldUuid(previous.uuid())
-        .newUuid(current.uuid())
+        .oldUuid(previous.id())
+        .newUuid(current.id())
         .build();
   }
 
@@ -375,8 +388,8 @@ public class User extends AbstractBehavior<UserMessage> {
         .to(name())
         .oldScore(previous.score())
         .newScore(current.score())
-        .oldUuid(previous.uuid())
-        .newUuid(current.uuid())
+        .oldUuid(previous.id())
+        .newUuid(current.id())
         .build();
   }
 
@@ -397,7 +410,7 @@ public class User extends AbstractBehavior<UserMessage> {
         .from(name(message.replyTo()))
         .to(name())
         .score(message.score())
-        .uuid(message.uuid())
+        .uuid(message.id())
         .build();
   }
 

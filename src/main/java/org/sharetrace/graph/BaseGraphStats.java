@@ -25,16 +25,16 @@ import org.sharetrace.util.DescriptiveStats;
 abstract class BaseGraphStats<V, E> {
 
   public SizeMetrics sizeMetrics() {
-    return SizeMetrics.builder().nNodes(nNodes()).nEdges(nEdges()).build();
+    return SizeMetrics.builder().numNodes(numNodes()).numEdges(numEdges()).build();
   }
 
   @Value.Lazy
-  public int nNodes() {
+  public int numNodes() {
     return graph().vertexSet().size();
   }
 
   @Value.Lazy
-  public int nEdges() {
+  public int numEdges() {
     return graph().edgeSet().size();
   }
 
@@ -42,11 +42,11 @@ abstract class BaseGraphStats<V, E> {
   protected abstract Graph<V, E> graph();
 
   public CycleMetrics cycleMetrics() {
-    return CycleMetrics.builder().nTriangles(nTriangles()).girth(girth()).build();
+    return CycleMetrics.builder().numTriangles(numTriangles()).girth(girth()).build();
   }
 
   @Value.Lazy
-  public long nTriangles() {
+  public long numTriangles() {
     return GraphMetrics.getNumberOfTriangles(graph());
   }
 
@@ -109,7 +109,7 @@ abstract class BaseGraphStats<V, E> {
     return Floats.toArray(algorithm.getScores().values());
   }
 
-  @Value.Derived
+  @Value.Lazy
   protected ShortestPathAlgorithm<V, E> shortestPath() {
     return new FloydWarshallShortestPaths<>(graph());
   }

@@ -22,19 +22,12 @@ public class TypedSupplier<T> implements Supplier<T> {
     return new TypedSupplier<>((Class<T>) result.getClass(), () -> result);
   }
 
-  /**
-   * Returns a result of the {@link Supplier} if it is an instance of the expected type.
-   *
-   * @throws ClassCastException when the result not assignable to the type T.
-   * @throws NullPointerException when the result is null
-   */
   @Override
   public T get() {
     Object result = Objects.requireNonNull(supplier.get());
     return type.cast(result);
   }
 
-  /** Returns the expected class type of the return value of {@link Supplier#get()}. */
   public Class<? extends T> getType() {
     return type;
   }

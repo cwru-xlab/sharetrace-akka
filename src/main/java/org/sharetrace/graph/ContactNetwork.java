@@ -18,9 +18,9 @@ import org.sharetrace.User;
  */
 public interface ContactNetwork {
 
-  int nUsers();
+  int numUsers();
 
-  int nContacts();
+  int numContacts();
 
   IntStream users();
 

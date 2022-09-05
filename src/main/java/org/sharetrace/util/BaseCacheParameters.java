@@ -1,16 +1,22 @@
 package org.sharetrace.util;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.time.Duration;
+import java.util.function.BinaryOperator;
 import org.immutables.value.Value;
 
-@Value.Immutable
-interface BaseCacheParameters {
+@SuppressWarnings("DefaultAnnotationParam")
+@Value.Immutable(copy = true)
+interface BaseCacheParameters<T> {
 
-  int nIntervals();
+  int numIntervals();
 
-  int nLookAhead();
+  int numLookAhead();
 
   Duration interval();
 
   Duration refreshPeriod();
+
+  @JsonIgnore
+  BinaryOperator<T> mergeStrategy();
 }

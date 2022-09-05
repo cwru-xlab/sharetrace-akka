@@ -12,16 +12,16 @@ import org.sharetrace.data.factory.ContactTimeFactory;
 import org.sharetrace.logging.Loggable;
 
 @Value.Immutable
-abstract class BaseSyntheticContactNetwork implements ContactNetwork {
+abstract class BaseSampledContactNetwork implements ContactNetwork {
 
   @Override
-  public int nUsers() {
-    return helper().nUsers();
+  public int numUsers() {
+    return helper().numUsers();
   }
 
   @Override
-  public int nContacts() {
-    return helper().nContacts();
+  public int numContacts() {
+    return helper().numContacts();
   }
 
   @Override
@@ -48,7 +48,7 @@ abstract class BaseSyntheticContactNetwork implements ContactNetwork {
   protected Set<Contact> contactSet() {
     return helper()
         .contacts(contactTimeFactory())
-        .collect(ObjectOpenHashSet.toSetWithExpectedSize(nContacts()));
+        .collect(ObjectOpenHashSet.toSetWithExpectedSize(numContacts()));
   }
 
   protected abstract ContactTimeFactory contactTimeFactory();

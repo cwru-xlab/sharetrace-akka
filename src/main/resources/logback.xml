@@ -18,7 +18,7 @@
           <version>[ignore]</version>
         </fieldNames>
         <includeContext>false</includeContext>
-        <includeMdcKeyName>iteration</includeMdcKeyName>
+        <includeMdcKeyName>stateId</includeMdcKeyName>
         <includeMdcKeyName>graphType</includeMdcKeyName>
       </encoder>
     </appender>

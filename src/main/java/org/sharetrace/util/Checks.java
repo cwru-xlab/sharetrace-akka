@@ -4,7 +4,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Range;
 import java.util.Objects;
 
-/** A collection of utility methods for checking conditions and verifying assumptions. */
 public final class Checks {
 
   private static final String RANGE_MSG = "%s must be in the range %s; got %s";

@@ -59,7 +59,7 @@ public class ContactNetworkHelper {
     return Contact.builder().user1(user1).user2(user2).timestamp(contactTime).build();
   }
 
-  public int nUsers() {
+  public int numUsers() {
     return contactNetwork.vertexSet().size();
   }
 
@@ -67,7 +67,7 @@ public class ContactNetworkHelper {
     return contactNetwork;
   }
 
-  public int nContacts() {
+  public int numContacts() {
     return contactNetwork.edgeSet().size();
   }
 

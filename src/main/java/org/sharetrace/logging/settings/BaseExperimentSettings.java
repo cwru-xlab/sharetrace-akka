@@ -1,6 +1,8 @@
 package org.sharetrace.logging.settings;
 
 import org.immutables.value.Value;
+import org.sharetrace.message.MessageParameters;
+import org.sharetrace.message.RiskScoreMessage;
 import org.sharetrace.message.UserParameters;
 import org.sharetrace.util.CacheParameters;
 
@@ -9,11 +11,13 @@ interface BaseExperimentSettings extends LoggableSetting {
 
   UserParameters userParameters();
 
-  CacheParameters cacheParameters();
+  MessageParameters messageParameters();
+
+  CacheParameters<RiskScoreMessage> cacheParameters();
 
   long seed();
 
-  String iteration();
+  String stateId();
 
   String graphType();
 }

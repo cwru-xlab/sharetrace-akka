@@ -5,7 +5,7 @@ import org.immutables.value.Value;
 @Value.Immutable
 interface BaseSizeMetrics extends LoggableMetric {
 
-  long nNodes();
+  long numNodes();
 
-  long nEdges();
+  long numEdges();
 }

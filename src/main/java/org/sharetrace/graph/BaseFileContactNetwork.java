@@ -29,13 +29,13 @@ abstract class BaseFileContactNetwork implements ContactNetwork {
   public static final String WHITESPACE_DELIMITER = "\\s+";
 
   @Override
-  public int nUsers() {
-    return helper().nUsers();
+  public int numUsers() {
+    return helper().numUsers();
   }
 
   @Override
-  public int nContacts() {
-    return helper().nContacts();
+  public int numContacts() {
+    return helper().numContacts();
   }
 
   @Override
