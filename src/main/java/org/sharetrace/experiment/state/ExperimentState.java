@@ -209,21 +209,21 @@ public class ExperimentState {
       return String.valueOf(new Random().nextLong());
     }
 
-    private Builder(ExperimentState iteration) {
-      context = iteration.context;
-      loggables = iteration.loggables;
+    private Builder(ExperimentState state) {
+      context = state.context;
+      loggables = state.loggables;
       preDatasetBuilders = newBuildersMap();
       postDatasetBuilders = newBuildersMap();
-      mdc = iteration.mdc;
-      graphType = iteration.graphType;
+      mdc = state.mdc;
+      graphType = state.graphType;
       id(cxt -> newId());
-      messageParameters = iteration.messageParameters;
-      cacheParameters = iteration.cacheParameters;
-      riskScoreValuePdfFactory = iteration.riskScoreValuePdfFactory;
-      riskScoreTimePdfFactory = iteration.riskScoreTimePdfFactory;
-      contactTimePdfFactory = iteration.contactTimePdfFactory;
-      dataset = iteration.dataset;
-      userParameters = iteration.userParameters;
+      messageParameters = state.messageParameters;
+      cacheParameters = state.cacheParameters;
+      riskScoreValuePdfFactory = state.riskScoreValuePdfFactory;
+      riskScoreTimePdfFactory = state.riskScoreTimePdfFactory;
+      contactTimePdfFactory = state.contactTimePdfFactory;
+      dataset = state.dataset;
+      userParameters = state.userParameters;
     }
 
     @Override
