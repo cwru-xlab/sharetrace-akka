@@ -181,9 +181,9 @@ public class ExperimentState {
     private Dataset dataset;
     private UserParameters userParameters;
 
-    private Builder(ExperimentContext context) {
-      this.context = context;
-      loggables = Loggables.create(context.loggable(), logger);
+    private Builder(ExperimentContext baseContext) {
+      context = baseContext;
+      loggables = Loggables.create(baseContext.loggable(), logger);
       preDatasetBuilders = newBuildersMap();
       postDatasetBuilders = newBuildersMap();
       mdc = new HashMap<>();
@@ -216,7 +216,7 @@ public class ExperimentState {
       postDatasetBuilders = newBuildersMap();
       mdc = state.mdc;
       graphType = state.graphType;
-      id(cxt -> newId());
+      id(context -> newId());
       messageParameters = state.messageParameters;
       cacheParameters = state.cacheParameters;
       riskScoreValuePdfFactory = state.riskScoreValuePdfFactory;
