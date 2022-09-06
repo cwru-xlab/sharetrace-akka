@@ -45,7 +45,7 @@ public final class Defaults {
   @Builder.Factory()
   public static ExperimentState defaultFileState(
       GraphType graphType, Optional<String> delimiter, Path path) {
-    return ExperimentState.builder(ExperimentContext.create())
+    return ExperimentState.builder(CONTEXT)
         .graphType(graphType)
         .dataset(context -> fileDataset(context, delimiter.orElse(WHITESPACE_DELIMITER), path))
         .build();
@@ -65,7 +65,7 @@ public final class Defaults {
   @Builder.Factory
   public static ExperimentState defaultSampledState(
       GraphType graphType, int numNodes, Optional<GraphGeneratorFactory> graphGeneratorFactory) {
-    return ExperimentState.builder(ExperimentContext.create())
+    return ExperimentState.builder(CONTEXT)
         .graphType(graphType)
         .dataset(context -> sampledDataset(context, numNodes, graphGeneratorFactory))
         .build();
@@ -103,18 +103,14 @@ public final class Defaults {
       Optional<GraphGeneratorFactory> graphGeneratorFactory,
       float transmissionRate,
       float sendCoefficient) {
-    return ExperimentState.builder(parametersContext())
+    return ExperimentState.builder(PARAMETERS_CONTEXT)
         .graphType(graphType)
         .messageParameters(
-            messageParameters()
+            MESSAGE_PARAMETERS
                 .withTransmissionRate(transmissionRate)
                 .withSendCoefficient(sendCoefficient))
         .dataset(context -> sampledDataset(context, numNodes, graphGeneratorFactory))
         .build();
-  }
-
-  public static ExperimentContext parametersContext() {
-    return PARAMETERS_CONTEXT;
   }
 
   public static MessageParameters messageParameters() {
@@ -124,14 +120,10 @@ public final class Defaults {
   @Builder.Factory
   public static ExperimentState defaultRuntimeState(
       GraphType graphType, int numNodes, Optional<GraphGeneratorFactory> graphGeneratorFactory) {
-    return ExperimentState.builder(runtimeContext())
+    return ExperimentState.builder(RUNTIME_CONTEXT)
         .graphType(graphType)
         .dataset(context -> sampledDataset(context, numNodes, graphGeneratorFactory))
         .build();
-  }
-
-  public static ExperimentContext runtimeContext() {
-    return RUNTIME_CONTEXT;
   }
 
   public static CacheParameters<RiskScoreMessage> cacheParameters() {
