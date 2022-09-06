@@ -64,7 +64,7 @@ public final class Defaults {
     return Duration.ofSeconds(timeout);
   }
 
-  @Builder.Factory()
+  @Builder.Factory
   static ExperimentState defaultFileState(
       GraphType graphType, Optional<String> delimiter, Path path) {
     return ExperimentState.builder(CONTEXT)
