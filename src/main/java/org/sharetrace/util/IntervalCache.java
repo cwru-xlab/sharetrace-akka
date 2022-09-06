@@ -30,7 +30,7 @@ import java.util.function.Predicate;
  *
  * @param <T> The type of the cached values.
  */
-public class IntervalCache<T extends Comparable<T>> {
+public class IntervalCache<T> {
 
   public static final int MIN_INTERVALS = 1;
   public static final int MIN_LOOK_AHEAD = 0;
@@ -154,7 +154,7 @@ public class IntervalCache<T extends Comparable<T>> {
     return entry -> entry.getKey() <= time;
   }
 
-  public static final class Builder<T extends Comparable<T>> {
+  public static final class Builder<T> {
 
     private BinaryOperator<T> mergeStrategy;
     private Comparator<T> comparator;
