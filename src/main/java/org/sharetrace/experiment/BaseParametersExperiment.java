@@ -2,7 +2,6 @@ package org.sharetrace.experiment;
 
 import org.immutables.value.Value;
 import org.sharetrace.experiment.state.ExperimentState;
-import org.sharetrace.message.MessageParameters;
 import org.sharetrace.util.Range;
 
 @Value.Immutable
@@ -14,15 +13,16 @@ abstract class BaseParametersExperiment implements Experiment {
 
   @Override
   public void run(ExperimentState initialState) {
-    MessageParameters newParameters;
     for (double tr : transmissionRates()) {
       for (double sc : sendCoefficients()) {
-        newParameters =
-            initialState
-                .messageParameters()
-                .withTransmissionRate((float) tr)
-                .withSendCoefficient((float) sc);
-        initialState.toBuilder().messageParameters(newParameters).build().run();
+        initialState.toBuilder()
+            .messageParameters(
+                initialState
+                    .messageParameters()
+                    .withTransmissionRate((float) tr)
+                    .withSendCoefficient((float) sc))
+            .build()
+            .run();
       }
     }
   }
