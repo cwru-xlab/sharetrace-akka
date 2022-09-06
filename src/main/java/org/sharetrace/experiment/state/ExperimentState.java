@@ -187,14 +187,14 @@ public class ExperimentState {
       preDatasetBuilders = newBuildersMap();
       postDatasetBuilders = newBuildersMap();
       mdc = new HashMap<>();
-      id(cxt -> newId());
-      mdc(cxt -> Logging.mdc(cxt.id(), cxt.graphType()));
-      messageParameters(cxt -> Defaults.messageParameters());
-      cacheParameters(cxt -> Defaults.cacheParameters());
+      id(context -> newId());
+      mdc(context -> Logging.mdc(context.id(), context.graphType()));
+      messageParameters(context -> Defaults.messageParameters());
+      cacheParameters(context -> Defaults.cacheParameters());
       riskScoreTimePdfFactory(defaultPdfFactory());
       riskScoreValuePdfFactory(defaultPdfFactory());
       contactTimePdfFactory(defaultPdfFactory());
-      userParameters(cxt -> Defaults.userParameters(cxt.dataset()));
+      userParameters(context -> Defaults.userParameters(context.dataset()));
     }
 
     private static Map<Class<? super Builder>, Function<? super Builder, ?>> newBuildersMap() {
