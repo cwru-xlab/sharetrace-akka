@@ -10,5 +10,5 @@ interface MessageEvent extends LoggableEvent {
 
   RiskScore score();
 
-  String uuid();
+  String id();
 }

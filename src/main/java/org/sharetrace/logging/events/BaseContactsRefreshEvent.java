@@ -7,7 +7,7 @@ interface BaseContactsRefreshEvent extends LoggableEvent {
 
   String of();
 
-  int nRemaining();
+  int numRemaining();
 
-  int nExpired();
+  int numExpired();
 }

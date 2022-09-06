@@ -96,10 +96,6 @@ public class User extends AbstractBehavior<UserMessage> {
     sendThreshold = current.score().value() * messageParameters.sendCoefficient();
   }
 
-  private void startRefreshTimer() {
-    timers.startTimerWithFixedDelay(RefreshMessage.INSTANCE, userParameters.refreshPeriod());
-  }
-
   private RiskScoreMessage transmitted(RiskScoreMessage received) {
     return RiskScoreMessage.builder()
         .replyTo(getContext().getSelf())
@@ -113,6 +109,10 @@ public class User extends AbstractBehavior<UserMessage> {
         .value(received.score().value() * messageParameters.transmissionRate())
         .timestamp(received.score().timestamp())
         .build();
+  }
+
+  private void startRefreshTimer() {
+    timers.startTimerWithFixedDelay(RefreshMessage.INSTANCE, userParameters.refreshPeriod());
   }
 
   @Builder.Factory
@@ -141,8 +141,7 @@ public class User extends AbstractBehavior<UserMessage> {
         });
   }
 
-  private static Predicate<Entry<ActorRef<UserMessage>, Instant>> isNotFrom(
-      RiskScoreMessage message) {
+  private static Predicate<Entry<?, ?>> isNotFrom(RiskScoreMessage message) {
     return Predicate.not(contact -> contact.getKey().equals(message.replyTo()));
   }
 
@@ -152,7 +151,7 @@ public class User extends AbstractBehavior<UserMessage> {
         .from(name(message.replyTo()))
         .to(name(contact))
         .score(message.score())
-        .uuid(message.id())
+        .id(message.id())
         .build();
   }
 
@@ -162,7 +161,7 @@ public class User extends AbstractBehavior<UserMessage> {
         .from(name(message.replyTo()))
         .to(name(contact))
         .score(message.score())
-        .uuid(message.id())
+        .id(message.id())
         .build();
   }
 
@@ -172,7 +171,7 @@ public class User extends AbstractBehavior<UserMessage> {
         .from(name(message.replyTo()))
         .to(name(contact))
         .score(message.score())
-        .uuid(message.id())
+        .id(message.id())
         .build();
   }
 
@@ -262,8 +261,7 @@ public class User extends AbstractBehavior<UserMessage> {
     cache.max(buffered).ifPresent(cached -> sendCached(message.replyTo(), cached));
   }
 
-  private Predicate<Entry<ActorRef<UserMessage>, Instant>> isContactRecent(
-      RiskScoreMessage message) {
+  private Predicate<Entry<?, Instant>> isContactRecent(RiskScoreMessage message) {
     return contact -> isRecent(contact.getValue(), message);
   }
 
@@ -333,8 +331,8 @@ public class User extends AbstractBehavior<UserMessage> {
   private ContactsRefreshEvent contactsRefreshEvent(int nRemaining, int nExpired) {
     return ContactsRefreshEvent.builder()
         .of(name())
-        .nRemaining(nRemaining)
-        .nExpired(nExpired)
+        .numRemaining(nRemaining)
+        .numExpired(nExpired)
         .build();
   }
 
@@ -347,8 +345,8 @@ public class User extends AbstractBehavior<UserMessage> {
         .of(name())
         .oldScore(previous.score())
         .newScore(current.score())
-        .oldUuid(previous.id())
-        .newUuid(current.id())
+        .oldId(previous.id())
+        .newId(current.id())
         .build();
   }
 
@@ -388,8 +386,8 @@ public class User extends AbstractBehavior<UserMessage> {
         .to(name())
         .oldScore(previous.score())
         .newScore(current.score())
-        .oldUuid(previous.id())
-        .newUuid(current.id())
+        .oldId(previous.id())
+        .newId(current.id())
         .build();
   }
 
@@ -410,7 +408,7 @@ public class User extends AbstractBehavior<UserMessage> {
         .from(name(message.replyTo()))
         .to(name())
         .score(message.score())
-        .uuid(message.id())
+        .id(message.id())
         .build();
   }
 

@@ -8,7 +8,7 @@ interface ScoreChangeEvent extends LoggableEvent {
 
   RiskScore newScore();
 
-  String oldUuid();
+  String oldId();
 
-  String newUuid();
+  String newId();
 }
