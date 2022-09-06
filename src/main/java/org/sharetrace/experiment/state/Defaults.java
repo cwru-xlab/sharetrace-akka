@@ -42,8 +42,30 @@ public final class Defaults {
 
   private Defaults() {}
 
+  public static MessageParameters messageParameters() {
+    return MESSAGE_PARAMETERS;
+  }
+
+  public static CacheParameters<RiskScoreMessage> cacheParameters() {
+    return CACHE_PARAMETERS;
+  }
+
+  public static UserParameters userParameters(Dataset dataset) {
+    return UserParameters.builder()
+        .refreshPeriod(Duration.ofHours(1L))
+        .idleTimeout(idleTimeout(dataset))
+        .build();
+  }
+
+  public static Duration idleTimeout(Dataset dataset) {
+    double nContacts = dataset.getContactNetwork().numContacts();
+    double targetBase = Math.max(MIN_BASE, MAX_BASE - DECAY_RATE * nContacts);
+    long timeout = (long) Math.ceil(Math.log(nContacts) / targetBase);
+    return Duration.ofSeconds(timeout);
+  }
+
   @Builder.Factory()
-  public static ExperimentState defaultFileState(
+  static ExperimentState defaultFileState(
       GraphType graphType, Optional<String> delimiter, Path path) {
     return ExperimentState.builder(CONTEXT)
         .graphType(graphType)
@@ -52,7 +74,7 @@ public final class Defaults {
   }
 
   @Builder.Factory
-  public static Dataset fileDataset(DatasetContext context, String delimiter, Path path) {
+  static Dataset fileDataset(DatasetContext context, String delimiter, Path path) {
     return FileDataset.builder()
         .delimiter(delimiter)
         .path(path)
@@ -63,7 +85,7 @@ public final class Defaults {
   }
 
   @Builder.Factory
-  public static ExperimentState defaultSampledState(
+  static ExperimentState defaultSampledState(
       GraphType graphType, int numNodes, Optional<GraphGeneratorFactory> graphGeneratorFactory) {
     return ExperimentState.builder(CONTEXT)
         .graphType(graphType)
@@ -72,7 +94,7 @@ public final class Defaults {
   }
 
   @Builder.Factory
-  public static Dataset sampledDataset(
+  static Dataset sampledDataset(
       DatasetContext context, int numNodes, Optional<GraphGeneratorFactory> generatorFactory) {
     return SampledDataset.builder()
         .addAllLoggable(context.loggable())
@@ -97,7 +119,7 @@ public final class Defaults {
   }
 
   @Builder.Factory
-  public static ExperimentState defaultParametersState(
+  static ExperimentState defaultParametersState(
       GraphType graphType,
       int numNodes,
       Optional<GraphGeneratorFactory> graphGeneratorFactory,
@@ -113,35 +135,13 @@ public final class Defaults {
         .build();
   }
 
-  public static MessageParameters messageParameters() {
-    return MESSAGE_PARAMETERS;
-  }
-
   @Builder.Factory
-  public static ExperimentState defaultRuntimeState(
+  static ExperimentState defaultRuntimeState(
       GraphType graphType, int numNodes, Optional<GraphGeneratorFactory> graphGeneratorFactory) {
     return ExperimentState.builder(RUNTIME_CONTEXT)
         .graphType(graphType)
         .dataset(context -> sampledDataset(context, numNodes, graphGeneratorFactory))
         .build();
-  }
-
-  public static CacheParameters<RiskScoreMessage> cacheParameters() {
-    return CACHE_PARAMETERS;
-  }
-
-  public static UserParameters userParameters(Dataset dataset) {
-    return UserParameters.builder()
-        .refreshPeriod(Duration.ofHours(1L))
-        .idleTimeout(idleTimeout(dataset))
-        .build();
-  }
-
-  public static Duration idleTimeout(Dataset dataset) {
-    double nContacts = dataset.getContactNetwork().numContacts();
-    double targetBase = Math.max(MIN_BASE, MAX_BASE - DECAY_RATE * nContacts);
-    long timeout = (long) Math.ceil(Math.log(nContacts) / targetBase);
-    return Duration.ofSeconds(timeout);
   }
 
   private static ExperimentContext newParametersContext() {
