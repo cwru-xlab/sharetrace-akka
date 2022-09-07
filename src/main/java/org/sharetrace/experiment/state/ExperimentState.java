@@ -4,8 +4,9 @@ import akka.actor.typed.Behavior;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Collections;
+import java.util.EnumMap;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
@@ -72,7 +73,7 @@ public class ExperimentState {
     cacheParameters = builder.cacheParameters;
   }
 
-  public static GraphTypeBuilder builder(ExperimentContext context) {
+  public static Builder builder(ExperimentContext context) {
     return new Builder(context);
   }
 
@@ -140,19 +141,24 @@ public class ExperimentState {
     return messageParameters;
   }
 
+  private enum Setter {
+    // Ordered by dependency
+    GRAPH_TYPE,
+    ID,
+    MDC,
+    MESSAGE_PARAMETERS,
+    CACHE_PARAMETERS,
+    RISK_SCORE_VALUE,
+    RISK_SCORE_TIME,
+    CONTACT_TIME,
+    PDFS,
+    FACTORIES,
+    DATASET,
+    USER_PARAMETERS
+  }
+
   public static class Builder
-      implements GraphTypeBuilder,
-          IdBuilder,
-          MdcBuilder,
-          MessageParametersBuilder,
-          CacheParametersBuilder,
-          RiskScoreValueBuilder,
-          RiskScoreTimeBuilder,
-          ContactTimeBuilder,
-          DatasetBuilder,
-          UserParametersBuilder,
-          FinalBuilder,
-          GraphTypeContext,
+      implements GraphTypeContext,
           IdContext,
           MdcContext,
           MessageParametersContext,
@@ -163,8 +169,7 @@ public class ExperimentState {
 
     private final ExperimentContext context;
     private final Loggables loggables;
-    private final Map<Class<? super Builder>, Function<? super Builder, ?>> preDatasetBuilders;
-    private final Map<Class<? super Builder>, Function<? super Builder, ?>> postDatasetBuilders;
+    private final Setters setters;
     private final Map<String, String> mdc;
     private GraphType graphType;
     private String id;
@@ -184,8 +189,7 @@ public class ExperimentState {
     private Builder(ExperimentContext baseContext) {
       context = baseContext;
       loggables = Loggables.create(baseContext.loggable(), logger);
-      preDatasetBuilders = newBuildersMap();
-      postDatasetBuilders = newBuildersMap();
+      setters = new Setters();
       mdc = new HashMap<>();
       id(context -> newId());
       mdc(context -> Logging.mdc(context.id(), context.graphType()));
@@ -197,10 +201,6 @@ public class ExperimentState {
       userParameters(context -> Defaults.userParameters(context.dataset()));
     }
 
-    private static Map<Class<? super Builder>, Function<? super Builder, ?>> newBuildersMap() {
-      return new LinkedHashMap<>();
-    }
-
     private Function<PdfFactoryContext, PdfFactory> defaultPdfFactory() {
       return context -> seed -> new UniformRealDistribution(new Well512a(seed), 0d, 1d);
     }
@@ -209,11 +209,100 @@ public class ExperimentState {
       return String.valueOf(new Random().nextLong());
     }
 
+    public Builder id(Function<IdContext, String> factory) {
+      setters.put(Setter.ID, factory.andThen(this::id));
+      return this;
+    }
+
+    public Builder id(String id) {
+      this.id = Objects.requireNonNull(id);
+      setters.remove(Setter.ID);
+      return this;
+    }
+
+    public Builder mdc(Function<MdcContext, Map<String, String>> factory) {
+      setters.put(Setter.MDC, factory.andThen(this::mdc));
+      return this;
+    }
+
+    public Builder mdc(Map<String, String> mdc) {
+      this.mdc.putAll(Objects.requireNonNull(mdc));
+      setters.remove(Setter.MDC);
+      return this;
+    }
+
+    public Builder messageParameters(
+        Function<MessageParametersContext, MessageParameters> factory) {
+      setters.put(Setter.MESSAGE_PARAMETERS, factory.andThen(this::messageParameters));
+      return this;
+    }
+
+    public Builder messageParameters(MessageParameters parameters) {
+      messageParameters = Objects.requireNonNull(parameters);
+      setters.remove(Setter.MESSAGE_PARAMETERS);
+      return this;
+    }
+
+    public Builder cacheParameters(
+        Function<CacheParametersContext, CacheParameters<RiskScoreMessage>> factory) {
+      setters.put(Setter.CACHE_PARAMETERS, factory.andThen(this::cacheParameters));
+      return this;
+    }
+
+    public Builder cacheParameters(CacheParameters<RiskScoreMessage> parameters) {
+      cacheParameters = Objects.requireNonNull(parameters);
+      setters.remove(Setter.CACHE_PARAMETERS);
+      return this;
+    }
+
+    public Builder riskScoreTimePdfFactory(Function<PdfFactoryContext, PdfFactory> factory) {
+      setters.put(Setter.RISK_SCORE_TIME, factory.andThen(this::riskScoreTimePdfFactory));
+      return this;
+    }
+
+    public Builder riskScoreTimePdfFactory(PdfFactory pdfFactory) {
+      riskScoreTimePdfFactory = Objects.requireNonNull(pdfFactory);
+      setters.remove(Setter.RISK_SCORE_TIME);
+      return this;
+    }
+
+    public Builder riskScoreValuePdfFactory(Function<PdfFactoryContext, PdfFactory> factory) {
+      setters.put(Setter.RISK_SCORE_VALUE, factory.andThen(this::riskScoreValuePdfFactory));
+      return this;
+    }
+
+    public Builder riskScoreValuePdfFactory(PdfFactory pdfFactory) {
+      riskScoreValuePdfFactory = Objects.requireNonNull(pdfFactory);
+      setters.remove(Setter.RISK_SCORE_VALUE);
+      return this;
+    }
+
+    public Builder contactTimePdfFactory(Function<PdfFactoryContext, PdfFactory> factory) {
+      setters.put(Setter.CONTACT_TIME, factory.andThen(this::contactTimePdfFactory));
+      return this;
+    }
+
+    public Builder contactTimePdfFactory(PdfFactory pdfFactory) {
+      contactTimePdfFactory = Objects.requireNonNull(pdfFactory);
+      setters.remove(Setter.CONTACT_TIME);
+      return this;
+    }
+
+    public Builder userParameters(Function<UserParametersContext, UserParameters> factory) {
+      setters.put(Setter.USER_PARAMETERS, factory.andThen(this::userParameters));
+      return this;
+    }
+
+    public Builder userParameters(UserParameters parameters) {
+      userParameters = Objects.requireNonNull(parameters);
+      setters.remove(Setter.USER_PARAMETERS);
+      return this;
+    }
+
     private Builder(ExperimentState state) {
       context = state.context;
       loggables = state.loggables;
-      preDatasetBuilders = newBuildersMap();
-      postDatasetBuilders = newBuildersMap();
+      setters = new Setters();
       mdc = state.mdc;
       graphType = state.graphType;
       id(context -> newId());
@@ -226,31 +315,27 @@ public class ExperimentState {
       userParameters = state.userParameters;
     }
 
-    @Override
     public ExperimentState build() {
-      applyBuilders(preDatasetBuilders);
-      setPdfs();
-      setFactories();
-      applyBuilders(postDatasetBuilders);
+      setters.put(Setter.PDFS, x -> setPdfs());
+      setters.put(Setter.FACTORIES, x -> setFactories());
+      setters.values().forEach(setter -> setter.apply(this));
       return new ExperimentState(this);
     }
 
-    private void applyBuilders(Map<Class<? super Builder>, Function<? super Builder, ?>> builders) {
-      builders.values().forEach(setter -> setter.apply(this));
-    }
-
-    private void setPdfs() {
+    private Builder setPdfs() {
       long seed = context.seed();
       riskScoreValuePdf = riskScoreValuePdfFactory.getPdf(seed);
       riskScoreTimePdf = riskScoreTimePdfFactory.getPdf(seed);
       contactTimePdf = contactTimePdfFactory.getPdf(seed);
+      return this;
     }
 
-    private void setFactories() {
+    private Builder setFactories() {
       Sampler<RiskScore> riskScoreSampler = newRiskScoreSampler();
       riskScoreFactory = RiskScoreFactory.fromSupplier(riskScoreSampler::sample);
       Sampler<Instant> contactTimeSampler = newContactTimeSampler();
       contactTimeFactory = ContactTimeFactory.fromSupplier(contactTimeSampler::sample);
+      return this;
     }
 
     private Sampler<RiskScore> newRiskScoreSampler() {
@@ -304,7 +389,7 @@ public class ExperimentState {
 
     @Override
     public Map<String, String> mdc() {
-      return mdc;
+      return Collections.unmodifiableMap(mdc);
     }
 
     @Override
@@ -332,142 +417,33 @@ public class ExperimentState {
       return dataset;
     }
 
-    @Override
-    public MdcBuilder id(String id) {
-      this.id = Objects.requireNonNull(id);
-      preDatasetBuilders.remove(IdBuilder.class);
+    public Builder graphType(Function<GraphTypeContext, GraphType> factory) {
+      setters.put(Setter.GRAPH_TYPE, factory.andThen(this::graphType));
       return this;
     }
 
-    @Override
-    public MdcBuilder id(Function<IdContext, String> factory) {
-      preDatasetBuilders.put(IdBuilder.class, factory.andThen(this::id));
-      return this;
-    }
-
-    @Override
-    public MessageParametersBuilder mdc(Map<String, String> mdc) {
-      this.mdc.putAll(Objects.requireNonNull(mdc));
-      preDatasetBuilders.remove(MdcBuilder.class);
-      return this;
-    }
-
-    @Override
-    public MessageParametersBuilder mdc(Function<MdcContext, Map<String, String>> factory) {
-      preDatasetBuilders.put(MdcBuilder.class, factory.andThen(this::mdc));
-      return this;
-    }
-
-    @Override
-    public CacheParametersBuilder messageParameters(MessageParameters parameters) {
-      messageParameters = Objects.requireNonNull(parameters);
-      preDatasetBuilders.remove(MessageParametersBuilder.class);
-      return this;
-    }
-
-    @Override
-    public CacheParametersBuilder messageParameters(
-        Function<MessageParametersContext, MessageParameters> factory) {
-      preDatasetBuilders.put(
-          MessageParametersBuilder.class, factory.andThen(this::messageParameters));
-      return this;
-    }
-
-    @Override
-    public RiskScoreValueBuilder cacheParameters(CacheParameters<RiskScoreMessage> parameters) {
-      cacheParameters = Objects.requireNonNull(parameters);
-      preDatasetBuilders.remove(CacheParametersBuilder.class);
-      return this;
-    }
-
-    @Override
-    public RiskScoreValueBuilder cacheParameters(
-        Function<CacheParametersContext, CacheParameters<RiskScoreMessage>> factory) {
-      preDatasetBuilders.put(CacheParametersBuilder.class, factory.andThen(this::cacheParameters));
-      return this;
-    }
-
-    @Override
-    public ContactTimeBuilder riskScoreTimePdfFactory(PdfFactory pdfFactory) {
-      riskScoreTimePdfFactory = Objects.requireNonNull(pdfFactory);
-      preDatasetBuilders.remove(RiskScoreTimeBuilder.class);
-      return this;
-    }
-
-    @Override
-    public ContactTimeBuilder riskScoreTimePdfFactory(
-        Function<PdfFactoryContext, PdfFactory> factory) {
-      preDatasetBuilders.put(
-          RiskScoreTimeBuilder.class, factory.andThen(this::riskScoreTimePdfFactory));
-      return this;
-    }
-
-    @Override
-    public RiskScoreTimeBuilder riskScoreValuePdfFactory(PdfFactory pdfFactory) {
-      riskScoreValuePdfFactory = Objects.requireNonNull(pdfFactory);
-      preDatasetBuilders.remove(RiskScoreValueBuilder.class);
-      return this;
-    }
-
-    @Override
-    public RiskScoreTimeBuilder riskScoreValuePdfFactory(
-        Function<PdfFactoryContext, PdfFactory> factory) {
-      preDatasetBuilders.put(
-          RiskScoreValueBuilder.class, factory.andThen(this::riskScoreValuePdfFactory));
-      return this;
-    }
-
-    @Override
-    public DatasetBuilder contactTimePdfFactory(PdfFactory pdfFactory) {
-      contactTimePdfFactory = Objects.requireNonNull(pdfFactory);
-      preDatasetBuilders.remove(ContactTimeBuilder.class);
-      return this;
-    }
-
-    @Override
-    public DatasetBuilder contactTimePdfFactory(Function<PdfFactoryContext, PdfFactory> factory) {
-      preDatasetBuilders.put(
-          ContactTimeBuilder.class, factory.andThen(this::contactTimePdfFactory));
-      return this;
-    }
-
-    @Override
-    public FinalBuilder userParameters(UserParameters parameters) {
-      userParameters = Objects.requireNonNull(parameters);
-      postDatasetBuilders.remove(UserParametersBuilder.class);
-      return this;
-    }
-
-    @Override
-    public FinalBuilder userParameters(Function<UserParametersContext, UserParameters> factory) {
-      postDatasetBuilders.put(UserParametersBuilder.class, factory.andThen(this::userParameters));
-      return this;
-    }
-
-    @Override
-    public IdBuilder graphType(GraphType graphType) {
+    public Builder graphType(GraphType graphType) {
       this.graphType = Objects.requireNonNull(graphType);
-      preDatasetBuilders.remove(GraphTypeBuilder.class);
+      setters.remove(Setter.GRAPH_TYPE);
       return this;
     }
 
-    @Override
-    public IdBuilder graphType(Function<GraphTypeContext, GraphType> factory) {
-      preDatasetBuilders.put(GraphTypeBuilder.class, factory.andThen(this::graphType));
+    public Builder dataset(Function<DatasetContext, Dataset> factory) {
+      setters.put(Setter.DATASET, factory.andThen(this::dataset));
       return this;
     }
 
-    @Override
-    public UserParametersBuilder dataset(Dataset dataset) {
+    public Builder dataset(Dataset dataset) {
       this.dataset = Objects.requireNonNull(dataset);
-      postDatasetBuilders.remove(DatasetBuilder.class);
+      setters.remove(Setter.DATASET);
       return this;
     }
+  }
 
-    @Override
-    public UserParametersBuilder dataset(Function<DatasetContext, Dataset> factory) {
-      postDatasetBuilders.put(DatasetBuilder.class, factory.andThen(this::dataset));
-      return this;
+  private static final class Setters extends EnumMap<Setter, Function<? super Builder, ?>> {
+
+    public Setters() {
+      super(Setter.class);
     }
   }
 }
