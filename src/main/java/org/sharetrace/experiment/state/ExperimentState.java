@@ -116,7 +116,7 @@ public class ExperimentState {
         .build();
   }
 
-  protected CacheFactory<RiskScoreMessage> cacheFactory() {
+  private CacheFactory<RiskScoreMessage> cacheFactory() {
     return () ->
         IntervalCache.<RiskScoreMessage>builder()
             .clock(context.clock())
@@ -193,7 +193,7 @@ public class ExperimentState {
       mdc = new HashMap<>();
     }
 
-    private static Builder fromState(ExperimentState state) {
+    protected static Builder fromState(ExperimentState state) {
       return new Builder(state.context)
           .graphType(state.graphType)
           .id(context -> newId())
@@ -269,7 +269,7 @@ public class ExperimentState {
       return this;
     }
 
-    private static Builder withDefaults(ExperimentContext context) {
+    protected static Builder withDefaults(ExperimentContext context) {
       return new Builder(context)
           .id(cxt -> newId())
           .mdc(cxt -> Logging.mdc(cxt.id(), cxt.graphType()))
