@@ -3,7 +3,7 @@ package org.sharetrace.data.factory;
 import org.sharetrace.util.IntervalCache;
 
 @FunctionalInterface
-public interface CacheFactory<T extends Comparable<T>> {
+public interface CacheFactory<T> {
 
   IntervalCache<T> getCache();
 }
