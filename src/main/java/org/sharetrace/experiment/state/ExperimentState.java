@@ -74,7 +74,7 @@ public class ExperimentState {
   }
 
   public static Builder builder(ExperimentContext context) {
-    return new Builder(context);
+    return Builder.withDefaults(context);
   }
 
   public void run() {
@@ -130,7 +130,7 @@ public class ExperimentState {
   }
 
   public Builder toBuilder() {
-    return new Builder(this);
+    return Builder.fromState(this);
   }
 
   public Dataset dataset() {
@@ -186,23 +186,24 @@ public class ExperimentState {
     private Dataset dataset;
     private UserParameters userParameters;
 
-    private Builder(ExperimentContext baseContext) {
-      context = baseContext;
-      loggables = Loggables.create(baseContext.loggable(), logger);
+    private Builder(ExperimentContext context) {
+      this.context = context;
+      loggables = Loggables.create(context.loggable(), logger);
       setters = new Setters();
       mdc = new HashMap<>();
-      id(context -> newId());
-      mdc(context -> Logging.mdc(context.id(), context.graphType()));
-      messageParameters(context -> Defaults.messageParameters());
-      cacheParameters(context -> Defaults.cacheParameters());
-      riskScoreTimePdfFactory(defaultPdfFactory());
-      riskScoreValuePdfFactory(defaultPdfFactory());
-      contactTimePdfFactory(defaultPdfFactory());
-      userParameters(context -> Defaults.userParameters(context.dataset()));
     }
 
-    private Function<PdfFactoryContext, PdfFactory> defaultPdfFactory() {
-      return context -> seed -> new UniformRealDistribution(new Well512a(seed), 0d, 1d);
+    private static Builder fromState(ExperimentState state) {
+      return new Builder(state.context)
+          .graphType(state.graphType)
+          .id(context -> newId())
+          .messageParameters(state.messageParameters)
+          .cacheParameters(state.cacheParameters)
+          .riskScoreValuePdfFactory(state.riskScoreValuePdfFactory)
+          .riskScoreTimePdfFactory(state.riskScoreTimePdfFactory)
+          .contactTimePdfFactory(state.contactTimePdfFactory)
+          .dataset(state.dataset)
+          .userParameters(state.userParameters);
     }
 
     private static String newId() {
@@ -218,6 +219,70 @@ public class ExperimentState {
       this.id = Objects.requireNonNull(id);
       setters.remove(Setter.ID);
       return this;
+    }
+
+    public Builder messageParameters(MessageParameters parameters) {
+      messageParameters = Objects.requireNonNull(parameters);
+      setters.remove(Setter.MESSAGE_PARAMETERS);
+      return this;
+    }
+
+    public Builder cacheParameters(CacheParameters<RiskScoreMessage> parameters) {
+      cacheParameters = Objects.requireNonNull(parameters);
+      setters.remove(Setter.CACHE_PARAMETERS);
+      return this;
+    }
+
+    public Builder riskScoreTimePdfFactory(PdfFactory pdfFactory) {
+      riskScoreTimePdfFactory = Objects.requireNonNull(pdfFactory);
+      setters.remove(Setter.RISK_SCORE_TIME);
+      return this;
+    }
+
+    public Builder riskScoreValuePdfFactory(PdfFactory pdfFactory) {
+      riskScoreValuePdfFactory = Objects.requireNonNull(pdfFactory);
+      setters.remove(Setter.RISK_SCORE_VALUE);
+      return this;
+    }
+
+    public Builder contactTimePdfFactory(PdfFactory pdfFactory) {
+      contactTimePdfFactory = Objects.requireNonNull(pdfFactory);
+      setters.remove(Setter.CONTACT_TIME);
+      return this;
+    }
+
+    public Builder userParameters(UserParameters parameters) {
+      userParameters = Objects.requireNonNull(parameters);
+      setters.remove(Setter.USER_PARAMETERS);
+      return this;
+    }
+
+    public Builder graphType(GraphType graphType) {
+      this.graphType = Objects.requireNonNull(graphType);
+      setters.remove(Setter.GRAPH_TYPE);
+      return this;
+    }
+
+    public Builder dataset(Dataset dataset) {
+      this.dataset = Objects.requireNonNull(dataset);
+      setters.remove(Setter.DATASET);
+      return this;
+    }
+
+    private static Builder withDefaults(ExperimentContext context) {
+      return new Builder(context)
+          .id(cxt -> newId())
+          .mdc(cxt -> Logging.mdc(cxt.id(), cxt.graphType()))
+          .messageParameters(cxt -> Defaults.messageParameters())
+          .cacheParameters(cxt -> Defaults.cacheParameters())
+          .riskScoreTimePdfFactory(defaultPdfFactory())
+          .riskScoreValuePdfFactory(defaultPdfFactory())
+          .contactTimePdfFactory(defaultPdfFactory())
+          .userParameters(cxt -> Defaults.userParameters(cxt.dataset()));
+    }
+
+    private static Function<PdfFactoryContext, PdfFactory> defaultPdfFactory() {
+      return context -> seed -> new UniformRealDistribution(new Well512a(seed), 0d, 1d);
     }
 
     public Builder mdc(Function<MdcContext, Map<String, String>> factory) {
@@ -237,21 +302,9 @@ public class ExperimentState {
       return this;
     }
 
-    public Builder messageParameters(MessageParameters parameters) {
-      messageParameters = Objects.requireNonNull(parameters);
-      setters.remove(Setter.MESSAGE_PARAMETERS);
-      return this;
-    }
-
     public Builder cacheParameters(
         Function<CacheParametersContext, CacheParameters<RiskScoreMessage>> factory) {
       setters.put(Setter.CACHE_PARAMETERS, factory.andThen(this::cacheParameters));
-      return this;
-    }
-
-    public Builder cacheParameters(CacheParameters<RiskScoreMessage> parameters) {
-      cacheParameters = Objects.requireNonNull(parameters);
-      setters.remove(Setter.CACHE_PARAMETERS);
       return this;
     }
 
@@ -260,20 +313,8 @@ public class ExperimentState {
       return this;
     }
 
-    public Builder riskScoreTimePdfFactory(PdfFactory pdfFactory) {
-      riskScoreTimePdfFactory = Objects.requireNonNull(pdfFactory);
-      setters.remove(Setter.RISK_SCORE_TIME);
-      return this;
-    }
-
     public Builder riskScoreValuePdfFactory(Function<PdfFactoryContext, PdfFactory> factory) {
       setters.put(Setter.RISK_SCORE_VALUE, factory.andThen(this::riskScoreValuePdfFactory));
-      return this;
-    }
-
-    public Builder riskScoreValuePdfFactory(PdfFactory pdfFactory) {
-      riskScoreValuePdfFactory = Objects.requireNonNull(pdfFactory);
-      setters.remove(Setter.RISK_SCORE_VALUE);
       return this;
     }
 
@@ -282,37 +323,9 @@ public class ExperimentState {
       return this;
     }
 
-    public Builder contactTimePdfFactory(PdfFactory pdfFactory) {
-      contactTimePdfFactory = Objects.requireNonNull(pdfFactory);
-      setters.remove(Setter.CONTACT_TIME);
-      return this;
-    }
-
     public Builder userParameters(Function<UserParametersContext, UserParameters> factory) {
       setters.put(Setter.USER_PARAMETERS, factory.andThen(this::userParameters));
       return this;
-    }
-
-    public Builder userParameters(UserParameters parameters) {
-      userParameters = Objects.requireNonNull(parameters);
-      setters.remove(Setter.USER_PARAMETERS);
-      return this;
-    }
-
-    private Builder(ExperimentState state) {
-      context = state.context;
-      loggables = state.loggables;
-      setters = new Setters();
-      mdc = state.mdc;
-      graphType = state.graphType;
-      id(context -> newId());
-      messageParameters = state.messageParameters;
-      cacheParameters = state.cacheParameters;
-      riskScoreValuePdfFactory = state.riskScoreValuePdfFactory;
-      riskScoreTimePdfFactory = state.riskScoreTimePdfFactory;
-      contactTimePdfFactory = state.contactTimePdfFactory;
-      dataset = state.dataset;
-      userParameters = state.userParameters;
     }
 
     public ExperimentState build() {
@@ -422,20 +435,8 @@ public class ExperimentState {
       return this;
     }
 
-    public Builder graphType(GraphType graphType) {
-      this.graphType = Objects.requireNonNull(graphType);
-      setters.remove(Setter.GRAPH_TYPE);
-      return this;
-    }
-
     public Builder dataset(Function<DatasetContext, Dataset> factory) {
       setters.put(Setter.DATASET, factory.andThen(this::dataset));
-      return this;
-    }
-
-    public Builder dataset(Dataset dataset) {
-      this.dataset = Objects.requireNonNull(dataset);
-      setters.remove(Setter.DATASET);
       return this;
     }
   }
