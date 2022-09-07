@@ -198,7 +198,7 @@ public class ExperimentState {
     protected static Builder from(ExperimentState state) {
       return new Builder(state.ctx)
           .graphType(state.graphType)
-          .id(context -> newId())
+          .id(ctx -> newId())
           .msgParams(state.msgParams)
           .cacheParams(state.cacheParams)
           .scoreValuesFactory(state.scoreValuesFactory)
