@@ -120,17 +120,9 @@ public final class Defaults {
 
   @Builder.Factory
   static ExperimentState defaultParametersState(
-      GraphType graphType,
-      int numNodes,
-      Optional<GraphGeneratorFactory> graphGeneratorFactory,
-      float transmissionRate,
-      float sendCoefficient) {
+      GraphType graphType, int numNodes, Optional<GraphGeneratorFactory> graphGeneratorFactory) {
     return ExperimentState.builder(PARAMETERS_CONTEXT)
         .graphType(graphType)
-        .messageParameters(
-            MESSAGE_PARAMETERS
-                .withTransmissionRate(transmissionRate)
-                .withSendCoefficient(sendCoefficient))
         .dataset(context -> sampledDataset(context, numNodes, graphGeneratorFactory))
         .build();
   }
