@@ -322,20 +322,20 @@ public class ExperimentState {
       return new ExperimentState(this);
     }
 
-    private Builder setPdfs() {
+    private Void setPdfs() {
       long seed = context.seed();
       riskScoreValuePdf = riskScoreValuePdfFactory.getPdf(seed);
       riskScoreTimePdf = riskScoreTimePdfFactory.getPdf(seed);
       contactTimePdf = contactTimePdfFactory.getPdf(seed);
-      return this;
+      return null;
     }
 
-    private Builder setFactories() {
+    private Void setFactories() {
       Sampler<RiskScore> riskScoreSampler = newRiskScoreSampler();
       riskScoreFactory = RiskScoreFactory.fromSupplier(riskScoreSampler::sample);
       Sampler<Instant> contactTimeSampler = newContactTimeSampler();
       contactTimeFactory = ContactTimeFactory.fromSupplier(contactTimeSampler::sample);
-      return this;
+      return null;
     }
 
     private Sampler<RiskScore> newRiskScoreSampler() {
