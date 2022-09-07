@@ -8,6 +8,7 @@ import org.jgrapht.generate.GraphGenerator;
 import org.jgrapht.generate.RandomRegularGraphGenerator;
 import org.jgrapht.generate.ScaleFreeGraphGenerator;
 import org.jgrapht.generate.WattsStrogatzGraphGenerator;
+import org.jgrapht.graph.DefaultEdge;
 import org.sharetrace.experiment.GraphType;
 
 class GraphGenerators {
@@ -16,7 +17,7 @@ class GraphGenerators {
 
   @Builder.Factory
   @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-  public static <V, E> GraphGenerator<V, E, ?> graphGenerator(
+  public static GraphGenerator<Integer, DefaultEdge, Integer> graphGenerator(
       @Builder.Parameter GraphType graphType,
       @Builder.Parameter int numNodes,
       @Builder.Parameter long seed,
@@ -50,20 +51,20 @@ class GraphGenerators {
       case SCALE_FREE:
         return new ScaleFreeGraphGenerator<>(numNodes, seed);
       default:
-        throw generatorCreationFailedException(graphType);
+        throw generatorCreationFailed(graphType);
     }
   }
 
   @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
   private static <T> T getOrThrow(Optional<T> optional, String name, GraphType graphType) {
-    return optional.orElseThrow(() -> missingParameterException(name, graphType));
+    return optional.orElseThrow(() -> missingParam(name, graphType));
   }
 
-  private static RuntimeException generatorCreationFailedException(GraphType graphType) {
-    return new IllegalArgumentException("Failed to create graph generator for " + graphType);
-  }
-
-  private static RuntimeException missingParameterException(String name, GraphType graphType) {
+  private static RuntimeException missingParam(String name, GraphType graphType) {
     return new IllegalArgumentException("Missing parameter " + name + " for graph " + graphType);
+  }
+
+  private static RuntimeException generatorCreationFailed(GraphType graphType) {
+    return new IllegalArgumentException("Failed to create graph generator for " + graphType);
   }
 }

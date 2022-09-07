@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.util.Set;
 import org.immutables.value.Value;
 import org.sharetrace.data.factory.RiskScoreFactory;
+import org.sharetrace.graph.ContactNetwork;
 import org.sharetrace.graph.FileContactNetwork;
 import org.sharetrace.logging.Loggable;
 import org.sharetrace.message.RiskScore;
@@ -14,20 +15,13 @@ import org.sharetrace.message.RiskScore;
 abstract class BaseFileDataset implements Dataset {
 
   @Override
-  public RiskScore getRiskScore(int user) {
-    return riskScoreFactory().getRiskScore(user);
-  }
-
-  protected abstract RiskScoreFactory riskScoreFactory();
-
-  @Override
   @Value.Derived
-  public FileContactNetwork getContactNetwork() {
+  public ContactNetwork contactNetwork() {
     return FileContactNetwork.builder()
         .addAllLoggable(loggable())
         .delimiter(delimiter())
         .path(path())
-        .referenceTime(referenceTime())
+        .refTime(refTime())
         .build();
   }
 
@@ -37,5 +31,12 @@ abstract class BaseFileDataset implements Dataset {
 
   protected abstract Path path();
 
-  protected abstract Instant referenceTime();
+  protected abstract Instant refTime();
+
+  @Override
+  public RiskScore riskScore(int user) {
+    return scoreFactory().riskScore(user);
+  }
+
+  protected abstract RiskScoreFactory scoreFactory();
 }

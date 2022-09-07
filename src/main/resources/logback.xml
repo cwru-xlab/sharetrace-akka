@@ -102,13 +102,13 @@
     <ringBufferSize>8192</ringBufferSize> <!--Default: blocking-->
     <waitStrategyType>blocking</waitStrategyType>
   </appender>
-  <logger name="EventLogger" level="info" additivity="false">
+  <logger name="EventsLogger" level="info" additivity="false">
     <appender-ref ref="events"/>
   </logger>
-  <logger name="MetricLogger" level="info" additivity="false">
+  <logger name="MetricsLogger" level="info" additivity="false">
     <appender-ref ref="metrics"/>
   </logger>
-  <logger name="SettingLogger" level="info" additivity="false">
+  <logger name="SettingsLogger" level="info" additivity="false">
     <appender-ref ref="settings"/>
   </logger>
   <root level="info">

@@ -19,15 +19,15 @@ public class VertexIndependentPaths {
   private static final int MIN_PARALLEL_VERTICES = 50;
   private final Graph<Integer, DefaultEdge> graph;
   private final boolean isDirected;
-  private final int nVertices;
-  private final int nPairs;
+  private final int numVertices;
+  private final int numPairs;
   private final Graph<Integer, DefaultEdge> directed;
 
   public <V, E> VertexIndependentPaths(Graph<V, E> graph) {
     this.graph = GraphFactory.toIntGraph(graph);
     this.isDirected = graph.getType().isDirected();
-    this.nVertices = graph.vertexSet().size();
-    this.nPairs = nVertices * (nVertices - 1) / (isDirected ? 1 : 2);
+    this.numVertices = graph.vertexSet().size();
+    this.numPairs = numVertices * (numVertices - 1) / (isDirected ? 1 : 2);
     this.directed = GraphFactory.toDirected(this.graph);
   }
 
@@ -41,15 +41,15 @@ public class VertexIndependentPaths {
   }
 
   private int maxPossiblePaths(int source, int target) {
-    int nPaths;
+    int numPaths;
     if (source == target) {
-      nPaths = 0;
+      numPaths = 0;
     } else if (isDirected) {
-      nPaths = Math.min(graph.outDegreeOf(source), graph.inDegreeOf(target));
+      numPaths = Math.min(graph.outDegreeOf(source), graph.inDegreeOf(target));
     } else {
-      nPaths = Math.min(graph.degreeOf(source), graph.degreeOf(target));
+      numPaths = Math.min(graph.degreeOf(source), graph.degreeOf(target));
     }
-    return nPaths;
+    return numPaths;
   }
 
   private int nontrivialPathCount(int source, int target, int maxFind) {
@@ -79,6 +79,16 @@ public class VertexIndependentPaths {
     return nFound;
   }
 
+  private static <V, E> KShortestPathAlgorithm<V, E> newKShortestPaths(Graph<V, E> graph) {
+    // Suurballe provides a simpler implementation since it ensures no loops.
+    return new SuurballeKDisjointShortestPaths<>(graph);
+  }
+
+  private static <V> List<V> withoutEndpoints(GraphPath<V, ?> path) {
+    List<V> vertices = path.getVertexList();
+    return vertices.size() < 3 ? List.of() : vertices.subList(1, vertices.size() - 1);
+  }
+
   private int nonadjacentPathCount(int source, int target, int maxFind) {
     Graph<Integer, ?> graph = GraphFactory.copyGraph(this.graph);
     ShortestPathAlgorithm<Integer, ?> shortestPaths = newShortestPaths(graph);
@@ -91,16 +101,6 @@ public class VertexIndependentPaths {
       }
     } while (path != null && nFound < maxFind);
     return nFound;
-  }
-
-  private static <V, E> KShortestPathAlgorithm<V, E> newKShortestPaths(Graph<V, E> graph) {
-    // Suurballe provides a simpler implementation since it ensures no loops.
-    return new SuurballeKDisjointShortestPaths<>(graph);
-  }
-
-  private static <V> List<V> withoutEndpoints(GraphPath<V, ?> path) {
-    List<V> vertices = path.getVertexList();
-    return vertices.size() < 3 ? List.of() : vertices.subList(1, vertices.size() - 1);
   }
 
   private static <V, E> ShortestPathAlgorithm<V, E> newShortestPaths(Graph<V, E> graph) {
@@ -120,11 +120,11 @@ public class VertexIndependentPaths {
     return vertices(allowParallel)
         .filter(target -> source != target)
         .map(target -> getPathCount(source, target, maxFind))
-        .collect(newCounts(nVertices - 1), Collection::add, Collection::addAll);
+        .collect(newCounts(numVertices - 1), Collection::add, Collection::addAll);
   }
 
   private IntStream vertices(boolean allowParallel) {
-    return nVertices > MIN_PARALLEL_VERTICES && allowParallel
+    return numVertices > MIN_PARALLEL_VERTICES && allowParallel
         ? graph.vertexSet().parallelStream().mapToInt(Integer::valueOf)
         : graph.vertexSet().stream().mapToInt(Integer::valueOf);
   }
@@ -144,7 +144,7 @@ public class VertexIndependentPaths {
   public List<Integer> getAllPathCounts(int maxFind, boolean allowParallel) {
     return vertices(allowParallel)
         .flatMap(source -> uniqueSourceCounts(source, maxFind))
-        .collect(newCounts(nPairs), Collection::add, Collection::addAll);
+        .collect(newCounts(numPairs), Collection::add, Collection::addAll);
   }
 
   private IntStream uniqueSourceCounts(int source, int maxFind) {

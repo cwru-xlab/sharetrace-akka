@@ -8,11 +8,11 @@ import org.sharetrace.User;
 import org.sharetrace.graph.ContactNetwork;
 
 @Value.Immutable
-abstract class BaseRiskScoreMessage implements UserMessage, Comparable<RiskScoreMessage> {
+abstract class BaseRiskScoreMsg implements UserMsg, Comparable<RiskScoreMsg> {
 
   @Override
-  public int compareTo(RiskScoreMessage message) {
-    return score().compareTo(message.score());
+  public int compareTo(RiskScoreMsg msg) {
+    return score().compareTo(msg.score());
   }
 
   public abstract RiskScore score();
@@ -20,7 +20,7 @@ abstract class BaseRiskScoreMessage implements UserMessage, Comparable<RiskScore
   /**
    * Returns the actor reference associated with the {@link User} that propagates this risk score.
    */
-  public abstract ActorRef<UserMessage> replyTo();
+  public abstract ActorRef<UserMsg> replyTo();
 
   /**
    * Returns a universally unique identifier that can be used to correlate risk scores as they

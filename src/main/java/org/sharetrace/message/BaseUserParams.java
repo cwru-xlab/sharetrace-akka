@@ -13,12 +13,12 @@ import org.sharetrace.util.Checks;
  */
 @SuppressWarnings("DefaultAnnotationParam")
 @Value.Immutable(copy = true)
-abstract class BaseUserParameters implements UserMessage {
+abstract class BaseUserParams {
 
   @Value.Check
   protected void check() {
-    Checks.greaterThan(idleTimeout(), Duration.ZERO, "idleTimeout");
-    Checks.greaterThan(refreshPeriod(), Duration.ZERO, "refreshPeriod");
+    Checks.isGreaterThan(idleTimeout(), Duration.ZERO, "idleTimeout");
+    Checks.isGreaterThan(refreshPeriod(), Duration.ZERO, "refreshPeriod");
   }
 
   // TODO Add Javadoc

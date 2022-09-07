@@ -5,7 +5,6 @@ import java.util.Set;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import org.immutables.value.Value;
-import org.jgrapht.Graph;
 import org.jgrapht.generate.GraphGenerator;
 import org.jgrapht.graph.DefaultEdge;
 import org.sharetrace.data.factory.ContactTimeFactory;
@@ -39,11 +38,6 @@ abstract class BaseSampledContactNetwork implements ContactNetwork {
     helper().logMetrics();
   }
 
-  @Override
-  public Graph<Integer, DefaultEdge> topology() {
-    return helper().contactNetwork();
-  }
-
   @Value.Derived
   protected Set<Contact> contactSet() {
     return helper()
@@ -55,7 +49,7 @@ abstract class BaseSampledContactNetwork implements ContactNetwork {
 
   @Value.Derived
   protected ContactNetworkHelper helper() {
-    return ContactNetworkHelper.create(graphGenerator(), loggable());
+    return ContactNetworkHelper.of(graphGenerator(), loggable());
   }
 
   protected abstract GraphGenerator<Integer, DefaultEdge, ?> graphGenerator();

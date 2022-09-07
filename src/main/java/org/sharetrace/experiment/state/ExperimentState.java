@@ -20,7 +20,7 @@ import org.sharetrace.Runner;
 import org.sharetrace.data.Dataset;
 import org.sharetrace.data.factory.CacheFactory;
 import org.sharetrace.data.factory.ContactTimeFactory;
-import org.sharetrace.data.factory.PdfFactory;
+import org.sharetrace.data.factory.DistributionFactory;
 import org.sharetrace.data.factory.RiskScoreFactory;
 import org.sharetrace.data.sampling.RiskScoreSampler;
 import org.sharetrace.data.sampling.Sampler;
@@ -28,49 +28,47 @@ import org.sharetrace.data.sampling.TimeSampler;
 import org.sharetrace.experiment.ExperimentContext;
 import org.sharetrace.experiment.GraphType;
 import org.sharetrace.logging.Loggable;
-import org.sharetrace.logging.Loggables;
+import org.sharetrace.logging.Logger;
 import org.sharetrace.logging.Logging;
 import org.sharetrace.logging.settings.ExperimentSettings;
 import org.sharetrace.logging.settings.LoggableSetting;
-import org.sharetrace.message.AlgorithmMessage;
-import org.sharetrace.message.MessageParameters;
+import org.sharetrace.message.AlgorithmMsg;
+import org.sharetrace.message.MsgParams;
 import org.sharetrace.message.RiskScore;
-import org.sharetrace.message.RiskScoreMessage;
-import org.sharetrace.message.UserParameters;
-import org.sharetrace.util.CacheParameters;
+import org.sharetrace.message.RiskScoreMsg;
+import org.sharetrace.message.UserParams;
+import org.sharetrace.util.CacheParams;
 import org.sharetrace.util.IntervalCache;
-import org.slf4j.Logger;
 import org.slf4j.MDC;
 
 public class ExperimentState {
 
-  private static final Logger logger = Logging.settingLogger();
-  private final ExperimentContext context;
-  private final Loggables loggables;
+  private final ExperimentContext ctx;
+  private final Logger logger;
   private final String id;
   private final GraphType graphType;
   private final Map<String, String> mdc;
-  private final PdfFactory riskScoreValuePdfFactory;
-  private final PdfFactory riskScoreTimePdfFactory;
-  private final PdfFactory contactTimePdfFactory;
+  private final DistributionFactory scoreValuesFactory;
+  private final DistributionFactory scoreTimesFactory;
+  private final DistributionFactory contactTimesFactory;
   private final Dataset dataset;
-  private final UserParameters userParameters;
-  private final MessageParameters messageParameters;
-  private final CacheParameters<RiskScoreMessage> cacheParameters;
+  private final UserParams userParams;
+  private final MsgParams msgParams;
+  private final CacheParams<RiskScoreMsg> cacheParams;
 
   private ExperimentState(Builder builder) {
-    context = builder.context;
-    loggables = builder.loggables;
+    ctx = builder.ctx;
+    logger = builder.logger;
     graphType = builder.graphType;
     id = builder.id;
     mdc = builder.mdc;
-    riskScoreValuePdfFactory = builder.riskScoreValuePdfFactory;
-    riskScoreTimePdfFactory = builder.riskScoreTimePdfFactory;
-    contactTimePdfFactory = builder.contactTimePdfFactory;
+    scoreValuesFactory = builder.scoreValuesFactory;
+    scoreTimesFactory = builder.scoreTimesFactory;
+    contactTimesFactory = builder.contactTimesFactory;
     dataset = builder.dataset;
-    userParameters = builder.userParameters;
-    messageParameters = builder.messageParameters;
-    cacheParameters = builder.cacheParameters;
+    userParams = builder.userParams;
+    msgParams = builder.msgParams;
+    cacheParams = builder.cacheParams;
   }
 
   public static Builder builder(ExperimentContext context) {
@@ -84,18 +82,18 @@ public class ExperimentState {
 
   private void setup() {
     mdc.forEach(MDC::put);
-    dataset.getContactNetwork().logMetrics();
-    loggables.log(LoggableSetting.KEY, settings());
+    dataset.contactNetwork().logMetrics();
+    logger.log(LoggableSetting.KEY, settings());
   }
 
   private ExperimentSettings settings() {
     return ExperimentSettings.builder()
         .graphType(graphType.toString())
         .stateId(id)
-        .seed(context.seed())
-        .userParameters(userParameters)
-        .messageParameters(messageParameters)
-        .cacheParameters(cacheParameters)
+        .seed(ctx.seed())
+        .userParams(userParams)
+        .msgParams(msgParams)
+        .cacheParams(cacheParams)
         .build();
   }
 
@@ -103,42 +101,46 @@ public class ExperimentState {
     Runner.run(newAlgorithm(), "RiskPropagation");
   }
 
-  private Behavior<AlgorithmMessage> newAlgorithm() {
+  private Behavior<AlgorithmMsg> newAlgorithm() {
     return RiskPropagationBuilder.create()
-        .addAllLoggable(loggables.loggable())
+        .addAllLoggable(ctx.loggable())
         .putAllMdc(mdc)
-        .contactNetwork(dataset.getContactNetwork())
-        .userParameters(userParameters)
-        .messageParameters(messageParameters)
-        .clock(context.clock())
-        .riskScoreFactory(dataset)
+        .contactNetwork(dataset.contactNetwork())
+        .userParams(userParams)
+        .msgParams(msgParams)
+        .clock(ctx.clock())
+        .scoreFactory(dataset)
         .cacheFactory(cacheFactory())
         .build();
   }
 
-  private CacheFactory<RiskScoreMessage> cacheFactory() {
+  private CacheFactory<RiskScoreMsg> cacheFactory() {
     return () ->
-        IntervalCache.<RiskScoreMessage>builder()
-            .clock(context.clock())
-            .nIntervals(cacheParameters.numIntervals())
-            .nLookAhead(cacheParameters.numLookAhead())
-            .interval(cacheParameters.interval())
-            .refreshPeriod(cacheParameters.refreshPeriod())
-            .mergeStrategy(cacheParameters.mergeStrategy())
-            .comparator(RiskScoreMessage::compareTo)
+        IntervalCache.<RiskScoreMsg>builder()
+            .clock(ctx.clock())
+            .numIntervals(cacheParams.numIntervals())
+            .numLookAhead(cacheParams.numLookAhead())
+            .interval(cacheParams.interval())
+            .refreshPeriod(cacheParams.refreshPeriod())
+            .mergeStrategy(cacheParams.mergeStrategy())
+            .comparator(RiskScoreMsg::compareTo)
             .build();
   }
 
+  public ExperimentState withNewId() {
+    return toBuilder().build();
+  }
+
   public Builder toBuilder() {
-    return Builder.fromState(this);
+    return Builder.from(this);
   }
 
   public Dataset dataset() {
     return dataset;
   }
 
-  public MessageParameters messageParameters() {
-    return messageParameters;
+  public MsgParams msgParams() {
+    return msgParams;
   }
 
   private enum Setter {
@@ -146,64 +148,64 @@ public class ExperimentState {
     GRAPH_TYPE,
     ID,
     MDC,
-    MESSAGE_PARAMETERS,
-    CACHE_PARAMETERS,
-    RISK_SCORE_VALUE,
-    RISK_SCORE_TIME,
-    CONTACT_TIME,
-    PDFS,
+    MSG_PARAMS,
+    CACHE_PARAMS,
+    SCORE_VALUES,
+    SCORE_TIMES,
+    CONTACT_TIMES,
+    DISTRIBUTIONS,
     FACTORIES,
     DATASET,
-    USER_PARAMETERS
+    USER_PARAMS
   }
 
   public static class Builder
       implements GraphTypeContext,
           IdContext,
           MdcContext,
-          MessageParametersContext,
-          CacheParametersContext,
-          PdfFactoryContext,
+          MsgParamsContext,
+          CacheParamsContext,
+          DistributionFactoryContext,
           DatasetContext,
-          UserParametersContext {
+          UserParamsContext {
 
-    private final ExperimentContext context;
-    private final Loggables loggables;
+    private final ExperimentContext ctx;
+    private final Logger logger;
     private final Map<Setter, Function<? super Builder, ?>> setters;
     private final Map<String, String> mdc;
     private GraphType graphType;
     private String id;
-    private MessageParameters messageParameters;
-    private CacheParameters<RiskScoreMessage> cacheParameters;
-    private PdfFactory riskScoreValuePdfFactory;
-    private PdfFactory riskScoreTimePdfFactory;
-    private PdfFactory contactTimePdfFactory;
-    private RealDistribution riskScoreValuePdf;
-    private RealDistribution riskScoreTimePdf;
-    private RealDistribution contactTimePdf;
-    private RiskScoreFactory riskScoreFactory;
+    private MsgParams msgParams;
+    private CacheParams<RiskScoreMsg> cacheParams;
+    private DistributionFactory scoreValuesFactory;
+    private DistributionFactory scoreTimesFactory;
+    private DistributionFactory contactTimesFactory;
+    private RealDistribution scoreValues;
+    private RealDistribution scoreTimes;
+    private RealDistribution contactTimes;
+    private RiskScoreFactory scoreFactory;
     private ContactTimeFactory contactTimeFactory;
     private Dataset dataset;
-    private UserParameters userParameters;
+    private UserParams userParams;
 
     private Builder(ExperimentContext context) {
-      this.context = context;
-      loggables = Loggables.create(context.loggable(), logger);
+      this.ctx = context;
+      logger = Logging.settingsLogger(context.loggable());
       setters = new EnumMap<>(Setter.class);
       mdc = new HashMap<>();
     }
 
-    protected static Builder fromState(ExperimentState state) {
-      return new Builder(state.context)
+    protected static Builder from(ExperimentState state) {
+      return new Builder(state.ctx)
           .graphType(state.graphType)
           .id(context -> newId())
-          .messageParameters(state.messageParameters)
-          .cacheParameters(state.cacheParameters)
-          .riskScoreValuePdfFactory(state.riskScoreValuePdfFactory)
-          .riskScoreTimePdfFactory(state.riskScoreTimePdfFactory)
-          .contactTimePdfFactory(state.contactTimePdfFactory)
+          .msgParams(state.msgParams)
+          .cacheParams(state.cacheParams)
+          .scoreValuesFactory(state.scoreValuesFactory)
+          .scoreTimesFactory(state.scoreTimesFactory)
+          .contactTimesFactory(state.contactTimesFactory)
           .dataset(state.dataset)
-          .userParameters(state.userParameters);
+          .userParams(state.userParams);
     }
 
     private static String newId() {
@@ -221,39 +223,39 @@ public class ExperimentState {
       return this;
     }
 
-    public Builder messageParameters(MessageParameters parameters) {
-      messageParameters = Objects.requireNonNull(parameters);
-      setters.remove(Setter.MESSAGE_PARAMETERS);
+    public Builder msgParams(MsgParams params) {
+      msgParams = Objects.requireNonNull(params);
+      setters.remove(Setter.MSG_PARAMS);
       return this;
     }
 
-    public Builder cacheParameters(CacheParameters<RiskScoreMessage> parameters) {
-      cacheParameters = Objects.requireNonNull(parameters);
-      setters.remove(Setter.CACHE_PARAMETERS);
+    public Builder cacheParams(CacheParams<RiskScoreMsg> params) {
+      cacheParams = Objects.requireNonNull(params);
+      setters.remove(Setter.CACHE_PARAMS);
       return this;
     }
 
-    public Builder riskScoreTimePdfFactory(PdfFactory pdfFactory) {
-      riskScoreTimePdfFactory = Objects.requireNonNull(pdfFactory);
-      setters.remove(Setter.RISK_SCORE_TIME);
+    public Builder scoreTimesFactory(DistributionFactory factory) {
+      scoreTimesFactory = Objects.requireNonNull(factory);
+      setters.remove(Setter.SCORE_TIMES);
       return this;
     }
 
-    public Builder riskScoreValuePdfFactory(PdfFactory pdfFactory) {
-      riskScoreValuePdfFactory = Objects.requireNonNull(pdfFactory);
-      setters.remove(Setter.RISK_SCORE_VALUE);
+    public Builder scoreValuesFactory(DistributionFactory factory) {
+      scoreValuesFactory = Objects.requireNonNull(factory);
+      setters.remove(Setter.SCORE_VALUES);
       return this;
     }
 
-    public Builder contactTimePdfFactory(PdfFactory pdfFactory) {
-      contactTimePdfFactory = Objects.requireNonNull(pdfFactory);
-      setters.remove(Setter.CONTACT_TIME);
+    public Builder contactTimesFactory(DistributionFactory factory) {
+      contactTimesFactory = Objects.requireNonNull(factory);
+      setters.remove(Setter.CONTACT_TIMES);
       return this;
     }
 
-    public Builder userParameters(UserParameters parameters) {
-      userParameters = Objects.requireNonNull(parameters);
-      setters.remove(Setter.USER_PARAMETERS);
+    public Builder userParams(UserParams parameters) {
+      userParams = Objects.requireNonNull(parameters);
+      setters.remove(Setter.USER_PARAMS);
       return this;
     }
 
@@ -271,18 +273,18 @@ public class ExperimentState {
 
     protected static Builder withDefaults(ExperimentContext context) {
       return new Builder(context)
-          .id(cxt -> newId())
-          .mdc(cxt -> Logging.mdc(cxt.id(), cxt.graphType()))
-          .messageParameters(cxt -> Defaults.messageParameters())
-          .cacheParameters(cxt -> Defaults.cacheParameters())
-          .riskScoreTimePdfFactory(defaultPdfFactory())
-          .riskScoreValuePdfFactory(defaultPdfFactory())
-          .contactTimePdfFactory(defaultPdfFactory())
-          .userParameters(cxt -> Defaults.userParameters(cxt.dataset()));
+          .id(ctx -> newId())
+          .mdc(ctx -> Logging.mdc(ctx.id(), ctx.graphType()))
+          .msgParams(ctx -> Defaults.msgParams())
+          .cacheParams(ctx -> Defaults.cacheParams())
+          .scoreTimesFactory(defaultFactory())
+          .scoreValuesFactory(defaultFactory())
+          .contactTimesFactory(defaultFactory())
+          .userParams(ctx -> Defaults.userParams(ctx.dataset()));
     }
 
-    private static Function<PdfFactoryContext, PdfFactory> defaultPdfFactory() {
-      return context -> seed -> new UniformRealDistribution(new Well512a(seed), 0d, 1d);
+    private static Function<DistributionFactoryContext, DistributionFactory> defaultFactory() {
+      return ctx -> seed -> new UniformRealDistribution(new Well512a(seed), 0d, 1d);
     }
 
     public Builder mdc(Function<MdcContext, Map<String, String>> factory) {
@@ -296,98 +298,98 @@ public class ExperimentState {
       return this;
     }
 
-    public Builder messageParameters(
-        Function<MessageParametersContext, MessageParameters> factory) {
-      setters.put(Setter.MESSAGE_PARAMETERS, factory.andThen(this::messageParameters));
+    public Builder msgParams(Function<MsgParamsContext, MsgParams> factory) {
+      setters.put(Setter.MSG_PARAMS, factory.andThen(this::msgParams));
       return this;
     }
 
-    public Builder cacheParameters(
-        Function<CacheParametersContext, CacheParameters<RiskScoreMessage>> factory) {
-      setters.put(Setter.CACHE_PARAMETERS, factory.andThen(this::cacheParameters));
+    public Builder cacheParams(Function<CacheParamsContext, CacheParams<RiskScoreMsg>> factory) {
+      setters.put(Setter.CACHE_PARAMS, factory.andThen(this::cacheParams));
       return this;
     }
 
-    public Builder riskScoreTimePdfFactory(Function<PdfFactoryContext, PdfFactory> factory) {
-      setters.put(Setter.RISK_SCORE_TIME, factory.andThen(this::riskScoreTimePdfFactory));
+    public Builder scoreTimesFactory(
+        Function<DistributionFactoryContext, DistributionFactory> factory) {
+      setters.put(Setter.SCORE_TIMES, factory.andThen(this::scoreTimesFactory));
       return this;
     }
 
-    public Builder riskScoreValuePdfFactory(Function<PdfFactoryContext, PdfFactory> factory) {
-      setters.put(Setter.RISK_SCORE_VALUE, factory.andThen(this::riskScoreValuePdfFactory));
+    public Builder scoreValuesFactory(
+        Function<DistributionFactoryContext, DistributionFactory> factory) {
+      setters.put(Setter.SCORE_VALUES, factory.andThen(this::scoreValuesFactory));
       return this;
     }
 
-    public Builder contactTimePdfFactory(Function<PdfFactoryContext, PdfFactory> factory) {
-      setters.put(Setter.CONTACT_TIME, factory.andThen(this::contactTimePdfFactory));
+    public Builder contactTimesFactory(
+        Function<DistributionFactoryContext, DistributionFactory> factory) {
+      setters.put(Setter.CONTACT_TIMES, factory.andThen(this::contactTimesFactory));
       return this;
     }
 
-    public Builder userParameters(Function<UserParametersContext, UserParameters> factory) {
-      setters.put(Setter.USER_PARAMETERS, factory.andThen(this::userParameters));
+    public Builder userParams(Function<UserParamsContext, UserParams> factory) {
+      setters.put(Setter.USER_PARAMS, factory.andThen(this::userParams));
       return this;
     }
 
     public ExperimentState build() {
-      setters.put(Setter.PDFS, x -> setPdfs());
+      setters.put(Setter.DISTRIBUTIONS, x -> setDistributions());
       setters.put(Setter.FACTORIES, x -> setFactories());
       setters.values().forEach(setter -> setter.apply(this));
       return new ExperimentState(this);
     }
 
-    private Void setPdfs() {
-      long seed = context.seed();
-      riskScoreValuePdf = riskScoreValuePdfFactory.getPdf(seed);
-      riskScoreTimePdf = riskScoreTimePdfFactory.getPdf(seed);
-      contactTimePdf = contactTimePdfFactory.getPdf(seed);
+    private Void setDistributions() {
+      scoreValues = scoreValuesFactory.distribution(ctx.seed());
+      scoreTimes = scoreTimesFactory.distribution(ctx.seed());
+      contactTimes = contactTimesFactory.distribution(ctx.seed());
       return null;
     }
 
     private Void setFactories() {
-      Sampler<RiskScore> riskScoreSampler = newRiskScoreSampler();
-      riskScoreFactory = RiskScoreFactory.fromSupplier(riskScoreSampler::sample);
+      Sampler<RiskScore> scoreSampler = newScoreSampler();
+      scoreFactory = RiskScoreFactory.from(scoreSampler::sample);
       Sampler<Instant> contactTimeSampler = newContactTimeSampler();
-      contactTimeFactory = ContactTimeFactory.fromSupplier(contactTimeSampler::sample);
+      contactTimeFactory = ContactTimeFactory.from(contactTimeSampler::sample);
       return null;
     }
 
-    private Sampler<RiskScore> newRiskScoreSampler() {
+    private Sampler<RiskScore> newScoreSampler() {
       return RiskScoreSampler.builder()
-          .valueDistribution(riskScoreValuePdf)
-          .timeSampler(newTimeSampler(riskScoreTimePdf, messageParameters.scoreTtl()))
+          .values(scoreValues)
+          .timeSampler(newTimeSampler(scoreTimes, msgParams.scoreTtl()))
           .build();
     }
 
-    private Sampler<Instant> newTimeSampler(RealDistribution ttlDistribution, Duration ttl) {
+    private Sampler<Instant> newTimeSampler(RealDistribution lookBacks, Duration maxLookBack) {
       return TimeSampler.builder()
-          .ttlDistribution(ttlDistribution)
-          .ttl(ttl)
-          .referenceTime(context.referenceTime())
+          .lookBacks(lookBacks)
+          .maxLookBack(maxLookBack)
+          .refTime(ctx.refTime())
           .build();
     }
 
     private Sampler<Instant> newContactTimeSampler() {
-      return newTimeSampler(contactTimePdf, messageParameters.contactTtl());
+      return newTimeSampler(contactTimes, msgParams.contactTtl());
     }
 
     @Override
-    public Instant referenceTime() {
-      return context.referenceTime();
+    public Instant refTime() {
+      return ctx.refTime();
     }
 
     @Override
     public Clock clock() {
-      return context.clock();
+      return ctx.clock();
     }
 
     @Override
     public long seed() {
-      return context.seed();
+      return ctx.seed();
     }
 
     @Override
     public Set<Class<? extends Loggable>> loggable() {
-      return loggables.loggable();
+      return ctx.loggable();
     }
 
     @Override
@@ -406,18 +408,18 @@ public class ExperimentState {
     }
 
     @Override
-    public MessageParameters messageParameters() {
-      return messageParameters;
+    public MsgParams msgParams() {
+      return msgParams;
     }
 
     @Override
-    public CacheParameters<RiskScoreMessage> cacheParameters() {
-      return cacheParameters;
+    public CacheParams<RiskScoreMsg> cacheParams() {
+      return cacheParams;
     }
 
     @Override
-    public RiskScoreFactory riskScoreFactory() {
-      return riskScoreFactory;
+    public RiskScoreFactory scoreFactory() {
+      return scoreFactory;
     }
 
     @Override

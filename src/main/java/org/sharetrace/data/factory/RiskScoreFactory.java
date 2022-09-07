@@ -6,9 +6,9 @@ import org.sharetrace.message.RiskScore;
 @FunctionalInterface
 public interface RiskScoreFactory {
 
-  static RiskScoreFactory fromSupplier(Supplier<RiskScore> supplier) {
+  static RiskScoreFactory from(Supplier<RiskScore> supplier) {
     return x -> supplier.get();
   }
 
-  RiskScore getRiskScore(int user);
+  RiskScore riskScore(int user);
 }

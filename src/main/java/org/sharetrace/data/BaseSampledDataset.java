@@ -7,6 +7,7 @@ import org.jgrapht.graph.DefaultEdge;
 import org.sharetrace.data.factory.ContactTimeFactory;
 import org.sharetrace.data.factory.GraphGeneratorFactory;
 import org.sharetrace.data.factory.RiskScoreFactory;
+import org.sharetrace.graph.ContactNetwork;
 import org.sharetrace.graph.SampledContactNetwork;
 import org.sharetrace.logging.Loggable;
 import org.sharetrace.message.RiskScore;
@@ -16,15 +17,8 @@ import org.sharetrace.message.RiskScore;
 abstract class BaseSampledDataset implements Dataset {
 
   @Override
-  public RiskScore getRiskScore(int user) {
-    return riskScoreFactory().getRiskScore(user);
-  }
-
-  protected abstract RiskScoreFactory riskScoreFactory();
-
-  @Override
   @Value.Derived
-  public SampledContactNetwork getContactNetwork() {
+  public ContactNetwork contactNetwork() {
     return SampledContactNetwork.builder()
         .addAllLoggable(loggable())
         .graphGenerator(graphGenerator())
@@ -35,8 +29,8 @@ abstract class BaseSampledDataset implements Dataset {
   protected abstract Set<Class<? extends Loggable>> loggable();
 
   @Value.Derived
-  protected GraphGenerator<Integer, DefaultEdge, ?> graphGenerator() {
-    return graphGeneratorFactory().getGraphGenerator(numNodes());
+  protected GraphGenerator<Integer, DefaultEdge, Integer> graphGenerator() {
+    return graphGeneratorFactory().graphGenerator(numNodes());
   }
 
   protected abstract GraphGeneratorFactory graphGeneratorFactory();
@@ -44,4 +38,11 @@ abstract class BaseSampledDataset implements Dataset {
   protected abstract int numNodes();
 
   protected abstract ContactTimeFactory contactTimeFactory();
+
+  @Override
+  public RiskScore riskScore(int user) {
+    return riskScoreFactory().riskScore(user);
+  }
+
+  protected abstract RiskScoreFactory riskScoreFactory();
 }

@@ -9,6 +9,7 @@ import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import java.time.Clock;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -19,18 +20,19 @@ import org.sharetrace.data.factory.RiskScoreFactory;
 import org.sharetrace.graph.Contact;
 import org.sharetrace.graph.ContactNetwork;
 import org.sharetrace.logging.Loggable;
-import org.sharetrace.logging.Loggables;
+import org.sharetrace.logging.Logger;
 import org.sharetrace.logging.Logging;
 import org.sharetrace.logging.metrics.LoggableMetric;
 import org.sharetrace.logging.metrics.RuntimeMetric;
-import org.sharetrace.message.AlgorithmMessage;
-import org.sharetrace.message.ContactMessage;
-import org.sharetrace.message.MessageParameters;
+import org.sharetrace.message.AlgorithmMsg;
+import org.sharetrace.message.ContactMsg;
+import org.sharetrace.message.MsgParams;
 import org.sharetrace.message.RiskScore;
-import org.sharetrace.message.RiskScoreMessage;
-import org.sharetrace.message.RunMessage;
-import org.sharetrace.message.UserMessage;
-import org.sharetrace.message.UserParameters;
+import org.sharetrace.message.RiskScoreMsg;
+import org.sharetrace.message.RunMsg;
+import org.sharetrace.message.UserMsg;
+import org.sharetrace.message.UserParams;
+import org.sharetrace.util.Iterables;
 import org.sharetrace.util.TypedSupplier;
 import org.slf4j.MDC;
 
@@ -41,90 +43,92 @@ import org.slf4j.MDC;
  *
  * <ol>
  *   <li>Map the {@link ContactNetwork} to a collection {@link User} actors.
- *   <li>For each {@link User}, send it an initial {@link RiskScoreMessage}.
+ *   <li>For each {@link User}, send it an initial {@link RiskScoreMsg}.
  *   <li>For each pair of {@link User}s that correspond to an edge in the {@link ContactNetwork},
- *       send each a complimentary {@link ContactMessage} that contains the {@link ActorRef} and
- *       time of contact of the other {@link User}.
+ *       send each a complimentary {@link ContactMsg} that contains the {@link ActorRef} and time of
+ *       contact of the other {@link User}.
  *   <li>Terminate once the stopping condition is satisfied. Termination occurs when when all {@link
- *       User}s have stopped passing messages (default), or a certain amount of time has passed.
+ *       User}s have stopped passing msgs (default), or a certain amount of time has passed.
  * </ol>
  *
- * @see UserParameters
+ * @see UserParams
  */
-public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
+public class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
 
-  private final Loggables loggables;
+  private final Logger logger;
+  private final Collection<Class<? extends Loggable>> loggable;
   private final Map<String, String> mdc;
-  private final UserParameters userParameters;
-  private final MessageParameters messageParameters;
+  private final UserParams userParams;
+  private final MsgParams msgParams;
   private final ContactNetwork contactNetwork;
   private final Clock clock;
-  private final RiskScoreFactory riskScoreFactory;
-  private final CacheFactory<RiskScoreMessage> cacheFactory;
+  private final RiskScoreFactory scoreFactory;
+  private final CacheFactory<RiskScoreMsg> cacheFactory;
   private final StopWatch runtime;
   private int nStopped;
 
   private RiskPropagation(
-      ActorContext<AlgorithmMessage> context,
+      ActorContext<AlgorithmMsg> ctx,
       Set<Class<? extends Loggable>> loggable,
       Map<String, String> mdc,
       ContactNetwork contactNetwork,
-      UserParameters userParameters,
-      MessageParameters messageParameters,
+      UserParams userParams,
+      MsgParams msgParams,
       Clock clock,
-      CacheFactory<RiskScoreMessage> cacheFactory,
-      RiskScoreFactory riskScoreFactory) {
-    super(context);
-    this.loggables = Loggables.create(loggable, () -> getContext().getLog());
+      CacheFactory<RiskScoreMsg> cacheFactory,
+      RiskScoreFactory scoreFactory) {
+    super(ctx);
+    this.loggable = loggable;
+    this.logger = Logging.logger(loggable, getContext()::getLog);
     this.mdc = mdc;
     this.contactNetwork = contactNetwork;
-    this.userParameters = userParameters;
-    this.messageParameters = messageParameters;
+    this.userParams = userParams;
+    this.msgParams = msgParams;
     this.clock = clock;
     this.cacheFactory = cacheFactory;
-    this.riskScoreFactory = riskScoreFactory;
+    this.scoreFactory = scoreFactory;
     this.runtime = new StopWatch();
     this.nStopped = 0;
   }
 
   @Builder.Factory
-  static Behavior<AlgorithmMessage> riskPropagation(
+  static Behavior<AlgorithmMsg> riskPropagation(
       ContactNetwork contactNetwork,
       Set<Class<? extends Loggable>> loggable,
       Map<String, String> mdc,
-      UserParameters userParameters,
-      MessageParameters messageParameters,
+      UserParams userParams,
+      MsgParams msgParams,
       Clock clock,
-      CacheFactory<RiskScoreMessage> cacheFactory,
-      RiskScoreFactory riskScoreFactory) {
+      CacheFactory<RiskScoreMsg> cacheFactory,
+      RiskScoreFactory scoreFactory) {
     return Behaviors.setup(
-        context -> {
-          context.setLoggerName(Logging.METRIC_LOGGER_NAME);
+        ctx -> {
+          ctx.setLoggerName(Logging.metricsLoggerName());
           return new RiskPropagation(
-              context,
+              ctx,
               loggable,
               mdc,
               contactNetwork,
-              userParameters,
-              messageParameters,
+              userParams,
+              msgParams,
               clock,
               cacheFactory,
-              riskScoreFactory);
+              scoreFactory);
         });
   }
 
   @Override
-  public Receive<AlgorithmMessage> createReceive() {
+  public Receive<AlgorithmMsg> createReceive() {
     return newReceiveBuilder()
-        .onMessage(RunMessage.class, this::onRunMessage)
-        .onSignal(Terminated.class, this::onTerminate)
+        .onMessage(RunMsg.class, this::onRunMessage)
+        .onSignal(Terminated.class, this::onTerminateMsg)
         .build();
   }
 
-  private Behavior<AlgorithmMessage> onRunMessage(RunMessage message) {
-    Behavior<AlgorithmMessage> behavior = this;
+  private Behavior<AlgorithmMsg> onRunMessage(RunMsg msg) {
+    Behavior<AlgorithmMsg> behavior = this;
     if (contactNetwork.numUsers() > 0) {
-      Map<Integer, ActorRef<UserMessage>> users = newUsers();
+      Map<Integer, ActorRef<UserMsg>> users = newUsers();
       sendSymptomScores(users);
       runtime.start();
       sendContacts(users);
@@ -134,8 +138,56 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
     return behavior;
   }
 
-  private Behavior<AlgorithmMessage> onTerminate(Terminated terminated) {
-    Behavior<AlgorithmMessage> behavior = this;
+  private Map<Integer, ActorRef<UserMsg>> newUsers() {
+    Map<Integer, ActorRef<UserMsg>> users = newUserMap();
+    ActorRef<UserMsg> user;
+    for (int name : Iterables.fromStream(contactNetwork.users())) {
+      user = getContext().spawn(newUser(), String.valueOf(name));
+      getContext().watch(user);
+      users.put(name, user);
+    }
+    return users;
+  }
+
+  private Map<Integer, ActorRef<UserMsg>> newUserMap() {
+    return new Int2ObjectOpenHashMap<>(contactNetwork.numUsers());
+  }
+
+  private Behavior<UserMsg> newUser() {
+    return UserBuilder.create()
+        .putAllMdc(mdc)
+        .addAllLoggable(loggable)
+        .userParams(userParams)
+        .msgParams(msgParams)
+        .clock(clock)
+        .cache(cacheFactory.cache())
+        .build();
+  }
+
+  private void sendSymptomScores(Map<Integer, ActorRef<UserMsg>> users) {
+    int name;
+    ActorRef<UserMsg> user;
+    RiskScore symptomScore;
+    for (Entry<Integer, ActorRef<UserMsg>> entry : users.entrySet()) {
+      name = entry.getKey();
+      user = entry.getValue();
+      symptomScore = scoreFactory.riskScore(name);
+      user.tell(RiskScoreMsg.builder().score(symptomScore).replyTo(user).build());
+    }
+  }
+
+  private void sendContacts(Map<Integer, ActorRef<UserMsg>> users) {
+    ActorRef<UserMsg> user1, user2;
+    for (Contact contact : Iterables.fromStream(contactNetwork.contacts())) {
+      user1 = users.get(contact.user1());
+      user2 = users.get(contact.user2());
+      user1.tell(ContactMsg.builder().replyTo(user2).time(contact.time()).build());
+      user2.tell(ContactMsg.builder().replyTo(user1).time(contact.time()).build());
+    }
+  }
+
+  private Behavior<AlgorithmMsg> onTerminateMsg(Terminated msg) {
+    Behavior<AlgorithmMsg> behavior = this;
     if (++nStopped == contactNetwork.numUsers()) {
       mdc.forEach(MDC::put);
       logMetrics();
@@ -144,58 +196,8 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
     return behavior;
   }
 
-  private Map<Integer, ActorRef<UserMessage>> newUsers() {
-    Map<Integer, ActorRef<UserMessage>> users = newUserMap();
-    Iterable<Integer> names = () -> contactNetwork.users().iterator();
-    ActorRef<UserMessage> user;
-    for (int name : names) {
-      user = getContext().spawn(newUser(), String.valueOf(name));
-      getContext().watch(user);
-      users.put(name, user);
-    }
-    return users;
-  }
-
-  private void sendSymptomScores(Map<Integer, ActorRef<UserMessage>> users) {
-    int name;
-    ActorRef<UserMessage> user;
-    RiskScore symptomScore;
-    for (Entry<Integer, ActorRef<UserMessage>> entry : users.entrySet()) {
-      name = entry.getKey();
-      user = entry.getValue();
-      symptomScore = riskScoreFactory.getRiskScore(name);
-      user.tell(RiskScoreMessage.builder().score(symptomScore).replyTo(user).build());
-    }
-  }
-
-  private void sendContacts(Map<Integer, ActorRef<UserMessage>> users) {
-    Iterable<Contact> contacts = () -> contactNetwork.contacts().iterator();
-    ActorRef<UserMessage> user1, user2;
-    for (Contact contact : contacts) {
-      user1 = users.get(contact.user1());
-      user2 = users.get(contact.user2());
-      user1.tell(ContactMessage.builder().replyTo(user2).timestamp(contact.timestamp()).build());
-      user2.tell(ContactMessage.builder().replyTo(user1).timestamp(contact.timestamp()).build());
-    }
-  }
-
   private void logMetrics() {
-    loggables.log(LoggableMetric.KEY, runtimeMetric());
-  }
-
-  private Map<Integer, ActorRef<UserMessage>> newUserMap() {
-    return new Int2ObjectOpenHashMap<>(contactNetwork.numUsers());
-  }
-
-  private Behavior<UserMessage> newUser() {
-    return UserBuilder.create()
-        .putAllMdc(mdc)
-        .addAllLoggable(loggables.loggable())
-        .userParameters(userParameters)
-        .messageParameters(messageParameters)
-        .clock(clock)
-        .cache(cacheFactory.getCache())
-        .build();
+    logger.log(LoggableMetric.KEY, runtimeMetric());
   }
 
   private TypedSupplier<LoggableMetric> runtimeMetric() {

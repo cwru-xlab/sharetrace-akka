@@ -68,14 +68,14 @@ public class IntervalCache<T> {
     return toLong(clock.instant());
   }
 
+  private static long toLong(Instant instant) {
+    return instant.getEpochSecond();
+  }
+
   private void updateRange() {
     long now = getTime();
     rangeStart = now - lookBack;
     rangeEnd = now + lookAhead;
-  }
-
-  private static long toLong(Instant instant) {
-    return instant.getEpochSecond();
   }
 
   public static <T extends Comparable<T>> Builder<T> builder() {
@@ -104,12 +104,12 @@ public class IntervalCache<T> {
     }
   }
 
-  private long floorKey(long timestamp) {
-    return rangeStart + interval * Math.floorDiv(timestamp - rangeStart, interval);
-  }
-
   private Predicate<Entry<Long, ?>> isExpired() {
     return entry -> entry.getKey() < rangeStart;
+  }
+
+  private long floorKey(long timestamp) {
+    return rangeStart + interval * Math.floorDiv(timestamp - rangeStart, interval);
   }
 
   /**
@@ -130,7 +130,7 @@ public class IntervalCache<T> {
   }
 
   private long checkedFloorKey(long timestamp) {
-    return floorKey(Checks.closedOpen(timestamp, rangeStart, rangeEnd, "timestamp"));
+    return floorKey(Checks.inClosedOpen(timestamp, rangeStart, rangeEnd, "timestamp"));
   }
 
   /**
@@ -174,14 +174,14 @@ public class IntervalCache<T> {
     }
 
     /** Sets the total number of contiguous time intervals. */
-    public Builder<T> nIntervals(int nIntervals) {
-      this.numIntervals = nIntervals;
+    public Builder<T> numIntervals(int numIntervals) {
+      this.numIntervals = numIntervals;
       return this;
     }
 
     /** Sets the number of "future" time intervals. */
-    public Builder<T> nLookAhead(int nLookAhead) {
-      this.numLookAhead = nLookAhead;
+    public Builder<T> numLookAhead(int numLookAhead) {
+      this.numLookAhead = numLookAhead;
       return this;
     }
 
@@ -224,10 +224,10 @@ public class IntervalCache<T> {
       Objects.requireNonNull(clock);
       Objects.requireNonNull(mergeStrategy);
       Objects.requireNonNull(comparator);
-      Checks.atLeast(interval, Duration.ZERO, "interval");
-      Checks.atLeast(numIntervals, MIN_INTERVALS, "numIntervals");
-      Checks.closedOpen(numLookAhead, MIN_LOOK_AHEAD, numIntervals, "numLookAhead");
-      Checks.atLeast(refreshPeriod, Duration.ZERO, "refreshPeriod");
+      Checks.isAtLeast(interval, Duration.ZERO, "interval");
+      Checks.isAtLeast(numIntervals, MIN_INTERVALS, "numIntervals");
+      Checks.inClosedOpen(numLookAhead, MIN_LOOK_AHEAD, numIntervals, "numLookAhead");
+      Checks.isAtLeast(refreshPeriod, Duration.ZERO, "refreshPeriod");
     }
   }
 }

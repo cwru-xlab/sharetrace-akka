@@ -14,7 +14,7 @@ import org.sharetrace.util.Checks;
  */
 @SuppressWarnings("DefaultAnnotationParam")
 @Value.Immutable(copy = true)
-abstract class BaseMessageParameters implements UserMessage {
+abstract class BaseMsgParams implements UserMsg {
 
   public static final float MIN_TRANSMISSION_RATE = 0f;
   public static final float MAX_TRANSMISSION_RATE = 1f;
@@ -24,11 +24,11 @@ abstract class BaseMessageParameters implements UserMessage {
   protected void check() {
     Checks.inClosedRange(
         transmissionRate(), MIN_TRANSMISSION_RATE, MAX_TRANSMISSION_RATE, "transmissionRate");
-    Checks.atLeast(sendCoefficient(), MIN_SEND_COEFFICIENT, "sendCoefficient");
-    Checks.atLeast(timeBuffer(), Duration.ZERO, "timeBuffer");
-    Checks.greaterThan(scoreTtl(), Duration.ZERO, "scoreTtl");
-    Checks.greaterThan(contactTtl(), Duration.ZERO, "contactTtl");
-    Checks.atLeast(scoreTolerance(), 0f, "scoreTolerance");
+    Checks.isAtLeast(sendCoefficient(), MIN_SEND_COEFFICIENT, "sendCoefficient");
+    Checks.isAtLeast(timeBuffer(), Duration.ZERO, "timeBuffer");
+    Checks.isGreaterThan(scoreTtl(), Duration.ZERO, "scoreTtl");
+    Checks.isGreaterThan(contactTtl(), Duration.ZERO, "contactTtl");
+    Checks.isAtLeast(tolerance(), 0f, "tolerance");
   }
 
   /**
@@ -79,5 +79,5 @@ abstract class BaseMessageParameters implements UserMessage {
    * Returns the maximum absolute difference between {@link RiskScore} values for them to be
    * considered approximately equal.
    */
-  public abstract float scoreTolerance();
+  public abstract float tolerance();
 }

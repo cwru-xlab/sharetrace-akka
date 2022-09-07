@@ -11,7 +11,7 @@ public final class Checks {
 
   private Checks() {}
 
-  public static <T extends Comparable<T>> T atLeast(T value, T atLeast, String name) {
+  public static <T extends Comparable<T>> T isAtLeast(T value, T atLeast, String name) {
     return inRange(value, Range.atLeast(atLeast), name);
   }
 
@@ -24,7 +24,7 @@ public final class Checks {
     Preconditions.checkArgument(condition, messageTemplate, args);
   }
 
-  public static <T extends Comparable<T>> T greaterThan(T value, T greaterThan, String name) {
+  public static <T extends Comparable<T>> T isGreaterThan(T value, T greaterThan, String name) {
     return inRange(value, Range.greaterThan(greaterThan), name);
   }
 
@@ -32,7 +32,7 @@ public final class Checks {
     return inRange(value, Range.closed(lower, upper), name);
   }
 
-  public static <T extends Comparable<T>> T closedOpen(T value, T lower, T upper, String name) {
+  public static <T extends Comparable<T>> T inClosedOpen(T value, T lower, T upper, String name) {
     return inRange(value, Range.closedOpen(lower, upper), name);
   }
 

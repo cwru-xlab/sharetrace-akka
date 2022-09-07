@@ -19,7 +19,7 @@ import java.util.function.Supplier;
 import org.immutables.builder.Builder;
 import org.sharetrace.graph.ContactNetwork;
 import org.sharetrace.logging.Loggable;
-import org.sharetrace.logging.Loggables;
+import org.sharetrace.logging.Logger;
 import org.sharetrace.logging.Logging;
 import org.sharetrace.logging.events.ContactEvent;
 import org.sharetrace.logging.events.ContactsRefreshEvent;
@@ -30,14 +30,14 @@ import org.sharetrace.logging.events.ReceiveEvent;
 import org.sharetrace.logging.events.SendCachedEvent;
 import org.sharetrace.logging.events.SendCurrentEvent;
 import org.sharetrace.logging.events.UpdateEvent;
-import org.sharetrace.message.ContactMessage;
-import org.sharetrace.message.MessageParameters;
-import org.sharetrace.message.RefreshMessage;
+import org.sharetrace.message.ContactMsg;
+import org.sharetrace.message.MsgParams;
+import org.sharetrace.message.RefreshMsg;
 import org.sharetrace.message.RiskScore;
-import org.sharetrace.message.RiskScoreMessage;
-import org.sharetrace.message.TimeoutMessage;
-import org.sharetrace.message.UserMessage;
-import org.sharetrace.message.UserParameters;
+import org.sharetrace.message.RiskScoreMsg;
+import org.sharetrace.message.TimeoutMsg;
+import org.sharetrace.message.UserMsg;
+import org.sharetrace.message.UserParams;
 import org.sharetrace.util.IntervalCache;
 import org.sharetrace.util.TypedSupplier;
 
@@ -45,294 +45,283 @@ import org.sharetrace.util.TypedSupplier;
  * An actor that corresponds to a {@link ContactNetwork} node. Collectively, all {@link User}s carry
  * out the execution of {@link RiskPropagation}.
  *
- * @see UserParameters
+ * @see UserParams
  */
-public class User extends AbstractBehavior<UserMessage> {
+public class User extends AbstractBehavior<UserMsg> {
 
-  private final TimerScheduler<UserMessage> timers;
-  private final Loggables loggables;
-  private final Map<ActorRef<UserMessage>, Instant> contacts;
-  private final UserParameters userParameters;
-  private final MessageParameters messageParameters;
+  private final TimerScheduler<UserMsg> timers;
+  private final Logger logger;
+  private final Map<ActorRef<UserMsg>, Instant> contacts;
+  private final UserParams userParams;
+  private final MsgParams msgParams;
   private final Clock clock;
-  private final IntervalCache<RiskScoreMessage> cache;
-  private RiskScoreMessage previous;
-  private RiskScoreMessage current;
-  private RiskScoreMessage transmitted;
-  private float sendThreshold;
+  private final IntervalCache<RiskScoreMsg> cache;
+  private RiskScoreMsg prev;
+  private RiskScoreMsg curr;
+  private RiskScoreMsg transmitted;
+  private float sendThresh;
 
   private User(
-      ActorContext<UserMessage> context,
-      TimerScheduler<UserMessage> timers,
+      ActorContext<UserMsg> ctx,
+      TimerScheduler<UserMsg> timers,
       Set<Class<? extends Loggable>> loggable,
-      UserParameters userParameters,
-      MessageParameters msgParameters,
+      UserParams userParams,
+      MsgParams msgParams,
       Clock clock,
-      IntervalCache<RiskScoreMessage> cache) {
-    super(context);
+      IntervalCache<RiskScoreMsg> cache) {
+    super(ctx);
     this.timers = timers;
-    this.loggables = Loggables.create(loggable, () -> getContext().getLog());
+    this.logger = Logging.logger(loggable, getContext()::getLog);
     this.contacts = new Object2ObjectOpenHashMap<>();
-    this.userParameters = userParameters;
-    this.messageParameters = msgParameters;
+    this.userParams = userParams;
+    this.msgParams = msgParams;
     this.clock = clock;
     this.cache = cache;
-    this.current = defaultMessage();
-    setMessagesAndThreshold(current);
+    this.curr = defaultMsg();
+    update(curr);
     startRefreshTimer();
   }
 
-  private RiskScoreMessage defaultMessage() {
-    return RiskScoreMessage.builder()
+  private RiskScoreMsg defaultMsg() {
+    return RiskScoreMsg.builder()
         .score(RiskScore.ofMinValue(clock.instant()))
         .replyTo(getContext().getSelf())
         .build();
   }
 
-  private void setMessagesAndThreshold(RiskScoreMessage newCurrent) {
-    previous = current;
-    current = newCurrent;
-    transmitted = transmitted(current);
-    sendThreshold = current.score().value() * messageParameters.sendCoefficient();
+  private void update(RiskScoreMsg msg) {
+    prev = curr;
+    curr = msg;
+    transmitted = transmitted(curr);
+    sendThresh = curr.score().value() * msgParams.sendCoefficient();
   }
 
-  private RiskScoreMessage transmitted(RiskScoreMessage received) {
-    return RiskScoreMessage.builder()
+  private RiskScoreMsg transmitted(RiskScoreMsg msg) {
+    return RiskScoreMsg.builder()
         .replyTo(getContext().getSelf())
-        .score(transmittedScore(received))
-        .id(received.id())
+        .score(transmittedScore(msg))
+        .id(msg.id())
         .build();
   }
 
-  private RiskScore transmittedScore(RiskScoreMessage received) {
+  private RiskScore transmittedScore(RiskScoreMsg msg) {
     return RiskScore.builder()
-        .value(received.score().value() * messageParameters.transmissionRate())
-        .timestamp(received.score().timestamp())
+        .value(msg.score().value() * msgParams.transmissionRate())
+        .time(msg.score().time())
         .build();
   }
 
   private void startRefreshTimer() {
-    timers.startTimerWithFixedDelay(RefreshMessage.INSTANCE, userParameters.refreshPeriod());
+    timers.startTimerWithFixedDelay(RefreshMsg.INSTANCE, userParams.refreshPeriod());
   }
 
   @Builder.Factory
-  static Behavior<UserMessage> user(
+  static Behavior<UserMsg> user(
       Map<String, String> mdc,
       Set<Class<? extends Loggable>> loggable,
-      UserParameters userParameters,
-      MessageParameters messageParameters,
+      UserParams userParams,
+      MsgParams msgParams,
       Clock clock,
-      IntervalCache<RiskScoreMessage> cache) {
+      IntervalCache<RiskScoreMsg> cache) {
     return Behaviors.setup(
-        context -> {
-          context.setLoggerName(Logging.EVENT_LOGGER_NAME);
-          Behavior<UserMessage> user =
+        ctx -> {
+          ctx.setLoggerName(Logging.eventsLoggerName());
+          Behavior<UserMsg> user =
               Behaviors.withTimers(
-                  timers ->
-                      new User(
-                          context,
-                          timers,
-                          loggable,
-                          userParameters,
-                          messageParameters,
-                          clock,
-                          cache));
-          return Behaviors.withMdc(UserMessage.class, message -> mdc, user);
+                  timers -> new User(ctx, timers, loggable, userParams, msgParams, clock, cache));
+          return Behaviors.withMdc(UserMsg.class, message -> mdc, user);
         });
   }
 
-  private static Predicate<Entry<?, ?>> isNotFrom(RiskScoreMessage message) {
-    return Predicate.not(contact -> contact.getKey().equals(message.replyTo()));
+  private static Predicate<Entry<?, ?>> isNotFrom(RiskScoreMsg msg) {
+    return Predicate.not(contact -> contact.getKey().equals(msg.replyTo()));
   }
 
-  private static SendCurrentEvent sendCurrentEvent(
-      ActorRef<UserMessage> contact, RiskScoreMessage message) {
+  private static SendCurrentEvent sendCurrentEvent(ActorRef<UserMsg> contact, RiskScoreMsg msg) {
     return SendCurrentEvent.builder()
-        .from(name(message.replyTo()))
+        .from(name(msg.replyTo()))
         .to(name(contact))
-        .score(message.score())
-        .id(message.id())
+        .score(msg.score())
+        .id(msg.id())
         .build();
   }
 
-  private static SendCachedEvent sendCachedEvent(
-      ActorRef<UserMessage> contact, RiskScoreMessage message) {
+  private static SendCachedEvent sendCachedEvent(ActorRef<UserMsg> contact, RiskScoreMsg msg) {
     return SendCachedEvent.builder()
-        .from(name(message.replyTo()))
+        .from(name(msg.replyTo()))
         .to(name(contact))
-        .score(message.score())
-        .id(message.id())
+        .score(msg.score())
+        .id(msg.id())
         .build();
   }
 
-  private static PropagateEvent propagateEvent(
-      ActorRef<UserMessage> contact, RiskScoreMessage message) {
+  private static PropagateEvent propagateEvent(ActorRef<UserMsg> contact, RiskScoreMsg msg) {
     return PropagateEvent.builder()
-        .from(name(message.replyTo()))
+        .from(name(msg.replyTo()))
         .to(name(contact))
-        .score(message.score())
-        .id(message.id())
+        .score(msg.score())
+        .id(msg.id())
         .build();
   }
 
-  private static String name(ActorRef<UserMessage> user) {
+  private static String name(ActorRef<UserMsg> user) {
     return user.path().name();
   }
 
   @Override
-  public Receive<UserMessage> createReceive() {
+  public Receive<UserMsg> createReceive() {
     return newReceiveBuilder()
-        .onMessage(ContactMessage.class, this::onContactMessage)
-        .onMessage(RiskScoreMessage.class, this::onRiskScoreMessage)
-        .onMessage(TimeoutMessage.class, x -> Behaviors.stopped())
-        .onMessage(RefreshMessage.class, this::onRefreshMessage)
+        .onMessage(ContactMsg.class, this::onContactMsg)
+        .onMessage(RiskScoreMsg.class, this::onRiskScoreMsg)
+        .onMessage(TimeoutMsg.class, x -> Behaviors.stopped())
+        .onMessage(RefreshMsg.class, this::onRefreshMsg)
         .build();
   }
 
-  private Behavior<UserMessage> onContactMessage(ContactMessage message) {
-    addContactIfAlive(message);
-    sendToContact(message);
+  private Behavior<UserMsg> onContactMsg(ContactMsg msg) {
+    addContactIfAlive(msg);
+    sendToContact(msg);
     return this;
   }
 
-  private void sendToContact(ContactMessage message) {
-    if (isScoreAlive(current) && isContactRecent(message, current)) {
-      sendCurrent(message);
+  private void sendToContact(ContactMsg msg) {
+    if (isScoreAlive(curr) && isContactRecent(msg, curr)) {
+      sendCurrent(msg);
     } else {
-      sendCached(message);
+      sendCached(msg);
     }
   }
 
-  private Behavior<UserMessage> onRiskScoreMessage(RiskScoreMessage message) {
-    logReceive(message);
-    propagate(updateAndCache(message));
+  private Behavior<UserMsg> onRiskScoreMsg(RiskScoreMsg msg) {
+    logReceive(msg);
+    propagate(updateAndCache(msg));
     resetTimeout();
     return this;
   }
 
-  private Behavior<UserMessage> onRefreshMessage(RefreshMessage message) {
+  private Behavior<UserMsg> onRefreshMsg(RefreshMsg msg) {
     refreshContacts();
     refreshCurrent();
     return this;
   }
 
-  private void sendCurrent(ContactMessage message) {
-    ActorRef<UserMessage> contact = message.replyTo();
+  private void sendCurrent(ContactMsg msg) {
+    ActorRef<UserMsg> contact = msg.replyTo();
     contact.tell(transmitted);
     logSendCurrent(contact);
   }
 
   private void resetTimeout() {
-    timers.startSingleTimer(TimeoutMessage.INSTANCE, userParameters.idleTimeout());
+    timers.startSingleTimer(TimeoutMsg.INSTANCE, userParams.idleTimeout());
   }
 
-  private void logSendCurrent(ActorRef<UserMessage> contact) {
+  private void logSendCurrent(ActorRef<UserMsg> contact) {
     logEvent(SendCurrentEvent.class, () -> sendCurrentEvent(contact, transmitted));
   }
 
   private void refreshContacts() {
     int nContacts = contacts.size();
     contacts.values().removeIf(Predicate.not(this::isContactAlive));
-    int nRemaining = contacts.size();
-    int nExpired = nContacts - nRemaining;
-    logContactsRefresh(nRemaining, nExpired);
+    int numRemaining = contacts.size();
+    int numExpired = nContacts - numRemaining;
+    logContactsRefresh(numRemaining, numExpired);
   }
 
   private void refreshCurrent() {
-    if (!isScoreAlive(current)) {
-      setMessagesAndThreshold(maxCachedOrDefault());
+    if (!isScoreAlive(curr)) {
+      update(maxCachedOrDefault());
       logCurrentRefresh();
     }
   }
 
-  private RiskScoreMessage maxCachedOrDefault() {
-    return cache.max(clock.instant()).orElseGet(this::defaultMessage);
+  private RiskScoreMsg maxCachedOrDefault() {
+    return cache.max(clock.instant()).orElseGet(this::defaultMsg);
   }
 
-  private void addContactIfAlive(ContactMessage message) {
-    if (isContactAlive(message.timestamp())) {
-      contacts.put(message.replyTo(), message.timestamp());
-      logContact(message);
+  private void addContactIfAlive(ContactMsg msg) {
+    if (isContactAlive(msg.time())) {
+      contacts.put(msg.replyTo(), msg.time());
+      logContact(msg);
     }
   }
 
-  private void sendCached(ContactMessage message) {
-    Instant buffered = buffered(message.timestamp());
-    cache.max(buffered).ifPresent(cached -> sendCached(message.replyTo(), cached));
+  private void sendCached(ContactMsg msg) {
+    Instant buffered = buffered(msg.time());
+    cache.max(buffered).ifPresent(cached -> sendCached(msg.replyTo(), cached));
   }
 
-  private Predicate<Entry<?, Instant>> isContactRecent(RiskScoreMessage message) {
-    return contact -> isRecent(contact.getValue(), message);
+  private Predicate<Entry<?, Instant>> isContactRecent(RiskScoreMsg msg) {
+    return contact -> isRecent(contact.getValue(), msg);
   }
 
-  private void sendCached(ActorRef<UserMessage> contact, RiskScoreMessage cached) {
+  private void sendCached(ActorRef<UserMsg> contact, RiskScoreMsg cached) {
     if (isScoreAlive(cached)) {
       contact.tell(cached);
       logSendCached(contact, cached);
     }
   }
 
-  private void propagate(RiskScoreMessage message) {
-    if (isScoreAlive(message) && isHighEnough(message)) {
+  private void propagate(RiskScoreMsg msg) {
+    if (isScoreAlive(msg) && isHighEnough(msg)) {
       contacts.entrySet().stream()
-          .filter(isNotFrom(message))
-          .filter(isContactRecent(message))
+          .filter(isNotFrom(msg))
+          .filter(isContactRecent(msg))
           .map(Entry::getKey)
-          .forEach(contact -> propagate(contact, message));
+          .forEach(contact -> propagate(contact, msg));
     }
   }
 
-  private boolean isHighEnough(RiskScoreMessage message) {
-    return message.score().value() >= sendThreshold;
+  private boolean isHighEnough(RiskScoreMsg msg) {
+    return msg.score().value() >= sendThresh;
   }
 
-  private void logSendCached(ActorRef<UserMessage> contact, RiskScoreMessage message) {
-    logEvent(SendCachedEvent.class, () -> sendCachedEvent(contact, message));
+  private void logSendCached(ActorRef<UserMsg> contact, RiskScoreMsg msg) {
+    logEvent(SendCachedEvent.class, () -> sendCachedEvent(contact, msg));
   }
 
-  private boolean isContactRecent(ContactMessage contact, RiskScoreMessage message) {
-    return isRecent(contact.timestamp(), message);
+  private boolean isContactRecent(ContactMsg contact, RiskScoreMsg msg) {
+    return isRecent(contact.time(), msg);
   }
 
-  private boolean isRecent(Instant timestamp, RiskScoreMessage message) {
-    // Message timestamp is no newer (inclusive) than the buffered timestamp.
-    return !message.score().timestamp().isAfter(buffered(timestamp));
+  private boolean isRecent(Instant time, RiskScoreMsg msg) {
+    // Message time is no newer (inclusive) than the buffered time.
+    return !msg.score().time().isAfter(buffered(time));
   }
 
-  private Instant buffered(Instant timestamp) {
-    return timestamp.plus(messageParameters.timeBuffer());
+  private Instant buffered(Instant time) {
+    return time.plus(msgParams.timeBuffer());
   }
 
-  private boolean isContactAlive(Instant timestamp) {
-    return isAlive(timestamp, messageParameters.contactTtl());
+  private boolean isContactAlive(Instant time) {
+    return isAlive(time, msgParams.contactTtl());
   }
 
-  private boolean isScoreAlive(RiskScoreMessage message) {
-    return isAlive(message.score().timestamp(), messageParameters.scoreTtl());
+  private boolean isScoreAlive(RiskScoreMsg msg) {
+    return isAlive(msg.score().time(), msgParams.scoreTtl());
   }
 
-  private void propagate(ActorRef<UserMessage> contact, RiskScoreMessage message) {
-    contact.tell(message);
-    logPropagate(contact, message);
+  private void propagate(ActorRef<UserMsg> contact, RiskScoreMsg msg) {
+    contact.tell(msg);
+    logPropagate(contact, msg);
   }
 
-  private void logPropagate(ActorRef<UserMessage> contact, RiskScoreMessage message) {
-    logEvent(PropagateEvent.class, () -> propagateEvent(contact, message));
+  private void logPropagate(ActorRef<UserMsg> contact, RiskScoreMsg msg) {
+    logEvent(PropagateEvent.class, () -> propagateEvent(contact, msg));
   }
 
-  private void logContact(ContactMessage message) {
-    logEvent(ContactEvent.class, () -> contactEvent(message));
+  private void logContact(ContactMsg msg) {
+    logEvent(ContactEvent.class, () -> contactEvent(msg));
   }
 
-  private void logContactsRefresh(int nRemaining, int nExpired) {
-    logEvent(ContactsRefreshEvent.class, () -> contactsRefreshEvent(nRemaining, nExpired));
+  private void logContactsRefresh(int numRemaining, int numExpired) {
+    logEvent(ContactsRefreshEvent.class, () -> contactsRefreshEvent(numRemaining, numExpired));
   }
 
-  private ContactsRefreshEvent contactsRefreshEvent(int nRemaining, int nExpired) {
+  private ContactsRefreshEvent contactsRefreshEvent(int numRemaining, int numExpired) {
     return ContactsRefreshEvent.builder()
         .of(name())
-        .numRemaining(nRemaining)
-        .numExpired(nExpired)
+        .numRemaining(numRemaining)
+        .numExpired(numExpired)
         .build();
   }
 
@@ -343,33 +332,33 @@ public class User extends AbstractBehavior<UserMessage> {
   private CurrentRefreshEvent currentRefreshEvent() {
     return CurrentRefreshEvent.builder()
         .of(name())
-        .oldScore(previous.score())
-        .newScore(current.score())
-        .oldId(previous.id())
-        .newId(current.id())
+        .oldScore(prev.score())
+        .newScore(curr.score())
+        .oldId(prev.id())
+        .newId(curr.id())
         .build();
   }
 
-  private RiskScoreMessage updateAndCache(RiskScoreMessage message) {
-    RiskScoreMessage propagate;
-    if (isHigherThanCurrent(message)) {
-      setMessagesAndThreshold(message);
+  private RiskScoreMsg updateAndCache(RiskScoreMsg msg) {
+    RiskScoreMsg propagate;
+    if (isHigherThanCurrent(msg)) {
+      update(msg);
       logUpdate();
       propagate = transmitted;
     } else {
-      propagate = transmitted(message);
+      propagate = transmitted(msg);
     }
     return cached(propagate);
   }
 
-  private boolean isHigherThanCurrent(RiskScoreMessage message) {
+  private boolean isHigherThanCurrent(RiskScoreMsg msg) {
     // Do NOT use scoreTolerance; otherwise, it causes issues with logging and analysis.
-    return message.score().value() > current.score().value();
+    return msg.score().value() > curr.score().value();
   }
 
-  private RiskScoreMessage cached(RiskScoreMessage message) {
-    cache.put(message.score().timestamp(), message);
-    return message;
+  private RiskScoreMsg cached(RiskScoreMsg msg) {
+    cache.put(msg.score().time(), msg);
+    return msg;
   }
 
   private void logUpdate() {
@@ -377,17 +366,17 @@ public class User extends AbstractBehavior<UserMessage> {
   }
 
   private <T extends Loggable> void logEvent(Class<T> type, Supplier<T> supplier) {
-    loggables.log(LoggableEvent.KEY, TypedSupplier.of(type, supplier));
+    logger.log(LoggableEvent.KEY, TypedSupplier.of(type, supplier));
   }
 
   private UpdateEvent updateEvent() {
     return UpdateEvent.builder()
-        .from(name(current.replyTo()))
+        .from(name(curr.replyTo()))
         .to(name())
-        .oldScore(previous.score())
-        .newScore(current.score())
-        .oldId(previous.id())
-        .newId(current.id())
+        .oldScore(prev.score())
+        .newScore(curr.score())
+        .oldId(prev.id())
+        .newId(curr.id())
         .build();
   }
 
@@ -395,24 +384,24 @@ public class User extends AbstractBehavior<UserMessage> {
     return name(getContext().getSelf());
   }
 
-  private ContactEvent contactEvent(ContactMessage message) {
-    return ContactEvent.builder().of(name()).addUsers(name(), name(message.replyTo())).build();
+  private ContactEvent contactEvent(ContactMsg msg) {
+    return ContactEvent.builder().of(name()).addUsers(name(), name(msg.replyTo())).build();
   }
 
-  private void logReceive(RiskScoreMessage message) {
-    logEvent(ReceiveEvent.class, () -> receiveEvent(message));
+  private void logReceive(RiskScoreMsg msg) {
+    logEvent(ReceiveEvent.class, () -> receiveEvent(msg));
   }
 
-  private ReceiveEvent receiveEvent(RiskScoreMessage message) {
+  private ReceiveEvent receiveEvent(RiskScoreMsg msg) {
     return ReceiveEvent.builder()
-        .from(name(message.replyTo()))
+        .from(name(msg.replyTo()))
         .to(name())
-        .score(message.score())
-        .id(message.id())
+        .score(msg.score())
+        .id(msg.id())
         .build();
   }
 
-  private boolean isAlive(Instant timestamp, Duration timeToLive) {
-    return Duration.between(timestamp, clock.instant()).compareTo(timeToLive) < 0;
+  private boolean isAlive(Instant time, Duration timeToLive) {
+    return Duration.between(time, clock.instant()).compareTo(timeToLive) < 0;
   }
 }

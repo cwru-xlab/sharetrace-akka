@@ -6,9 +6,9 @@ import java.util.function.Supplier;
 @FunctionalInterface
 public interface ContactTimeFactory {
 
-  static ContactTimeFactory fromSupplier(Supplier<Instant> supplier) {
+  static ContactTimeFactory from(Supplier<Instant> supplier) {
     return (x, xx) -> supplier.get();
   }
 
-  Instant getContactTime(int user1, int user2);
+  Instant contactTime(int user1, int user2);
 }

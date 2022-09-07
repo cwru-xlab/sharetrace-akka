@@ -5,5 +5,5 @@ import org.sharetrace.graph.ContactNetwork;
 
 public interface Dataset extends RiskScoreFactory {
 
-  ContactNetwork getContactNetwork();
+  ContactNetwork contactNetwork();
 }

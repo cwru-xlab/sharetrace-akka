@@ -96,10 +96,10 @@ abstract class BaseRange extends AbstractDoubleCollection {
   @Value.Check
   protected void check() {
     if (Checks.isNot(step(), 0, "step") > 0) {
-      Checks.atLeast(stop(), start(), "stop");
+      Checks.isAtLeast(stop(), start(), "stop");
     } else {
-      Checks.atLeast(start(), stop(), "start");
+      Checks.isAtLeast(start(), stop(), "start");
     }
-    Checks.greaterThan(scale(), 0d, "scale");
+    Checks.isGreaterThan(scale(), 0d, "scale");
   }
 }

@@ -1,19 +1,19 @@
 package org.sharetrace.logging.settings;
 
 import org.immutables.value.Value;
-import org.sharetrace.message.MessageParameters;
-import org.sharetrace.message.RiskScoreMessage;
-import org.sharetrace.message.UserParameters;
-import org.sharetrace.util.CacheParameters;
+import org.sharetrace.message.MsgParams;
+import org.sharetrace.message.RiskScoreMsg;
+import org.sharetrace.message.UserParams;
+import org.sharetrace.util.CacheParams;
 
 @Value.Immutable
 interface BaseExperimentSettings extends LoggableSetting {
 
-  UserParameters userParameters();
+  UserParams userParams();
 
-  MessageParameters messageParameters();
+  MsgParams msgParams();
 
-  CacheParameters<RiskScoreMessage> cacheParameters();
+  CacheParams<RiskScoreMsg> cacheParams();
 
   long seed();
 

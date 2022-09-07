@@ -33,13 +33,13 @@ abstract class BaseGraphStats<V, E> {
     return graph().vertexSet().size();
   }
 
+  @Value.Parameter
+  protected abstract Graph<V, E> graph();
+
   @Value.Lazy
   public int numEdges() {
     return graph().edgeSet().size();
   }
-
-  @Value.Parameter
-  protected abstract Graph<V, E> graph();
 
   public CycleMetrics cycleMetrics() {
     return CycleMetrics.builder().numTriangles(numTriangles()).girth(girth()).build();
@@ -90,9 +90,18 @@ abstract class BaseGraphStats<V, E> {
     return getScores(new ClusteringCoefficient<>(graph()));
   }
 
+  private static float[] getScores(VertexScoringAlgorithm<?, Double> algorithm) {
+    return Floats.toArray(algorithm.getScores().values());
+  }
+
   @Value.Lazy
   public float[] harmonicCentralities() {
     return getScores(new HarmonicCentrality<>(graph(), shortestPath()));
+  }
+
+  @Value.Lazy
+  protected ShortestPathAlgorithm<V, E> shortestPath() {
+    return new FloydWarshallShortestPaths<>(graph());
   }
 
   @Value.Lazy
@@ -103,15 +112,6 @@ abstract class BaseGraphStats<V, E> {
   @Value.Lazy
   public float[] eigenvectorCentralities() {
     return getScores(new EigenvectorCentrality<>(graph()));
-  }
-
-  private static float[] getScores(VertexScoringAlgorithm<?, Double> algorithm) {
-    return Floats.toArray(algorithm.getScores().values());
-  }
-
-  @Value.Lazy
-  protected ShortestPathAlgorithm<V, E> shortestPath() {
-    return new FloydWarshallShortestPaths<>(graph());
   }
 
   @Value.Lazy

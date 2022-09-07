@@ -11,11 +11,11 @@ import org.immutables.value.Value;
  * their actors.
  */
 @Value.Immutable
-interface BaseContactMessage extends UserMessage {
+interface BaseContactMsg extends UserMsg {
 
   /** Returns the time at which the two individuals came in contact. */
-  Instant timestamp();
+  Instant time();
 
   /** Returns the actor reference associated with the complimentary person of the contact. */
-  ActorRef<UserMessage> replyTo();
+  ActorRef<UserMsg> replyTo();
 }

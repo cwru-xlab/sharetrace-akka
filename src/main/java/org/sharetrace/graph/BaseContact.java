@@ -10,5 +10,5 @@ interface BaseContact {
 
   int user2();
 
-  Instant timestamp();
+  Instant time();
 }

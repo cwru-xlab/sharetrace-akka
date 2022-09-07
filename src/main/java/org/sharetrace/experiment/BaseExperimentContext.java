@@ -31,7 +31,7 @@ abstract class BaseExperimentContext implements AbstractExperimentContext {
 
   @Override
   @Value.Default
-  public Instant referenceTime() {
+  public Instant refTime() {
     return clock().instant();
   }
 

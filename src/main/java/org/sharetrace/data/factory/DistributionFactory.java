@@ -3,7 +3,7 @@ package org.sharetrace.data.factory;
 import org.apache.commons.math3.distribution.RealDistribution;
 
 @FunctionalInterface
-public interface PdfFactory {
+public interface DistributionFactory {
 
-  RealDistribution getPdf(long seed);
+  RealDistribution distribution(long seed);
 }

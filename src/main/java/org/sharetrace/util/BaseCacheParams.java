@@ -7,7 +7,7 @@ import org.immutables.value.Value;
 
 @SuppressWarnings("DefaultAnnotationParam")
 @Value.Immutable(copy = true)
-interface BaseCacheParameters<T> {
+interface BaseCacheParams<T> {
 
   int numIntervals();
 

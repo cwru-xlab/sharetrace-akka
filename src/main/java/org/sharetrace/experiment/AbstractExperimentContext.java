@@ -7,7 +7,7 @@ import org.sharetrace.logging.Loggable;
 
 public interface AbstractExperimentContext {
 
-  Instant referenceTime();
+  Instant refTime();
 
   Clock clock();
 

@@ -22,11 +22,10 @@ import org.jgrapht.graph.DefaultEdge;
 import org.sharetrace.data.factory.ContactTimeFactory;
 import org.sharetrace.logging.Loggable;
 import org.sharetrace.util.Indexer;
+import org.sharetrace.util.Iterables;
 
 @Value.Immutable
 abstract class BaseFileContactNetwork implements ContactNetwork {
-
-  public static final String WHITESPACE_DELIMITER = "\\s+";
 
   @Override
   public int numUsers() {
@@ -53,23 +52,16 @@ abstract class BaseFileContactNetwork implements ContactNetwork {
     helper().logMetrics();
   }
 
-  @Override
-  public Graph<Integer, DefaultEdge> topology() {
-    return helper().contactNetwork();
-  }
-
   @Value.Derived
   protected ContactNetworkHelper helper() {
-    return ContactNetworkHelper.create(graphGenerator(), loggable());
+    return ContactNetworkHelper.of(graphGenerator(), loggable());
   }
 
   private GraphGenerator<Integer, DefaultEdge, Integer> graphGenerator() {
-    return (target, x) -> generateGraph(target);
+    return (target, x) -> generate(target);
   }
 
-  protected abstract Set<Class<? extends Loggable>> loggable();
-
-  private void generateGraph(Graph<Integer, DefaultEdge> target) {
+  private void generate(Graph<Integer, DefaultEdge> target) {
     contactMap().keySet().stream()
         .map(List::copyOf)
         .forEach(users -> Graphs.addEdgeWithVertices(target, users.get(0), users.get(1)));
@@ -81,36 +73,32 @@ abstract class BaseFileContactNetwork implements ContactNetwork {
     Map<Set<Integer>, Instant> contactMap = new Object2ObjectOpenHashMap<>();
     IdIndexer indexer = new IdIndexer();
     try (BufferedReader reader = Files.newBufferedReader(path())) {
-      Iterable<String> lines = () -> reader.lines().iterator();
-      for (String line : lines) {
+      for (String line : Iterables.fromStream(reader.lines())) {
         String[] args = line.split(delimiter());
         int user1 = parseAndIndexUser(args[1], indexer);
         int user2 = parseAndIndexUser(args[2], indexer);
         if (user1 != user2) {
-          Instant timestamp = parseTimestamp(args[0]);
-          contactMap.merge(key(user1, user2), timestamp, BaseFileContactNetwork::newer);
-          lastContactTime.update(timestamp);
+          Instant time = parseTime(args[0]);
+          contactMap.merge(key(user1, user2), time, BaseFileContactNetwork::newer);
+          lastContactTime.update(time);
         }
       }
     } catch (IOException exception) {
       throw new UncheckedIOException(exception);
     }
-    adjustTimestamps(contactMap, lastContactTime);
+    adjustTimes(contactMap, lastContactTime);
     return contactMap;
   }
 
   protected abstract Path path();
 
-  @Value.Default
-  protected String delimiter() {
-    return WHITESPACE_DELIMITER;
-  }
+  protected abstract String delimiter();
 
   private static int parseAndIndexUser(String user, IdIndexer indexer) {
     return indexer.index(user.strip());
   }
 
-  private static Instant parseTimestamp(String timestamp) {
+  private static Instant parseTime(String timestamp) {
     return Instant.ofEpochSecond(Long.parseLong(timestamp.strip()));
   }
 
@@ -118,20 +106,18 @@ abstract class BaseFileContactNetwork implements ContactNetwork {
     return IntSet.of(user1, user2);
   }
 
-  private static Instant newer(Instant timestamp1, Instant timestamp2) {
-    return timestamp1.isAfter(timestamp2) ? timestamp1 : timestamp2;
+  private static Instant newer(Instant time1, Instant time2) {
+    return time1.isAfter(time2) ? time1 : time2;
   }
 
-  private void adjustTimestamps(
-      Map<Set<Integer>, Instant> contacts, LastContactTime lastContactTime) {
-    Duration offset = Duration.between(lastContactTime.value, referenceTime());
-    contacts.replaceAll((users, timestamp) -> timestamp.plus(offset));
+  private void adjustTimes(Map<Set<Integer>, Instant> contacts, LastContactTime lastContactTime) {
+    Duration offset = Duration.between(lastContactTime.value, refTime());
+    contacts.replaceAll((users, time) -> time.plus(offset));
   }
 
-  @Value.Default
-  protected Instant referenceTime() {
-    return Instant.now();
-  }
+  protected abstract Instant refTime();
+
+  protected abstract Set<Class<? extends Loggable>> loggable();
 
   private ContactTimeFactory contactTimeFactory() {
     return (user1, user2) -> contactMap().get(key(user1, user2));
@@ -141,8 +127,8 @@ abstract class BaseFileContactNetwork implements ContactNetwork {
 
     private Instant value = Instant.MIN;
 
-    public void update(Instant timestamp) {
-      value = newer(value, timestamp);
+    public void update(Instant time) {
+      value = newer(value, time);
     }
   }
 

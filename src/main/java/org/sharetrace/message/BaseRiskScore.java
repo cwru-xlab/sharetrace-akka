@@ -33,7 +33,7 @@ abstract class BaseRiskScore implements Comparable<RiskScore> {
   public int compareTo(RiskScore score) {
     return ComparisonChain.start()
         .compare(value(), score.value())
-        .compare(timestamp(), score.timestamp())
+        .compare(time(), score.time())
         .result();
   }
 
@@ -45,7 +45,7 @@ abstract class BaseRiskScore implements Comparable<RiskScore> {
    * Returns when this risk score was first computed; never modified during {@link RiskPropagation}.
    */
   @Value.Parameter
-  public abstract Instant timestamp();
+  public abstract Instant time();
 
   @Value.Check
   protected void check() {

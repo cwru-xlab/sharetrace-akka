@@ -3,23 +3,23 @@ package org.sharetrace.util;
 import java.util.Objects;
 import java.util.function.Supplier;
 
-public class TypedSupplier<T> implements Supplier<T> {
+public final class TypedSupplier<T> implements Supplier<T> {
 
   private final Class<? extends T> type;
   private final Supplier<? extends T> supplier;
 
   private <R extends T> TypedSupplier(Class<R> type, Supplier<R> supplier) {
-    this.type = Objects.requireNonNull(type);
-    this.supplier = Objects.requireNonNull(supplier);
-  }
-
-  public static <T, R extends T> TypedSupplier<T> of(Class<R> type, Supplier<R> supplier) {
-    return new TypedSupplier<>(type, supplier);
+    this.type = type;
+    this.supplier = supplier;
   }
 
   @SuppressWarnings("unchecked")
   public static <T> TypedSupplier<T> of(T result) {
-    return new TypedSupplier<>((Class<T>) result.getClass(), () -> result);
+    return of((Class<T>) result.getClass(), () -> result);
+  }
+
+  public static <T, R extends T> TypedSupplier<T> of(Class<R> type, Supplier<R> supplier) {
+    return new TypedSupplier<>(Objects.requireNonNull(type), Objects.requireNonNull(supplier));
   }
 
   @Override

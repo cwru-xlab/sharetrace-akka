@@ -5,23 +5,23 @@ import akka.actor.typed.ActorSystem;
 import akka.actor.typed.Behavior;
 import akka.actor.typed.Terminated;
 import akka.actor.typed.javadsl.Behaviors;
-import org.sharetrace.message.AlgorithmMessage;
-import org.sharetrace.message.RunMessage;
+import org.sharetrace.message.AlgorithmMsg;
+import org.sharetrace.message.RunMsg;
 
 public class Runner {
 
   private Runner() {}
 
-  public static void run(Behavior<AlgorithmMessage> algorithm, String name) {
+  public static void run(Behavior<AlgorithmMsg> algorithm, String name) {
     ActorSystem.create(runner(algorithm, name), name + "Runner");
   }
 
-  private static Behavior<Void> runner(Behavior<AlgorithmMessage> algorithm, String name) {
+  private static Behavior<Void> runner(Behavior<AlgorithmMsg> algorithm, String name) {
     return Behaviors.setup(
-        context -> {
-          ActorRef<AlgorithmMessage> instance = context.spawn(algorithm, name);
-          context.watch(instance);
-          instance.tell(RunMessage.INSTANCE);
+        ctx -> {
+          ActorRef<AlgorithmMsg> instance = ctx.spawn(algorithm, name);
+          ctx.watch(instance);
+          instance.tell(RunMsg.INSTANCE);
           return Behaviors.receive(Void.class)
               .onSignal(Terminated.class, signal -> Behaviors.stopped())
               .build();

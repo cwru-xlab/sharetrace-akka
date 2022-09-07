@@ -3,27 +3,45 @@ package org.sharetrace.logging;
 import ch.qos.logback.core.spi.PropertyContainer;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.Supplier;
 import org.sharetrace.experiment.GraphType;
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public final class Logging {
 
-  public static final String METRIC_LOGGER_NAME = "MetricLogger";
-  public static final String EVENT_LOGGER_NAME = "EventLogger";
-  public static final String SETTING_LOGGER_NAME = "SettingLogger";
+  private static final String SETTINGS_LOGGER_NAME = "SettingsLogger";
+  private static final String EVENTS_LOGGER_NAME = "EventsLogger";
+  private static final String METRICS_LOGGER_NAME = "MetricsLogger";
 
   private Logging() {}
 
-  public static Logger metricLogger() {
-    return LoggerFactory.getLogger(METRIC_LOGGER_NAME);
+  public static Logger logger(
+      Set<Class<? extends Loggable>> loggable, Supplier<org.slf4j.Logger> logger) {
+    return DefaultLogger.of(loggable, logger);
   }
 
-  public static Logger settingLogger() {
-    return LoggerFactory.getLogger(SETTING_LOGGER_NAME);
+  public static String eventsLoggerName() {
+    return EVENTS_LOGGER_NAME;
   }
 
-  public static Path graphsLogPath() {
+  public static Logger metricsLogger(Set<Class<? extends Loggable>> loggable) {
+    return DefaultLogger.of(loggable, LoggerFactory.getLogger(metricsLoggerName()));
+  }
+
+  public static String metricsLoggerName() {
+    return METRICS_LOGGER_NAME;
+  }
+
+  public static Logger settingsLogger(Set<Class<? extends Loggable>> loggable) {
+    return DefaultLogger.of(loggable, LoggerFactory.getLogger(settingsLoggerName()));
+  }
+
+  public static String settingsLoggerName() {
+    return SETTINGS_LOGGER_NAME;
+  }
+
+  public static Path graphsPath() {
     PropertyContainer properties = (PropertyContainer) LoggerFactory.getILoggerFactory();
     return Path.of(properties.getProperty("graphs.log.dir"));
   }
