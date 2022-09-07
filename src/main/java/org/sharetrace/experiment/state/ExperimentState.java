@@ -169,7 +169,7 @@ public class ExperimentState {
 
     private final ExperimentContext context;
     private final Loggables loggables;
-    private final Setters setters;
+    private final Map<Setter, Function<? super Builder, ?>> setters;
     private final Map<String, String> mdc;
     private GraphType graphType;
     private String id;
@@ -189,7 +189,7 @@ public class ExperimentState {
     private Builder(ExperimentContext context) {
       this.context = context;
       loggables = Loggables.create(context.loggable(), logger);
-      setters = new Setters();
+      setters = new EnumMap<>(Setter.class);
       mdc = new HashMap<>();
     }
 
@@ -438,13 +438,6 @@ public class ExperimentState {
     public Builder dataset(Function<DatasetContext, Dataset> factory) {
       setters.put(Setter.DATASET, factory.andThen(this::dataset));
       return this;
-    }
-  }
-
-  private static final class Setters extends EnumMap<Setter, Function<? super Builder, ?>> {
-
-    public Setters() {
-      super(Setter.class);
     }
   }
 }
