@@ -189,7 +189,7 @@ public class ExperimentState {
     private UserParams userParams;
 
     private Builder(ExperimentContext context) {
-      this.ctx = context;
+      ctx = context;
       logger = Logging.settingsLogger(context.loggable());
       setters = new EnumMap<>(Setter.class);
       mdc = new HashMap<>();
