@@ -98,8 +98,8 @@ abstract class BaseFileContactNetwork implements ContactNetwork {
     return indexer.index(user.strip());
   }
 
-  private static Instant parseTime(String timestamp) {
-    return Instant.ofEpochSecond(Long.parseLong(timestamp.strip()));
+  private static Instant parseTime(String time) {
+    return Instant.ofEpochSecond(Long.parseLong(time.strip()));
   }
 
   private static Set<Integer> key(int user1, int user2) {

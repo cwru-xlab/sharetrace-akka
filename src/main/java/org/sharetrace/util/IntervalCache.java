@@ -89,10 +89,10 @@ public class IntervalCache<T> {
    * to retrieving the value, the cache is possibly refreshed if it has been sufficiently long since
    * its previous refresh.
    */
-  public Optional<T> get(Instant timestamp) {
-    Objects.requireNonNull(timestamp);
+  public Optional<T> get(Instant time) {
+    Objects.requireNonNull(time);
     refresh();
-    long key = floorKey(toLong(timestamp));
+    long key = floorKey(toLong(time));
     return Optional.ofNullable(cache.get(key));
   }
 
@@ -108,8 +108,8 @@ public class IntervalCache<T> {
     return entry -> entry.getKey() < rangeStart;
   }
 
-  private long floorKey(long timestamp) {
-    return rangeStart + interval * Math.floorDiv(timestamp - rangeStart, interval);
+  private long floorKey(long time) {
+    return rangeStart + interval * Math.floorDiv(time - rangeStart, interval);
   }
 
   /**
@@ -120,17 +120,17 @@ public class IntervalCache<T> {
    *
    * @throws IllegalArgumentException if the timespan does not contain the specified timestamp.
    */
-  public void put(Instant timestamp, T value) {
-    Objects.requireNonNull(timestamp);
+  public void put(Instant time, T value) {
+    Objects.requireNonNull(time);
     refresh();
-    long key = checkedFloorKey(toLong(timestamp));
+    long key = checkedFloorKey(toLong(time));
     T oldValue = cache.get(key);
-    T newValue = oldValue == null ? value : mergeStrategy.apply(oldValue, value);
+    T newValue = (oldValue == null) ? value : mergeStrategy.apply(oldValue, value);
     cache.put(key, newValue);
   }
 
-  private long checkedFloorKey(long timestamp) {
-    return floorKey(Checks.inClosedOpen(timestamp, rangeStart, rangeEnd, "timestamp"));
+  private long checkedFloorKey(long time) {
+    return floorKey(Checks.inClosedOpen(time, rangeStart, rangeEnd, "time"));
   }
 
   /**
@@ -140,18 +140,15 @@ public class IntervalCache<T> {
    * Prior to retrieving the value, the cache is possibly refreshed if it has been sufficiently long
    * since its previous refresh.
    */
-  public Optional<T> max(Instant timestamp) {
-    Objects.requireNonNull(timestamp);
+  public Optional<T> max(Instant time) {
+    Objects.requireNonNull(time);
     refresh();
-    return cache.entrySet().stream()
-        .filter(isNotAfter(timestamp))
-        .map(Entry::getValue)
-        .max(comparator);
+    return cache.entrySet().stream().filter(isNotAfter(time)).map(Entry::getValue).max(comparator);
   }
 
-  private static Predicate<Entry<Long, ?>> isNotAfter(Instant timestamp) {
-    long time = toLong(timestamp);
-    return entry -> entry.getKey() <= time;
+  private static Predicate<Entry<Long, ?>> isNotAfter(Instant time) {
+    long t = toLong(time);
+    return entry -> entry.getKey() <= t;
   }
 
   public static final class Builder<T> {

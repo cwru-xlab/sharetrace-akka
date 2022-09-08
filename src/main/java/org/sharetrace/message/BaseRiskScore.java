@@ -25,8 +25,8 @@ abstract class BaseRiskScore implements Comparable<RiskScore> {
   public static final float MAX_VALUE = 1f;
   public static final float VALUE_RANGE = MAX_VALUE - MIN_VALUE;
 
-  public static RiskScore ofMinValue(Instant timestamp) {
-    return RiskScore.of(MIN_VALUE, timestamp);
+  public static RiskScore ofMinValue(Instant time) {
+    return RiskScore.of(MIN_VALUE, time);
   }
 
   @Override
