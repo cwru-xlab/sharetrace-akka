@@ -1,12 +1,12 @@
 package org.sharetrace.experiment.state;
 
 import akka.actor.typed.Behavior;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.EnumMap;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
@@ -18,7 +18,6 @@ import org.apache.commons.math3.random.Well512a;
 import org.sharetrace.RiskPropagationBuilder;
 import org.sharetrace.Runner;
 import org.sharetrace.data.Dataset;
-import org.sharetrace.data.factory.CacheFactory;
 import org.sharetrace.data.factory.ContactTimeFactory;
 import org.sharetrace.data.factory.DistributionFactory;
 import org.sharetrace.data.factory.RiskScoreFactory;
@@ -76,14 +75,10 @@ public class ExperimentState {
   }
 
   public void run() {
-    setup();
-    runAlgorithm();
-  }
-
-  private void setup() {
     mdc.forEach(MDC::put);
     dataset.contactNetwork().logMetrics();
     logger.log(LoggableSetting.KEY, settings());
+    Runner.run(newAlgorithm(), "RiskPropagation");
   }
 
   private ExperimentSettings settings() {
@@ -97,10 +92,6 @@ public class ExperimentState {
         .build();
   }
 
-  private void runAlgorithm() {
-    Runner.run(newAlgorithm(), "RiskPropagation");
-  }
-
   private Behavior<AlgorithmMsg> newAlgorithm() {
     return RiskPropagationBuilder.create()
         .addAllLoggable(ctx.loggable())
@@ -110,21 +101,8 @@ public class ExperimentState {
         .msgParams(msgParams)
         .clock(ctx.clock())
         .scoreFactory(dataset)
-        .cacheFactory(cacheFactory())
+        .cacheFactory(this::newCache)
         .build();
-  }
-
-  private CacheFactory<RiskScoreMsg> cacheFactory() {
-    return () ->
-        IntervalCache.<RiskScoreMsg>builder()
-            .clock(ctx.clock())
-            .numIntervals(cacheParams.numIntervals())
-            .numLookAhead(cacheParams.numLookAhead())
-            .interval(cacheParams.interval())
-            .refreshPeriod(cacheParams.refreshPeriod())
-            .mergeStrategy(cacheParams.mergeStrategy())
-            .comparator(RiskScoreMsg::compareTo)
-            .build();
   }
 
   public ExperimentState withNewId() {
@@ -141,6 +119,18 @@ public class ExperimentState {
 
   public MsgParams msgParams() {
     return msgParams;
+  }
+
+  private IntervalCache<RiskScoreMsg> newCache() {
+    return IntervalCache.<RiskScoreMsg>builder()
+        .clock(ctx.clock())
+        .numIntervals(cacheParams.numIntervals())
+        .numLookAhead(cacheParams.numLookAhead())
+        .interval(cacheParams.interval())
+        .refreshPeriod(cacheParams.refreshPeriod())
+        .mergeStrategy(cacheParams.mergeStrategy())
+        .comparator(RiskScoreMsg::compareTo)
+        .build();
   }
 
   private enum Setter {
@@ -192,7 +182,7 @@ public class ExperimentState {
       ctx = context;
       logger = Logging.settingsLogger(context.loggable());
       setters = new EnumMap<>(Setter.class);
-      mdc = new HashMap<>();
+      mdc = new Object2ObjectOpenHashMap<>();
     }
 
     protected static Builder from(ExperimentState state) {
