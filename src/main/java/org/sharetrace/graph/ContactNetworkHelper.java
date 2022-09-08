@@ -27,7 +27,7 @@ import org.sharetrace.logging.metrics.SizeMetrics;
 import org.sharetrace.logging.metrics.TopologyMetric;
 import org.sharetrace.util.TypedSupplier;
 
-public class ContactNetworkHelper {
+public final class ContactNetworkHelper {
 
   private final Graph<Integer, DefaultEdge> contactNetwork;
   private final Logger logger;
