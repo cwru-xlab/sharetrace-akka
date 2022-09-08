@@ -13,6 +13,7 @@ import org.sharetrace.util.Range;
 @Value.Immutable
 abstract class BaseRuntimeExperiment implements Experiment {
 
+  private static final int IGNORED = 50;
   private static final ExperimentContext DEFAULT_CTX = newDefaultContext();
 
   private static ExperimentContext newDefaultContext() {
@@ -20,8 +21,8 @@ abstract class BaseRuntimeExperiment implements Experiment {
         .withLoggable(Set.of(SizeMetrics.class, RuntimeMetric.class, ExperimentSettings.class));
   }
 
-  public void runWithDefaults(GraphType graphType, int numNodes) {
-    run(newDefaultState(graphType, numNodes));
+  public void runWithDefaults(GraphType graphType) {
+    run(newDefaultState(graphType));
   }
 
   @Override
@@ -35,10 +36,10 @@ abstract class BaseRuntimeExperiment implements Experiment {
   @Value.Parameter
   protected abstract Range numNodes();
 
-  private static ExperimentState newDefaultState(GraphType graphType, int numNodes) {
+  private static ExperimentState newDefaultState(GraphType graphType) {
     return ExperimentState.builder(DEFAULT_CTX)
         .graphType(graphType)
-        .dataset(ctx -> SampledDatasetBuilder.create().context(ctx).numNodes(numNodes).build())
+        .dataset(ctx -> SampledDatasetBuilder.create().context(ctx).numNodes(IGNORED).build())
         .build();
   }
 }
