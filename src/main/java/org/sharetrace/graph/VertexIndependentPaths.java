@@ -37,7 +37,7 @@ public final class VertexIndependentPaths {
 
   private static <V> List<V> withoutEndpoints(GraphPath<V, ?> path) {
     List<V> vertices = path.getVertexList();
-    return vertices.size() < 3 ? List.of() : vertices.subList(1, vertices.size() - 1);
+    return (vertices.size() < 3) ? List.of() : vertices.subList(1, vertices.size() - 1);
   }
 
   private static <V, E> ShortestPathAlgorithm<V, E> newShortestPaths(Graph<V, E> graph) {
@@ -55,7 +55,7 @@ public final class VertexIndependentPaths {
 
   public int getPathCount(int source, int target, int maxFind) {
     int stopAt = Math.min(maxFind, maxPossiblePaths(source, target));
-    return stopAt > 0 ? nontrivialPathCount(source, target, stopAt) : 0;
+    return (stopAt > 0) ? nontrivialPathCount(source, target, stopAt) : 0;
   }
 
   public List<Integer> getPathCounts(int source) {
