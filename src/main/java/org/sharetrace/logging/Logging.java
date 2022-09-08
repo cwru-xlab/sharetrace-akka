@@ -34,11 +34,7 @@ public final class Logging {
   }
 
   public static Logger settingsLogger(Set<Class<? extends Loggable>> loggable) {
-    return DefaultLogger.of(loggable, LoggerFactory.getLogger(settingsLoggerName()));
-  }
-
-  public static String settingsLoggerName() {
-    return SETTINGS_LOGGER_NAME;
+    return DefaultLogger.of(loggable, LoggerFactory.getLogger(SETTINGS_LOGGER_NAME));
   }
 
   public static Path graphsPath() {
