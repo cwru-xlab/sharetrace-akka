@@ -3,8 +3,8 @@ package org.sharetrace.experiment;
 import java.util.Set;
 import org.immutables.value.Value;
 import org.sharetrace.data.SampledDataset;
+import org.sharetrace.experiment.state.Defaults;
 import org.sharetrace.experiment.state.ExperimentState;
-import org.sharetrace.experiment.state.SampledDatasetBuilder;
 import org.sharetrace.logging.metrics.RuntimeMetric;
 import org.sharetrace.logging.metrics.SizeMetrics;
 import org.sharetrace.logging.settings.ExperimentSettings;
@@ -39,7 +39,7 @@ abstract class BaseRuntimeExperiment implements Experiment {
   private static ExperimentState newDefaultState(GraphType graphType) {
     return ExperimentState.builder(DEFAULT_CTX)
         .graphType(graphType)
-        .dataset(ctx -> SampledDatasetBuilder.create().context(ctx).numNodes(IGNORED).build())
+        .dataset(ctx -> Defaults.sampledDataset(ctx, IGNORED))
         .build();
   }
 }

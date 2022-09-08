@@ -2,8 +2,8 @@ package org.sharetrace.experiment;
 
 import java.nio.file.Path;
 import org.immutables.value.Value;
+import org.sharetrace.experiment.state.Defaults;
 import org.sharetrace.experiment.state.ExperimentState;
-import org.sharetrace.experiment.state.FileDatasetBuilder;
 import org.sharetrace.util.Range;
 
 @Value.Immutable
@@ -31,7 +31,7 @@ abstract class BaseFileExperiment implements Experiment {
   private static ExperimentState defaultFileState(GraphType graphType, Path path) {
     return ExperimentState.builder(ExperimentContext.create())
         .graphType(graphType)
-        .dataset(ctx -> FileDatasetBuilder.create().context(ctx).path(path).build())
+        .dataset(ctx -> Defaults.fileDataset(ctx, path))
         .build();
   }
 }

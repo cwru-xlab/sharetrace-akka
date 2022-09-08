@@ -3,9 +3,6 @@ package org.sharetrace.experiment.state;
 import com.google.common.math.DoubleMath;
 import java.nio.file.Path;
 import java.time.Duration;
-import java.util.Optional;
-import java.util.function.Supplier;
-import org.immutables.builder.Builder;
 import org.sharetrace.data.Dataset;
 import org.sharetrace.data.FileDataset;
 import org.sharetrace.data.SampledDataset;
@@ -51,10 +48,13 @@ public final class Defaults {
     return Duration.ofSeconds(timeout);
   }
 
-  @Builder.Factory
-  static Dataset fileDataset(DatasetContext context, Optional<String> delimiter, Path path) {
+  public static Dataset fileDataset(DatasetContext context, Path path) {
+    return fileDataset(context, WHITESPACE_DELIMITER, path);
+  }
+
+  public static Dataset fileDataset(DatasetContext context, String delimiter, Path path) {
     return FileDataset.builder()
-        .delimiter(delimiter.orElse(WHITESPACE_DELIMITER))
+        .delimiter(delimiter)
         .path(path)
         .addAllLoggable(context.loggable())
         .refTime(context.refTime())
@@ -62,29 +62,31 @@ public final class Defaults {
         .build();
   }
 
-  @Builder.Factory
-  static Dataset sampledDataset(
-      DatasetContext context, int numNodes, Optional<GraphGeneratorFactory> graphGeneratorFactory) {
+  public static Dataset sampledDataset(DatasetContext context, int numNodes) {
+    return sampledDataset(context, numNodes, defaultFactory(context));
+  }
+
+  public static Dataset sampledDataset(
+      DatasetContext context, int numNodes, GraphGeneratorFactory graphGeneratorFactory) {
     return SampledDataset.builder()
         .addAllLoggable(context.loggable())
         .riskScoreFactory(context.scoreFactory())
         .contactTimeFactory(context.contactTimeFactory())
-        .graphGeneratorFactory(graphGeneratorFactory.orElseGet(defaultFactory(context)))
+        .graphGeneratorFactory(graphGeneratorFactory)
         .numNodes(numNodes)
         .build();
   }
 
-  private static Supplier<GraphGeneratorFactory> defaultFactory(DatasetContext context) {
-    return () ->
-        numNodes ->
-            GraphGeneratorBuilder.create(context.graphType(), numNodes, context.seed())
-                .numEdges(numNodes * 2)
-                .degree(4)
-                .numNearestNeighbors(2)
-                .numInitialNodes(2)
-                .numNewEdges(2)
-                .rewiringProbability(0.3)
-                .build();
+  private static GraphGeneratorFactory defaultFactory(DatasetContext context) {
+    return numNodes ->
+        GraphGeneratorBuilder.create(context.graphType(), numNodes, context.seed())
+            .numEdges(numNodes * 2)
+            .degree(4)
+            .numNearestNeighbors(2)
+            .numInitialNodes(2)
+            .numNewEdges(2)
+            .rewiringProbability(0.3)
+            .build();
   }
 
   private static CacheParams<RiskScoreMsg> newCacheParams() {
