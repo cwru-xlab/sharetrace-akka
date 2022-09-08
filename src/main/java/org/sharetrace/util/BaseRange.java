@@ -17,16 +17,8 @@ abstract class BaseRange extends AbstractDoubleCollection {
     return Range.builder().start(value).stop(value + 1).scale(scale).build();
   }
 
-  public static Range of(int start, int stop, int step) {
-    return Range.builder().start(start).stop(stop).step(step).build();
-  }
-
   public static Range of(int stop) {
     return Range.builder().stop(stop).build();
-  }
-
-  public static Range of(int start, int stop) {
-    return Range.builder().start(start).stop(stop).build();
   }
 
   @Override
@@ -43,13 +35,9 @@ abstract class BaseRange extends AbstractDoubleCollection {
 
       @Override
       public double nextDouble() {
-        double nxt = computeNext();
+        double nxt = BigDecimal.valueOf(next).multiply(scale).doubleValue();
         next += step();
         return nxt;
-      }
-
-      private double computeNext() {
-        return BigDecimal.valueOf(next).multiply(scale).doubleValue();
       }
     };
   }
