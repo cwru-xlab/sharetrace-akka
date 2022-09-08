@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration debug="true">
+  <timestamp datePattern="yyyyMMddHHmmss" key="bySecond"/>
+  <property name="log.dir" value="logs/${bySecond}"/>
+  <property name="graphs.log.dir" scope="context" value="${log.dir}/graphs"/>
+  <root level="info">
+    <appender-ref ref="console"/>
+  </root>
   <appender
     class="net.logstash.logback.appender.LoggingEventAsyncDisruptorAppender"
     name="console">
@@ -115,10 +121,4 @@
   <logger additivity="false" level="info" name="SettingsLogger">
     <appender-ref ref="settings"/>
   </logger>
-  <property name="log.dir" value="logs/${bySecond}"/>
-  <property name="graphs.log.dir" scope="context" value="${log.dir}/graphs"/>
-  <root level="info">
-    <appender-ref ref="console"/>
-  </root>
-  <timestamp datePattern="yyyyMMddHHmmss" key="bySecond"/>
 </configuration>
