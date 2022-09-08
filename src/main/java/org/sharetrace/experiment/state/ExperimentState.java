@@ -38,6 +38,7 @@ import org.sharetrace.message.RiskScoreMsg;
 import org.sharetrace.message.UserParams;
 import org.sharetrace.util.CacheParams;
 import org.sharetrace.util.IntervalCache;
+import org.sharetrace.util.TypedSupplier;
 import org.slf4j.MDC;
 
 public class ExperimentState {
@@ -75,10 +76,14 @@ public class ExperimentState {
   }
 
   public void run() {
+    logMetricsAndSettings();
+    Runner.run(newAlgorithm(), "RiskPropagation");
+  }
+
+  private void logMetricsAndSettings() {
     mdc.forEach(MDC::put);
     dataset.contactNetwork().logMetrics();
-    logger.log(LoggableSetting.KEY, settings());
-    Runner.run(newAlgorithm(), "RiskPropagation");
+    logger.log(LoggableSetting.KEY, TypedSupplier.of(ExperimentSettings.class, this::settings));
   }
 
   public ExperimentState withNewId() {

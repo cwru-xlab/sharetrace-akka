@@ -140,7 +140,7 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
   }
 
   private Map<Integer, ActorRef<UserMsg>> newUsers() {
-    Map<Integer, ActorRef<UserMsg>> users = newUserMap();
+    Map<Integer, ActorRef<UserMsg>> users = new Int2ObjectOpenHashMap<>(numUsers);
     ActorRef<UserMsg> user;
     for (int name : contactNetwork.users()) {
       user = getContext().spawn(newUser(), String.valueOf(name));
@@ -148,10 +148,6 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
       users.put(name, user);
     }
     return users;
-  }
-
-  private Map<Integer, ActorRef<UserMsg>> newUserMap() {
-    return new Int2ObjectOpenHashMap<>(numUsers);
   }
 
   private Behavior<UserMsg> newUser() {
