@@ -34,7 +34,7 @@ abstract class BaseRuntimeExperiment implements Experiment {
   }
 
   @Value.Parameter
-  protected abstract Range numNodes();
+  public abstract Range numNodes();
 
   private static ExperimentState newDefaultState(GraphType graphType) {
     return ExperimentState.builder(DEFAULT_CTX)

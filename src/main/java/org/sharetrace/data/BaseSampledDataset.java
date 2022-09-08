@@ -1,6 +1,5 @@
 package org.sharetrace.data;
 
-import java.util.Set;
 import org.immutables.value.Value;
 import org.jgrapht.generate.GraphGenerator;
 import org.jgrapht.graph.DefaultEdge;
@@ -9,7 +8,6 @@ import org.sharetrace.data.factory.GraphGeneratorFactory;
 import org.sharetrace.data.factory.RiskScoreFactory;
 import org.sharetrace.graph.ContactNetwork;
 import org.sharetrace.graph.SampledContactNetwork;
-import org.sharetrace.logging.Loggable;
 import org.sharetrace.message.RiskScore;
 
 @SuppressWarnings("DefaultAnnotationParam")
@@ -25,8 +23,6 @@ abstract class BaseSampledDataset implements Dataset {
         .contactTimeFactory(contactTimeFactory())
         .build();
   }
-
-  protected abstract Set<Class<? extends Loggable>> loggable();
 
   @Value.Derived
   protected GraphGenerator<Integer, DefaultEdge, Integer> graphGenerator() {

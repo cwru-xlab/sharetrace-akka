@@ -1,18 +1,16 @@
 package org.sharetrace.data;
 
 import java.nio.file.Path;
-import java.time.Instant;
-import java.util.Set;
 import org.immutables.value.Value;
 import org.sharetrace.data.factory.RiskScoreFactory;
 import org.sharetrace.graph.ContactNetwork;
 import org.sharetrace.graph.FileContactNetwork;
-import org.sharetrace.logging.Loggable;
 import org.sharetrace.message.RiskScore;
+import org.sharetrace.util.TimeRef;
 
 @SuppressWarnings("DefaultAnnotationParam")
 @Value.Immutable(copy = true)
-abstract class BaseFileDataset implements Dataset {
+abstract class BaseFileDataset implements Dataset, TimeRef {
 
   @Override
   @Value.Derived
@@ -25,13 +23,9 @@ abstract class BaseFileDataset implements Dataset {
         .build();
   }
 
-  protected abstract Set<Class<? extends Loggable>> loggable();
-
   protected abstract String delimiter();
 
   protected abstract Path path();
-
-  protected abstract Instant refTime();
 
   @Override
   public RiskScore riskScore(int user) {

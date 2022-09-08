@@ -8,10 +8,10 @@ import org.immutables.value.Value;
 import org.jgrapht.generate.GraphGenerator;
 import org.jgrapht.graph.DefaultEdge;
 import org.sharetrace.data.factory.ContactTimeFactory;
-import org.sharetrace.logging.Loggable;
+import org.sharetrace.util.LoggableRef;
 
 @Value.Immutable
-abstract class BaseSampledContactNetwork implements ContactNetwork {
+abstract class BaseSampledContactNetwork implements ContactNetwork, LoggableRef {
 
   @Override
   public int numUsers() {
@@ -53,6 +53,4 @@ abstract class BaseSampledContactNetwork implements ContactNetwork {
   }
 
   protected abstract GraphGenerator<Integer, DefaultEdge, ?> graphGenerator();
-
-  protected abstract Set<Class<? extends Loggable>> loggable();
 }

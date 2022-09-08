@@ -5,9 +5,10 @@ import java.time.Instant;
 import org.apache.commons.math3.distribution.RealDistribution;
 import org.immutables.value.Value;
 import org.sharetrace.util.Checks;
+import org.sharetrace.util.TimeRef;
 
 @Value.Immutable
-abstract class BaseTimeSampler extends BaseSampler<Instant> {
+abstract class BaseTimeSampler extends BaseSampler<Instant> implements TimeRef {
 
   @Override
   public Instant sample() {
@@ -25,7 +26,8 @@ abstract class BaseTimeSampler extends BaseSampler<Instant> {
   protected abstract Duration maxLookBack();
 
   /** Returns a timestamp to which all other timestamps be in reference */
-  protected abstract Instant refTime();
+  @Override
+  public abstract Instant refTime();
 
   @Value.Check
   protected void check() {

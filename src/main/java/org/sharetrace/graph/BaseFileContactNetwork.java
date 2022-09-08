@@ -20,12 +20,13 @@ import org.jgrapht.Graphs;
 import org.jgrapht.generate.GraphGenerator;
 import org.jgrapht.graph.DefaultEdge;
 import org.sharetrace.data.factory.ContactTimeFactory;
-import org.sharetrace.logging.Loggable;
 import org.sharetrace.util.Indexer;
 import org.sharetrace.util.Iterables;
+import org.sharetrace.util.LoggableRef;
+import org.sharetrace.util.TimeRef;
 
 @Value.Immutable
-abstract class BaseFileContactNetwork implements ContactNetwork {
+abstract class BaseFileContactNetwork implements ContactNetwork, TimeRef, LoggableRef {
 
   @Override
   public int numUsers() {
@@ -114,10 +115,6 @@ abstract class BaseFileContactNetwork implements ContactNetwork {
     Duration offset = Duration.between(lastContactTime.value, refTime());
     contacts.replaceAll((users, time) -> time.plus(offset));
   }
-
-  protected abstract Instant refTime();
-
-  protected abstract Set<Class<? extends Loggable>> loggable();
 
   private ContactTimeFactory contactTimeFactory() {
     return (user1, user2) -> contactMap().get(key(user1, user2));

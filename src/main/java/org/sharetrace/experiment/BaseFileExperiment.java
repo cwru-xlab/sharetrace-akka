@@ -9,6 +9,10 @@ import org.sharetrace.util.Range;
 @Value.Immutable
 abstract class BaseFileExperiment implements Experiment {
 
+  public static FileExperiment create() {
+    return FileExperiment.builder().build();
+  }
+
   public void runWithDefaults(GraphType graphType, Path path) {
     run(defaultFileState(graphType, path));
   }
@@ -19,7 +23,10 @@ abstract class BaseFileExperiment implements Experiment {
   }
 
   @Value.Parameter
-  protected abstract int numIterations();
+  @Value.Default
+  protected int numIterations() {
+    return 1;
+  }
 
   private static ExperimentState defaultFileState(GraphType graphType, Path path) {
     return ExperimentState.builder(ExperimentContext.create())
