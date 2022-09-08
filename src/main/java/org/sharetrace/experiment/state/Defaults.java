@@ -74,10 +74,10 @@ public final class Defaults {
         .build();
   }
 
-  private static Supplier<GraphGeneratorFactory> defaultFactory(DatasetContext ctx) {
+  private static Supplier<GraphGeneratorFactory> defaultFactory(DatasetContext context) {
     return () ->
         numNodes ->
-            GraphGeneratorBuilder.create(ctx.graphType(), numNodes, ctx.seed())
+            GraphGeneratorBuilder.create(context.graphType(), numNodes, context.seed())
                 .numEdges(numNodes * 2)
                 .degree(4)
                 .numNearestNeighbors(2)
