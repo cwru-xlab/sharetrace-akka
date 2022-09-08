@@ -49,12 +49,8 @@ public final class Defaults {
   }
 
   public static Dataset fileDataset(DatasetContext context, Path path) {
-    return fileDataset(context, WHITESPACE_DELIMITER, path);
-  }
-
-  public static Dataset fileDataset(DatasetContext context, String delimiter, Path path) {
     return FileDataset.builder()
-        .delimiter(delimiter)
+        .delimiter(WHITESPACE_DELIMITER)
         .path(path)
         .addAllLoggable(context.loggable())
         .refTime(context.refTime())
@@ -63,16 +59,11 @@ public final class Defaults {
   }
 
   public static Dataset sampledDataset(DatasetContext context, int numNodes) {
-    return sampledDataset(context, numNodes, defaultFactory(context));
-  }
-
-  public static Dataset sampledDataset(
-      DatasetContext context, int numNodes, GraphGeneratorFactory graphGeneratorFactory) {
     return SampledDataset.builder()
         .addAllLoggable(context.loggable())
         .riskScoreFactory(context.scoreFactory())
         .contactTimeFactory(context.contactTimeFactory())
-        .graphGeneratorFactory(graphGeneratorFactory)
+        .graphGeneratorFactory(defaultFactory(context))
         .numNodes(numNodes)
         .build();
   }
