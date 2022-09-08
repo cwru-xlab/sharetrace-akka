@@ -19,7 +19,7 @@ class DefaultLogger implements Logger {
 
   public static DefaultLogger of(Set<Class<? extends Loggable>> loggable, org.slf4j.Logger logger) {
     Objects.requireNonNull(logger);
-    return of(loggable, () -> logger);
+    return new DefaultLogger(Objects.requireNonNull(loggable), () -> logger);
   }
 
   public static DefaultLogger of(

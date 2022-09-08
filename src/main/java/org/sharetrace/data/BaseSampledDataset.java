@@ -30,7 +30,7 @@ abstract class BaseSampledDataset implements Dataset {
   }
 
   @Value.Derived
-  protected GraphGenerator<Integer, DefaultEdge, Integer> graphGenerator() {
+  protected GraphGenerator<Integer, DefaultEdge, ?> graphGenerator() {
     return graphGeneratorFactory().graphGenerator(numNodes());
   }
 
