@@ -319,7 +319,7 @@ public class User extends AbstractBehavior<UserMsg> {
 
   private ContactsRefreshEvent contactsRefreshEvent(int numRemaining, int numExpired) {
     return ContactsRefreshEvent.builder()
-        .of(name())
+        .user(name())
         .numRemaining(numRemaining)
         .numExpired(numExpired)
         .build();
@@ -331,7 +331,7 @@ public class User extends AbstractBehavior<UserMsg> {
 
   private CurrentRefreshEvent currentRefreshEvent() {
     return CurrentRefreshEvent.builder()
-        .of(name())
+        .user(name())
         .oldScore(prev.score())
         .newScore(curr.score())
         .oldId(prev.id())
@@ -385,7 +385,7 @@ public class User extends AbstractBehavior<UserMsg> {
   }
 
   private ContactEvent contactEvent(ContactMsg msg) {
-    return ContactEvent.builder().of(name()).addUsers(name(), name(msg.replyTo())).build();
+    return ContactEvent.builder().user(name()).addUsers(name(), name(msg.replyTo())).build();
   }
 
   private void logReceive(RiskScoreMsg msg) {

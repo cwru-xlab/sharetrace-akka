@@ -6,7 +6,7 @@ import org.immutables.value.Value;
 @Value.Immutable
 interface BaseContactEvent extends LoggableEvent {
 
-  String of();
+  String user();
 
   List<String> users();
 }

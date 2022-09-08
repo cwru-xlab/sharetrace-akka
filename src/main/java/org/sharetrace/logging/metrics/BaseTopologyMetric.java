@@ -6,5 +6,5 @@ import org.immutables.value.Value;
 interface BaseTopologyMetric extends LoggableMetric {
 
   @Value.Parameter
-  String label();
+  String id();
 }
