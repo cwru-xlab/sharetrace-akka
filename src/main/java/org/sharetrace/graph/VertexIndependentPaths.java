@@ -120,7 +120,7 @@ public class VertexIndependentPaths {
     return vertices(allowParallel)
         .filter(target -> source != target)
         .map(target -> getPathCount(source, target, maxFind))
-        .collect(newCounts(numVertices - 1), Collection::add, Collection::addAll);
+        .collect(newCounts(numVertices - 1), List::add, List::addAll);
   }
 
   private IntStream vertices(boolean allowParallel) {
@@ -144,7 +144,7 @@ public class VertexIndependentPaths {
   public List<Integer> getAllPathCounts(int maxFind, boolean allowParallel) {
     return vertices(allowParallel)
         .flatMap(source -> uniqueSourceCounts(source, maxFind))
-        .collect(newCounts(numPairs), Collection::add, Collection::addAll);
+        .collect(newCounts(numPairs), List::add, List::addAll);
   }
 
   private IntStream uniqueSourceCounts(int source, int maxFind) {

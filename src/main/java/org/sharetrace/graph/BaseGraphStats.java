@@ -1,7 +1,9 @@
 package org.sharetrace.graph;
 
-import com.google.common.primitives.Floats;
+import it.unimi.dsi.fastutil.floats.FloatArrayList;
 import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
+import java.util.Collection;
+import java.util.List;
 import org.immutables.value.Value;
 import org.jgrapht.Graph;
 import org.jgrapht.GraphMetrics;
@@ -86,16 +88,19 @@ abstract class BaseGraphStats<V, E> {
   }
 
   @Value.Lazy
-  public float[] localClusteringCoefficients() {
+  public List<Float> localClusteringCoefficients() {
     return getScores(new ClusteringCoefficient<>(graph()));
   }
 
-  private static float[] getScores(VertexScoringAlgorithm<?, Double> algorithm) {
-    return Floats.toArray(algorithm.getScores().values());
+  private static List<Float> getScores(VertexScoringAlgorithm<?, Double> algorithm) {
+    Collection<Double> scores = algorithm.getScores().values();
+    return scores.stream()
+        .map(Double::floatValue)
+        .collect(() -> new FloatArrayList(scores.size()), List::add, List::addAll);
   }
 
   @Value.Lazy
-  public float[] harmonicCentralities() {
+  public List<Float> harmonicCentralities() {
     return getScores(new HarmonicCentrality<>(graph(), shortestPath()));
   }
 
@@ -105,12 +110,12 @@ abstract class BaseGraphStats<V, E> {
   }
 
   @Value.Lazy
-  public float[] katzCentralities() {
+  public List<Float> katzCentralities() {
     return getScores(new KatzCentrality<>(graph()));
   }
 
   @Value.Lazy
-  public float[] eigenvectorCentralities() {
+  public List<Float> eigenvectorCentralities() {
     return getScores(new EigenvectorCentrality<>(graph()));
   }
 
