@@ -133,7 +133,7 @@ public class User extends AbstractBehavior<UserMsg> {
         });
   }
 
-  private static Predicate<Entry<?, ?>> isNotFrom(RiskScoreMsg msg) {
+  private static Predicate<Entry<ActorRef<UserMsg>, ?>> isNotFrom(RiskScoreMsg msg) {
     return Predicate.not(contact -> contact.getKey().equals(msg.replyTo()));
   }
 
@@ -284,7 +284,6 @@ public class User extends AbstractBehavior<UserMsg> {
   }
 
   private boolean isRecent(Instant time, RiskScoreMsg msg) {
-    // Message time is no newer (inclusive) than the buffered time.
     return !msg.score().time().isAfter(buffered(time));
   }
 

@@ -1,9 +1,6 @@
 package org.sharetrace.graph;
 
-import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import java.util.Set;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
 import org.immutables.value.Value;
 import org.jgrapht.generate.GraphGenerator;
 import org.jgrapht.graph.DefaultEdge;
@@ -14,35 +11,19 @@ import org.sharetrace.util.LoggableRef;
 abstract class BaseSampledContactNetwork implements ContactNetwork, LoggableRef {
 
   @Override
-  public int numUsers() {
-    return helper().numUsers();
-  }
-
-  @Override
-  public int numContacts() {
-    return helper().numContacts();
-  }
-
-  @Override
-  public IntStream users() {
+  public Set<Integer> users() {
     return helper().users();
   }
 
   @Override
-  public Stream<Contact> contacts() {
-    return contactSet().stream();
+  @Value.Derived
+  public Set<Contact> contacts() {
+    return helper().contacts(contactTimeFactory());
   }
 
   @Override
   public void logMetrics() {
     helper().logMetrics();
-  }
-
-  @Value.Derived
-  protected Set<Contact> contactSet() {
-    return helper()
-        .contacts(contactTimeFactory())
-        .collect(ObjectOpenHashSet.toSetWithExpectedSize(numContacts()));
   }
 
   protected abstract ContactTimeFactory contactTimeFactory();

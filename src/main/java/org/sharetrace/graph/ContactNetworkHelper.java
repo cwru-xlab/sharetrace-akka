@@ -1,5 +1,6 @@
 package org.sharetrace.graph;
 
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -7,10 +8,9 @@ import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
 import org.jgrapht.Graph;
 import org.jgrapht.generate.GraphGenerator;
 import org.jgrapht.graph.DefaultEdge;
@@ -45,8 +45,11 @@ public class ContactNetworkHelper {
     return new ContactNetworkHelper(contactNetwork, Logging.metricsLogger(loggable));
   }
 
-  public Stream<Contact> contacts(ContactTimeFactory timeFactory) {
-    return contactNetwork.edgeSet().stream().map(edge -> toContact(edge, timeFactory));
+  public Set<Contact> contacts(ContactTimeFactory timeFactory) {
+    Set<DefaultEdge> edges = contactNetwork.edgeSet();
+    return edges.stream()
+        .map(edge -> toContact(edge, timeFactory))
+        .collect(ObjectOpenHashSet.toSetWithExpectedSize(edges.size()));
   }
 
   private Contact toContact(DefaultEdge edge, ContactTimeFactory factory) {
@@ -56,16 +59,8 @@ public class ContactNetworkHelper {
     return Contact.builder().user1(user1).user2(user2).time(time).build();
   }
 
-  public int numUsers() {
-    return contactNetwork.vertexSet().size();
-  }
-
-  public int numContacts() {
-    return contactNetwork.edgeSet().size();
-  }
-
-  public IntStream users() {
-    return contactNetwork.vertexSet().stream().mapToInt(Integer::intValue);
+  public Set<Integer> users() {
+    return Collections.unmodifiableSet(contactNetwork.vertexSet());
   }
 
   public void logMetrics() {

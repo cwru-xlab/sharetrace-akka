@@ -32,7 +32,6 @@ import org.sharetrace.message.RiskScoreMsg;
 import org.sharetrace.message.RunMsg;
 import org.sharetrace.message.UserMsg;
 import org.sharetrace.message.UserParams;
-import org.sharetrace.util.Iterables;
 import org.sharetrace.util.TypedSupplier;
 import org.slf4j.MDC;
 
@@ -61,11 +60,12 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
   private final UserParams userParams;
   private final MsgParams msgParams;
   private final ContactNetwork contactNetwork;
+  private final int numUsers;
   private final Clock clock;
   private final RiskScoreFactory scoreFactory;
   private final CacheFactory<RiskScoreMsg> cacheFactory;
   private final StopWatch runtime;
-  private int nStopped;
+  private int numStopped;
 
   private RiskPropagation(
       ActorContext<AlgorithmMsg> ctx,
@@ -82,13 +82,14 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
     this.logger = Logging.logger(loggable, getContext()::getLog);
     this.mdc = mdc;
     this.contactNetwork = contactNetwork;
+    this.numUsers = contactNetwork.users().size();
     this.userParams = userParams;
     this.msgParams = msgParams;
     this.clock = clock;
     this.cacheFactory = cacheFactory;
     this.scoreFactory = scoreFactory;
     this.runtime = new StopWatch();
-    this.nStopped = 0;
+    this.numStopped = 0;
   }
 
   @Builder.Factory
@@ -127,7 +128,7 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
 
   private Behavior<AlgorithmMsg> onRunMessage(RunMsg msg) {
     Behavior<AlgorithmMsg> behavior = this;
-    if (contactNetwork.numUsers() > 0) {
+    if (numUsers > 0) {
       Map<Integer, ActorRef<UserMsg>> users = newUsers();
       sendSymptomScores(users);
       runtime.start();
@@ -141,7 +142,7 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
   private Map<Integer, ActorRef<UserMsg>> newUsers() {
     Map<Integer, ActorRef<UserMsg>> users = newUserMap();
     ActorRef<UserMsg> user;
-    for (int name : Iterables.fromStream(contactNetwork.users())) {
+    for (int name : contactNetwork.users()) {
       user = getContext().spawn(newUser(), String.valueOf(name));
       getContext().watch(user);
       users.put(name, user);
@@ -150,7 +151,7 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
   }
 
   private Map<Integer, ActorRef<UserMsg>> newUserMap() {
-    return new Int2ObjectOpenHashMap<>(contactNetwork.numUsers());
+    return new Int2ObjectOpenHashMap<>(numUsers);
   }
 
   private Behavior<UserMsg> newUser() {
@@ -178,7 +179,7 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
 
   private void sendContacts(Map<Integer, ActorRef<UserMsg>> users) {
     ActorRef<UserMsg> user1, user2;
-    for (Contact contact : Iterables.fromStream(contactNetwork.contacts())) {
+    for (Contact contact : contactNetwork.contacts()) {
       user1 = users.get(contact.user1());
       user2 = users.get(contact.user2());
       user1.tell(ContactMsg.builder().replyTo(user2).time(contact.time()).build());
@@ -188,7 +189,7 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
 
   private Behavior<AlgorithmMsg> onTerminateMsg(Terminated msg) {
     Behavior<AlgorithmMsg> behavior = this;
-    if (++nStopped == contactNetwork.numUsers()) {
+    if (++numStopped == numUsers) {
       mdc.forEach(MDC::put);
       logMetrics();
       behavior = Behaviors.stopped();

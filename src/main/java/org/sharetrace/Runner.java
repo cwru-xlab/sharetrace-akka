@@ -23,7 +23,7 @@ public class Runner {
           ctx.watch(instance);
           instance.tell(RunMsg.INSTANCE);
           return Behaviors.receive(Void.class)
-              .onSignal(Terminated.class, signal -> Behaviors.stopped())
+              .onSignal(Terminated.class, x -> Behaviors.stopped())
               .build();
         });
   }

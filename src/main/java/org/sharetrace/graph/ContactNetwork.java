@@ -1,7 +1,6 @@
 package org.sharetrace.graph;
 
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
+import java.util.Set;
 import org.sharetrace.RiskPropagation;
 import org.sharetrace.User;
 
@@ -16,13 +15,9 @@ import org.sharetrace.User;
  */
 public interface ContactNetwork {
 
-  int numUsers();
+  Set<Integer> users();
 
-  int numContacts();
-
-  IntStream users();
-
-  Stream<Contact> contacts();
+  Set<Contact> contacts();
 
   void logMetrics();
 }
