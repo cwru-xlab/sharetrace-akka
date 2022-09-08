@@ -13,7 +13,7 @@ import org.jgrapht.alg.shortestpath.SuurballeKDisjointShortestPaths;
 import org.jgrapht.graph.DefaultEdge;
 import org.jheaps.tree.FibonacciHeap;
 
-public class VertexIndependentPaths {
+public final class VertexIndependentPaths {
 
   private static final int MIN_PARALLEL_VERTICES = 50;
   private final Graph<Integer, DefaultEdge> graph;
