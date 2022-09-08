@@ -13,7 +13,6 @@ import org.sharetrace.message.RiskScoreMsg;
 import org.sharetrace.message.UserParams;
 import org.sharetrace.util.CacheParams;
 
-@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public final class Defaults {
 
   private static final String WHITESPACE_DELIMITER = "\\s+";
