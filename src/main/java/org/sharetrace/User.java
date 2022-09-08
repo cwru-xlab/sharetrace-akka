@@ -82,39 +82,6 @@ public class User extends AbstractBehavior<UserMsg> {
     startRefreshTimer();
   }
 
-  private RiskScoreMsg defaultMsg() {
-    return RiskScoreMsg.builder()
-        .score(RiskScore.ofMinValue(clock.instant()))
-        .replyTo(getContext().getSelf())
-        .build();
-  }
-
-  private void updateWith(RiskScoreMsg msg) {
-    prev = curr;
-    curr = msg;
-    transmitted = transmitted(curr);
-    sendThresh = curr.score().value() * msgParams.sendCoefficient();
-  }
-
-  private RiskScoreMsg transmitted(RiskScoreMsg msg) {
-    return RiskScoreMsg.builder()
-        .replyTo(getContext().getSelf())
-        .score(transmittedScore(msg))
-        .id(msg.id())
-        .build();
-  }
-
-  private RiskScore transmittedScore(RiskScoreMsg msg) {
-    return RiskScore.builder()
-        .value(msg.score().value() * msgParams.transmissionRate())
-        .time(msg.score().time())
-        .build();
-  }
-
-  private void startRefreshTimer() {
-    timers.startTimerWithFixedDelay(RefreshMsg.INSTANCE, userParams.refreshPeriod());
-  }
-
   @Builder.Factory
   static Behavior<UserMsg> user(
       Map<String, String> mdc,
@@ -176,6 +143,39 @@ public class User extends AbstractBehavior<UserMsg> {
         .onMessage(TimeoutMsg.class, x -> Behaviors.stopped())
         .onMessage(RefreshMsg.class, this::onRefreshMsg)
         .build();
+  }
+
+  private RiskScoreMsg defaultMsg() {
+    return RiskScoreMsg.builder()
+        .score(RiskScore.ofMinValue(clock.instant()))
+        .replyTo(getContext().getSelf())
+        .build();
+  }
+
+  private void updateWith(RiskScoreMsg msg) {
+    prev = curr;
+    curr = msg;
+    transmitted = transmitted(curr);
+    sendThresh = curr.score().value() * msgParams.sendCoefficient();
+  }
+
+  private RiskScoreMsg transmitted(RiskScoreMsg msg) {
+    return RiskScoreMsg.builder()
+        .replyTo(getContext().getSelf())
+        .score(transmittedScore(msg))
+        .id(msg.id())
+        .build();
+  }
+
+  private RiskScore transmittedScore(RiskScoreMsg msg) {
+    return RiskScore.builder()
+        .value(msg.score().value() * msgParams.transmissionRate())
+        .time(msg.score().time())
+        .build();
+  }
+
+  private void startRefreshTimer() {
+    timers.startTimerWithFixedDelay(RefreshMsg.INSTANCE, userParams.refreshPeriod());
   }
 
   private Behavior<UserMsg> onContactMsg(ContactMsg msg) {

@@ -52,13 +52,6 @@ public class ContactNetworkHelper {
         .collect(ObjectOpenHashSet.toSetWithExpectedSize(edges.size()));
   }
 
-  private Contact toContact(DefaultEdge edge, ContactTimeFactory factory) {
-    int user1 = contactNetwork.getEdgeSource(edge);
-    int user2 = contactNetwork.getEdgeTarget(edge);
-    Instant time = factory.contactTime(user1, user2);
-    return Contact.builder().user1(user1).user2(user2).time(time).build();
-  }
-
   public Set<Integer> users() {
     return Collections.unmodifiableSet(contactNetwork.vertexSet());
   }
@@ -66,6 +59,13 @@ public class ContactNetworkHelper {
   public void logMetrics() {
     logStats();
     logTopology();
+  }
+
+  private Contact toContact(DefaultEdge edge, ContactTimeFactory factory) {
+    int user1 = contactNetwork.getEdgeSource(edge);
+    int user2 = contactNetwork.getEdgeTarget(edge);
+    Instant time = factory.contactTime(user1, user2);
+    return Contact.builder().user1(user1).user2(user2).time(time).build();
   }
 
   private void logStats() {

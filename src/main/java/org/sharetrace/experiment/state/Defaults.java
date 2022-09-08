@@ -40,13 +40,6 @@ public final class Defaults {
         .build();
   }
 
-  private static Duration idleTimeout(Dataset dataset) {
-    double numContacts = dataset.contactNetwork().contacts().size();
-    double targetBase = Math.max(MIN_BASE, MAX_BASE - DECAY_RATE * numContacts);
-    long timeout = (long) Math.ceil(Math.log(numContacts) / targetBase);
-    return Duration.ofSeconds(timeout);
-  }
-
   public static Dataset fileDataset(DatasetContext context, Path path) {
     return FileDataset.builder()
         .delimiter(WHITESPACE_DELIMITER)
@@ -65,6 +58,13 @@ public final class Defaults {
         .graphGeneratorFactory(defaultFactory(context))
         .numNodes(numNodes)
         .build();
+  }
+
+  private static Duration idleTimeout(Dataset dataset) {
+    double numContacts = dataset.contactNetwork().contacts().size();
+    double targetBase = Math.max(MIN_BASE, MAX_BASE - DECAY_RATE * numContacts);
+    long timeout = (long) Math.ceil(Math.log(numContacts) / targetBase);
+    return Duration.ofSeconds(timeout);
   }
 
   private static GraphGeneratorFactory defaultFactory(DatasetContext context) {

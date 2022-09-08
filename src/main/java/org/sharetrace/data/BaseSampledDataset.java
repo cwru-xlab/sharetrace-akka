@@ -24,6 +24,11 @@ abstract class BaseSampledDataset implements Dataset {
         .build();
   }
 
+  @Override
+  public RiskScore riskScore(int user) {
+    return riskScoreFactory().riskScore(user);
+  }
+
   @Value.Derived
   protected GraphGenerator<Integer, DefaultEdge, Integer> graphGenerator() {
     return graphGeneratorFactory().graphGenerator(numNodes());
@@ -34,11 +39,6 @@ abstract class BaseSampledDataset implements Dataset {
   protected abstract int numNodes();
 
   protected abstract ContactTimeFactory contactTimeFactory();
-
-  @Override
-  public RiskScore riskScore(int user) {
-    return riskScoreFactory().riskScore(user);
-  }
 
   protected abstract RiskScoreFactory riskScoreFactory();
 }

@@ -81,6 +81,22 @@ public class ExperimentState {
     Runner.run(newAlgorithm(), "RiskPropagation");
   }
 
+  public ExperimentState withNewId() {
+    return toBuilder().build();
+  }
+
+  public Builder toBuilder() {
+    return Builder.from(this);
+  }
+
+  public Dataset dataset() {
+    return dataset;
+  }
+
+  public MsgParams msgParams() {
+    return msgParams;
+  }
+
   private ExperimentSettings settings() {
     return ExperimentSettings.builder()
         .graphType(graphType.toString())
@@ -103,22 +119,6 @@ public class ExperimentState {
         .scoreFactory(dataset)
         .cacheFactory(this::newCache)
         .build();
-  }
-
-  public ExperimentState withNewId() {
-    return toBuilder().build();
-  }
-
-  public Builder toBuilder() {
-    return Builder.from(this);
-  }
-
-  public Dataset dataset() {
-    return dataset;
-  }
-
-  public MsgParams msgParams() {
-    return msgParams;
   }
 
   private IntervalCache<RiskScoreMsg> newCache() {
@@ -198,8 +198,24 @@ public class ExperimentState {
           .userParams(state.userParams);
     }
 
+    protected static Builder withDefaults(ExperimentContext context) {
+      return new Builder(context)
+          .id(ctx -> newId())
+          .mdc(ctx -> Logging.mdc(ctx.id(), ctx.graphType()))
+          .msgParams(ctx -> Defaults.msgParams())
+          .cacheParams(ctx -> Defaults.cacheParams())
+          .scoreTimesFactory(defaultFactory())
+          .scoreValuesFactory(defaultFactory())
+          .contactTimesFactory(defaultFactory())
+          .userParams(ctx -> Defaults.userParams(ctx.dataset()));
+    }
+
     private static String newId() {
       return String.valueOf(new Random().nextLong());
+    }
+
+    private static Function<DistributionFactoryContext, DistributionFactory> defaultFactory() {
+      return ctx -> seed -> new UniformRealDistribution(new Well512a(seed), 0d, 1d);
     }
 
     public Builder id(Function<IdContext, String> factory) {
@@ -261,22 +277,6 @@ public class ExperimentState {
       return this;
     }
 
-    protected static Builder withDefaults(ExperimentContext context) {
-      return new Builder(context)
-          .id(ctx -> newId())
-          .mdc(ctx -> Logging.mdc(ctx.id(), ctx.graphType()))
-          .msgParams(ctx -> Defaults.msgParams())
-          .cacheParams(ctx -> Defaults.cacheParams())
-          .scoreTimesFactory(defaultFactory())
-          .scoreValuesFactory(defaultFactory())
-          .contactTimesFactory(defaultFactory())
-          .userParams(ctx -> Defaults.userParams(ctx.dataset()));
-    }
-
-    private static Function<DistributionFactoryContext, DistributionFactory> defaultFactory() {
-      return ctx -> seed -> new UniformRealDistribution(new Well512a(seed), 0d, 1d);
-    }
-
     public Builder mdc(Function<MdcContext, Map<String, String>> factory) {
       setters.put(Setter.MDC, factory.andThen(this::mdc));
       return this;
@@ -326,40 +326,6 @@ public class ExperimentState {
       setters.put(Setter.FACTORIES, x -> setFactories());
       setters.values().forEach(setter -> setter.apply(this));
       return new ExperimentState(this);
-    }
-
-    private Void setDistributions() {
-      scoreValues = scoreValuesFactory.distribution(ctx.seed());
-      scoreTimes = scoreTimesFactory.distribution(ctx.seed());
-      contactTimes = contactTimesFactory.distribution(ctx.seed());
-      return null;
-    }
-
-    private Void setFactories() {
-      Sampler<RiskScore> scoreSampler = newScoreSampler();
-      scoreFactory = RiskScoreFactory.from(scoreSampler::sample);
-      Sampler<Instant> contactTimeSampler = newContactTimeSampler();
-      contactTimeFactory = ContactTimeFactory.from(contactTimeSampler::sample);
-      return null;
-    }
-
-    private Sampler<RiskScore> newScoreSampler() {
-      return RiskScoreSampler.builder()
-          .values(scoreValues)
-          .timeSampler(newTimeSampler(scoreTimes, msgParams.scoreTtl()))
-          .build();
-    }
-
-    private Sampler<Instant> newTimeSampler(RealDistribution lookBacks, Duration maxLookBack) {
-      return TimeSampler.builder()
-          .lookBacks(lookBacks)
-          .maxLookBack(maxLookBack)
-          .refTime(ctx.refTime())
-          .build();
-    }
-
-    private Sampler<Instant> newContactTimeSampler() {
-      return newTimeSampler(contactTimes, msgParams.contactTtl());
     }
 
     @Override
@@ -430,6 +396,40 @@ public class ExperimentState {
     public Builder dataset(Function<DatasetContext, Dataset> factory) {
       setters.put(Setter.DATASET, factory.andThen(this::dataset));
       return this;
+    }
+
+    private Void setDistributions() {
+      scoreValues = scoreValuesFactory.distribution(ctx.seed());
+      scoreTimes = scoreTimesFactory.distribution(ctx.seed());
+      contactTimes = contactTimesFactory.distribution(ctx.seed());
+      return null;
+    }
+
+    private Void setFactories() {
+      Sampler<RiskScore> scoreSampler = newScoreSampler();
+      scoreFactory = RiskScoreFactory.from(scoreSampler::sample);
+      Sampler<Instant> contactTimeSampler = newContactTimeSampler();
+      contactTimeFactory = ContactTimeFactory.from(contactTimeSampler::sample);
+      return null;
+    }
+
+    private Sampler<RiskScore> newScoreSampler() {
+      return RiskScoreSampler.builder()
+          .values(scoreValues)
+          .timeSampler(newTimeSampler(scoreTimes, msgParams.scoreTtl()))
+          .build();
+    }
+
+    private Sampler<Instant> newTimeSampler(RealDistribution lookBacks, Duration maxLookBack) {
+      return TimeSampler.builder()
+          .lookBacks(lookBacks)
+          .maxLookBack(maxLookBack)
+          .refTime(ctx.refTime())
+          .build();
+    }
+
+    private Sampler<Instant> newContactTimeSampler() {
+      return newTimeSampler(contactTimes, msgParams.contactTtl());
     }
   }
 }

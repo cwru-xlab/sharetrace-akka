@@ -42,6 +42,16 @@ abstract class BaseRange extends AbstractDoubleCollection {
     };
   }
 
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper(this)
+        .add("start", start())
+        .add("stop", stop())
+        .add("step", step())
+        .add("scale", scale())
+        .toString();
+  }
+
   @Value.Parameter(order = 4)
   @Value.Default
   public double scale() {
@@ -62,16 +72,6 @@ abstract class BaseRange extends AbstractDoubleCollection {
 
   @Value.Parameter(order = 2)
   public abstract int stop();
-
-  @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(this)
-        .add("start", start())
-        .add("stop", stop())
-        .add("step", step())
-        .add("scale", scale())
-        .toString();
-  }
 
   @Override
   @Value.Derived

@@ -23,14 +23,14 @@ abstract class BaseFileDataset implements Dataset, TimeRef {
         .build();
   }
 
-  protected abstract String delimiter();
-
-  protected abstract Path path();
-
   @Override
   public RiskScore riskScore(int user) {
     return scoreFactory().riskScore(user);
   }
+
+  protected abstract String delimiter();
+
+  protected abstract Path path();
 
   protected abstract RiskScoreFactory scoreFactory();
 }

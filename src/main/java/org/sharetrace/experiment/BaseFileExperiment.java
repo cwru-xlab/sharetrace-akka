@@ -13,6 +13,13 @@ abstract class BaseFileExperiment implements Experiment {
     return FileExperiment.builder().build();
   }
 
+  private static ExperimentState defaultFileState(GraphType graphType, Path path) {
+    return ExperimentState.builder(ExperimentContext.create())
+        .graphType(graphType)
+        .dataset(ctx -> Defaults.fileDataset(ctx, path))
+        .build();
+  }
+
   public void runWithDefaults(GraphType graphType, Path path) {
     run(defaultFileState(graphType, path));
   }
@@ -26,12 +33,5 @@ abstract class BaseFileExperiment implements Experiment {
   @Value.Default
   protected int numIterations() {
     return 1;
-  }
-
-  private static ExperimentState defaultFileState(GraphType graphType, Path path) {
-    return ExperimentState.builder(ExperimentContext.create())
-        .graphType(graphType)
-        .dataset(ctx -> Defaults.fileDataset(ctx, path))
-        .build();
   }
 }

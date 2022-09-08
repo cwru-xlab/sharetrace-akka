@@ -20,17 +20,6 @@ abstract class BaseMsgParams implements UserMsg {
   public static final float MAX_TRANSMISSION_RATE = 1f;
   public static final float MIN_SEND_COEFFICIENT = 0f;
 
-  @Value.Check
-  protected void check() {
-    Checks.inClosedRange(
-        transmissionRate(), MIN_TRANSMISSION_RATE, MAX_TRANSMISSION_RATE, "transmissionRate");
-    Checks.isAtLeast(sendCoefficient(), MIN_SEND_COEFFICIENT, "sendCoefficient");
-    Checks.isAtLeast(timeBuffer(), Duration.ZERO, "timeBuffer");
-    Checks.isGreaterThan(scoreTtl(), Duration.ZERO, "scoreTtl");
-    Checks.isGreaterThan(contactTtl(), Duration.ZERO, "contactTtl");
-    Checks.isAtLeast(tolerance(), 0f, "tolerance");
-  }
-
   /**
    * Returns the value which determines at what rate the value of a {@link RiskScore} exponentially
    * decreases as it propagates through the {@link ContactNetwork}. A transmission rate of 0 results
@@ -80,4 +69,15 @@ abstract class BaseMsgParams implements UserMsg {
    * considered approximately equal.
    */
   public abstract float tolerance();
+
+  @Value.Check
+  protected void check() {
+    Checks.inClosedRange(
+        transmissionRate(), MIN_TRANSMISSION_RATE, MAX_TRANSMISSION_RATE, "transmissionRate");
+    Checks.isAtLeast(sendCoefficient(), MIN_SEND_COEFFICIENT, "sendCoefficient");
+    Checks.isAtLeast(timeBuffer(), Duration.ZERO, "timeBuffer");
+    Checks.isGreaterThan(scoreTtl(), Duration.ZERO, "scoreTtl");
+    Checks.isGreaterThan(contactTtl(), Duration.ZERO, "contactTtl");
+    Checks.isAtLeast(tolerance(), 0f, "tolerance");
+  }
 }

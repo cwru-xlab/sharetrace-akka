@@ -22,9 +22,6 @@ abstract class BaseDescriptiveStats {
     return (float) statistics().getMean();
   }
 
-  @JsonIgnore
-  protected abstract DescriptiveStatistics statistics();
-
   @Value.Derived
   public float sampleVariance() {
     return (float) statistics().getVariance();
@@ -87,4 +84,7 @@ abstract class BaseDescriptiveStats {
         .mapToObj(v -> (float) v)
         .collect(FloatArrayList::new, List::add, List::addAll);
   }
+
+  @JsonIgnore
+  protected abstract DescriptiveStatistics statistics();
 }

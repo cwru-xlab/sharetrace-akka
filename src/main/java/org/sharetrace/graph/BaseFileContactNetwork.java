@@ -25,6 +25,14 @@ import org.sharetrace.util.TimeRef;
 @Value.Immutable
 abstract class BaseFileContactNetwork implements ContactNetwork, TimeRef, LoggableRef {
 
+  private static Set<Integer> key(int user1, int user2) {
+    return IntSet.of(user1, user2);
+  }
+
+  private static Instant newer(Instant time1, Instant time2) {
+    return time1.isAfter(time2) ? time1 : time2;
+  }
+
   @Override
   public Set<Integer> users() {
     return helper().users();
@@ -45,18 +53,6 @@ abstract class BaseFileContactNetwork implements ContactNetwork, TimeRef, Loggab
     return ContactNetworkHelper.of(graphGenerator(), loggable());
   }
 
-  private GraphGenerator<Integer, DefaultEdge, ?> graphGenerator() {
-    return (target, x) -> generate(target);
-  }
-
-  private void generate(Graph<Integer, DefaultEdge> target) {
-    List<Integer> users;
-    for (Set<Integer> contact : contactMap().keySet()) {
-      users = List.copyOf(contact);
-      Graphs.addEdgeWithVertices(target, users.get(0), users.get(1));
-    }
-  }
-
   @Value.Derived
   protected Map<Set<Integer>, Instant> contactMap() {
     ContactsResult result;
@@ -70,6 +66,20 @@ abstract class BaseFileContactNetwork implements ContactNetwork, TimeRef, Loggab
   }
 
   protected abstract Path path();
+
+  protected abstract String delimiter();
+
+  private GraphGenerator<Integer, DefaultEdge, ?> graphGenerator() {
+    return (target, x) -> generate(target);
+  }
+
+  private void generate(Graph<Integer, DefaultEdge> target) {
+    List<Integer> users;
+    for (Set<Integer> contact : contactMap().keySet()) {
+      users = List.copyOf(contact);
+      Graphs.addEdgeWithVertices(target, users.get(0), users.get(1));
+    }
+  }
 
   private void adjustTimes(ContactsResult result) {
     Duration offset = Duration.between(result.lastContactTime, refTime());
@@ -92,16 +102,6 @@ abstract class BaseFileContactNetwork implements ContactNetwork, TimeRef, Loggab
     }
     return new ContactsResult(contacts, lastContactTime);
   }
-
-  private static Set<Integer> key(int user1, int user2) {
-    return IntSet.of(user1, user2);
-  }
-
-  private static Instant newer(Instant time1, Instant time2) {
-    return time1.isAfter(time2) ? time1 : time2;
-  }
-
-  protected abstract String delimiter();
 
   private ContactTimeFactory contactTimeFactory() {
     return (user1, user2) -> contactMap().get(key(user1, user2));

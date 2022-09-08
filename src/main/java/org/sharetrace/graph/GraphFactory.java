@@ -59,15 +59,6 @@ public final class GraphFactory {
     return newGraph(DefaultGraphType.directedSimple());
   }
 
-  private static Graph<Integer, DefaultEdge> newGraph(GraphType graphType) {
-    return new FastutilMapIntVertexGraph<>(vertexIdFactory(), DefaultEdge::new, graphType, false);
-  }
-
-  private static Supplier<Integer> vertexIdFactory() {
-    int[] id = new int[] {0};
-    return () -> id[0]++;
-  }
-
   public static Graph<Integer, DefaultEdge> copyDirected(Graph<Integer, DefaultEdge> directed) {
     Graph<Integer, DefaultEdge> copy = newDirectedGraph();
     Graphs.addGraph(copy, GraphTests.requireDirected(directed));
@@ -82,6 +73,15 @@ public final class GraphFactory {
 
   public static Graph<Integer, DefaultEdge> newUndirectedGraph() {
     return newGraph(DefaultGraphType.simple());
+  }
+
+  private static Graph<Integer, DefaultEdge> newGraph(GraphType graphType) {
+    return new FastutilMapIntVertexGraph<>(vertexIdFactory(), DefaultEdge::new, graphType, false);
+  }
+
+  private static Supplier<Integer> vertexIdFactory() {
+    int[] id = new int[] {0};
+    return () -> id[0]++;
   }
 
   private static Graph<Integer, DefaultEdge> newGraphFor(Graph<?, ?> graph) {

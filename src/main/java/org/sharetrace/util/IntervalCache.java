@@ -60,26 +60,21 @@ public class IntervalCache<T> {
     updateRange();
   }
 
-  private static long toLong(Duration duration) {
-    return duration.toSeconds();
+  public static <T extends Comparable<T>> Builder<T> builder() {
+    return new Builder<>();
   }
 
-  private long getTime() {
-    return toLong(clock.instant());
+  private static long toLong(Duration duration) {
+    return duration.toSeconds();
   }
 
   private static long toLong(Instant instant) {
     return instant.getEpochSecond();
   }
 
-  private void updateRange() {
-    long now = getTime();
-    rangeStart = now - lookBack;
-    rangeEnd = now + lookAhead;
-  }
-
-  public static <T extends Comparable<T>> Builder<T> builder() {
-    return new Builder<>();
+  private static Predicate<Entry<Long, ?>> isNotAfter(Instant time) {
+    long t = toLong(time);
+    return entry -> entry.getKey() <= t;
   }
 
   /**
@@ -94,22 +89,6 @@ public class IntervalCache<T> {
     refresh();
     long key = floorKey(toLong(time));
     return Optional.ofNullable(cache.get(key));
-  }
-
-  private void refresh() {
-    if (getTime() - lastRefresh > refreshPeriod) {
-      updateRange();
-      cache.entrySet().removeIf(isExpired());
-      lastRefresh = getTime();
-    }
-  }
-
-  private Predicate<Entry<Long, ?>> isExpired() {
-    return entry -> entry.getKey() < rangeStart;
-  }
-
-  private long floorKey(long time) {
-    return rangeStart + interval * Math.floorDiv(time - rangeStart, interval);
   }
 
   /**
@@ -129,10 +108,6 @@ public class IntervalCache<T> {
     cache.put(key, newValue);
   }
 
-  private long checkedFloorKey(long time) {
-    return floorKey(Checks.inClosedOpen(time, rangeStart, rangeEnd, "time"));
-  }
-
   /**
    * Returns an {@link Optional} containing the maximum value, according to the specified
    * comparator, whose time interval contains specified timestamp. If no values have been cached in
@@ -146,9 +121,34 @@ public class IntervalCache<T> {
     return cache.entrySet().stream().filter(isNotAfter(time)).map(Entry::getValue).max(comparator);
   }
 
-  private static Predicate<Entry<Long, ?>> isNotAfter(Instant time) {
-    long t = toLong(time);
-    return entry -> entry.getKey() <= t;
+  private void updateRange() {
+    long now = getTime();
+    rangeStart = now - lookBack;
+    rangeEnd = now + lookAhead;
+  }
+
+  private void refresh() {
+    if (getTime() - lastRefresh > refreshPeriod) {
+      updateRange();
+      cache.entrySet().removeIf(isExpired());
+      lastRefresh = getTime();
+    }
+  }
+
+  private Predicate<Entry<Long, ?>> isExpired() {
+    return entry -> entry.getKey() < rangeStart;
+  }
+
+  private long floorKey(long time) {
+    return rangeStart + interval * Math.floorDiv(time - rangeStart, interval);
+  }
+
+  private long checkedFloorKey(long time) {
+    return floorKey(Checks.inClosedOpen(time, rangeStart, rangeEnd, "time"));
+  }
+
+  private long getTime() {
+    return toLong(clock.instant());
   }
 
   public static final class Builder<T> {

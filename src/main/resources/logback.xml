@@ -1,42 +1,39 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration debug="true">
-  <timestamp datePattern="yyyyMMddHHmmss" key="bySecond"/>
-  <property name="log.dir" value="logs/${bySecond}"/>
-  <property name="graphs.log.dir" value="${log.dir}/graphs" scope="context"/>
-  <appender class="net.logstash.logback.appender.LoggingEventAsyncDisruptorAppender" name="console">
+  <appender
+    class="net.logstash.logback.appender.LoggingEventAsyncDisruptorAppender"
+    name="console">
     <appendRetryFrequency>5</appendRetryFrequency> <!--Default: 5ms-->
     <appendTimeout>-1</appendTimeout> <!--Default: 0-->
-    <ringBufferSize>8192</ringBufferSize> <!--Default: 8192-->
-    <waitStrategyType>blocking</waitStrategyType> <!--Default: blocking-->
     <appender class="ch.qos.logback.core.ConsoleAppender">
       <encoder class="net.logstash.logback.encoder.LogstashEncoder">
         <fieldNames class="net.logstash.logback.fieldnames.ShortenedFieldNames">
           <levelValue>[ignore]</levelValue>
-          <timestamp>[ignore]</timestamp>
           <logger>[ignore]</logger>
           <thread>[ignore]</thread>
+          <timestamp>[ignore]</timestamp>
           <version>[ignore]</version>
         </fieldNames>
         <includeContext>false</includeContext>
         <includeMdcKeyName>stateId</includeMdcKeyName>
         <includeMdcKeyName>graphType</includeMdcKeyName>
       </encoder>
-    </appender>
+    </appender> <!--Default: 8192-->
+    <ringBufferSize>8192</ringBufferSize> <!--Default: blocking-->
+    <waitStrategyType>blocking</waitStrategyType>
   </appender>
-  <!--Ref: https://github.com/logfellow/logstash-logback-encoder#async-appenders-->
-  <appender class="net.logstash.logback.appender.LoggingEventAsyncDisruptorAppender"
+  <appender
+    class="net.logstash.logback.appender.LoggingEventAsyncDisruptorAppender"
     name="events">
     <appendRetryFrequency>5</appendRetryFrequency> <!--Default: 5ms-->
     <appendTimeout>-1</appendTimeout> <!--Default: 0-->
-    <ringBufferSize>8192</ringBufferSize> <!--Default: 8192-->
-    <waitStrategyType>blocking</waitStrategyType> <!--Default: blocking-->
     <appender class="ch.qos.logback.core.rolling.RollingFileAppender">
       <encoder class="net.logstash.logback.encoder.LogstashEncoder">
         <fieldNames class="net.logstash.logback.fieldnames.ShortenedFieldNames">
           <levelValue>[ignore]</levelValue>
-          <timestamp>[ignore]</timestamp>
           <logger>[ignore]</logger>
           <thread>[ignore]</thread>
+          <timestamp>[ignore]</timestamp>
           <version>[ignore]</version>
         </fieldNames>
         <includeContext>false</includeContext>
@@ -44,41 +41,45 @@
         <includeMdcKeyName>graphType</includeMdcKeyName>
       </encoder>
       <immediateFlush>false</immediateFlush>
-      <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-        <fileNamePattern>${log.dir}/events/${bySecond}-%d{yyyyMMdd}-%i.log.zip</fileNamePattern>
+      <rollingPolicy
+        class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+        <fileNamePattern>${log.dir}/events/${bySecond}-%d{yyyyMMdd}-%i.log.zip
+        </fileNamePattern>
         <maxFileSize>1GB</maxFileSize>
         <maxHistory>30</maxHistory>
         <totalSizeCap>20GB</totalSizeCap>
       </rollingPolicy>
-    </appender>
+    </appender> <!--Default: 8192-->
+    <ringBufferSize>8192</ringBufferSize> <!--Default: blocking-->
+    <waitStrategyType>blocking</waitStrategyType>
   </appender>
-  <!--Ref: https://github.com/logfellow/logstash-logback-encoder#async-appenders-->
-  <appender class="net.logstash.logback.appender.LoggingEventAsyncDisruptorAppender"
+  <appender
+    class="net.logstash.logback.appender.LoggingEventAsyncDisruptorAppender"
     name="metrics">
     <appendRetryFrequency>5</appendRetryFrequency> <!--Default: 5ms-->
     <appendTimeout>-1</appendTimeout> <!--Default: 0-->
-    <ringBufferSize>8192</ringBufferSize> <!--Default: 8192-->
-    <waitStrategyType>blocking</waitStrategyType> <!--Default: blocking-->
     <appender class="ch.qos.logback.core.FileAppender">
       <append>true</append>
-      <file>${log.dir}/metrics.log</file>
       <encoder class="net.logstash.logback.encoder.LogstashEncoder">
         <fieldNames class="net.logstash.logback.fieldnames.ShortenedFieldNames">
           <levelValue>[ignore]</levelValue>
-          <timestamp>[ignore]</timestamp>
           <logger>[ignore]</logger>
           <thread>[ignore]</thread>
+          <timestamp>[ignore]</timestamp>
           <version>[ignore]</version>
         </fieldNames>
         <includeContext>false</includeContext>
         <includeMdcKeyName>stateId</includeMdcKeyName>
         <includeMdcKeyName>graphType</includeMdcKeyName>
       </encoder>
+      <file>${log.dir}/metrics.log</file>
       <immediateFlush>false</immediateFlush>
-    </appender>
+    </appender> <!--Default: 8192-->
+    <ringBufferSize>8192</ringBufferSize> <!--Default: blocking-->
+    <waitStrategyType>blocking</waitStrategyType>
   </appender>
-  <!--Ref: https://github.com/logfellow/logstash-logback-encoder#async-appenders-->
-  <appender class="net.logstash.logback.appender.LoggingEventAsyncDisruptorAppender"
+  <appender
+    class="net.logstash.logback.appender.LoggingEventAsyncDisruptorAppender"
     name="settings">
     <appendRetryFrequency>5</appendRetryFrequency> <!--Default: 5ms-->
     <appendTimeout>-1</appendTimeout> <!--Default: 0-->
@@ -87,9 +88,9 @@
       <encoder class="net.logstash.logback.encoder.LogstashEncoder">
         <fieldNames class="net.logstash.logback.fieldnames.ShortenedFieldNames">
           <levelValue>[ignore]</levelValue>
-          <timestamp>[ignore]</timestamp>
           <logger>[ignore]</logger>
           <thread>[ignore]</thread>
+          <timestamp>[ignore]</timestamp>
           <version>[ignore]</version>
         </fieldNames>
         <includeContext>false</includeContext>
@@ -102,16 +103,22 @@
     <ringBufferSize>8192</ringBufferSize> <!--Default: blocking-->
     <waitStrategyType>blocking</waitStrategyType>
   </appender>
-  <logger name="EventsLogger" level="info" additivity="false">
+  <!--Ref: https://github.com/logfellow/logstash-logback-encoder#async-appenders-->
+  <logger additivity="false" level="info" name="EventsLogger">
     <appender-ref ref="events"/>
   </logger>
-  <logger name="MetricsLogger" level="info" additivity="false">
+  <!--Ref: https://github.com/logfellow/logstash-logback-encoder#async-appenders-->
+  <logger additivity="false" level="info" name="MetricsLogger">
     <appender-ref ref="metrics"/>
   </logger>
-  <logger name="SettingsLogger" level="info" additivity="false">
+  <!--Ref: https://github.com/logfellow/logstash-logback-encoder#async-appenders-->
+  <logger additivity="false" level="info" name="SettingsLogger">
     <appender-ref ref="settings"/>
   </logger>
+  <property name="log.dir" value="logs/${bySecond}"/>
+  <property name="graphs.log.dir" scope="context" value="${log.dir}/graphs"/>
   <root level="info">
     <appender-ref ref="console"/>
   </root>
+  <timestamp datePattern="yyyyMMddHHmmss" key="bySecond"/>
 </configuration>

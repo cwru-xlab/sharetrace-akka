@@ -26,6 +26,13 @@ import org.sharetrace.util.DescriptiveStats;
 @Value.Immutable
 abstract class BaseGraphStats<V, E> {
 
+  private static List<Float> getScores(VertexScoringAlgorithm<?, Double> algorithm) {
+    Collection<Double> scores = algorithm.getScores().values();
+    return scores.stream()
+        .map(Double::floatValue)
+        .collect(() -> new FloatArrayList(scores.size()), List::add, List::addAll);
+  }
+
   public SizeMetrics sizeMetrics() {
     return SizeMetrics.builder().numNodes(numNodes()).numEdges(numEdges()).build();
   }
@@ -34,9 +41,6 @@ abstract class BaseGraphStats<V, E> {
   public int numNodes() {
     return graph().vertexSet().size();
   }
-
-  @Value.Parameter
-  protected abstract Graph<V, E> graph();
 
   @Value.Lazy
   public int numEdges() {
@@ -92,21 +96,9 @@ abstract class BaseGraphStats<V, E> {
     return getScores(new ClusteringCoefficient<>(graph()));
   }
 
-  private static List<Float> getScores(VertexScoringAlgorithm<?, Double> algorithm) {
-    Collection<Double> scores = algorithm.getScores().values();
-    return scores.stream()
-        .map(Double::floatValue)
-        .collect(() -> new FloatArrayList(scores.size()), List::add, List::addAll);
-  }
-
   @Value.Lazy
   public List<Float> harmonicCentralities() {
     return getScores(new HarmonicCentrality<>(graph(), shortestPath()));
-  }
-
-  @Value.Lazy
-  protected ShortestPathAlgorithm<V, E> shortestPath() {
-    return new FloydWarshallShortestPaths<>(graph());
   }
 
   @Value.Lazy
@@ -137,6 +129,14 @@ abstract class BaseGraphStats<V, E> {
   @Value.Lazy
   public int center() {
     return graphMeasurer().getGraphCenter().size();
+  }
+
+  @Value.Parameter
+  protected abstract Graph<V, E> graph();
+
+  @Value.Lazy
+  protected ShortestPathAlgorithm<V, E> shortestPath() {
+    return new FloydWarshallShortestPaths<>(graph());
   }
 
   @Value.Lazy

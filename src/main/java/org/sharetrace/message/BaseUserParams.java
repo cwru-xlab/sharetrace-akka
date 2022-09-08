@@ -15,15 +15,15 @@ import org.sharetrace.util.Checks;
 @Value.Immutable(copy = true)
 abstract class BaseUserParams {
 
-  @Value.Check
-  protected void check() {
-    Checks.isGreaterThan(idleTimeout(), Duration.ZERO, "idleTimeout");
-    Checks.isGreaterThan(refreshPeriod(), Duration.ZERO, "refreshPeriod");
-  }
-
   // TODO Add Javadoc
   public abstract Duration idleTimeout();
 
   // TODO Add Javadoc
   public abstract Duration refreshPeriod();
+
+  @Value.Check
+  protected void check() {
+    Checks.isGreaterThan(idleTimeout(), Duration.ZERO, "idleTimeout");
+    Checks.isGreaterThan(refreshPeriod(), Duration.ZERO, "refreshPeriod");
+  }
 }

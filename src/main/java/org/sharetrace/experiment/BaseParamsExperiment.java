@@ -25,15 +25,15 @@ abstract class BaseParamsExperiment implements Experiment {
             .collect(Collectors.toUnmodifiableSet()));
   }
 
-  public void runWithDefaults(GraphType graphType, int numNodes) {
-    run(newDefaultState(graphType, numNodes));
-  }
-
   private static ExperimentState newDefaultState(GraphType graphType, int numNodes) {
     return ExperimentState.builder(DEFAULT_CTX)
         .graphType(graphType)
         .dataset(ctx -> Defaults.sampledDataset(ctx, numNodes))
         .build();
+  }
+
+  public void runWithDefaults(GraphType graphType, int numNodes) {
+    run(newDefaultState(graphType, numNodes));
   }
 
   @Override

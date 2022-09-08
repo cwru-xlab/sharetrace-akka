@@ -21,6 +21,13 @@ abstract class BaseRuntimeExperiment implements Experiment {
         .withLoggable(Set.of(SizeMetrics.class, RuntimeMetric.class, ExperimentSettings.class));
   }
 
+  private static ExperimentState newDefaultState(GraphType graphType) {
+    return ExperimentState.builder(DEFAULT_CTX)
+        .graphType(graphType)
+        .dataset(ctx -> Defaults.sampledDataset(ctx, IGNORED))
+        .build();
+  }
+
   public void runWithDefaults(GraphType graphType) {
     run(newDefaultState(graphType));
   }
@@ -35,11 +42,4 @@ abstract class BaseRuntimeExperiment implements Experiment {
 
   @Value.Parameter
   public abstract Range numNodes();
-
-  private static ExperimentState newDefaultState(GraphType graphType) {
-    return ExperimentState.builder(DEFAULT_CTX)
-        .graphType(graphType)
-        .dataset(ctx -> Defaults.sampledDataset(ctx, IGNORED))
-        .build();
-  }
 }
