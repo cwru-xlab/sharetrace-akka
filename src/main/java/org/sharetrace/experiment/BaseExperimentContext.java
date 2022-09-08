@@ -2,8 +2,8 @@ package org.sharetrace.experiment;
 
 import java.time.Clock;
 import java.time.Instant;
-import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 import org.immutables.value.Value;
 import org.sharetrace.logging.Loggable;
 import org.sharetrace.logging.events.ContactEvent;
@@ -44,7 +44,7 @@ abstract class BaseExperimentContext implements AbstractExperimentContext {
   @Override
   @Value.Default
   public long seed() {
-    return new Random().nextLong();
+    return ThreadLocalRandom.current().nextLong();
   }
 
   @Override

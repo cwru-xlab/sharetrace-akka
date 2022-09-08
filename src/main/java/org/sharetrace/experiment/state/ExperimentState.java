@@ -9,8 +9,8 @@ import java.util.Collections;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
 import org.apache.commons.math3.distribution.RealDistribution;
 import org.apache.commons.math3.distribution.UniformRealDistribution;
@@ -216,7 +216,7 @@ public class ExperimentState {
     }
 
     private static String newId() {
-      return String.valueOf(new Random().nextLong());
+      return String.valueOf(ThreadLocalRandom.current().nextLong());
     }
 
     private static Function<DistributionFactoryContext, DistributionFactory> defaultFactory() {
