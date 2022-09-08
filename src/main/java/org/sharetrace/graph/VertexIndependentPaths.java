@@ -1,7 +1,6 @@
 package org.sharetrace.graph;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
