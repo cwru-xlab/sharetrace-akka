@@ -1,9 +1,14 @@
 package org.sharetrace.util;
 
+import com.google.common.collect.Range;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoField;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAccessor;
+import java.time.temporal.TemporalAmount;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -34,7 +39,7 @@ public class IntervalCache<T> {
 
   public static final int MIN_INTERVALS = 1;
   public static final int MIN_LOOK_AHEAD = 0;
-
+  private static final String TEMPORAL = "temporal";
   private final Map<Long, T> cache;
   private final BinaryOperator<T> mergeStrategy;
   private final Comparator<T> comparator;
@@ -45,7 +50,7 @@ public class IntervalCache<T> {
   private final long refreshPeriod;
   private long lastRefresh;
   private long rangeStart;
-  private long rangeEnd;
+  private Range<Long> range;
 
   private IntervalCache(Builder<T> builder) {
     cache = builder.cache;
@@ -56,23 +61,22 @@ public class IntervalCache<T> {
     lookBack = toLong(builder.lookBack);
     lookAhead = toLong(builder.lookAhead);
     refreshPeriod = toLong(builder.refreshPeriod);
-    lastRefresh = getTime();
-    updateRange();
+    lastRefresh = toLong(Instant.MIN);
   }
 
-  public static <T extends Comparable<T>> Builder<T> builder() {
+  public static <T> Builder<T> builder() {
     return new Builder<>();
   }
 
-  private static long toLong(Duration duration) {
-    return duration.toSeconds();
+  private static long toLong(TemporalAmount time) {
+    return time.get(ChronoUnit.SECONDS);
   }
 
-  private static long toLong(Instant instant) {
-    return instant.getEpochSecond();
+  private static long toLong(TemporalAccessor time) {
+    return time.getLong(ChronoField.INSTANT_SECONDS);
   }
 
-  private static Predicate<Entry<Long, ?>> isNotAfter(Instant time) {
+  private static Predicate<Entry<Long, ?>> isNotAfter(TemporalAccessor time) {
     long t = toLong(time);
     return entry -> entry.getKey() <= t;
   }
@@ -84,7 +88,7 @@ public class IntervalCache<T> {
    * to retrieving the value, the cache is possibly refreshed if it has been sufficiently long since
    * its previous refresh.
    */
-  public Optional<T> get(Instant time) {
+  public Optional<T> get(TemporalAccessor time) {
     Objects.requireNonNull(time);
     refresh();
     long key = floorKey(toLong(time));
@@ -99,7 +103,7 @@ public class IntervalCache<T> {
    *
    * @throws IllegalArgumentException if the timespan does not contain the specified timestamp.
    */
-  public void put(Instant time, T value) {
+  public void put(TemporalAccessor time, T value) {
     Objects.requireNonNull(time);
     refresh();
     long key = checkedFloorKey(toLong(time));
@@ -115,21 +119,17 @@ public class IntervalCache<T> {
    * Prior to retrieving the value, the cache is possibly refreshed if it has been sufficiently long
    * since its previous refresh.
    */
-  public Optional<T> max(Instant time) {
+  public Optional<T> max(TemporalAccessor time) {
     Objects.requireNonNull(time);
     refresh();
     return cache.entrySet().stream().filter(isNotAfter(time)).map(Entry::getValue).max(comparator);
   }
 
-  private void updateRange() {
-    long now = getTime();
-    rangeStart = now - lookBack;
-    rangeEnd = now + lookAhead;
-  }
-
   private void refresh() {
     if (getTime() - lastRefresh > refreshPeriod) {
-      updateRange();
+      rangeStart = getTime() - lookBack;
+      long rangeEnd = getTime() + lookAhead;
+      range = Range.closedOpen(rangeStart, rangeEnd);
       cache.entrySet().removeIf(isExpired());
       lastRefresh = getTime();
     }
@@ -144,7 +144,7 @@ public class IntervalCache<T> {
   }
 
   private long checkedFloorKey(long time) {
-    return floorKey(Checks.inClosedOpen(time, rangeStart, rangeEnd, "time"));
+    return floorKey(Checks.inRange(time, range, TEMPORAL));
   }
 
   private long getTime() {
