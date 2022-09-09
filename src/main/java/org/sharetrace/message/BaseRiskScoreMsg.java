@@ -5,8 +5,13 @@ import java.util.UUID;
 import org.immutables.value.Value;
 import org.sharetrace.RiskPropagation;
 import org.sharetrace.User;
-import org.sharetrace.graph.ContactNetwork;
 
+/**
+ * A uniquely identifiable message that contains the {@link RiskScore} of a {@link User}.
+ *
+ * @see User
+ * @see RiskPropagation
+ */
 @Value.Immutable
 abstract class BaseRiskScoreMsg implements UserMsg, Comparable<RiskScoreMsg> {
 
@@ -15,17 +20,13 @@ abstract class BaseRiskScoreMsg implements UserMsg, Comparable<RiskScoreMsg> {
     return score().compareTo(msg.score());
   }
 
+  /** Returns the risk score contained in this message. */
   public abstract RiskScore score();
 
-  /**
-   * Returns the actor reference associated with the {@link User} that propagates this risk score.
-   */
+  /** Returns the actor reference associated with the {@link User} that sent this message. */
   public abstract ActorRef<UserMsg> replyTo();
 
-  /**
-   * Returns a universally unique identifier that can be used to correlate risk scores as they
-   * propagate through the {@link ContactNetwork} during {@link RiskPropagation}.
-   */
+  /** Returns a unique identifier to track this message during {@link RiskPropagation}. */
   @Value.Default
   public String id() {
     return UUID.randomUUID().toString();

@@ -7,15 +7,14 @@ import org.sharetrace.User;
 import org.sharetrace.util.Checks;
 
 /**
- * Parameters that affect how and if messages are passed between {@link User}s during {@link
- * RiskPropagation}.
+ * Parameters that affect how and if messages are passed between {@link User}s.
  *
  * @see User
  * @see RiskPropagation
  */
 @SuppressWarnings("DefaultAnnotationParam")
 @Value.Immutable(copy = true)
-abstract class BaseMsgParams implements UserMsg {
+abstract class BaseMsgParams {
 
   public static final float MIN_TRANSMISSION_RATE = 0f;
   public static final float MAX_TRANSMISSION_RATE = 1f;
@@ -23,17 +22,19 @@ abstract class BaseMsgParams implements UserMsg {
 
   /**
    * Returns the rate at which the value of a {@link RiskScore} exponentially decreases as it
-   * propagates from the source {@link User} during {@link RiskPropagation}. This must be in the
-   * range (0, 1).
+   * propagates from the source {@link User} during {@link RiskPropagation}.
    */
   public abstract float transmissionRate();
 
   /**
    * Returns the multiplier used to set the threshold of a {@link User} that determines if a
    * received {@link RiskScoreMsg} should be propagated. A {@link RiskScoreMsg} is eligible for
-   * propagation if {@code scoreValue >= userValue * sendCoefficient}. Given a positive transmission
-   * rate, a positive coefficient guarantees that non-iterative {@link RiskPropagation} terminates.
-   * This must be non-negative.
+   * propagation if
+   *
+   * <pre>{@code scoreValue >= userValue * sendCoefficient}.</pre>
+   *
+   * Given a positive transmission rate, a positive coefficient guarantees that {@link
+   * RiskPropagation} terminates.
    */
   public abstract float sendCoefficient();
 
@@ -41,9 +42,11 @@ abstract class BaseMsgParams implements UserMsg {
    * Returns the extent to which a {@link RiskScore} is relevant after a contact occurs. When
    * determining if a {@link RiskScoreMsg} is eligible for propagation, this is used to shift the
    * contact time forward. Thus, a {@link RiskScore} that was computed after a contact occurred may
-   * still be eligible for propagation if {@code scoreTime <= contactTime + timeBuffer}. A nonzero
-   * value can account for delays in symptom onset and initial {@link User} communication. This must
-   * be positive.
+   * still be eligible for propagation if
+   *
+   * <pre>{@code scoreTime <= contactTime + timeBuffer}.</pre>
+   *
+   * A nonzero value can account for delays in symptom onset and initial {@link User} communication.
    */
   public abstract Duration timeBuffer();
 

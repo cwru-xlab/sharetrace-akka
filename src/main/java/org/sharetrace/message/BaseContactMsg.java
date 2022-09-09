@@ -8,7 +8,7 @@ import org.sharetrace.User;
 import org.sharetrace.graph.Contact;
 
 /**
- * A message sent to a {@link User} to initiate message passing with another {@link User}.
+ * A message that initiates message-passing {@link User} with another {@link User}.
  *
  * @see User
  * @see RiskPropagation
