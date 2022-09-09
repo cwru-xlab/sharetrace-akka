@@ -32,6 +32,10 @@ public final class Checks {
     return inRange(value, Range.closed(lower, upper), name);
   }
 
+  public static <T extends Comparable<T>> T inOpenRange(T value, T lower, T upper, String name) {
+    return inRange(value, Range.open(lower, upper), name);
+  }
+
   public static <T extends Comparable<T>> T inClosedOpen(T value, T lower, T upper, String name) {
     return inRange(value, Range.closedOpen(lower, upper), name);
   }

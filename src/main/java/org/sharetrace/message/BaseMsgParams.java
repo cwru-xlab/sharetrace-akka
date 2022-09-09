@@ -4,7 +4,6 @@ import java.time.Duration;
 import org.immutables.value.Value;
 import org.sharetrace.RiskPropagation;
 import org.sharetrace.User;
-import org.sharetrace.graph.ContactNetwork;
 import org.sharetrace.util.Checks;
 
 /**
@@ -23,58 +22,54 @@ abstract class BaseMsgParams implements UserMsg {
   public static final float MIN_SEND_COEFFICIENT = 0f;
 
   /**
-   * Returns the value which determines at what rate the value of a {@link RiskScore} exponentially
-   * decreases as it propagates through the {@link ContactNetwork}. A transmission rate of 0 results
-   * in no value decay, and so an execution of {@link RiskPropagation} must be terminated by other
-   * means than relying on a nonzero send tolerance.
+   * Returns the rate at which the value of a {@link RiskScore} exponentially decreases as it
+   * propagates from the source {@link User} during {@link RiskPropagation}. This must be in the
+   * range (0, 1).
    */
   public abstract float transmissionRate();
 
   /**
-   * Returns the value which determines the threshold that the value of a {@link RiskScore} must
-   * satisfy to be propagated by a {@link User}. Specifically, a {@link RiskScore} is only eligible
-   * for propagation if {@code scoreValue >= currentValue * sendCoefficient}. Given a positive
-   * transmission rate that is less than 1, a positive send tolerance guarantees that asynchronous,
-   * non-iterative message passing eventually terminates since the value of a propagated {@link
-   * RiskScore} exponentially decreases with a rate constant equal to the transmission rate.
+   * Returns the multiplier used to set the threshold of a {@link User} that determines if a
+   * received {@link RiskScoreMsg} should be propagated. A {@link RiskScoreMsg} is eligible for
+   * propagation if {@code scoreValue >= userValue * sendCoefficient}. Given a positive transmission
+   * rate, a positive coefficient guarantees that non-iterative {@link RiskPropagation} terminates.
+   * This must be non-negative.
    */
   public abstract float sendCoefficient();
 
   /**
-   * Returns the duration which determines to what extent a {@link RiskScore} is considered relevant
-   * to a given contact after it occurred. A nonzero time buffer can account for delayed symptom
-   * onset since a symptom-based {@link RiskScore} of a person would not begin to reflect the fact
-   * that they are infected until after developing symptoms. Additionally, a nonzero time buffer can
-   * account for the delay between when two persons come in contact and when their respective actors
-   * begin to communicate.
+   * Returns the extent to which a {@link RiskScore} is relevant after a contact occurs. When
+   * determining if a {@link RiskScoreMsg} is eligible for propagation, this is used to shift the
+   * contact time forward. Thus, a {@link RiskScore} that was computed after a contact occurred may
+   * still be eligible for propagation if {@code scoreTime <= contactTime + timeBuffer}. A nonzero
+   * value can account for delays in symptom onset and initial {@link User} communication. This must
+   * be positive.
    */
   public abstract Duration timeBuffer();
 
   /**
-   * Returns the duration which determines how long a given {@link RiskScore} is considered
-   * relevant. Intuitively, {@link RiskScore}s that are based on older data are (1) less likely to
-   * still accurately reflect the current risk of a person; and (2) more likely to have already been
-   * accounted for in the {@link ContactNetwork} by its propagation to other {@link User}s.
+   * Returns the extent to which a {@link RiskScore} is relevant after it was computed. Intuitively,
+   * an older {@link RiskScore} is less likely to reflect the current risk of a user and more likely
+   * to already be accounted for via its propagation to other {@link User}s.
    */
   public abstract Duration scoreTtl();
 
   /**
-   * Returns the duration which determines how long a given contact is considered relevant.
-   * Intuitively, contacts that occurred further in the past are less likely to propagate any new
-   * {@link RiskScore} in the {@link ContactNetwork} for which the complimentary {@link User} has
-   * not already accounted.
+   * Returns the extent to which a contact is relevant after it occurred. Intuitively, an older
+   * contact is less likely to cause the propagation of a new {@link RiskScore} for which the
+   * receiving {@link User}s had not already accounted.
    */
   public abstract Duration contactTtl();
 
   /**
    * Returns the maximum absolute difference between {@link RiskScore} values for them to be
-   * considered approximately equal.
+   * approximately equal.
    */
   public abstract float tolerance();
 
   @Value.Check
   protected void check() {
-    Checks.inClosedRange(
+    Checks.inOpenRange(
         transmissionRate(), MIN_TRANSMISSION_RATE, MAX_TRANSMISSION_RATE, "transmissionRate");
     Checks.isAtLeast(sendCoefficient(), MIN_SEND_COEFFICIENT, "sendCoefficient");
     Checks.isAtLeast(timeBuffer(), Duration.ZERO, "timeBuffer");
