@@ -8,7 +8,6 @@ import java.time.Instant;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
@@ -31,7 +30,7 @@ import java.util.function.Predicate;
  *
  * @param <T> The type of the cached values.
  */
-public class IntervalCache<T> {
+public final class IntervalCache<T> {
 
   public static final int MIN_INTERVALS = 1;
   public static final int MIN_LOOK_AHEAD = 0;
@@ -85,7 +84,7 @@ public class IntervalCache<T> {
    * its previous refresh.
    */
   public Optional<T> get(Instant time) {
-    Objects.requireNonNull(time);
+    nonNullTime(time);
     refresh();
     long key = floorKey(toLong(time));
     return Optional.ofNullable(cache.get(key));
@@ -100,7 +99,8 @@ public class IntervalCache<T> {
    * @throws IllegalArgumentException if the timespan does not contain the specified timestamp.
    */
   public void put(Instant time, T value) {
-    Objects.requireNonNull(time);
+    nonNullTime(time);
+    Checks.isNotNull(value, "value");
     refresh();
     long key = checkedFloorKey(toLong(time));
     T oldValue = cache.get(key);
@@ -116,7 +116,7 @@ public class IntervalCache<T> {
    * since its previous refresh.
    */
   public Optional<T> max(Instant time) {
-    Objects.requireNonNull(time);
+    nonNullTime(time);
     refresh();
     return cache.entrySet().stream().filter(isNotAfter(time)).map(Entry::getValue).max(comparator);
   }
@@ -145,6 +145,10 @@ public class IntervalCache<T> {
 
   private long getTime() {
     return toLong(clock.instant());
+  }
+
+  private static <T> void nonNullTime(T time) {
+    Checks.isNotNull(time, "time");
   }
 
   public static final class Builder<T> {
@@ -212,11 +216,11 @@ public class IntervalCache<T> {
     }
 
     private void checkFields() {
-      Objects.requireNonNull(interval);
-      Objects.requireNonNull(refreshPeriod);
-      Objects.requireNonNull(clock);
-      Objects.requireNonNull(mergeStrategy);
-      Objects.requireNonNull(comparator);
+      Checks.isNotNull(interval, "interval");
+      Checks.isNotNull(refreshPeriod, "refreshPeriod");
+      Checks.isNotNull(clock, "clock");
+      Checks.isNotNull(mergeStrategy, "mergeStrategy");
+      Checks.isNotNull(comparator, "comparator");
       Checks.isAtLeast(interval, Duration.ZERO, "interval");
       Checks.isAtLeast(numIntervals, MIN_INTERVALS, "numIntervals");
       Checks.inClosedOpen(numLookAhead, MIN_LOOK_AHEAD, numIntervals, "numLookAhead");

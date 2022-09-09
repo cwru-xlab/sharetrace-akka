@@ -1,6 +1,5 @@
 package org.sharetrace.util;
 
-import java.util.Objects;
 import java.util.function.Supplier;
 
 public final class TypedSupplier<T> implements Supplier<T> {
@@ -15,17 +14,19 @@ public final class TypedSupplier<T> implements Supplier<T> {
 
   @SuppressWarnings("unchecked")
   public static <T> TypedSupplier<T> of(T result) {
-    return of((Class<T>) result.getClass(), () -> result);
+    Checks.isNotNull(result, "result");
+    return new TypedSupplier<>((Class<T>) result.getClass(), () -> result);
   }
 
   public static <T, R extends T> TypedSupplier<T> of(Class<R> type, Supplier<R> supplier) {
-    return new TypedSupplier<>(Objects.requireNonNull(type), Objects.requireNonNull(supplier));
+    Checks.isNotNull(type, "type");
+    Checks.isNotNull(supplier, "supplier");
+    return new TypedSupplier<>(type, supplier);
   }
 
   @Override
   public T get() {
-    Object result = Objects.requireNonNull(supplier.get());
-    return type.cast(result);
+    return type.cast(supplier.get());
   }
 
   public Class<? extends T> getType() {

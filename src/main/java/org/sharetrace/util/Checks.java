@@ -11,8 +11,12 @@ public final class Checks {
 
   private Checks() {}
 
-  public static <T extends Comparable<T>> T isAtLeast(T value, T atLeast, String name) {
-    return inRange(value, Range.atLeast(atLeast), name);
+  public static <T> T isNotNull(T value, String name) {
+    return Objects.requireNonNull(value, name);
+  }
+
+  public static <T extends Comparable<T>> void isAtLeast(T value, T atLeast, String name) {
+    inRange(value, Range.atLeast(atLeast), name);
   }
 
   public static <T extends Comparable<T>> T inRange(T value, Range<T> range, String name) {
@@ -24,20 +28,22 @@ public final class Checks {
     Preconditions.checkArgument(condition, messageTemplate, args);
   }
 
-  public static <T extends Comparable<T>> T isGreaterThan(T value, T greaterThan, String name) {
-    return inRange(value, Range.greaterThan(greaterThan), name);
+  public static <T extends Comparable<T>> void isGreaterThan(T value, T greaterThan, String name) {
+    inRange(value, Range.greaterThan(greaterThan), name);
   }
 
-  public static <T extends Comparable<T>> T inClosedRange(T value, T lower, T upper, String name) {
-    return inRange(value, Range.closed(lower, upper), name);
+  public static <T extends Comparable<T>> void inClosedRange(
+      T value, T lower, T upper, String name) {
+    inRange(value, Range.closed(lower, upper), name);
   }
 
-  public static <T extends Comparable<T>> T inOpenRange(T value, T lower, T upper, String name) {
-    return inRange(value, Range.open(lower, upper), name);
+  public static <T extends Comparable<T>> void inOpenRange(T value, T lower, T upper, String name) {
+    inRange(value, Range.open(lower, upper), name);
   }
 
-  public static <T extends Comparable<T>> T inClosedOpen(T value, T lower, T upper, String name) {
-    return inRange(value, Range.closedOpen(lower, upper), name);
+  public static <T extends Comparable<T>> void inClosedOpen(
+      T value, T lower, T upper, String name) {
+    inRange(value, Range.closedOpen(lower, upper), name);
   }
 
   public static <T> T isNot(T value, T not, String name) {

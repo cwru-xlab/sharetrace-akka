@@ -8,9 +8,9 @@ public interface Logger {
     return log(messageAndKey, messageAndKey, TypedSupplier.of(loggable));
   }
 
-  boolean log(String message, String key, TypedSupplier<? extends Loggable> loggable);
+  boolean log(String message, String key, TypedSupplier<? extends Loggable> supplier);
 
-  default boolean log(String messageAndKey, TypedSupplier<? extends Loggable> loggable) {
-    return log(messageAndKey, messageAndKey, loggable);
+  default boolean log(String messageAndKey, TypedSupplier<? extends Loggable> supplier) {
+    return log(messageAndKey, messageAndKey, supplier);
   }
 }
