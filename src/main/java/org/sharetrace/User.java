@@ -11,6 +11,7 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.Temporal;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -162,9 +163,13 @@ public class User extends AbstractBehavior<UserMsg> {
   private RiskScoreMsg transmitted(RiskScoreMsg msg) {
     return RiskScoreMsg.builder()
         .replyTo(getContext().getSelf())
-        .score(msg.score().multiply(msgParams.transmissionRate()))
+        .score(transmitted(msg.score()))
         .id(msg.id())
         .build();
+  }
+
+  private RiskScore transmitted(RiskScore score) {
+    return RiskScore.of(score.value() * msgParams.transmissionRate(), score.time());
   }
 
   private void startRefreshTimer() {
@@ -212,10 +217,10 @@ public class User extends AbstractBehavior<UserMsg> {
   }
 
   private void refreshContacts() {
-    int nContacts = contacts.size();
+    int numContacts = contacts.size();
     contacts.values().removeIf(Predicate.not(this::isContactAlive));
     int numRemaining = contacts.size();
-    logContactsRefresh(numRemaining, nContacts - numRemaining);
+    logContactsRefresh(numRemaining, numContacts - numRemaining);
   }
 
   private void refreshCurrent() {
@@ -233,7 +238,7 @@ public class User extends AbstractBehavior<UserMsg> {
   }
 
   private void sendCached(ContactMsg msg) {
-    Instant buffered = buffered(msg.time());
+    Temporal buffered = buffered(msg.time());
     cache.max(buffered).ifPresent(cached -> sendCached(msg.replyTo(), cached));
   }
 
@@ -274,7 +279,7 @@ public class User extends AbstractBehavior<UserMsg> {
     return time.plus(msgParams.timeBuffer());
   }
 
-  private boolean isContactAlive(Instant time) {
+  private boolean isContactAlive(Temporal time) {
     return isAlive(time, msgParams.contactTtl());
   }
 
@@ -323,24 +328,15 @@ public class User extends AbstractBehavior<UserMsg> {
 
   private RiskScoreMsg updateAndCache(RiskScoreMsg msg) {
     RiskScoreMsg propagate;
-    if (isHigherThanCurrent(msg)) {
+    if (msg.score().value() > curr.score().value()) {
       updateWith(msg);
       logUpdate();
       propagate = transmitted;
     } else {
       propagate = transmitted(msg);
     }
-    return cached(propagate);
-  }
-
-  private boolean isHigherThanCurrent(RiskScoreMsg msg) {
-    // Do NOT use score tolerance; otherwise, it causes issues with logging and analysis.
-    return msg.score().value() > curr.score().value();
-  }
-
-  private RiskScoreMsg cached(RiskScoreMsg msg) {
-    cache.put(msg.score().time(), msg);
-    return msg;
+    cache.put(msg.score().time(), propagate);
+    return propagate;
   }
 
   private void logUpdate() {
@@ -383,7 +379,7 @@ public class User extends AbstractBehavior<UserMsg> {
         .build();
   }
 
-  private boolean isAlive(Instant time, Duration ttl) {
-    return Duration.between(time, clock.instant()).compareTo(ttl) < 0;
+  private boolean isAlive(Temporal temporal, Duration ttl) {
+    return Duration.between(temporal, clock.instant()).compareTo(ttl) < 0;
   }
 }
