@@ -5,10 +5,6 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.temporal.ChronoField;
-import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalAccessor;
-import java.time.temporal.TemporalAmount;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -68,15 +64,15 @@ public class IntervalCache<T> {
     return new Builder<>();
   }
 
-  private static long toLong(TemporalAmount time) {
-    return time.get(ChronoUnit.SECONDS);
+  private static long toLong(Duration duration) {
+    return duration.getSeconds();
   }
 
-  private static long toLong(TemporalAccessor time) {
-    return time.getLong(ChronoField.INSTANT_SECONDS);
+  private static long toLong(Instant time) {
+    return time.getEpochSecond();
   }
 
-  private static Predicate<Entry<Long, ?>> isNotAfter(TemporalAccessor time) {
+  private static Predicate<Entry<Long, ?>> isNotAfter(Instant time) {
     long t = toLong(time);
     return entry -> entry.getKey() <= t;
   }
@@ -88,7 +84,7 @@ public class IntervalCache<T> {
    * to retrieving the value, the cache is possibly refreshed if it has been sufficiently long since
    * its previous refresh.
    */
-  public Optional<T> get(TemporalAccessor time) {
+  public Optional<T> get(Instant time) {
     Objects.requireNonNull(time);
     refresh();
     long key = floorKey(toLong(time));
@@ -103,7 +99,7 @@ public class IntervalCache<T> {
    *
    * @throws IllegalArgumentException if the timespan does not contain the specified timestamp.
    */
-  public void put(TemporalAccessor time, T value) {
+  public void put(Instant time, T value) {
     Objects.requireNonNull(time);
     refresh();
     long key = checkedFloorKey(toLong(time));
@@ -119,7 +115,7 @@ public class IntervalCache<T> {
    * Prior to retrieving the value, the cache is possibly refreshed if it has been sufficiently long
    * since its previous refresh.
    */
-  public Optional<T> max(TemporalAccessor time) {
+  public Optional<T> max(Instant time) {
     Objects.requireNonNull(time);
     refresh();
     return cache.entrySet().stream().filter(isNotAfter(time)).map(Entry::getValue).max(comparator);

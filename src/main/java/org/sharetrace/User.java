@@ -238,7 +238,7 @@ public class User extends AbstractBehavior<UserMsg> {
   }
 
   private void sendCached(ContactMsg msg) {
-    Temporal buffered = buffered(msg.time());
+    Instant buffered = buffered(msg.time());
     cache.max(buffered).ifPresent(cached -> sendCached(msg.replyTo(), cached));
   }
 
