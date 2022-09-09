@@ -9,12 +9,12 @@ import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.immutables.value.Value;
 
 @Value.Immutable
-abstract class BaseDescriptiveStats {
+abstract class BaseStats {
 
-  public static DescriptiveStats of(Collection<? extends Number> values) {
+  public static Stats of(Collection<? extends Number> values) {
     DescriptiveStatistics statistics = new DescriptiveStatistics();
     values.stream().mapToDouble(Number::doubleValue).forEach(statistics::addValue);
-    return DescriptiveStats.builder().statistics(statistics).build();
+    return Stats.builder().statistics(statistics).build();
   }
 
   @Value.Derived

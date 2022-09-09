@@ -21,7 +21,7 @@ import org.sharetrace.logging.metrics.CycleMetrics;
 import org.sharetrace.logging.metrics.EccentricityMetrics;
 import org.sharetrace.logging.metrics.ScoringMetrics;
 import org.sharetrace.logging.metrics.SizeMetrics;
-import org.sharetrace.util.DescriptiveStats;
+import org.sharetrace.util.Stats;
 
 @Value.Immutable
 abstract class BaseGraphStats<V, E> {
@@ -74,10 +74,10 @@ abstract class BaseGraphStats<V, E> {
     return ScoringMetrics.builder()
         .degeneracy(degeneracy())
         .globalClusteringCoefficient(globalClusteringCoefficient())
-        .localClusteringCoefficient(DescriptiveStats.of(localClusteringCoefficients()))
-        .harmonicCentrality(DescriptiveStats.of(harmonicCentralities()))
-        .katzCentrality(DescriptiveStats.of(katzCentralities()))
-        .eigenvectorCentrality(DescriptiveStats.of(eigenvectorCentralities()))
+        .localClusteringCoefficient(Stats.of(localClusteringCoefficients()))
+        .harmonicCentrality(Stats.of(harmonicCentralities()))
+        .katzCentrality(Stats.of(katzCentralities()))
+        .eigenvectorCentrality(Stats.of(eigenvectorCentralities()))
         .build();
   }
 

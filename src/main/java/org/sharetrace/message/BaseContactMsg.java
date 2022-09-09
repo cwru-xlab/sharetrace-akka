@@ -3,19 +3,23 @@ package org.sharetrace.message;
 import akka.actor.typed.ActorRef;
 import java.time.Instant;
 import org.immutables.value.Value;
+import org.sharetrace.RiskPropagation;
+import org.sharetrace.User;
+import org.sharetrace.graph.Contact;
 
 /**
- * An interaction between two persons. As a message, a contact contains the timestamp at which the
- * two persons interacted and the actor reference of the other person. Thus, two complimentary
- * messages should be sent, one to each person of the contact, to initiate communication between
- * their actors.
+ * A message sent to a {@link User} to initiate message passing with another {@link User}.
+ *
+ * @see User
+ * @see RiskPropagation
+ * @see Contact
  */
 @Value.Immutable
 interface BaseContactMsg extends UserMsg {
 
-  /** Returns the time at which the two individuals came in contact. */
+  /** Returns the time at which the two users came in contact. */
   Instant time();
 
-  /** Returns the actor reference associated with the complimentary person of the contact. */
+  /** Returns the actor reference of the contacted user. */
   ActorRef<UserMsg> replyTo();
 }

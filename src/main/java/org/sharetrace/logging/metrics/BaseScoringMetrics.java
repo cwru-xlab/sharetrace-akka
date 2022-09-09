@@ -1,20 +1,20 @@
 package org.sharetrace.logging.metrics;
 
 import org.immutables.value.Value;
-import org.sharetrace.util.DescriptiveStats;
+import org.sharetrace.util.Stats;
 
 @Value.Immutable
 interface BaseScoringMetrics extends LoggableMetric {
 
-  DescriptiveStats harmonicCentrality();
+  Stats harmonicCentrality();
 
-  DescriptiveStats katzCentrality();
+  Stats katzCentrality();
 
-  DescriptiveStats eigenvectorCentrality();
+  Stats eigenvectorCentrality();
 
   float degeneracy();
 
   float globalClusteringCoefficient();
 
-  DescriptiveStats localClusteringCoefficient();
+  Stats localClusteringCoefficient();
 }

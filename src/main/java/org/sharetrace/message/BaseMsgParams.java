@@ -7,10 +7,12 @@ import org.sharetrace.User;
 import org.sharetrace.graph.ContactNetwork;
 import org.sharetrace.util.Checks;
 
-// TODO Update Javadoc
 /**
- * A collection of values that modify the behavior of a {@link User} while passing messages during
- * an execution of {@link RiskPropagation}.
+ * Parameters that affect how and if messages are passed between {@link User}s during {@link
+ * RiskPropagation}.
+ *
+ * @see User
+ * @see RiskPropagation
  */
 @SuppressWarnings("DefaultAnnotationParam")
 @Value.Immutable(copy = true)

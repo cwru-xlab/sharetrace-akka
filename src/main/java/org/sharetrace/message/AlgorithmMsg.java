@@ -1,4 +1,10 @@
 package org.sharetrace.message;
 
-/** A marker for all messages that can be sent by an instance of an algorithm. */
+import org.sharetrace.RiskPropagation;
+
+/**
+ * A marker interface for all messages that can be sent to an instance of an algorithm.
+ *
+ * @see RiskPropagation
+ */
 public interface AlgorithmMsg {}

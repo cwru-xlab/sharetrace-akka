@@ -1,6 +1,12 @@
 package org.sharetrace.message;
 
-/** A signal that is sent to an instance of an algorithm to invoke it. */
+import org.sharetrace.RiskPropagation;
+
+/**
+ * A message to send to an algorithm instance to invoke it.
+ *
+ * @see RiskPropagation
+ */
 public enum RunMsg implements AlgorithmMsg {
   INSTANCE
 }
