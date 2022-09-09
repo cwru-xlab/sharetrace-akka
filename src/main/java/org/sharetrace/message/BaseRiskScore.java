@@ -47,6 +47,10 @@ abstract class BaseRiskScore implements Comparable<RiskScore> {
   @Value.Parameter
   public abstract Instant time();
 
+  public RiskScore multiply(float multiplier) {
+    return RiskScore.of(value() * multiplier, time());
+  }
+
   @Value.Check
   protected void check() {
     Checks.inClosedRange(value(), MIN_VALUE, MAX_VALUE, "value");

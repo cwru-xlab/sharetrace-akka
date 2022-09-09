@@ -162,15 +162,8 @@ public class User extends AbstractBehavior<UserMsg> {
   private RiskScoreMsg transmitted(RiskScoreMsg msg) {
     return RiskScoreMsg.builder()
         .replyTo(getContext().getSelf())
-        .score(transmittedScore(msg))
+        .score(msg.score().multiply(msgParams.transmissionRate()))
         .id(msg.id())
-        .build();
-  }
-
-  private RiskScore transmittedScore(RiskScoreMsg msg) {
-    return RiskScore.builder()
-        .value(msg.score().value() * msgParams.transmissionRate())
-        .time(msg.score().time())
         .build();
   }
 
