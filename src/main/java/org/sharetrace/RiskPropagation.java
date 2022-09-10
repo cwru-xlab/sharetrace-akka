@@ -67,7 +67,7 @@ import org.slf4j.MDC;
  * @see RiskScoreMsg
  * @see ContactMsg
  */
-public class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
+public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
 
   private final Logger logger;
   private final Collection<Class<? extends Loggable>> loggable;

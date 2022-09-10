@@ -49,7 +49,7 @@ import org.sharetrace.util.TypedSupplier;
  *
  * @see UserParams
  */
-public class User extends AbstractBehavior<UserMsg> {
+public final class User extends AbstractBehavior<UserMsg> {
 
   private final TimerScheduler<UserMsg> timers;
   private final Logger logger;
