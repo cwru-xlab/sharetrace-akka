@@ -55,14 +55,11 @@ abstract class BaseFileContactNetwork implements ContactNetwork, TimeRef, Loggab
 
   @Value.Derived
   protected Map<Set<Integer>, Instant> contactMap() {
-    ContactsResult result;
     try (BufferedReader reader = Files.newBufferedReader(path())) {
-      result = toContacts(reader.lines()::iterator);
+      return toContacts(reader.lines()::iterator);
     } catch (IOException exception) {
       throw new UncheckedIOException(exception);
     }
-    adjustTimes(result);
-    return result.contacts;
   }
 
   protected abstract Path path();
@@ -81,12 +78,7 @@ abstract class BaseFileContactNetwork implements ContactNetwork, TimeRef, Loggab
     }
   }
 
-  private void adjustTimes(ContactsResult result) {
-    Duration offset = Duration.between(result.lastContactTime, refTime());
-    result.contacts.replaceAll((x, time) -> time.plus(offset));
-  }
-
-  private ContactsResult toContacts(Iterable<String> lines) {
+  private Map<Set<Integer>, Instant> toContacts(Iterable<String> lines) {
     Instant lastContactTime = Instant.MIN;
     Indexer<String> indexer = new Indexer<>();
     Map<Set<Integer>, Instant> contacts = new Object2ObjectOpenHashMap<>();
@@ -100,21 +92,12 @@ abstract class BaseFileContactNetwork implements ContactNetwork, TimeRef, Loggab
         lastContactTime = newer(lastContactTime, time);
       }
     }
-    return new ContactsResult(contacts, lastContactTime);
+    Duration offset = Duration.between(lastContactTime, refTime());
+    contacts.replaceAll((x, time) -> time.plus(offset));
+    return contacts;
   }
 
   private ContactTimeFactory contactTimeFactory() {
     return (user1, user2) -> contactMap().get(key(user1, user2));
-  }
-
-  private static final class ContactsResult {
-
-    private final Map<Set<Integer>, Instant> contacts;
-    private final Instant lastContactTime;
-
-    private ContactsResult(Map<Set<Integer>, Instant> contacts, Instant lastContactTime) {
-      this.contacts = contacts;
-      this.lastContactTime = lastContactTime;
-    }
   }
 }
