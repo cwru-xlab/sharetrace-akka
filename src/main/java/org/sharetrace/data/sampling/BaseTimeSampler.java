@@ -16,17 +16,11 @@ abstract class BaseTimeSampler extends BaseSampler<Instant> implements TimeRef {
     return refTime().minusSeconds(lookBack);
   }
 
-  /** Returns a timestamp to which all other timestamps be in reference */
   @Override
   public abstract Instant refTime();
 
-  /**
-   * Returns a probability distribution over which to sample time-to-live percentages. Samples are
-   * min-max normalized to ensure they are between 0 and 1.
-   */
   protected abstract RealDistribution lookBacks();
 
-  /** Returns the duration for which a timestamp is valid. */
   protected abstract Duration maxLookBack();
 
   @Value.Check
