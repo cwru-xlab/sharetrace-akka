@@ -3,7 +3,7 @@ package org.sharetrace.message;
 import org.sharetrace.RiskPropagation;
 
 /**
- * A message to send to an algorithm instance to invoke it.
+ * A message that invokes instance of an algorithm.
  *
  * @see RiskPropagation
  */
