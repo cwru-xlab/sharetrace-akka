@@ -25,7 +25,6 @@ import org.sharetrace.logging.metrics.LoggableMetric;
 import org.sharetrace.logging.metrics.ScoringMetrics;
 import org.sharetrace.logging.metrics.SizeMetrics;
 import org.sharetrace.logging.metrics.TopologyMetric;
-import org.sharetrace.util.Checks;
 import org.sharetrace.util.TypedSupplier;
 
 public final class ContactNetworkHelper {
@@ -41,15 +40,12 @@ public final class ContactNetworkHelper {
   public static ContactNetworkHelper of(
       GraphGenerator<Integer, DefaultEdge, ?> graphGenerator,
       Set<Class<? extends Loggable>> loggable) {
-    Logger logger = Logging.metricsLogger(loggable); // Create early to check for null.
-    Checks.isNotNull(graphGenerator, "graphGenerator");
     Graph<Integer, DefaultEdge> contactNetwork = GraphFactory.newUndirectedGraph();
     graphGenerator.generateGraph(contactNetwork);
-    return new ContactNetworkHelper(contactNetwork, logger);
+    return new ContactNetworkHelper(contactNetwork, Logging.metricsLogger(loggable));
   }
 
   public Set<Contact> contacts(ContactTimeFactory contactTimeFactory) {
-    Checks.isNotNull(contactTimeFactory, "contactTimeFactory");
     Set<DefaultEdge> edges = contactNetwork.edgeSet();
     return edges.stream()
         .map(edge -> toContact(edge, contactTimeFactory))

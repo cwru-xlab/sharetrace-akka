@@ -84,7 +84,6 @@ public final class IntervalCache<T> {
    * its previous refresh.
    */
   public Optional<T> get(Instant time) {
-    nonNullTime(time);
     refresh();
     long key = floorKey(toLong(time));
     return Optional.ofNullable(cache.get(key));
@@ -99,8 +98,6 @@ public final class IntervalCache<T> {
    * @throws IllegalArgumentException if the timespan does not contain the specified timestamp.
    */
   public void put(Instant time, T value) {
-    nonNullTime(time);
-    Checks.isNotNull(value, "value");
     refresh();
     long key = checkedFloorKey(toLong(time));
     T oldValue = cache.get(key);
@@ -116,7 +113,6 @@ public final class IntervalCache<T> {
    * since its previous refresh.
    */
   public Optional<T> max(Instant time) {
-    nonNullTime(time);
     refresh();
     return cache.entrySet().stream().filter(isNotAfter(time)).map(Entry::getValue).max(comparator);
   }
@@ -145,10 +141,6 @@ public final class IntervalCache<T> {
 
   private long getTime() {
     return toLong(clock.instant());
-  }
-
-  private static <T> void nonNullTime(T time) {
-    Checks.isNotNull(time, "time");
   }
 
   public static final class Builder<T> {

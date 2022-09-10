@@ -14,13 +14,10 @@ public final class TypedSupplier<T> implements Supplier<T> {
 
   @SuppressWarnings("unchecked")
   public static <T> TypedSupplier<T> of(T result) {
-    Checks.isNotNull(result, "result");
     return new TypedSupplier<>((Class<T>) result.getClass(), () -> result);
   }
 
   public static <T, R extends T> TypedSupplier<T> of(Class<R> type, Supplier<R> supplier) {
-    Checks.isNotNull(type, "type");
-    Checks.isNotNull(supplier, "supplier");
     return new TypedSupplier<>(type, supplier);
   }
 

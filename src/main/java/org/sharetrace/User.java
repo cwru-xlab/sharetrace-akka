@@ -42,6 +42,7 @@ import org.sharetrace.model.UserParams;
 import org.sharetrace.util.IntervalCache;
 import org.sharetrace.util.TypedSupplier;
 
+// TODO
 /**
  * An actor that corresponds to a {@link ContactNetwork} node. Collectively, all {@link User}s carry
  * out the execution of {@link RiskPropagation}.

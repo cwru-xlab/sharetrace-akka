@@ -35,6 +35,7 @@ import org.sharetrace.model.UserParams;
 import org.sharetrace.util.TypedSupplier;
 import org.slf4j.MDC;
 
+// TODO
 /**
  * A non-iterative, asynchronous implementation of the ShareTrace algorithm. The objective is to
  * estimate the marginal posterior probability of infection for all individuals in the specified

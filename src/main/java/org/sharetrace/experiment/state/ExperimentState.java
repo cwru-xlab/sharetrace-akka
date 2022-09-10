@@ -36,7 +36,6 @@ import org.sharetrace.model.CacheParams;
 import org.sharetrace.model.MsgParams;
 import org.sharetrace.model.RiskScore;
 import org.sharetrace.model.UserParams;
-import org.sharetrace.util.Checks;
 import org.sharetrace.util.IntervalCache;
 import org.sharetrace.util.TypedSupplier;
 import org.slf4j.MDC;
@@ -184,7 +183,7 @@ public final class ExperimentState {
     private UserParams userParams;
 
     private Builder(ExperimentContext context) {
-      ctx = Checks.isNotNull(context, "context");
+      ctx = context;
       logger = Logging.settingsLogger(context.loggable());
       setters = new EnumMap<>(Setter.class);
       mdc = new Object2ObjectOpenHashMap<>();
@@ -223,114 +222,106 @@ public final class ExperimentState {
       return ctx -> seed -> new UniformRealDistribution(new Well512a(seed), 0d, 1d);
     }
 
-    private static <T> T nonNullFactory(T factory) {
-      return Checks.isNotNull(factory, "factory");
-    }
-
-    private static <T> T nonNullParams(T params) {
-      return Checks.isNotNull(params, "params");
-    }
-
     public Builder id(Function<IdContext, String> factory) {
-      setters.put(Setter.ID, nonNullFactory(factory).andThen(this::id));
+      setters.put(Setter.ID, factory.andThen(this::id));
       return this;
     }
 
     public Builder id(String id) {
-      this.id = Checks.isNotNull(id, "id");
+      this.id = id;
       setters.remove(Setter.ID);
       return this;
     }
 
     public Builder msgParams(MsgParams params) {
-      msgParams = nonNullParams(params);
+      msgParams = params;
       setters.remove(Setter.MSG_PARAMS);
       return this;
     }
 
     public Builder cacheParams(CacheParams<RiskScoreMsg> params) {
-      cacheParams = nonNullParams(params);
+      cacheParams = params;
       setters.remove(Setter.CACHE_PARAMS);
       return this;
     }
 
     public Builder scoreTimesFactory(DistributionFactory factory) {
-      scoreTimesFactory = nonNullFactory(factory);
+      scoreTimesFactory = factory;
       setters.remove(Setter.SCORE_TIMES);
       return this;
     }
 
     public Builder scoreValuesFactory(DistributionFactory factory) {
-      scoreValuesFactory = nonNullFactory(factory);
+      scoreValuesFactory = factory;
       setters.remove(Setter.SCORE_VALUES);
       return this;
     }
 
     public Builder contactTimesFactory(DistributionFactory factory) {
-      contactTimesFactory = nonNullFactory(factory);
+      contactTimesFactory = factory;
       setters.remove(Setter.CONTACT_TIMES);
       return this;
     }
 
     public Builder userParams(UserParams params) {
-      userParams = nonNullParams(params);
+      userParams = params;
       setters.remove(Setter.USER_PARAMS);
       return this;
     }
 
     public Builder graphType(GraphType graphType) {
-      this.graphType = Checks.isNotNull(graphType, "graphType");
+      this.graphType = graphType;
       setters.remove(Setter.GRAPH_TYPE);
       return this;
     }
 
     public Builder dataset(Dataset dataset) {
-      this.dataset = Checks.isNotNull(dataset, "dataset");
+      this.dataset = dataset;
       setters.remove(Setter.DATASET);
       return this;
     }
 
     public Builder mdc(Function<MdcContext, Map<String, String>> factory) {
-      setters.put(Setter.MDC, nonNullFactory(factory).andThen(this::mdc));
+      setters.put(Setter.MDC, factory.andThen(this::mdc));
       return this;
     }
 
     public Builder mdc(Map<String, String> mdc) {
-      this.mdc.putAll(Checks.isNotNull(mdc, "mdc"));
+      this.mdc.putAll(mdc);
       setters.remove(Setter.MDC);
       return this;
     }
 
     public Builder msgParams(Function<MsgParamsContext, MsgParams> factory) {
-      setters.put(Setter.MSG_PARAMS, nonNullFactory(factory).andThen(this::msgParams));
+      setters.put(Setter.MSG_PARAMS, factory.andThen(this::msgParams));
       return this;
     }
 
     public Builder cacheParams(Function<CacheParamsContext, CacheParams<RiskScoreMsg>> factory) {
-      setters.put(Setter.CACHE_PARAMS, nonNullFactory(factory).andThen(this::cacheParams));
+      setters.put(Setter.CACHE_PARAMS, factory.andThen(this::cacheParams));
       return this;
     }
 
     public Builder scoreTimesFactory(
         Function<DistributionFactoryContext, DistributionFactory> factory) {
-      setters.put(Setter.SCORE_TIMES, nonNullFactory(factory).andThen(this::scoreTimesFactory));
+      setters.put(Setter.SCORE_TIMES, factory.andThen(this::scoreTimesFactory));
       return this;
     }
 
     public Builder scoreValuesFactory(
         Function<DistributionFactoryContext, DistributionFactory> factory) {
-      setters.put(Setter.SCORE_VALUES, nonNullFactory(factory).andThen(this::scoreValuesFactory));
+      setters.put(Setter.SCORE_VALUES, factory.andThen(this::scoreValuesFactory));
       return this;
     }
 
     public Builder contactTimesFactory(
         Function<DistributionFactoryContext, DistributionFactory> factory) {
-      setters.put(Setter.CONTACT_TIMES, nonNullFactory(factory).andThen(this::contactTimesFactory));
+      setters.put(Setter.CONTACT_TIMES, factory.andThen(this::contactTimesFactory));
       return this;
     }
 
     public Builder userParams(Function<UserParamsContext, UserParams> factory) {
-      setters.put(Setter.USER_PARAMS, nonNullFactory(factory).andThen(this::userParams));
+      setters.put(Setter.USER_PARAMS, factory.andThen(this::userParams));
       return this;
     }
 
@@ -402,12 +393,12 @@ public final class ExperimentState {
     }
 
     public Builder graphType(Function<GraphTypeContext, GraphType> factory) {
-      setters.put(Setter.GRAPH_TYPE, nonNullFactory(factory).andThen(this::graphType));
+      setters.put(Setter.GRAPH_TYPE, factory.andThen(this::graphType));
       return this;
     }
 
     public Builder dataset(Function<DatasetContext, Dataset> factory) {
-      setters.put(Setter.DATASET, nonNullFactory(factory).andThen(this::dataset));
+      setters.put(Setter.DATASET, factory.andThen(this::dataset));
       return this;
     }
 
