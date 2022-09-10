@@ -1,8 +1,8 @@
 package org.sharetrace.graph;
 
 import java.util.Set;
-import org.sharetrace.RiskPropagation;
-import org.sharetrace.User;
+import org.sharetrace.actors.RiskPropagation;
+import org.sharetrace.actors.User;
 
 /**
  * An undirected simple graph in which a node represents a user and an edge between two nodes

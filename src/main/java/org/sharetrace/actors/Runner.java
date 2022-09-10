@@ -1,4 +1,4 @@
-package org.sharetrace;
+package org.sharetrace.actors;
 
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.ActorSystem;
