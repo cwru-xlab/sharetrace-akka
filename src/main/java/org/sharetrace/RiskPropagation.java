@@ -138,8 +138,8 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
     Behavior<AlgorithmMsg> behavior = this;
     if (numUsers > 0) {
       Map<Integer, ActorRef<UserMsg>> users = newUsers();
-      splits.put(SendScoresRuntimeMetric.class, timer.run(() -> sendSymptomScores(users)));
-      splits.put(SendContactsRuntimeMetric.class, timer.run(() -> sendContacts(users)));
+      splits.put(SendScoresRuntimeMetric.class, timer.time(() -> sendSymptomScores(users)));
+      splits.put(SendContactsRuntimeMetric.class, timer.time(() -> sendContacts(users)));
     } else {
       behavior = Behaviors.stopped();
     }
@@ -234,7 +234,7 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
 
   private static final class Timer extends StopWatch {
 
-    public long run(Runnable runnable) {
+    public long time(Runnable runnable) {
       if (!isStarted()) {
         start();
       }
