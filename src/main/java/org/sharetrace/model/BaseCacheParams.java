@@ -1,4 +1,4 @@
-package org.sharetrace.util;
+package org.sharetrace.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.time.Duration;

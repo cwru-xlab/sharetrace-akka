@@ -1,4 +1,4 @@
-package org.sharetrace.message;
+package org.sharetrace.model;
 
 import java.time.Duration;
 import org.immutables.value.Value;

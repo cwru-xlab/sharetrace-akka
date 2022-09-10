@@ -32,13 +32,13 @@ import org.sharetrace.logging.events.SendCachedEvent;
 import org.sharetrace.logging.events.SendCurrentEvent;
 import org.sharetrace.logging.events.UpdateEvent;
 import org.sharetrace.message.ContactMsg;
-import org.sharetrace.message.MsgParams;
 import org.sharetrace.message.RefreshMsg;
-import org.sharetrace.message.RiskScore;
 import org.sharetrace.message.RiskScoreMsg;
 import org.sharetrace.message.TimeoutMsg;
 import org.sharetrace.message.UserMsg;
-import org.sharetrace.message.UserParams;
+import org.sharetrace.model.MsgParams;
+import org.sharetrace.model.RiskScore;
+import org.sharetrace.model.UserParams;
 import org.sharetrace.util.IntervalCache;
 import org.sharetrace.util.TypedSupplier;
 

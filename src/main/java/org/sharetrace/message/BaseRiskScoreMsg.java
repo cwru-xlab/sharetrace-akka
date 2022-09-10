@@ -5,6 +5,7 @@ import java.util.UUID;
 import org.immutables.value.Value;
 import org.sharetrace.RiskPropagation;
 import org.sharetrace.User;
+import org.sharetrace.model.RiskScore;
 
 /**
  * A uniquely identifiable message that contains the {@link RiskScore} of a {@link User}.

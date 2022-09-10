@@ -1,7 +1,7 @@
 package org.sharetrace.data.factory;
 
 import java.util.function.Supplier;
-import org.sharetrace.message.RiskScore;
+import org.sharetrace.model.RiskScore;
 
 @FunctionalInterface
 public interface RiskScoreFactory {

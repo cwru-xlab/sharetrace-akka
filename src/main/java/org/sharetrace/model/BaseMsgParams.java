@@ -1,9 +1,10 @@
-package org.sharetrace.message;
+package org.sharetrace.model;
 
 import java.time.Duration;
 import org.immutables.value.Value;
 import org.sharetrace.RiskPropagation;
 import org.sharetrace.User;
+import org.sharetrace.message.RiskScoreMsg;
 import org.sharetrace.util.Checks;
 
 /**

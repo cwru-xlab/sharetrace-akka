@@ -8,10 +8,10 @@ import org.sharetrace.data.FileDataset;
 import org.sharetrace.data.SampledDataset;
 import org.sharetrace.data.factory.GraphGeneratorBuilder;
 import org.sharetrace.data.factory.GraphGeneratorFactory;
-import org.sharetrace.message.MsgParams;
 import org.sharetrace.message.RiskScoreMsg;
-import org.sharetrace.message.UserParams;
-import org.sharetrace.util.CacheParams;
+import org.sharetrace.model.CacheParams;
+import org.sharetrace.model.MsgParams;
+import org.sharetrace.model.UserParams;
 
 public final class Defaults {
 

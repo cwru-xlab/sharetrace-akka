@@ -26,12 +26,12 @@ import org.sharetrace.logging.metrics.LoggableMetric;
 import org.sharetrace.logging.metrics.RuntimeMetric;
 import org.sharetrace.message.AlgorithmMsg;
 import org.sharetrace.message.ContactMsg;
-import org.sharetrace.message.MsgParams;
-import org.sharetrace.message.RiskScore;
 import org.sharetrace.message.RiskScoreMsg;
 import org.sharetrace.message.RunMsg;
 import org.sharetrace.message.UserMsg;
-import org.sharetrace.message.UserParams;
+import org.sharetrace.model.MsgParams;
+import org.sharetrace.model.RiskScore;
+import org.sharetrace.model.UserParams;
 import org.sharetrace.util.TypedSupplier;
 import org.slf4j.MDC;
 

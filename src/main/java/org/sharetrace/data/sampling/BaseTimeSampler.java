@@ -4,8 +4,8 @@ import java.time.Duration;
 import java.time.Instant;
 import org.apache.commons.math3.distribution.RealDistribution;
 import org.immutables.value.Value;
+import org.sharetrace.model.TimeRef;
 import org.sharetrace.util.Checks;
-import org.sharetrace.util.TimeRef;
 
 @Value.Immutable
 abstract class BaseTimeSampler extends BaseSampler<Instant> implements TimeRef {

@@ -5,7 +5,7 @@ import org.immutables.value.Value;
 import org.jgrapht.generate.GraphGenerator;
 import org.jgrapht.graph.DefaultEdge;
 import org.sharetrace.data.factory.ContactTimeFactory;
-import org.sharetrace.util.LoggableRef;
+import org.sharetrace.model.LoggableRef;
 
 @Value.Immutable
 abstract class BaseSampledContactNetwork implements ContactNetwork, LoggableRef {

@@ -18,9 +18,9 @@ import org.jgrapht.Graphs;
 import org.jgrapht.generate.GraphGenerator;
 import org.jgrapht.graph.DefaultEdge;
 import org.sharetrace.data.factory.ContactTimeFactory;
+import org.sharetrace.model.LoggableRef;
+import org.sharetrace.model.TimeRef;
 import org.sharetrace.util.Indexer;
-import org.sharetrace.util.LoggableRef;
-import org.sharetrace.util.TimeRef;
 
 @Value.Immutable
 abstract class BaseFileContactNetwork implements ContactNetwork, TimeRef, LoggableRef {

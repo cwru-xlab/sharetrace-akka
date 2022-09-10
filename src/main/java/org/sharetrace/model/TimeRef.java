@@ -1,4 +1,4 @@
-package org.sharetrace.util;
+package org.sharetrace.model;
 
 import java.time.Instant;
 

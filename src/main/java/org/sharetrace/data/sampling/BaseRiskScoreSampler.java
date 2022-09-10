@@ -3,7 +3,7 @@ package org.sharetrace.data.sampling;
 import java.time.Instant;
 import org.apache.commons.math3.distribution.RealDistribution;
 import org.immutables.value.Value;
-import org.sharetrace.message.RiskScore;
+import org.sharetrace.model.RiskScore;
 
 @Value.Immutable
 abstract class BaseRiskScoreSampler extends BaseSampler<RiskScore> {

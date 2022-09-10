@@ -1,4 +1,4 @@
-package org.sharetrace.util;
+package org.sharetrace.model;
 
 import java.util.Set;
 import org.sharetrace.logging.Loggable;

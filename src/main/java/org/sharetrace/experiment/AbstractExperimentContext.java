@@ -1,8 +1,8 @@
 package org.sharetrace.experiment;
 
 import java.time.Clock;
-import org.sharetrace.util.LoggableRef;
-import org.sharetrace.util.TimeRef;
+import org.sharetrace.model.LoggableRef;
+import org.sharetrace.model.TimeRef;
 
 public interface AbstractExperimentContext extends TimeRef, LoggableRef {
 

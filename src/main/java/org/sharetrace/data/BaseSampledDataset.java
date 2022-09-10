@@ -8,7 +8,7 @@ import org.sharetrace.data.factory.GraphGeneratorFactory;
 import org.sharetrace.data.factory.RiskScoreFactory;
 import org.sharetrace.graph.ContactNetwork;
 import org.sharetrace.graph.SampledContactNetwork;
-import org.sharetrace.message.RiskScore;
+import org.sharetrace.model.RiskScore;
 
 @SuppressWarnings("DefaultAnnotationParam")
 @Value.Immutable(copy = true)

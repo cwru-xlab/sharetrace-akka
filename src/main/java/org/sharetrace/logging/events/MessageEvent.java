@@ -1,6 +1,6 @@
 package org.sharetrace.logging.events;
 
-import org.sharetrace.message.RiskScore;
+import org.sharetrace.model.RiskScore;
 
 interface MessageEvent extends LoggableEvent {
 

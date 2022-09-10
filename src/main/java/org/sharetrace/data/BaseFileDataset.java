@@ -5,8 +5,8 @@ import org.immutables.value.Value;
 import org.sharetrace.data.factory.RiskScoreFactory;
 import org.sharetrace.graph.ContactNetwork;
 import org.sharetrace.graph.FileContactNetwork;
-import org.sharetrace.message.RiskScore;
-import org.sharetrace.util.TimeRef;
+import org.sharetrace.model.RiskScore;
+import org.sharetrace.model.TimeRef;
 
 @SuppressWarnings("DefaultAnnotationParam")
 @Value.Immutable(copy = true)
