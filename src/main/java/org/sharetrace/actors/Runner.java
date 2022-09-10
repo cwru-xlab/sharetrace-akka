@@ -9,7 +9,7 @@ import akka.actor.typed.javadsl.Behaviors;
 import org.sharetrace.message.AlgorithmMsg;
 import org.sharetrace.message.RunMsg;
 
-public class Runner {
+public final class Runner {
 
   private Runner() {}
 
