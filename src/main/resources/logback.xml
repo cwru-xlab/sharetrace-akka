@@ -3,9 +3,6 @@
   <timestamp datePattern="yyyyMMddHHmmss" key="bySecond"/>
   <property name="log.dir" value="logs/${bySecond}"/>
   <property name="graphs.log.dir" scope="context" value="${log.dir}/graphs"/>
-  <root level="info">
-    <appender-ref ref="console"/>
-  </root>
   <appender
     class="net.logstash.logback.appender.LoggingEventAsyncDisruptorAppender"
     name="console">
@@ -109,6 +106,9 @@
     <ringBufferSize>8192</ringBufferSize> <!--Default: blocking-->
     <waitStrategyType>blocking</waitStrategyType>
   </appender>
+  <root level="info">
+    <appender-ref ref="console"/>
+  </root>
   <!--Ref: https://github.com/logfellow/logstash-logback-encoder#async-appenders-->
   <logger additivity="false" level="info" name="EventsLogger">
     <appender-ref ref="events"/>
