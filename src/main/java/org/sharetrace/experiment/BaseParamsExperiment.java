@@ -5,7 +5,7 @@ import java.util.stream.Collectors;
 import org.immutables.value.Value;
 import org.sharetrace.experiment.state.Defaults;
 import org.sharetrace.experiment.state.ExperimentState;
-import org.sharetrace.logging.metrics.TopologyMetric;
+import org.sharetrace.logging.metrics.GraphTopology;
 import org.sharetrace.util.Range;
 
 @Value.Immutable
@@ -21,7 +21,7 @@ abstract class BaseParamsExperiment implements Experiment {
     ExperimentContext context = ExperimentContext.create();
     return context.withLoggable(
         context.loggable().stream()
-            .filter(Predicate.not(loggable -> loggable.equals(TopologyMetric.class)))
+            .filter(Predicate.not(loggable -> loggable.equals(GraphTopology.class)))
             .collect(Collectors.toUnmodifiableSet()));
   }
 

@@ -15,10 +15,10 @@ import org.jgrapht.alg.scoring.EigenvectorCentrality;
 import org.jgrapht.alg.scoring.KatzCentrality;
 import org.jgrapht.alg.shortestpath.FloydWarshallShortestPaths;
 import org.jgrapht.alg.shortestpath.GraphMeasurer;
-import org.sharetrace.logging.metrics.CycleMetrics;
-import org.sharetrace.logging.metrics.EccentricityMetrics;
-import org.sharetrace.logging.metrics.ScoringMetrics;
-import org.sharetrace.logging.metrics.SizeMetrics;
+import org.sharetrace.logging.metrics.GraphCycles;
+import org.sharetrace.logging.metrics.GraphEccentricity;
+import org.sharetrace.logging.metrics.GraphScores;
+import org.sharetrace.logging.metrics.GraphSize;
 import org.sharetrace.util.Stats;
 
 @Value.Immutable
@@ -31,8 +31,8 @@ abstract class BaseGraphStats<V, E> {
         .collect(() -> new FloatArrayList(scores.size()), List::add, List::addAll);
   }
 
-  public SizeMetrics sizeMetrics() {
-    return SizeMetrics.builder().numNodes(numNodes()).numEdges(numEdges()).build();
+  public GraphSize graphSize() {
+    return GraphSize.builder().numNodes(numNodes()).numEdges(numEdges()).build();
   }
 
   @Value.Lazy
@@ -45,8 +45,8 @@ abstract class BaseGraphStats<V, E> {
     return graph().edgeSet().size();
   }
 
-  public CycleMetrics cycleMetrics() {
-    return CycleMetrics.builder().numTriangles(numTriangles()).girth(girth()).build();
+  public GraphCycles graphCycles() {
+    return GraphCycles.builder().numTriangles(numTriangles()).girth(girth()).build();
   }
 
   @Value.Lazy
@@ -59,8 +59,8 @@ abstract class BaseGraphStats<V, E> {
     return GraphMetrics.getGirth(graph());
   }
 
-  public EccentricityMetrics eccentricityMetrics() {
-    return EccentricityMetrics.builder()
+  public GraphEccentricity graphEccentricity() {
+    return GraphEccentricity.builder()
         .radius(radius())
         .diameter(diameter())
         .center(center())
@@ -68,8 +68,8 @@ abstract class BaseGraphStats<V, E> {
         .build();
   }
 
-  public ScoringMetrics scoringMetrics() {
-    return ScoringMetrics.builder()
+  public GraphScores graphScores() {
+    return GraphScores.builder()
         .degeneracy(degeneracy())
         .globalClusteringCoefficient(globalClusteringCoefficient())
         .localClusteringCoefficient(Stats.of(localClusteringCoefficients()))

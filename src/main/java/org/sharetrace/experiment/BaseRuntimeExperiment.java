@@ -5,10 +5,11 @@ import org.immutables.value.Value;
 import org.sharetrace.data.SampledDataset;
 import org.sharetrace.experiment.state.Defaults;
 import org.sharetrace.experiment.state.ExperimentState;
-import org.sharetrace.logging.metrics.RiskPropRuntimeMetric;
-import org.sharetrace.logging.metrics.SendContactsRuntimeMetric;
-import org.sharetrace.logging.metrics.SendScoresRuntimeMetric;
-import org.sharetrace.logging.metrics.SizeMetrics;
+import org.sharetrace.logging.metrics.GraphSize;
+import org.sharetrace.logging.metrics.MsgPassingRuntime;
+import org.sharetrace.logging.metrics.RiskPropRuntime;
+import org.sharetrace.logging.metrics.SendContactsRuntime;
+import org.sharetrace.logging.metrics.SendScoresRuntime;
 import org.sharetrace.logging.settings.ExperimentSettings;
 import org.sharetrace.util.Range;
 
@@ -22,10 +23,11 @@ abstract class BaseRuntimeExperiment implements Experiment {
     return ExperimentContext.create()
         .withLoggable(
             Set.of(
-                SizeMetrics.class,
-                RiskPropRuntimeMetric.class,
-                SendScoresRuntimeMetric.class,
-                SendContactsRuntimeMetric.class,
+                GraphSize.class,
+                SendScoresRuntime.class,
+                SendContactsRuntime.class,
+                RiskPropRuntime.class,
+                MsgPassingRuntime.class,
                 ExperimentSettings.class));
   }
 

@@ -3,7 +3,7 @@ package org.sharetrace.logging.metrics;
 import org.immutables.value.Value;
 
 @Value.Immutable
-interface BaseSizeMetrics extends LoggableMetric {
+interface BaseGraphSize extends LoggableMetric {
 
   long numNodes();
 

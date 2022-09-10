@@ -13,14 +13,15 @@ import org.sharetrace.logging.events.ReceiveEvent;
 import org.sharetrace.logging.events.SendCachedEvent;
 import org.sharetrace.logging.events.SendCurrentEvent;
 import org.sharetrace.logging.events.UpdateEvent;
-import org.sharetrace.logging.metrics.CycleMetrics;
-import org.sharetrace.logging.metrics.EccentricityMetrics;
-import org.sharetrace.logging.metrics.RiskPropRuntimeMetric;
-import org.sharetrace.logging.metrics.ScoringMetrics;
-import org.sharetrace.logging.metrics.SendContactsRuntimeMetric;
-import org.sharetrace.logging.metrics.SendScoresRuntimeMetric;
-import org.sharetrace.logging.metrics.SizeMetrics;
-import org.sharetrace.logging.metrics.TopologyMetric;
+import org.sharetrace.logging.metrics.GraphCycles;
+import org.sharetrace.logging.metrics.GraphEccentricity;
+import org.sharetrace.logging.metrics.GraphScores;
+import org.sharetrace.logging.metrics.GraphSize;
+import org.sharetrace.logging.metrics.GraphTopology;
+import org.sharetrace.logging.metrics.MsgPassingRuntime;
+import org.sharetrace.logging.metrics.RiskPropRuntime;
+import org.sharetrace.logging.metrics.SendContactsRuntime;
+import org.sharetrace.logging.metrics.SendScoresRuntime;
 import org.sharetrace.logging.settings.ExperimentSettings;
 
 @SuppressWarnings("DefaultAnnotationParam")
@@ -63,14 +64,15 @@ abstract class BaseExperimentContext implements AbstractExperimentContext {
         SendCurrentEvent.class,
         UpdateEvent.class,
         // Metrics
-        CycleMetrics.class,
-        EccentricityMetrics.class,
-        ScoringMetrics.class,
-        SizeMetrics.class,
-        RiskPropRuntimeMetric.class,
-        SendScoresRuntimeMetric.class,
-        SendContactsRuntimeMetric.class,
-        TopologyMetric.class,
+        GraphCycles.class,
+        GraphEccentricity.class,
+        GraphScores.class,
+        GraphSize.class,
+        SendScoresRuntime.class,
+        SendContactsRuntime.class,
+        RiskPropRuntime.class,
+        MsgPassingRuntime.class,
+        GraphTopology.class,
         // Settings
         ExperimentSettings.class);
   }

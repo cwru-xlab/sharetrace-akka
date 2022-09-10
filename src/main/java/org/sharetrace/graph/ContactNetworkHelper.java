@@ -19,12 +19,12 @@ import org.sharetrace.data.factory.ContactTimeFactory;
 import org.sharetrace.logging.Loggable;
 import org.sharetrace.logging.Logger;
 import org.sharetrace.logging.Logging;
-import org.sharetrace.logging.metrics.CycleMetrics;
-import org.sharetrace.logging.metrics.EccentricityMetrics;
+import org.sharetrace.logging.metrics.GraphCycles;
+import org.sharetrace.logging.metrics.GraphEccentricity;
+import org.sharetrace.logging.metrics.GraphScores;
+import org.sharetrace.logging.metrics.GraphSize;
+import org.sharetrace.logging.metrics.GraphTopology;
 import org.sharetrace.logging.metrics.LoggableMetric;
-import org.sharetrace.logging.metrics.ScoringMetrics;
-import org.sharetrace.logging.metrics.SizeMetrics;
-import org.sharetrace.logging.metrics.TopologyMetric;
 import org.sharetrace.util.TypedSupplier;
 
 public final class ContactNetworkHelper {
@@ -57,8 +57,16 @@ public final class ContactNetworkHelper {
   }
 
   public void logMetrics() {
-    logStats();
-    logTopology();
+    GraphStats<?, ?> stats = GraphStats.of(contactNetwork);
+    String key = LoggableMetric.KEY;
+    logger.log(key, TypedSupplier.of(GraphSize.class, stats::graphSize));
+    logger.log(key, TypedSupplier.of(GraphCycles.class, stats::graphCycles));
+    logger.log(key, TypedSupplier.of(GraphEccentricity.class, stats::graphEccentricity));
+    logger.log(key, TypedSupplier.of(GraphScores.class, stats::graphScores));
+    String filename = UUID.randomUUID().toString();
+    if (logger.log(LoggableMetric.KEY, GraphTopology.of(filename))) {
+      exportNetwork(filename);
+    }
   }
 
   private Contact toContact(DefaultEdge edge, ContactTimeFactory factory) {
@@ -66,22 +74,6 @@ public final class ContactNetworkHelper {
     int user2 = contactNetwork.getEdgeTarget(edge);
     Instant time = factory.contactTime(user1, user2);
     return Contact.builder().user1(user1).user2(user2).time(time).build();
-  }
-
-  private void logStats() {
-    GraphStats<?, ?> stats = GraphStats.of(contactNetwork);
-    String key = LoggableMetric.KEY;
-    logger.log(key, TypedSupplier.of(SizeMetrics.class, stats::sizeMetrics));
-    logger.log(key, TypedSupplier.of(CycleMetrics.class, stats::cycleMetrics));
-    logger.log(key, TypedSupplier.of(EccentricityMetrics.class, stats::eccentricityMetrics));
-    logger.log(key, TypedSupplier.of(ScoringMetrics.class, stats::scoringMetrics));
-  }
-
-  private void logTopology() {
-    String filename = UUID.randomUUID().toString();
-    if (logger.log(LoggableMetric.KEY, TopologyMetric.of(filename))) {
-      exportNetwork(filename);
-    }
   }
 
   private void exportNetwork(String filename) {

@@ -3,4 +3,4 @@ package org.sharetrace.logging.metrics;
 import org.immutables.value.Value;
 
 @Value.Immutable
-interface BaseSendContactsRuntimeMetric extends AbstractRuntimeMetric {}
+interface BaseRiskPropRuntime extends AbstractRuntime {}

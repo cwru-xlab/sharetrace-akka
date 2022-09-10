@@ -3,8 +3,9 @@ package org.sharetrace.logging.metrics;
 import org.immutables.value.Value;
 
 @Value.Immutable
-interface BaseTopologyMetric extends LoggableMetric {
+interface BaseGraphCycles extends LoggableMetric {
 
-  @Value.Parameter
-  String id();
+  int girth();
+
+  long numTriangles();
 }
