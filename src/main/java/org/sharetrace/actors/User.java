@@ -92,14 +92,22 @@ public final class User extends AbstractBehavior<UserMsg> {
       MsgParams msgParams,
       Clock clock,
       IntervalCache<RiskScoreMsg> cache) {
-    return Behaviors.setup(
-        ctx -> {
-          ctx.setLoggerName(Logging.eventsLoggerName());
-          Behavior<UserMsg> user =
-              Behaviors.withTimers(
-                  timers -> new User(ctx, timers, loggable, userParams, msgParams, clock, cache));
-          return Behaviors.withMdc(UserMsg.class, message -> mdc, user);
-        });
+    return Behaviors.setup(ctx -> newUser(ctx, mdc, loggable, userParams, msgParams, clock, cache));
+  }
+
+  private static Behavior<UserMsg> newUser(
+      ActorContext<UserMsg> context,
+      Map<String, String> mdc,
+      Set<Class<? extends Loggable>> loggable,
+      UserParams userParams,
+      MsgParams msgParams,
+      Clock clock,
+      IntervalCache<RiskScoreMsg> cache) {
+    context.setLoggerName(Logging.eventsLoggerName());
+    Behavior<UserMsg> user =
+        Behaviors.withTimers(
+            timers -> new User(context, timers, loggable, userParams, msgParams, clock, cache));
+    return Behaviors.withMdc(UserMsg.class, message -> mdc, user);
   }
 
   private static Predicate<Entry<ActorRef<UserMsg>, ?>> isNotFrom(RiskScoreMsg msg) {
