@@ -19,6 +19,5 @@ import org.immutables.value.Value.Style.ImplementationVisibility;
     newBuilder = "create",
     typeAbstract = "Base*",
     typeImmutable = "*",
-    deepImmutablesDetection = true,
     defaults = @Value.Immutable(copy = false, lazyhash = true))
 @interface ImmutableStyle {}
