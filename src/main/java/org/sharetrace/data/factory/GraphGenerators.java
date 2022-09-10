@@ -11,7 +11,7 @@ import org.jgrapht.generate.WattsStrogatzGraphGenerator;
 import org.jgrapht.graph.DefaultEdge;
 import org.sharetrace.experiment.GraphType;
 
-class GraphGenerators {
+final class GraphGenerators {
 
   private GraphGenerators() {}
 

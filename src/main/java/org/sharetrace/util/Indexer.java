@@ -4,7 +4,7 @@ import com.google.common.base.MoreObjects;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import java.util.Map;
 
-public class Indexer<T> {
+public final class Indexer<T> {
 
   private final Map<T, Integer> index;
   private int value;
