@@ -247,8 +247,7 @@ public final class User extends AbstractBehavior<UserMsg> {
   }
 
   private void sendCached(ContactMsg msg) {
-    Instant buffered = buffered(msg.time());
-    cache.max(buffered).ifPresent(cached -> sendCached(msg.replyTo(), cached));
+    cache.max(buffered(msg.time())).ifPresent(cached -> sendCached(msg.replyTo(), cached));
   }
 
   private Predicate<Entry<?, Instant>> isContactRecent(RiskScoreMsg msg) {
