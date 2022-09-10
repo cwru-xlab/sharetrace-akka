@@ -11,8 +11,8 @@ public final class Checks {
 
   private Checks() {}
 
-  public static <T> T isNotNull(T value, String name) {
-    return Objects.requireNonNull(value, name);
+  public static <T> void isNotNull(T value, String name) {
+    Objects.requireNonNull(value, name);
   }
 
   public static <T extends Comparable<T>> void isAtLeast(T value, T atLeast, String name) {
