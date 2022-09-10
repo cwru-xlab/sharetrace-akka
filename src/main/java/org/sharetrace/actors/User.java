@@ -64,14 +64,14 @@ public final class User extends AbstractBehavior<UserMsg> {
   private float sendThresh;
 
   private User(
-      ActorContext<UserMsg> ctx,
+      ActorContext<UserMsg> context,
       TimerScheduler<UserMsg> timers,
       Set<Class<? extends Loggable>> loggable,
       UserParams userParams,
       MsgParams msgParams,
       Clock clock,
       IntervalCache<RiskScoreMsg> cache) {
-    super(ctx);
+    super(context);
     this.timers = timers;
     this.logger = Logging.logger(loggable, getContext()::getLog);
     this.contacts = new Object2ObjectOpenHashMap<>();
