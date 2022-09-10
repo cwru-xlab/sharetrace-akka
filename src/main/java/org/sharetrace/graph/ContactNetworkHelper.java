@@ -45,10 +45,10 @@ public final class ContactNetworkHelper {
     return new ContactNetworkHelper(contactNetwork, Logging.metricsLogger(loggable));
   }
 
-  public Set<Contact> contacts(ContactTimeFactory contactTimeFactory) {
+  public Set<Contact> contacts(ContactTimeFactory timeFactory) {
     Set<DefaultEdge> edges = contactNetwork.edgeSet();
     return edges.stream()
-        .map(edge -> toContact(edge, contactTimeFactory))
+        .map(edge -> toContact(edge, timeFactory))
         .collect(ObjectOpenHashSet.toSetWithExpectedSize(edges.size()));
   }
 
