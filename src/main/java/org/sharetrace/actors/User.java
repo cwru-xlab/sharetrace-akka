@@ -42,12 +42,18 @@ import org.sharetrace.model.UserParams;
 import org.sharetrace.util.IntervalCache;
 import org.sharetrace.util.TypedSupplier;
 
-// TODO
 /**
- * An actor that corresponds to a {@link ContactNetwork} node. Collectively, all {@link User}s carry
- * out the execution of {@link RiskPropagation}.
+ * An actor that corresponds to a vertex in a {@link ContactNetwork}. Collectively, all {@link
+ * User}s carry out the execution of {@link RiskPropagation}.
  *
+ * @see RiskPropagation
+ * @see RiskScoreMsg
+ * @see ContactMsg
+ * @see TimeoutMsg
+ * @see RefreshMsg
  * @see UserParams
+ * @see MsgParams
+ * @see IntervalCache
  */
 public final class User extends AbstractBehavior<UserMsg> {
 

@@ -2,15 +2,13 @@ package org.sharetrace.graph;
 
 import java.util.Set;
 import org.sharetrace.actors.RiskPropagation;
-import org.sharetrace.actors.User;
 
 /**
- * An undirected simple graph in which a node represents a user and an edge between two nodes
- * indicates that the associated users of the incident nodes came in contact. Node identifiers are
- * zero-based contiguous natural numbers. In an instance of {@link RiskPropagation}, the topology of
- * this graph is mapped to a collection {@link User} actors.
+ * An undirected simple graph in which a vertex represents a user and an edge indicates that the
+ * associated users of the incident vertices came in contact. Vertices are enumerated, starting at
+ * 0.
  *
- * @see User
+ * @see RiskPropagation
  * @see Contact
  */
 public interface ContactNetwork {

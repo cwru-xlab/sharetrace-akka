@@ -49,9 +49,9 @@ import org.slf4j.MDC;
  *
  * <ol>
  *   <li>For each vertex in the {@link ContactNetwork}, create a {@link User} actor.
- *   <li>Send each {@link User} their initial symptom score in a {@link RiskScoreMsg}.
+ *   <li>Send each {@link User} their symptom score in a {@link RiskScoreMsg}.
  *   <li>For each {@link Contact} in the {@link ContactNetwork}, send a {@link ContactMsg} to each
- *       {@link User} that corresponds to the vertex incident to the edge.
+ *       {@link User} that contains the {@link ActorRef} of the other {@link User}.
  *   <li>Terminate once all {@link User}s have stopped passing messages.
  * </ol>
  *
