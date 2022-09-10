@@ -10,7 +10,6 @@ import akka.actor.typed.javadsl.Receive;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import java.time.Clock;
-import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -70,7 +69,7 @@ import org.slf4j.MDC;
 public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
 
   private final Logger logger;
-  private final Collection<Class<? extends Loggable>> loggable;
+  private final Set<Class<? extends Loggable>> loggable;
   private final Map<String, String> mdc;
   private final UserParams userParams;
   private final MsgParams msgParams;
