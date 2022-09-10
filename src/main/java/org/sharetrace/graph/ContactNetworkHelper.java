@@ -45,6 +45,10 @@ final class ContactNetworkHelper {
     return new ContactNetworkHelper(contactNetwork, Logging.metricsLogger(loggable));
   }
 
+  private static TypedSupplier<LoggableMetric> graphTopology(String filename) {
+    return TypedSupplier.of(GraphTopology.class, () -> GraphTopology.of(filename));
+  }
+
   public Set<Contact> contacts(ContactTimeFactory timeFactory) {
     Set<DefaultEdge> edges = contactNetwork.edgeSet();
     return edges.stream()
@@ -64,7 +68,7 @@ final class ContactNetworkHelper {
     logger.log(key, TypedSupplier.of(GraphEccentricity.class, stats::graphEccentricity));
     logger.log(key, TypedSupplier.of(GraphScores.class, stats::graphScores));
     String filename = UUID.randomUUID().toString();
-    if (logger.log(LoggableMetric.KEY, GraphTopology.of(filename))) {
+    if (logger.log(key, graphTopology(filename))) {
       exportNetwork(filename);
     }
   }
