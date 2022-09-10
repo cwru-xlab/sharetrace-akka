@@ -135,12 +135,20 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
         });
   }
 
+  private static long milli(long nanos) {
+    return TimeUnit.MILLISECONDS.convert(nanos, TimeUnit.NANOSECONDS);
+  }
+
   @Override
   public Receive<AlgorithmMsg> createReceive() {
     return newReceiveBuilder()
         .onMessage(RunMsg.class, this::onRunMessage)
         .onSignal(Terminated.class, this::onTerminateMsg)
         .build();
+  }
+
+  private long milli(Class<?> metric) {
+    return milli(timer.nanos(metric));
   }
 
   private Behavior<AlgorithmMsg> onRunMessage(RunMsg msg) {
@@ -224,46 +232,42 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
   }
 
   private CreateUsersRuntime createRuntime() {
-    return CreateUsersRuntime.of(timer.runtime(CreateUsersRuntime.class));
+    return CreateUsersRuntime.of(milli(CreateUsersRuntime.class));
   }
 
   private SendScoresRuntime scoresRuntime() {
-    return SendScoresRuntime.of(timer.runtime(SendScoresRuntime.class));
+    return SendScoresRuntime.of(milli(SendScoresRuntime.class));
   }
 
   private SendContactsRuntime contactsRuntime() {
-    return SendContactsRuntime.of(timer.runtime(SendContactsRuntime.class));
+    return SendContactsRuntime.of(milli(SendContactsRuntime.class));
   }
 
   private RiskPropRuntime riskPropRuntime() {
-    return RiskPropRuntime.of(timer.runtime(RiskPropRuntime.class));
+    return RiskPropRuntime.of(milli(RiskPropRuntime.class));
   }
 
   private MsgPassingRuntime msgPassingRuntime() {
-    return MsgPassingRuntime.of(
-        timer.runtime(RiskPropRuntime.class)
-            - timer.runtime(SendScoresRuntime.class)
-            - timer.runtime(CreateUsersRuntime.class));
+    long total = timer.nanos(RiskPropRuntime.class);
+    long exclude = timer.nanos(SendScoresRuntime.class) + timer.nanos(CreateUsersRuntime.class);
+    return MsgPassingRuntime.of(milli(total - exclude));
   }
 
   private static final class Timer extends StopWatch {
 
     private final Map<Class<?>, Long> runtimes = new Object2LongOpenHashMap<>();
 
-    private static long toMilli(long nanos) {
-      return TimeUnit.MILLISECONDS.convert(nanos, TimeUnit.NANOSECONDS);
-    }
-
     public <R> R time(Callable<R> task, Class<?> metric) {
-      long start = getNanoTime();
+      long start, stop;
       R result;
       try {
+        start = getNanoTime();
         result = task.call();
+        stop = getNanoTime();
       } catch (Exception exception) {
         throw new RuntimeException(exception);
       }
-      long stop = getNanoTime();
-      runtimes.put(metric, toMilli(stop - start));
+      runtimes.put(metric, stop - start);
       return result;
     }
 
@@ -271,8 +275,8 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
       time(Executors.callable(task), metric);
     }
 
-    public long runtime(Class<?> metric) {
-      return runtimes.computeIfAbsent(metric, x -> toMilli(getNanoTime()));
+    public long nanos(Class<?> metric) {
+      return runtimes.computeIfAbsent(metric, x -> getNanoTime());
     }
   }
 }
