@@ -3,8 +3,8 @@ package org.sharetrace.message;
 import akka.actor.typed.ActorRef;
 import java.util.UUID;
 import org.immutables.value.Value;
-import org.sharetrace.actors.RiskPropagation;
-import org.sharetrace.actors.User;
+import org.sharetrace.actor.RiskPropagation;
+import org.sharetrace.actor.User;
 import org.sharetrace.model.RiskScore;
 
 /**

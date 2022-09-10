@@ -1,6 +1,6 @@
 package org.sharetrace.message;
 
-import org.sharetrace.actors.RiskPropagation;
+import org.sharetrace.actor.RiskPropagation;
 
 /**
  * A message that invokes instance of an algorithm.

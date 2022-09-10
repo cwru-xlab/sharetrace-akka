@@ -19,12 +19,12 @@ import org.sharetrace.data.factory.ContactTimeFactory;
 import org.sharetrace.logging.Loggable;
 import org.sharetrace.logging.Logger;
 import org.sharetrace.logging.Logging;
-import org.sharetrace.logging.metrics.GraphCycles;
-import org.sharetrace.logging.metrics.GraphEccentricity;
-import org.sharetrace.logging.metrics.GraphScores;
-import org.sharetrace.logging.metrics.GraphSize;
-import org.sharetrace.logging.metrics.GraphTopology;
-import org.sharetrace.logging.metrics.LoggableMetric;
+import org.sharetrace.logging.metric.GraphCycles;
+import org.sharetrace.logging.metric.GraphEccentricity;
+import org.sharetrace.logging.metric.GraphScores;
+import org.sharetrace.logging.metric.GraphSize;
+import org.sharetrace.logging.metric.GraphTopology;
+import org.sharetrace.logging.metric.LoggableMetric;
 import org.sharetrace.util.TypedSupplier;
 
 final class ContactNetworkHelper {

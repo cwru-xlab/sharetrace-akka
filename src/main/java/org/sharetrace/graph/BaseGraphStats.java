@@ -15,10 +15,10 @@ import org.jgrapht.alg.scoring.EigenvectorCentrality;
 import org.jgrapht.alg.scoring.KatzCentrality;
 import org.jgrapht.alg.shortestpath.FloydWarshallShortestPaths;
 import org.jgrapht.alg.shortestpath.GraphMeasurer;
-import org.sharetrace.logging.metrics.GraphCycles;
-import org.sharetrace.logging.metrics.GraphEccentricity;
-import org.sharetrace.logging.metrics.GraphScores;
-import org.sharetrace.logging.metrics.GraphSize;
+import org.sharetrace.logging.metric.GraphCycles;
+import org.sharetrace.logging.metric.GraphEccentricity;
+import org.sharetrace.logging.metric.GraphScores;
+import org.sharetrace.logging.metric.GraphSize;
 import org.sharetrace.util.Stats;
 
 @Value.Immutable

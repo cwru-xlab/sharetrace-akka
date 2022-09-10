@@ -1,7 +1,7 @@
 package org.sharetrace.graph;
 
 import java.util.Set;
-import org.sharetrace.actors.RiskPropagation;
+import org.sharetrace.actor.RiskPropagation;
 
 /**
  * An undirected simple graph in which a vertex represents a user and an edge indicates that the

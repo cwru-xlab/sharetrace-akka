@@ -5,12 +5,12 @@ import org.immutables.value.Value;
 import org.sharetrace.data.SampledDataset;
 import org.sharetrace.experiment.state.Defaults;
 import org.sharetrace.experiment.state.ExperimentState;
-import org.sharetrace.logging.metrics.GraphSize;
-import org.sharetrace.logging.metrics.MsgPassingRuntime;
-import org.sharetrace.logging.metrics.RiskPropRuntime;
-import org.sharetrace.logging.metrics.SendContactsRuntime;
-import org.sharetrace.logging.metrics.SendScoresRuntime;
-import org.sharetrace.logging.settings.ExperimentSettings;
+import org.sharetrace.logging.metric.GraphSize;
+import org.sharetrace.logging.metric.MsgPassingRuntime;
+import org.sharetrace.logging.metric.RiskPropRuntime;
+import org.sharetrace.logging.metric.SendContactsRuntime;
+import org.sharetrace.logging.metric.SendScoresRuntime;
+import org.sharetrace.logging.setting.ExperimentSettings;
 import org.sharetrace.util.Range;
 
 @Value.Immutable

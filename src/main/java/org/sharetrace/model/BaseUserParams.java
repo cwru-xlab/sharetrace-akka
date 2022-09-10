@@ -2,7 +2,7 @@ package org.sharetrace.model;
 
 import java.time.Duration;
 import org.immutables.value.Value;
-import org.sharetrace.actors.User;
+import org.sharetrace.actor.User;
 import org.sharetrace.util.Checks;
 
 /**

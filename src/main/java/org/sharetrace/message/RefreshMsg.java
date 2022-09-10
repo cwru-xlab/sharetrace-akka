@@ -1,6 +1,6 @@
 package org.sharetrace.message;
 
-import org.sharetrace.actors.User;
+import org.sharetrace.actor.User;
 
 /**
  * A message that refreshes a {@link User}.

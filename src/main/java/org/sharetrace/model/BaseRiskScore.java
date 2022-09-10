@@ -3,8 +3,8 @@ package org.sharetrace.model;
 import com.google.common.collect.ComparisonChain;
 import java.time.Instant;
 import org.immutables.value.Value;
-import org.sharetrace.actors.RiskPropagation;
-import org.sharetrace.actors.User;
+import org.sharetrace.actor.RiskPropagation;
+import org.sharetrace.actor.User;
 import org.sharetrace.message.RiskScoreMsg;
 import org.sharetrace.util.Checks;
 
