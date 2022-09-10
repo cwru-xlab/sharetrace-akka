@@ -73,7 +73,7 @@ abstract class BaseMsgParams {
 
   @Value.Check
   protected void check() {
-    Checks.inOpenRange(
+    Checks.inOpen(
         transmissionRate(), MIN_TRANSMISSION_RATE, MAX_TRANSMISSION_RATE, "transmissionRate");
     Checks.isAtLeast(sendCoefficient(), MIN_SEND_COEFFICIENT, "sendCoefficient");
     Checks.isAtLeast(timeBuffer(), Duration.ZERO, "timeBuffer");

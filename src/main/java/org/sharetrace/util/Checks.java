@@ -12,7 +12,7 @@ public final class Checks {
   private Checks() {}
 
   public static <T> void isNotNull(T value, String name) {
-    Objects.requireNonNull(value, name);
+    Preconditions.checkNotNull(value, name);
   }
 
   public static <T extends Comparable<T>> void isAtLeast(T value, T atLeast, String name) {
@@ -32,12 +32,11 @@ public final class Checks {
     inRange(value, Range.greaterThan(greaterThan), name);
   }
 
-  public static <T extends Comparable<T>> void inClosedRange(
-      T value, T lower, T upper, String name) {
+  public static <T extends Comparable<T>> void inClosed(T value, T lower, T upper, String name) {
     inRange(value, Range.closed(lower, upper), name);
   }
 
-  public static <T extends Comparable<T>> void inOpenRange(T value, T lower, T upper, String name) {
+  public static <T extends Comparable<T>> void inOpen(T value, T lower, T upper, String name) {
     inRange(value, Range.open(lower, upper), name);
   }
 
