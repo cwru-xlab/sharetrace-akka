@@ -5,6 +5,7 @@ import org.immutables.value.Value;
 import org.sharetrace.data.SampledDataset;
 import org.sharetrace.experiment.state.Defaults;
 import org.sharetrace.experiment.state.ExperimentState;
+import org.sharetrace.logging.metric.CreateUsersRuntime;
 import org.sharetrace.logging.metric.GraphSize;
 import org.sharetrace.logging.metric.MsgPassingRuntime;
 import org.sharetrace.logging.metric.RiskPropRuntime;
@@ -24,6 +25,7 @@ abstract class BaseRuntimeExperiment implements Experiment {
         .withLoggable(
             Set.of(
                 GraphSize.class,
+                CreateUsersRuntime.class,
                 SendScoresRuntime.class,
                 SendContactsRuntime.class,
                 RiskPropRuntime.class,

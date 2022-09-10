@@ -13,6 +13,7 @@ import org.sharetrace.logging.event.ReceiveEvent;
 import org.sharetrace.logging.event.SendCachedEvent;
 import org.sharetrace.logging.event.SendCurrentEvent;
 import org.sharetrace.logging.event.UpdateEvent;
+import org.sharetrace.logging.metric.CreateUsersRuntime;
 import org.sharetrace.logging.metric.GraphCycles;
 import org.sharetrace.logging.metric.GraphEccentricity;
 import org.sharetrace.logging.metric.GraphScores;
@@ -68,11 +69,12 @@ abstract class BaseExperimentContext implements AbstractExperimentContext {
         GraphEccentricity.class,
         GraphScores.class,
         GraphSize.class,
+        GraphTopology.class,
+        CreateUsersRuntime.class,
         SendScoresRuntime.class,
         SendContactsRuntime.class,
         RiskPropRuntime.class,
         MsgPassingRuntime.class,
-        GraphTopology.class,
         // Settings
         ExperimentSettings.class);
   }

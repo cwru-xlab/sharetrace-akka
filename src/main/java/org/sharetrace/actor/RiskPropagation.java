@@ -13,6 +13,8 @@ import java.time.Clock;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import org.apache.commons.lang3.time.StopWatch;
@@ -24,6 +26,7 @@ import org.sharetrace.graph.ContactNetwork;
 import org.sharetrace.logging.Loggable;
 import org.sharetrace.logging.Logger;
 import org.sharetrace.logging.Logging;
+import org.sharetrace.logging.metric.CreateUsersRuntime;
 import org.sharetrace.logging.metric.LoggableMetric;
 import org.sharetrace.logging.metric.MsgPassingRuntime;
 import org.sharetrace.logging.metric.RiskPropRuntime;
@@ -143,7 +146,8 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
   private Behavior<AlgorithmMsg> onRunMessage(RunMsg msg) {
     Behavior<AlgorithmMsg> behavior = this;
     if (numUsers > 0) {
-      Map<Integer, ActorRef<UserMsg>> users = newUsers();
+      timer.start();
+      Map<Integer, ActorRef<UserMsg>> users = timer.time(this::newUsers, CreateUsersRuntime.class);
       timer.time(() -> sendSymptomScores(users), SendScoresRuntime.class);
       timer.time(() -> sendContacts(users), SendContactsRuntime.class);
     } else {
@@ -208,6 +212,7 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
   }
 
   private void logMetrics() {
+    logMetric(CreateUsersRuntime.class, this::createRuntime);
     logMetric(SendScoresRuntime.class, this::scoresRuntime);
     logMetric(SendContactsRuntime.class, this::contactsRuntime);
     logMetric(RiskPropRuntime.class, this::riskPropRuntime);
@@ -216,6 +221,10 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
 
   private <T extends Loggable> void logMetric(Class<T> type, Supplier<T> supplier) {
     logger.log(LoggableMetric.KEY, TypedSupplier.of(type, supplier));
+  }
+
+  private CreateUsersRuntime createRuntime() {
+    return CreateUsersRuntime.of(timer.runtime(CreateUsersRuntime.class));
   }
 
   private SendScoresRuntime scoresRuntime() {
@@ -232,7 +241,9 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
 
   private MsgPassingRuntime msgPassingRuntime() {
     return MsgPassingRuntime.of(
-        timer.runtime(RiskPropRuntime.class) - timer.runtime(SendScoresRuntime.class));
+        timer.runtime(RiskPropRuntime.class)
+            - timer.runtime(SendScoresRuntime.class)
+            - timer.runtime(CreateUsersRuntime.class));
   }
 
   private static final class Timer extends StopWatch {
@@ -243,14 +254,21 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
       return TimeUnit.MILLISECONDS.convert(nanos, TimeUnit.NANOSECONDS);
     }
 
-    public void time(Runnable runnable, Class<?> metric) {
-      if (!isStarted()) {
-        start();
-      }
+    public <R> R time(Callable<R> task, Class<?> metric) {
       long start = getNanoTime();
-      runnable.run();
+      R result;
+      try {
+        result = task.call();
+      } catch (Exception exception) {
+        throw new RuntimeException(exception);
+      }
       long stop = getNanoTime();
       runtimes.put(metric, toMilli(stop - start));
+      return result;
+    }
+
+    public void time(Runnable task, Class<?> metric) {
+      time(Executors.callable(task), metric);
     }
 
     public long runtime(Class<?> metric) {
