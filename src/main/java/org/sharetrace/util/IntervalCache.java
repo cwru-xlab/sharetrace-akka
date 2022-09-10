@@ -156,49 +156,41 @@ public final class IntervalCache<T> {
     private Duration refreshPeriod;
     private Map<Long, T> cache;
 
-    /** Sets duration of each contiguous time interval. */
     public Builder<T> interval(Duration interval) {
       this.interval = interval;
       return this;
     }
 
-    /** Sets the total number of contiguous time intervals. */
     public Builder<T> numIntervals(int numIntervals) {
       this.numIntervals = numIntervals;
       return this;
     }
 
-    /** Sets the number of "future" time intervals. */
     public Builder<T> numLookAhead(int numLookAhead) {
       this.numLookAhead = numLookAhead;
       return this;
     }
 
-    /** Sets the duration after which the cache will refresh. */
     public Builder<T> refreshPeriod(Duration refreshPeriod) {
       this.refreshPeriod = refreshPeriod;
       return this;
     }
 
-    /** Sets the clock that the cache will use for its notion of time. */
     public Builder<T> clock(Clock clock) {
       this.clock = clock;
       return this;
     }
 
-    /** Sets the strategy that will be used when adding values to the cache. */
     public Builder<T> mergeStrategy(BinaryOperator<T> mergeStrategy) {
       this.mergeStrategy = mergeStrategy;
       return this;
     }
 
-    /** Sets the {@link Comparator} that will be used when comparing values in the cache. */
     public Builder<T> comparator(Comparator<T> comparator) {
       this.comparator = comparator;
       return this;
     }
 
-    /** Returns an initialized instance of the cache. */
     public IntervalCache<T> build() {
       checkFields();
       lookBack = interval.multipliedBy(numIntervals - numLookAhead);
