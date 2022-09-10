@@ -15,8 +15,10 @@ import org.sharetrace.logging.events.SendCurrentEvent;
 import org.sharetrace.logging.events.UpdateEvent;
 import org.sharetrace.logging.metrics.CycleMetrics;
 import org.sharetrace.logging.metrics.EccentricityMetrics;
-import org.sharetrace.logging.metrics.RuntimeMetric;
+import org.sharetrace.logging.metrics.RiskPropRuntimeMetric;
 import org.sharetrace.logging.metrics.ScoringMetrics;
+import org.sharetrace.logging.metrics.SendContactsRuntimeMetric;
+import org.sharetrace.logging.metrics.SendScoresRuntimeMetric;
 import org.sharetrace.logging.metrics.SizeMetrics;
 import org.sharetrace.logging.metrics.TopologyMetric;
 import org.sharetrace.logging.settings.ExperimentSettings;
@@ -65,7 +67,9 @@ abstract class BaseExperimentContext implements AbstractExperimentContext {
         EccentricityMetrics.class,
         ScoringMetrics.class,
         SizeMetrics.class,
-        RuntimeMetric.class,
+        RiskPropRuntimeMetric.class,
+        SendScoresRuntimeMetric.class,
+        SendContactsRuntimeMetric.class,
         TopologyMetric.class,
         // Settings
         ExperimentSettings.class);

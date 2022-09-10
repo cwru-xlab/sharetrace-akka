@@ -13,6 +13,12 @@ import org.jgrapht.alg.shortestpath.SuurballeKDisjointShortestPaths;
 import org.jgrapht.graph.DefaultEdge;
 import org.jheaps.tree.FibonacciHeap;
 
+/**
+ * Computes the approximate number of vertex-independent paths (<a
+ * href=https://dx.doi.org/10.2139/ssrn.1831790>White and Newman 2011</a>). The API allows for
+ * serial or parallel (default) execution when finding the paths between a single source and
+ * multiple target vertices or when finding the paths between all pairs of vertices.
+ */
 public final class VertexIndependentPaths {
 
   private static final int MIN_PARALLEL_VERTICES = 50;
@@ -22,8 +28,8 @@ public final class VertexIndependentPaths {
   private final int numPairs;
   private final Graph<Integer, DefaultEdge> directed;
 
-  public <V, E> VertexIndependentPaths(Graph<V, E> graph) {
-    this.graph = GraphFactory.toIntGraph(graph);
+  public VertexIndependentPaths(Graph<Integer, DefaultEdge> graph) {
+    this.graph = graph;
     this.isDirected = graph.getType().isDirected();
     this.numVertices = graph.vertexSet().size();
     this.numPairs = numVertices * (numVertices - 1) / (isDirected ? 1 : 2);

@@ -8,11 +8,13 @@ import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import java.time.Clock;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.function.Supplier;
 import org.apache.commons.lang3.time.StopWatch;
 import org.immutables.builder.Builder;
 import org.sharetrace.data.factory.CacheFactory;
@@ -22,8 +24,11 @@ import org.sharetrace.graph.ContactNetwork;
 import org.sharetrace.logging.Loggable;
 import org.sharetrace.logging.Logger;
 import org.sharetrace.logging.Logging;
+import org.sharetrace.logging.metrics.AbstractRuntimeMetric;
 import org.sharetrace.logging.metrics.LoggableMetric;
-import org.sharetrace.logging.metrics.RuntimeMetric;
+import org.sharetrace.logging.metrics.RiskPropRuntimeMetric;
+import org.sharetrace.logging.metrics.SendContactsRuntimeMetric;
+import org.sharetrace.logging.metrics.SendScoresRuntimeMetric;
 import org.sharetrace.message.AlgorithmMsg;
 import org.sharetrace.message.ContactMsg;
 import org.sharetrace.message.RiskScoreMsg;
@@ -35,7 +40,6 @@ import org.sharetrace.model.UserParams;
 import org.sharetrace.util.TypedSupplier;
 import org.slf4j.MDC;
 
-// TODO
 /**
  * A non-iterative, asynchronous implementation of the ShareTrace algorithm. The objective is to
  * estimate the marginal posterior probability of infection for all individuals in the specified
@@ -55,6 +59,7 @@ import org.slf4j.MDC;
  */
 public class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
 
+  private static final long NANOS_PER_SEC = 1_000_000_000L;
   private final Logger logger;
   private final Collection<Class<? extends Loggable>> loggable;
   private final Map<String, String> mdc;
@@ -65,7 +70,8 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
   private final Clock clock;
   private final RiskScoreFactory scoreFactory;
   private final CacheFactory<RiskScoreMsg> cacheFactory;
-  private final StopWatch runtime;
+  private final Timer timer;
+  private final Map<Class<? extends AbstractRuntimeMetric>, Long> splits;
   private int numStopped;
 
   private RiskPropagation(
@@ -89,7 +95,8 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
     this.clock = clock;
     this.cacheFactory = cacheFactory;
     this.scoreFactory = scoreFactory;
-    this.runtime = new StopWatch();
+    this.timer = new Timer();
+    this.splits = new Object2LongOpenHashMap<>();
     this.numStopped = 0;
   }
 
@@ -131,9 +138,8 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
     Behavior<AlgorithmMsg> behavior = this;
     if (numUsers > 0) {
       Map<Integer, ActorRef<UserMsg>> users = newUsers();
-      sendSymptomScores(users);
-      runtime.start();
-      sendContacts(users);
+      splits.put(SendScoresRuntimeMetric.class, timer.run(() -> sendSymptomScores(users)));
+      splits.put(SendContactsRuntimeMetric.class, timer.run(() -> sendContacts(users)));
     } else {
       behavior = Behaviors.stopped();
     }
@@ -187,6 +193,7 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
   private Behavior<AlgorithmMsg> onTerminateMsg(Terminated msg) {
     Behavior<AlgorithmMsg> behavior = this;
     if (++numStopped == numUsers) {
+      timer.stop();
       mdc.forEach(MDC::put);
       logMetrics();
       behavior = Behaviors.stopped();
@@ -195,15 +202,45 @@ public class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
   }
 
   private void logMetrics() {
-    logger.log(LoggableMetric.KEY, runtimeMetric());
+    logMetric(SendScoresRuntimeMetric.class, this::scoresRuntime);
+    logMetric(SendContactsRuntimeMetric.class, this::contactsRuntime);
+    logMetric(RiskPropRuntimeMetric.class, this::riskPropRuntime);
   }
 
-  private TypedSupplier<LoggableMetric> runtimeMetric() {
-    return TypedSupplier.of(RuntimeMetric.class, () -> RuntimeMetric.of(runtime()));
+  private <T extends Loggable> void logMetric(Class<T> type, Supplier<T> supplier) {
+    logger.log(LoggableMetric.KEY, TypedSupplier.of(type, supplier));
   }
 
-  private float runtime() {
-    runtime.stop();
-    return (float) (runtime.getNanoTime() / 1e9);
+  private SendScoresRuntimeMetric scoresRuntime() {
+    float seconds = (float) (splits.get(SendScoresRuntimeMetric.class) / NANOS_PER_SEC);
+    return SendScoresRuntimeMetric.of(seconds);
+  }
+
+  private SendContactsRuntimeMetric contactsRuntime() {
+    return SendContactsRuntimeMetric.of(
+        seconds(SendContactsRuntimeMetric.class, SendScoresRuntimeMetric.class));
+  }
+
+  private RiskPropRuntimeMetric riskPropRuntime() {
+    return RiskPropRuntimeMetric.of(
+        seconds(RiskPropRuntimeMetric.class, SendContactsRuntimeMetric.class));
+  }
+
+  private float seconds(Class<?> metric, Class<?> previousMetric) {
+    long split = splits.get(metric);
+    long previous = splits.get(previousMetric);
+    return (float) ((split - previous) / NANOS_PER_SEC);
+  }
+
+  private static final class Timer extends StopWatch {
+
+    public long run(Runnable runnable) {
+      if (!isStarted()) {
+        start();
+      }
+      runnable.run();
+      split();
+      return getSplitNanoTime();
+    }
   }
 }
