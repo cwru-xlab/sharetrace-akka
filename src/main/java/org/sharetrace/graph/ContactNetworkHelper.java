@@ -51,7 +51,7 @@ final class ContactNetworkHelper {
 
   public Set<Contact> contacts(ContactTimeFactory timeFactory) {
     Set<Contact> contacts = new ObjectOpenHashSet<>(contactNetwork.edgeSet().size());
-    contactNetwork.edgeSet().forEach(edge -> contacts.add(toContact(edge, timeFactory)));
+    contactNetwork.edgeSet().forEach(edge -> contacts.add(contactOf(edge, timeFactory)));
     return Collections.unmodifiableSet(contacts);
   }
 
@@ -72,7 +72,7 @@ final class ContactNetworkHelper {
     }
   }
 
-  private Contact toContact(DefaultEdge edge, ContactTimeFactory factory) {
+  private Contact contactOf(DefaultEdge edge, ContactTimeFactory factory) {
     int user1 = contactNetwork.getEdgeSource(edge);
     int user2 = contactNetwork.getEdgeTarget(edge);
     Instant time = factory.contactTime(user1, user2);
