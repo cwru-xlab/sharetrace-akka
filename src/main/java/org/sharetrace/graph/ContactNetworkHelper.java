@@ -50,10 +50,9 @@ final class ContactNetworkHelper {
   }
 
   public Set<Contact> contacts(ContactTimeFactory timeFactory) {
-    Set<DefaultEdge> edges = contactNetwork.edgeSet();
-    return edges.stream()
-        .map(edge -> toContact(edge, timeFactory))
-        .collect(ObjectOpenHashSet.toSetWithExpectedSize(edges.size()));
+    Set<Contact> contacts = new ObjectOpenHashSet<>(contactNetwork.edgeSet().size());
+    contactNetwork.edgeSet().forEach(edge -> contacts.add(toContact(edge, timeFactory)));
+    return Collections.unmodifiableSet(contacts);
   }
 
   public Set<Integer> users() {
