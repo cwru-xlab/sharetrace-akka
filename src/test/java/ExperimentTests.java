@@ -7,7 +7,7 @@ import org.sharetrace.experiment.FileExperiment;
 import org.sharetrace.experiment.GraphType;
 import org.sharetrace.experiment.ParamsExperiment;
 import org.sharetrace.experiment.RuntimeExperiment;
-import org.sharetrace.util.Range;
+import org.sharetrace.util.Ranges;
 
 class ExperimentTests {
 
@@ -29,15 +29,15 @@ class ExperimentTests {
   public void testParamsExperiment(GraphType graphType) {
     ParamsExperiment experiment =
         ParamsExperiment.builder()
-            .transmissionRates(Range.single(8, 0.1))
-            .sendCoefficients(Range.single(6, 0.1))
+            .transmissionRates(Ranges.ofFloat(0.8f))
+            .sendCoefficients(Ranges.ofFloat(0.6f))
             .build();
     Assertions.assertDoesNotThrow(() -> experiment.runWithDefaults(graphType, 1000));
   }
 
   @Test
   public void testRuntimeExperiment() {
-    RuntimeExperiment experiment = RuntimeExperiment.of(Range.single(1000));
+    RuntimeExperiment experiment = RuntimeExperiment.of(Ranges.ofInt(1000));
     Assertions.assertDoesNotThrow(() -> experiment.runWithDefaults(GraphType.GNM_RANDOM));
   }
 }

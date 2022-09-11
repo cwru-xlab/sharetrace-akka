@@ -6,7 +6,7 @@ import org.immutables.value.Value;
 import org.sharetrace.experiment.state.Defaults;
 import org.sharetrace.experiment.state.ExperimentState;
 import org.sharetrace.logging.metric.GraphTopology;
-import org.sharetrace.util.Range;
+import org.sharetrace.util.Ranges;
 
 @Value.Immutable
 abstract class BaseParamsExperiment implements Experiment {
@@ -17,6 +17,13 @@ abstract class BaseParamsExperiment implements Experiment {
     return ParamsExperiment.builder().build();
   }
 
+  public static ExperimentState newDefaultState(GraphType graphType, int numNodes) {
+    return ExperimentState.builder(DEFAULT_CTX)
+        .graphType(graphType)
+        .dataset(ctx -> Defaults.sampledDataset(ctx, numNodes))
+        .build();
+  }
+
   private static ExperimentContext newDefaultContext() {
     ExperimentContext context = ExperimentContext.create();
     return context.withLoggable(
@@ -25,27 +32,16 @@ abstract class BaseParamsExperiment implements Experiment {
             .collect(Collectors.toUnmodifiableSet()));
   }
 
-  public static ExperimentState newDefaultState(GraphType graphType, int numNodes) {
-    return ExperimentState.builder(DEFAULT_CTX)
-        .graphType(graphType)
-        .dataset(ctx -> Defaults.sampledDataset(ctx, numNodes))
-        .build();
-  }
-
   public void runWithDefaults(GraphType graphType, int numNodes) {
     run(newDefaultState(graphType, numNodes));
   }
 
   @Override
   public void run(ExperimentState initialState) {
-    for (double tr : transmissionRates()) {
-      for (double sc : sendCoefficients()) {
+    for (float tr : transmissionRates()) {
+      for (float sc : sendCoefficients()) {
         initialState.toBuilder()
-            .msgParams(
-                initialState
-                    .msgParams()
-                    .withTransmissionRate((float) tr)
-                    .withSendCoefficient((float) sc))
+            .msgParams(initialState.msgParams().withTransmissionRate(tr).withSendCoefficient(sc))
             .build()
             .run();
       }
@@ -54,13 +50,13 @@ abstract class BaseParamsExperiment implements Experiment {
 
   @Value.Parameter
   @Value.Default
-  protected Range transmissionRates() {
-    return Range.of(1, 10, 1, 0.1);
+  protected Iterable<Float> transmissionRates() {
+    return Ranges.ofFloats(0.1f, 1f, 0.1f);
   }
 
   @Value.Parameter
   @Value.Default
-  protected Range sendCoefficients() {
-    return Range.of(1, 11, 1, 0.1);
+  protected Iterable<Float> sendCoefficients() {
+    return Ranges.ofFloats(0.1f, 1.1f, 0.1f);
   }
 }
