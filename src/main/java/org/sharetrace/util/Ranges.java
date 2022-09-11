@@ -20,7 +20,7 @@ public final class Ranges {
     return ofDoubles(value, value + 1d, 1d);
   }
 
-  public static Iterable<Float> ofFloats(double start, double stop, double step) {
+  public static Iterable<Float> ofFloats(float start, float stop, float step) {
     Iterable<Double> iterable = ofDoubles(start, stop, step);
     Stream<Double> stream = StreamSupport.stream(iterable.spliterator(), false);
     return iter(stream.mapToDouble(v -> v).mapToObj(v -> (float) v));
