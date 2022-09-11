@@ -25,9 +25,9 @@ abstract class BaseParamsExperiment implements Experiment {
   }
 
   private static ExperimentContext newDefaultContext() {
-    ExperimentContext context = ExperimentContext.create();
-    return context.withLoggable(
-        context.loggable().stream()
+    ExperimentContext ctx = ExperimentContext.create();
+    return ctx.withLoggable(
+        ctx.loggable().stream()
             .filter(Predicate.not(loggable -> loggable.equals(GraphTopology.class)))
             .collect(Collectors.toUnmodifiableSet()));
   }

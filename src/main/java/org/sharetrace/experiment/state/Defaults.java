@@ -40,22 +40,22 @@ public final class Defaults {
         .build();
   }
 
-  public static Dataset fileDataset(DatasetContext context, Path path) {
+  public static Dataset fileDataset(DatasetContext ctx, Path path) {
     return FileDataset.builder()
         .delimiter(WHITESPACE_DELIMITER)
         .path(path)
-        .addAllLoggable(context.loggable())
-        .refTime(context.refTime())
-        .scoreFactory(context.scoreFactory())
+        .addAllLoggable(ctx.loggable())
+        .refTime(ctx.refTime())
+        .scoreFactory(ctx.scoreFactory())
         .build();
   }
 
-  public static Dataset sampledDataset(DatasetContext context, int numNodes) {
+  public static Dataset sampledDataset(DatasetContext ctx, int numNodes) {
     return SampledDataset.builder()
-        .addAllLoggable(context.loggable())
-        .riskScoreFactory(context.scoreFactory())
-        .contactTimeFactory(context.contactTimeFactory())
-        .graphGeneratorFactory(defaultFactory(context))
+        .addAllLoggable(ctx.loggable())
+        .riskScoreFactory(ctx.scoreFactory())
+        .contactTimeFactory(ctx.contactTimeFactory())
+        .graphGeneratorFactory(defaultFactory(ctx))
         .numNodes(numNodes)
         .build();
   }
@@ -67,9 +67,9 @@ public final class Defaults {
     return Duration.ofSeconds(timeout);
   }
 
-  private static GraphGeneratorFactory defaultFactory(DatasetContext context) {
+  private static GraphGeneratorFactory defaultFactory(DatasetContext ctx) {
     return numNodes ->
-        GraphGeneratorBuilder.create(context.graphType(), numNodes, context.seed())
+        GraphGeneratorBuilder.create(ctx.graphType(), numNodes, ctx.seed())
             .numEdges(numNodes * 2)
             .degree(4)
             .numNearestNeighbors(2)

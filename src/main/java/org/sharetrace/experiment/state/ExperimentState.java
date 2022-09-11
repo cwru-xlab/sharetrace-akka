@@ -70,8 +70,8 @@ public final class ExperimentState {
     cacheParams = builder.cacheParams;
   }
 
-  public static Builder builder(ExperimentContext context) {
-    return Builder.withDefaults(context);
+  public static Builder builder(ExperimentContext ctx) {
+    return Builder.withDefaults(ctx);
   }
 
   public void run() {
@@ -184,7 +184,7 @@ public final class ExperimentState {
 
     private Builder(ExperimentContext context) {
       ctx = context;
-      logger = Logging.settingsLogger(context.loggable());
+      logger = Logging.settingsLogger(ctx.loggable());
       setters = new EnumMap<>(Setter.class);
       mdc = new Object2ObjectOpenHashMap<>();
     }
