@@ -26,7 +26,7 @@ abstract class BaseFileExperiment implements Experiment {
 
   @Override
   public void run(ExperimentState initialState) {
-    Ranges.ofFloats(numIterations()).forEach(x -> initialState.withNewId().run());
+    Ranges.ofInts(numIterations()).forEach(x -> initialState.withNewId().run());
   }
 
   @Value.Parameter

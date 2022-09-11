@@ -9,7 +9,7 @@ import java.util.stream.StreamSupport;
 public final class Ranges {
 
   public static Iterable<Double> ofDoubles(double start, double stop, double step) {
-    return iter(DoubleStream.iterate(start, v -> step > 0d ? v < stop : v > stop, v -> v + step));
+    return iter(DoubleStream.iterate(start, v -> (step > 0d) ? v < stop : v > stop, v -> v + step));
   }
 
   public static Iterable<Double> ofDoubles(double stop) {
@@ -35,7 +35,7 @@ public final class Ranges {
   }
 
   public static Iterable<Integer> ofInts(int start, int stop, int step) {
-    return iter(IntStream.iterate(start, v -> step > 0 ? v < stop : v > stop, v -> v + step));
+    return iter(IntStream.iterate(start, v -> (step > 0) ? v < stop : v > stop, v -> v + step));
   }
 
   public static Iterable<Integer> ofInts(int stop) {
