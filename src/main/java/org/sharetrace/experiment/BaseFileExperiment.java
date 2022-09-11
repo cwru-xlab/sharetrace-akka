@@ -13,7 +13,7 @@ abstract class BaseFileExperiment implements Experiment {
     return FileExperiment.builder().build();
   }
 
-  private static ExperimentState defaultFileState(GraphType graphType, Path path) {
+  public static ExperimentState newDefaultState(GraphType graphType, Path path) {
     return ExperimentState.builder(ExperimentContext.create())
         .graphType(graphType)
         .dataset(ctx -> Defaults.fileDataset(ctx, path))
@@ -21,7 +21,7 @@ abstract class BaseFileExperiment implements Experiment {
   }
 
   public void runWithDefaults(GraphType graphType, Path path) {
-    run(defaultFileState(graphType, path));
+    run(newDefaultState(graphType, path));
   }
 
   @Override

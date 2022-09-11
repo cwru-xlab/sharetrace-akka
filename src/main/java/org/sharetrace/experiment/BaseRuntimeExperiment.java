@@ -33,7 +33,7 @@ abstract class BaseRuntimeExperiment implements Experiment {
                 ExperimentSettings.class));
   }
 
-  private static ExperimentState newDefaultState(GraphType graphType) {
+  public static ExperimentState newDefaultState(GraphType graphType) {
     return ExperimentState.builder(DEFAULT_CTX)
         .graphType(graphType)
         .dataset(ctx -> Defaults.sampledDataset(ctx, IGNORED))
