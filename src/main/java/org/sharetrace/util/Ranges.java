@@ -1,52 +1,83 @@
 package org.sharetrace.util;
 
-import java.util.stream.BaseStream;
+import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
+import it.unimi.dsi.fastutil.doubles.DoublePredicate;
+import it.unimi.dsi.fastutil.doubles.DoubleUnaryOperator;
+import it.unimi.dsi.fastutil.floats.FloatArrayList;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntPredicate;
+import it.unimi.dsi.fastutil.ints.IntUnaryOperator;
+import java.util.Iterator;
+import java.util.List;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 public final class Ranges {
 
-  public static Iterable<Double> ofDoubles(double start, double stop, double step) {
-    return iter(DoubleStream.iterate(start, v -> (step > 0d) ? v < stop : v > stop, v -> v + step));
+  public static DoubleRange ofDoubles(double start, double stop, double step) {
+    DoublePredicate hasNext = v -> (step > 0d) ? v < stop : v > stop;
+    DoubleUnaryOperator next = v -> v + step;
+    return DoubleStream.iterate(start, hasNext, next)::iterator;
   }
 
-  public static Iterable<Double> ofDoubles(double stop) {
+  public static DoubleRange ofDoubles(double stop) {
     return ofDoubles(0d, stop, 1d);
   }
 
-  public static Iterable<Double> ofDouble(double value) {
-    return ofDoubles(value, value + 1d, 1d);
+  public static DoubleRange ofDouble(double value) {
+    return DoubleStream.of(value)::iterator;
   }
 
-  public static Iterable<Float> ofFloats(float start, float stop, float step) {
-    Iterable<Double> iterable = ofDoubles(start, stop, step);
-    Stream<Double> stream = StreamSupport.stream(iterable.spliterator(), false);
-    return iter(stream.mapToDouble(v -> v).mapToObj(v -> (float) v));
+  public static FloatRange ofFloats(float start, float stop, float step) {
+    Iterator<Double> iterator = ofDoubles(start, stop, step).iterator();
+    return DoubleStream.generate(iterator::next).mapToObj(v -> (float) v)::iterator;
   }
 
-  public static Iterable<Float> ofFloat(float value) {
+  public static FloatRange ofFloat(float value) {
     return ofFloats(value, value + 1f, 1f);
   }
 
-  public static Iterable<Float> ofFloats(float stop) {
+  public static FloatRange ofFloats(float stop) {
     return ofFloats(0f, stop, 1f);
   }
 
-  public static Iterable<Integer> ofInts(int start, int stop, int step) {
-    return iter(IntStream.iterate(start, v -> (step > 0) ? v < stop : v > stop, v -> v + step));
+  public static IntRange ofInts(int start, int stop, int step) {
+    IntPredicate hasNext = v -> (step > 0) ? v < stop : v > stop;
+    IntUnaryOperator next = v -> v + step;
+    return IntStream.iterate(start, hasNext, next)::iterator;
   }
 
-  public static Iterable<Integer> ofInts(int stop) {
-    return iter(IntStream.range(0, stop));
+  public static IntRange ofInts(int stop) {
+    return IntStream.range(0, stop)::iterator;
   }
 
-  public static Iterable<Integer> ofInt(int value) {
-    return iter(IntStream.of(value));
+  public static IntRange ofInt(int value) {
+    return IntStream.of(value)::iterator;
   }
 
-  private static <S extends BaseStream<T, S>, T> Iterable<T> iter(BaseStream<T, S> stream) {
-    return stream::iterator;
+  public interface Range<T extends Number> extends Iterable<T> {
+
+    List<T> toList();
+  }
+
+  public interface DoubleRange extends Range<Double> {
+
+    default List<Double> toList() {
+      return new DoubleArrayList(iterator());
+    }
+  }
+
+  public interface IntRange extends Range<Integer> {
+
+    default List<Integer> toList() {
+      return new IntArrayList(iterator());
+    }
+  }
+
+  public interface FloatRange extends Range<Float> {
+
+    default List<Float> toList() {
+      return new FloatArrayList(iterator());
+    }
   }
 }

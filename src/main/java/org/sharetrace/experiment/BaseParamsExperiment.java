@@ -1,5 +1,6 @@
 package org.sharetrace.experiment;
 
+import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import org.immutables.value.Value;
@@ -50,13 +51,13 @@ abstract class BaseParamsExperiment implements Experiment {
 
   @Value.Parameter
   @Value.Default
-  protected Iterable<Float> transmissionRates() {
-    return Ranges.ofFloats(0.1f, 1f, 0.1f);
+  protected List<Float> transmissionRates() {
+    return Ranges.ofFloats(0.1f, 1f, 0.1f).toList();
   }
 
   @Value.Parameter
   @Value.Default
-  protected Iterable<Float> sendCoefficients() {
-    return Ranges.ofFloats(0.1f, 1.1f, 0.1f);
+  protected List<Float> sendCoefficients() {
+    return Ranges.ofFloats(0.1f, 1.1f, 0.1f).toList();
   }
 }
