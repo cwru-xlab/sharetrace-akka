@@ -1,10 +1,9 @@
 package org.sharetrace.graph;
 
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
-import java.io.Closeable;
+import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
@@ -14,6 +13,7 @@ import java.util.UUID;
 import org.jgrapht.Graph;
 import org.jgrapht.generate.GraphGenerator;
 import org.jgrapht.graph.DefaultEdge;
+import org.jgrapht.nio.GraphExporter;
 import org.jgrapht.nio.graphml.GraphMLExporter;
 import org.sharetrace.data.factory.ContactTimeFactory;
 import org.sharetrace.logging.Loggable;
@@ -80,43 +80,38 @@ final class ContactNetworkHelper {
   }
 
   private void exportNetwork(String filename) {
-    new NetworkExporter(filename).export(contactNetwork);
+    new NetworkExporter<Integer, DefaultEdge>(filename).export(contactNetwork);
   }
 
-  private static final class NetworkExporter extends GraphMLExporter<Integer, DefaultEdge>
-      implements Closeable {
+  private static final class NetworkExporter<V, E> {
 
     private static final String FILE_EXT = ".graphml";
-    private final Writer writer;
+    private final GraphExporter<V, E> exporter;
+    private final File file;
 
     public NetworkExporter(String filename) {
-      writer = newWriter(filename);
-      setVertexIdProvider(String::valueOf);
+      file = newFile(filename);
+      exporter = new GraphMLExporter<>(String::valueOf);
     }
 
-    private static Writer newWriter(String filename) {
-      try {
-        return Files.newBufferedWriter(filePath(filename));
-      } catch (IOException exception) {
-        throw new UncheckedIOException(exception);
+    private static File newFile(String filename) {
+      String directory = ensureExists(Logging.graphsPath()).toString();
+      return Path.of(directory, filename + FILE_EXT).toFile();
+    }
+
+    private static Path ensureExists(Path path) {
+      if (Files.notExists(path)) {
+        try {
+          Files.createDirectories(path);
+        } catch (IOException exception) {
+          throw new UncheckedIOException(exception);
+        }
       }
+      return path;
     }
 
-    private static Path filePath(String filename) throws IOException {
-      Path path = Logging.graphsPath();
-      if (!Files.exists(path)) {
-        Files.createDirectories(path);
-      }
-      return Path.of(path.toString(), filename + FILE_EXT);
-    }
-
-    public void export(Graph<Integer, DefaultEdge> network) {
-      exportGraph(network, writer);
-    }
-
-    @Override
-    public void close() throws IOException {
-      writer.close();
+    public void export(Graph<V, E> network) {
+      exporter.exportGraph(network, file);
     }
   }
 }
