@@ -164,7 +164,7 @@ public final class User extends AbstractBehavior<UserMsg> {
     prev = curr;
     curr = msg;
     transmitted = transmitted(curr);
-    sendThresh = curr.score().value() * msgParams.sendCoefficient();
+    sendThresh = curr.score().value() * msgParams.sendCoeff();
   }
 
   private RiskScoreMsg transmitted(RiskScoreMsg msg) {
@@ -176,7 +176,7 @@ public final class User extends AbstractBehavior<UserMsg> {
   }
 
   private RiskScore transmitted(RiskScore score) {
-    return RiskScore.of(score.value() * msgParams.transmissionRate(), score.time());
+    return RiskScore.of(score.value() * msgParams.transRate(), score.time());
   }
 
   private void startRefreshTimer() {

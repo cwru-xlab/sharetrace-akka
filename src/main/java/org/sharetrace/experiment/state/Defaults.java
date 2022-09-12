@@ -112,8 +112,8 @@ public final class Defaults {
 
   private static MsgParams newMsgParams() {
     return MsgParams.builder()
-        .transmissionRate(0.8f)
-        .sendCoefficient(0.6f)
+        .transRate(0.8f)
+        .sendCoeff(0.6f)
         .scoreTtl(DEFAULT_TTL)
         .contactTtl(DEFAULT_TTL)
         .tolerance(0.01f)

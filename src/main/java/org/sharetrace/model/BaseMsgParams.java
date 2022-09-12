@@ -17,15 +17,15 @@ import org.sharetrace.util.Checks;
 @Value.Immutable(copy = true)
 abstract class BaseMsgParams {
 
-  public static final float MIN_TRANSMISSION_RATE = 0f;
-  public static final float MAX_TRANSMISSION_RATE = 1f;
-  public static final float MIN_SEND_COEFFICIENT = 0f;
+  public static final float MIN_TRANS_RATE = 0f;
+  public static final float MAX_TRANS_RATE = 1f;
+  public static final float MIN_SEND_COEFF = 0f;
 
   /**
    * Returns the rate at which the value of a {@link RiskScore} exponentially decreases as it
    * propagates from the source {@link User} during {@link RiskPropagation}.
    */
-  public abstract float transmissionRate();
+  public abstract float transRate();
 
   /**
    * Returns the multiplier used to set the threshold of a {@link User} that determines if a
@@ -37,7 +37,7 @@ abstract class BaseMsgParams {
    * Given a positive transmission rate, a positive coefficient guarantees that {@link
    * RiskPropagation} terminates.
    */
-  public abstract float sendCoefficient();
+  public abstract float sendCoeff();
 
   /**
    * Returns the extent to which a {@link RiskScore} is relevant after a contact occurs. When
@@ -73,9 +73,8 @@ abstract class BaseMsgParams {
 
   @Value.Check
   protected void check() {
-    Checks.inOpen(
-        transmissionRate(), MIN_TRANSMISSION_RATE, MAX_TRANSMISSION_RATE, "transmissionRate");
-    Checks.isAtLeast(sendCoefficient(), MIN_SEND_COEFFICIENT, "sendCoefficient");
+    Checks.inOpen(transRate(), MIN_TRANS_RATE, MAX_TRANS_RATE, "transRate");
+    Checks.isAtLeast(sendCoeff(), MIN_SEND_COEFF, "sendCoeff");
     Checks.isAtLeast(timeBuffer(), Duration.ZERO, "timeBuffer");
     Checks.isGreaterThan(scoreTtl(), Duration.ZERO, "scoreTtl");
     Checks.isGreaterThan(contactTtl(), Duration.ZERO, "contactTtl");

@@ -7,7 +7,7 @@ import org.immutables.value.Value;
 import org.sharetrace.experiment.state.Defaults;
 import org.sharetrace.experiment.state.ExperimentState;
 import org.sharetrace.logging.metric.GraphTopology;
-import org.sharetrace.util.Ranges;
+import org.sharetrace.util.Range;
 
 @Value.Immutable
 abstract class BaseParamsExperiment implements Experiment {
@@ -39,10 +39,10 @@ abstract class BaseParamsExperiment implements Experiment {
 
   @Override
   public void run(ExperimentState initialState) {
-    for (float tr : transmissionRates()) {
-      for (float sc : sendCoefficients()) {
+    for (float tr : transRates()) {
+      for (float sc : sendCoeffs()) {
         initialState.toBuilder()
-            .msgParams(initialState.msgParams().withTransmissionRate(tr).withSendCoefficient(sc))
+            .msgParams(initialState.msgParams().withTransRate(tr).withSendCoeff(sc))
             .build()
             .run();
       }
@@ -51,13 +51,13 @@ abstract class BaseParamsExperiment implements Experiment {
 
   @Value.Parameter
   @Value.Default
-  protected List<Float> transmissionRates() {
-    return Ranges.ofFloats(0.1f, 1f, 0.1f).toList();
+  protected List<Float> transRates() {
+    return Range.of(0.1f, 1f, 0.1f).toList();
   }
 
   @Value.Parameter
   @Value.Default
-  protected List<Float> sendCoefficients() {
-    return Ranges.ofFloats(0.1f, 1.1f, 0.1f).toList();
+  protected List<Float> sendCoeffs() {
+    return Range.of(0.1f, 1.1f, 0.1f).toList();
   }
 }
