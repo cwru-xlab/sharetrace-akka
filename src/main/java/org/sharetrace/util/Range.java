@@ -1,5 +1,6 @@
 package org.sharetrace.util;
 
+import java.math.BigDecimal;
 import java.util.Iterator;
 
 public interface Range<T extends Number> extends Iterable<T> {
@@ -7,18 +8,16 @@ public interface Range<T extends Number> extends Iterable<T> {
   static Range<Integer> of(int start, int stop, int step) {
     return () ->
         new Iterator<>() {
-          private int curr = start;
+          private final Iterator<Double> iterator = of((double) start, stop, step).iterator();
 
           @Override
           public boolean hasNext() {
-            return curr != stop;
+            return iterator.hasNext();
           }
 
           @Override
           public Integer next() {
-            int next = curr;
-            curr += step;
-            return next;
+            return iterator.next().intValue();
           }
         };
   }
@@ -34,17 +33,20 @@ public interface Range<T extends Number> extends Iterable<T> {
   static Range<Double> of(double start, double stop, double step) {
     return () ->
         new Iterator<>() {
-          private double curr = start;
+          private final BigDecimal delta = BigDecimal.valueOf(step);
+          private final boolean ascending = delta.compareTo(BigDecimal.ZERO) >= 0;
+          private final BigDecimal last = BigDecimal.valueOf(stop);
+          private BigDecimal curr = BigDecimal.valueOf(start);
 
           @Override
           public boolean hasNext() {
-            return curr != stop;
+            return ascending ? curr.compareTo(last) < 0 : curr.compareTo(last) > 0;
           }
 
           @Override
           public Double next() {
-            double next = curr;
-            curr += step;
+            double next = curr.doubleValue();
+            curr = curr.add(delta);
             return next;
           }
         };
@@ -56,32 +58,5 @@ public interface Range<T extends Number> extends Iterable<T> {
 
   static Range<Double> single(double value) {
     return of(value, value + 1d, 1d);
-  }
-
-  static Range<Float> of(float start, float stop, float step) {
-    return () ->
-        new Iterator<>() {
-          private float curr = start;
-
-          @Override
-          public boolean hasNext() {
-            return curr != stop;
-          }
-
-          @Override
-          public Float next() {
-            float next = curr;
-            curr += step;
-            return next;
-          }
-        };
-  }
-
-  static Range<Float> of(float stop) {
-    return of(0f, stop, 1f);
-  }
-
-  static Range<Float> single(float value) {
-    return of(value, value + 1f, 1f);
   }
 }

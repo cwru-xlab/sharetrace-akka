@@ -17,15 +17,16 @@ import org.sharetrace.util.Checks;
 @Value.Immutable(copy = true)
 abstract class BaseMsgParams {
 
-  public static final float MIN_TRANS_RATE = 0f;
-  public static final float MAX_TRANS_RATE = 1f;
-  public static final float MIN_SEND_COEFF = 0f;
+  public static final double MIN_TRANS_RATE = 0d;
+  public static final double MAX_TRANS_RATE = 1d;
+  public static final double MIN_SEND_COEFF = 0d;
+  public static final double MIN_TOLERANCE = 0d;
 
   /**
    * Returns the rate at which the value of a {@link RiskScore} exponentially decreases as it
    * propagates from the source {@link User} during {@link RiskPropagation}.
    */
-  public abstract float transRate();
+  public abstract double transRate();
 
   /**
    * Returns the multiplier used to set the threshold of a {@link User} that determines if a
@@ -37,7 +38,7 @@ abstract class BaseMsgParams {
    * Given a positive transmission rate, a positive coefficient guarantees that {@link
    * RiskPropagation} terminates.
    */
-  public abstract float sendCoeff();
+  public abstract double sendCoeff();
 
   /**
    * Returns the extent to which a {@link RiskScore} is relevant after a contact occurs. When
@@ -69,7 +70,7 @@ abstract class BaseMsgParams {
    * Returns the maximum absolute difference between {@link RiskScore} values for them to be
    * approximately equal.
    */
-  public abstract float tolerance();
+  public abstract double tolerance();
 
   @Value.Check
   protected void check() {
@@ -78,6 +79,6 @@ abstract class BaseMsgParams {
     Checks.isAtLeast(timeBuffer(), Duration.ZERO, "timeBuffer");
     Checks.isGreaterThan(scoreTtl(), Duration.ZERO, "scoreTtl");
     Checks.isGreaterThan(contactTtl(), Duration.ZERO, "contactTtl");
-    Checks.isAtLeast(tolerance(), 0f, "tolerance");
+    Checks.isAtLeast(tolerance(), MIN_TOLERANCE, "tolerance");
   }
 }

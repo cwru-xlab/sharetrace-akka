@@ -67,7 +67,7 @@ public final class User extends AbstractBehavior<UserMsg> {
   private RiskScoreMsg prev;
   private RiskScoreMsg curr;
   private RiskScoreMsg transmitted;
-  private float sendThresh;
+  private double sendThresh;
 
   private User(
       ActorContext<UserMsg> ctx,
@@ -176,7 +176,7 @@ public final class User extends AbstractBehavior<UserMsg> {
   }
 
   private RiskScore transmitted(RiskScore score) {
-    return RiskScore.of(score.value() * msgParams.transRate(), score.time());
+    return RiskScore.of((float) (score.value() * msgParams.transRate()), score.time());
   }
 
   private void startRefreshTimer() {

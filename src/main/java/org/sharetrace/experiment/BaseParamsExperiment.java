@@ -38,8 +38,8 @@ abstract class BaseParamsExperiment implements Experiment {
 
   @Override
   public void run(ExperimentState initialState) {
-    for (float tr : transRates()) {
-      for (float sc : sendCoeffs()) {
+    for (double tr : transRates()) {
+      for (double sc : sendCoeffs()) {
         initialState.toBuilder()
             .msgParams(initialState.msgParams().withTransRate(tr).withSendCoeff(sc))
             .build()
@@ -50,13 +50,13 @@ abstract class BaseParamsExperiment implements Experiment {
 
   @Value.Parameter
   @Value.Default
-  protected Range<Float> transRates() {
-    return Range.of(0.1f, 1f, 0.1f);
+  protected Range<Double> transRates() {
+    return Range.of(0.1, 1.0, 0.1);
   }
 
   @Value.Parameter
   @Value.Default
-  protected Range<Float> sendCoeffs() {
-    return Range.of(0.1f, 1.1f, 0.1f);
+  protected Range<Double> sendCoeffs() {
+    return Range.of(0.1, 1.1, 0.1);
   }
 }
