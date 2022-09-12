@@ -31,7 +31,7 @@ abstract class BaseFileExperiment implements Experiment {
 
   @Value.Parameter
   @Value.Default
-  protected int numIterations() {
+  protected short numIterations() {
     return 1;
   }
 }

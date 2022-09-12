@@ -28,10 +28,7 @@ class ExperimentTests {
       names = {"BARABASI_ALBERT", "GNM_RANDOM", "RANDOM_REGULAR", "SCALE_FREE", "WATTS_STROGATZ"})
   public void testParamsExperiment(GraphType graphType) {
     ParamsExperiment experiment =
-        ParamsExperiment.builder()
-            .transRates(Range.single(0.8f))
-            .sendCoeffs(Range.single(0.6f))
-            .build();
+        ParamsExperiment.builder().transRates(Range.of(0.8)).sendCoeffs(Range.of(0.6)).build();
     Assertions.assertDoesNotThrow(() -> experiment.runWithDefaults(graphType, 1000));
   }
 
