@@ -29,8 +29,8 @@ class ExperimentTests {
   public void testParamsExperiment(GraphType graphType) {
     ParamsExperiment experiment =
         ParamsExperiment.builder()
-            .transRates(Range.single(0.8f).toList())
-            .sendCoeffs(Range.single(0.6f).toList())
+            .transRates(Range.single(0.8f))
+            .sendCoeffs(Range.single(0.6f))
             .build();
     Assertions.assertDoesNotThrow(() -> experiment.runWithDefaults(graphType, 1000));
   }
