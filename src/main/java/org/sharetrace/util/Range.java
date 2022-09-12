@@ -21,11 +21,11 @@ public interface Range<T extends Number> extends Iterable<T> {
   }
 
   static OfInt of(int stop) {
-    return IntStream.range(0, stop)::iterator;
+    return of(0, stop, 1);
   }
 
   static OfInt single(int value) {
-    return IntStream.of(value)::iterator;
+    return of(value, value + 1, 1);
   }
 
   static OfDouble of(double start, double stop, double step) {
@@ -39,7 +39,7 @@ public interface Range<T extends Number> extends Iterable<T> {
   }
 
   static OfDouble single(double value) {
-    return DoubleStream.of(value)::iterator;
+    return of(value, value + 1d, 1d);
   }
 
   static OfFloat of(float start, float stop, float step) {
