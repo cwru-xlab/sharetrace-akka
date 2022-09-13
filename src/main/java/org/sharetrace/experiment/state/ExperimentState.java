@@ -410,10 +410,8 @@ public final class ExperimentState {
     }
 
     private Void setFactories() {
-      Sampler<RiskScore> scoreSampler = newScoreSampler();
-      scoreFactory = RiskScoreFactory.from(scoreSampler::sample);
-      Sampler<Instant> contactTimeSampler = newContactTimeSampler();
-      contactTimeFactory = ContactTimeFactory.from(contactTimeSampler::sample);
+      scoreFactory = RiskScoreFactory.from(newScoreSampler()::sample);
+      contactTimeFactory = ContactTimeFactory.from(newContactTimeSampler()::sample);
       return null;
     }
 
