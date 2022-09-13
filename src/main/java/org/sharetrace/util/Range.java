@@ -28,16 +28,16 @@ public interface Range<T extends Number> extends Iterable<T> {
     boolean ascending = step > 0;
     return () ->
         new Iterator<>() {
-          private long value = first;
+          private long next = first;
 
           @Override
           public boolean hasNext() {
-            return ascending ? value < last : value > last;
+            return ascending ? next < last : next > last;
           }
 
           @Override
           public Long next() {
-            return value = Math.addExact(value, step);
+            return next = Math.addExact(next, step);
           }
         };
   }
@@ -93,16 +93,16 @@ public interface Range<T extends Number> extends Iterable<T> {
     boolean ascending = delta.compareTo(BigDecimal.ZERO) > 0;
     return () ->
         new Iterator<>() {
-          private BigDecimal value = first;
+          private BigDecimal next = first;
 
           @Override
           public boolean hasNext() {
-            return ascending ? value.compareTo(last) < 0 : value.compareTo(last) > 0;
+            return ascending ? next.compareTo(last) < 0 : next.compareTo(last) > 0;
           }
 
           @Override
           public Double next() {
-            return (value = value.add(delta)).doubleValue();
+            return (next = next.add(delta)).doubleValue();
           }
         };
   }
