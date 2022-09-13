@@ -26,7 +26,7 @@ public interface Range<T extends Number> extends Iterable<T> {
   static Range<Long> ofLongs(long start, long stop, long step) {
     return () ->
         new Iterator<>() {
-          private long value = start;
+          private long value = start - step;
 
           @Override
           public boolean hasNext() {
@@ -35,9 +35,7 @@ public interface Range<T extends Number> extends Iterable<T> {
 
           @Override
           public Long next() {
-            long next = value;
-            value += step;
-            return next;
+            return value += step;
           }
         };
   }
@@ -77,7 +75,7 @@ public interface Range<T extends Number> extends Iterable<T> {
     boolean ascending = delta.compareTo(BigDecimal.ZERO) > 0;
     return () ->
         new Iterator<>() {
-          private BigDecimal value = first;
+          private BigDecimal value = first.subtract(delta);
 
           @Override
           public boolean hasNext() {
@@ -86,9 +84,7 @@ public interface Range<T extends Number> extends Iterable<T> {
 
           @Override
           public Double next() {
-            double next = value.doubleValue();
-            value = value.add(delta);
-            return next;
+            return (value = value.add(delta)).doubleValue();
           }
         };
   }
