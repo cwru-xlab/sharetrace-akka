@@ -23,9 +23,10 @@ public interface Range<T extends Number> extends Iterable<T> {
   }
 
   static Range<Long> ofLongs(long start, long stop, long step) {
+    long first = Math.subtractExact(start, step);
     return () ->
         new Iterator<>() {
-          private long value = Math.subtractExact(start, step);
+          private long value = first;
 
           @Override
           public boolean hasNext() {
@@ -68,13 +69,13 @@ public interface Range<T extends Number> extends Iterable<T> {
   }
 
   static Range<Double> ofDoubles(double start, double stop, double step) {
-    BigDecimal first = BigDecimal.valueOf(start);
     BigDecimal last = BigDecimal.valueOf(stop);
     BigDecimal delta = BigDecimal.valueOf(step);
+    BigDecimal first = BigDecimal.valueOf(start).subtract(delta);
     boolean ascending = delta.compareTo(BigDecimal.ZERO) > 0;
     return () ->
         new Iterator<>() {
-          private BigDecimal value = first.subtract(delta);
+          private BigDecimal value = first;
 
           @Override
           public boolean hasNext() {
