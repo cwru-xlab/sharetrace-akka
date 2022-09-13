@@ -2,31 +2,30 @@ package org.sharetrace.util;
 
 import java.math.BigDecimal;
 import java.util.Iterator;
-import java.util.function.DoubleFunction;
-import java.util.function.LongFunction;
+import java.util.function.Function;
 
 public interface Range<T extends Number> extends Iterable<T> {
 
-  static Range<Integer> ofInts(int start, int stop, int step) {
-    return narrow(ofLongs(start, stop, step), v -> (int) v);
+  static Range<Integer> ofInts(long start, long stop, long step) {
+    return map(ofLongs(start, stop, step), Math::toIntExact);
   }
 
-  static Range<Integer> ofInts(int start, int stop) {
-    return ofInts(start, stop, 1);
+  static Range<Integer> ofInts(long start, long stop) {
+    return ofInts(start, stop, 1L);
   }
 
-  static Range<Integer> ofInts(int stop) {
-    return ofInts(0, stop);
+  static Range<Integer> ofInts(long stop) {
+    return ofInts(0L, stop);
   }
 
-  static Range<Integer> ofInt(int value) {
-    return ofInts(value, value + 1);
+  static Range<Integer> ofInt(long value) {
+    return ofInts(value, value + 1L);
   }
 
   static Range<Long> ofLongs(long start, long stop, long step) {
     return () ->
         new Iterator<>() {
-          private long value = start - step;
+          private long value = Math.subtractExact(start, step);
 
           @Override
           public boolean hasNext() {
@@ -35,7 +34,7 @@ public interface Range<T extends Number> extends Iterable<T> {
 
           @Override
           public Long next() {
-            return value += step;
+            return value = Math.addExact(value, step);
           }
         };
   }
@@ -52,20 +51,20 @@ public interface Range<T extends Number> extends Iterable<T> {
     return ofLongs(value, value + 1L);
   }
 
-  static Range<Short> ofShorts(short start, short stop, short step) {
-    return narrow(ofLongs(start, stop, step), v -> (short) v);
+  static Range<Short> ofShorts(long start, long stop, long step) {
+    return map(ofLongs(start, stop, step), Range::toShortExact);
   }
 
-  static Range<Short> ofShorts(short start, short stop) {
-    return ofShorts(start, stop, (short) 1);
+  static Range<Short> ofShorts(long start, long stop) {
+    return ofShorts(start, stop, 1L);
   }
 
-  static Range<Short> ofShorts(short stop) {
-    return ofShorts((short) 0, stop);
+  static Range<Short> ofShorts(long stop) {
+    return ofShorts(0L, stop);
   }
 
-  static Range<Short> ofShort(short value) {
-    return ofShorts(value, (short) (value + 1));
+  static Range<Short> ofShort(long value) {
+    return ofShorts(value, value + 1L);
   }
 
   static Range<Double> ofDoubles(double start, double stop, double step) {
@@ -101,26 +100,41 @@ public interface Range<T extends Number> extends Iterable<T> {
     return ofDoubles(value, value + 1d);
   }
 
-  static Range<Float> ofFloats(float start, float stop, float step) {
-    return narrow(ofDoubles(start, stop, step), v -> (float) v);
+  static Range<Float> ofFloats(double start, double stop, double step) {
+    return map(ofDoubles(start, stop, step), Range::toFloatExact);
   }
 
-  static Range<Float> ofFloats(float start, float stop) {
-    return ofFloats(start, stop, 1f);
+  static Range<Float> ofFloats(double start, double stop) {
+    return ofFloats(start, stop, 1d);
   }
 
-  static Range<Float> ofFloats(float stop) {
-    return ofFloats(0f, stop);
+  static Range<Float> ofFloats(double stop) {
+    return ofFloats(0d, stop);
   }
 
-  static Range<Float> ofFloat(float value) {
-    return ofFloats(value, value + 1f);
+  static Range<Float> ofFloat(double value) {
+    return ofFloats(value, value + 1d);
   }
 
-  private static <T extends Number> Range<T> narrow(Range<Double> range, DoubleFunction<T> cast) {
+  private static float toFloatExact(double value) {
+    if ((float) value != value) {
+      throw new ArithmeticException("float overflow");
+    }
+    return (float) value;
+  }
+
+  private static short toShortExact(long value) {
+    if ((short) value != value) {
+      throw new ArithmeticException("short overflow");
+    }
+    return (short) value;
+  }
+
+  private static <T extends Number, R extends Number> Range<R> map(
+      Range<T> range, Function<T, R> cast) {
     return () ->
         new Iterator<>() {
-          private final Iterator<Double> iterator = range.iterator();
+          private final Iterator<T> iterator = range.iterator();
 
           @Override
           public boolean hasNext() {
@@ -128,24 +142,7 @@ public interface Range<T extends Number> extends Iterable<T> {
           }
 
           @Override
-          public T next() {
-            return cast.apply(iterator.next());
-          }
-        };
-  }
-
-  private static <T extends Number> Range<T> narrow(Range<Long> range, LongFunction<T> cast) {
-    return () ->
-        new Iterator<>() {
-          private final Iterator<Long> iterator = range.iterator();
-
-          @Override
-          public boolean hasNext() {
-            return iterator.hasNext();
-          }
-
-          @Override
-          public T next() {
+          public R next() {
             return cast.apply(iterator.next());
           }
         };
