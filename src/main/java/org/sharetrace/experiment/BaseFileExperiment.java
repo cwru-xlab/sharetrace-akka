@@ -26,7 +26,7 @@ abstract class BaseFileExperiment implements Experiment {
 
   @Override
   public void run(ExperimentState initialState) {
-    Range.of(numIterations()).forEach(x -> initialState.withNewId().run());
+    Range.ofShorts(numIterations()).forEach(x -> initialState.withNewId().run());
   }
 
   @Value.Parameter

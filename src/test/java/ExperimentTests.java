@@ -28,13 +28,16 @@ class ExperimentTests {
       names = {"BARABASI_ALBERT", "GNM_RANDOM", "RANDOM_REGULAR", "SCALE_FREE", "WATTS_STROGATZ"})
   public void testParamsExperiment(GraphType graphType) {
     ParamsExperiment experiment =
-        ParamsExperiment.builder().transRates(Range.of(0.8)).sendCoeffs(Range.of(0.6)).build();
+        ParamsExperiment.builder()
+            .transRates(Range.ofDouble(0.8))
+            .sendCoeffs(Range.ofDouble(0.6))
+            .build();
     Assertions.assertDoesNotThrow(() -> experiment.runWithDefaults(graphType, 1000));
   }
 
   @Test
   public void testRuntimeExperiment() {
-    RuntimeExperiment experiment = RuntimeExperiment.of(Range.of(1000));
+    RuntimeExperiment experiment = RuntimeExperiment.of(Range.ofInt(1000));
     Assertions.assertDoesNotThrow(() -> experiment.runWithDefaults(GraphType.GNM_RANDOM));
   }
 }

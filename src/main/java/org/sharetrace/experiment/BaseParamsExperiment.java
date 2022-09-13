@@ -51,12 +51,12 @@ abstract class BaseParamsExperiment implements Experiment {
   @Value.Parameter
   @Value.Default
   protected Range<Double> transRates() {
-    return Range.of(0.1, 1.0, 0.1);
+    return Range.ofDoubles(0.1, 1.0, 0.1);
   }
 
   @Value.Parameter
   @Value.Default
   protected Range<Double> sendCoeffs() {
-    return Range.of(0.1, 1.1, 0.1);
+    return Range.ofDoubles(0.1, 1.1, 0.1);
   }
 }
