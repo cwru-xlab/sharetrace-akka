@@ -6,22 +6,6 @@ import java.util.function.Function;
 
 public interface Range<T extends Number> extends Iterable<T> {
 
-  static Range<Integer> ofInts(long start, long stop, long step) {
-    return map(ofLongs(start, stop, step), Math::toIntExact);
-  }
-
-  static Range<Integer> ofInts(long start, long stop) {
-    return ofInts(start, stop, 1L);
-  }
-
-  static Range<Integer> ofInts(long stop) {
-    return ofInts(0L, stop);
-  }
-
-  static Range<Integer> ofInt(long value) {
-    return ofInts(value, value + 1L);
-  }
-
   static Range<Long> ofLongs(long start, long stop, long step) {
     long first = Math.subtractExact(start, step);
     long last = Math.subtractExact(stop, step);
@@ -52,6 +36,22 @@ public interface Range<T extends Number> extends Iterable<T> {
 
   static Range<Long> ofLong(long value) {
     return ofLongs(value, value + 1L);
+  }
+
+  static Range<Integer> ofInts(long start, long stop, long step) {
+    return map(ofLongs(start, stop, step), Math::toIntExact);
+  }
+
+  static Range<Integer> ofInts(long start, long stop) {
+    return ofInts(start, stop, 1L);
+  }
+
+  static Range<Integer> ofInts(long stop) {
+    return ofInts(0L, stop);
+  }
+
+  static Range<Integer> ofInt(long value) {
+    return ofInts(value, value + 1L);
   }
 
   static Range<Short> ofShorts(long start, long stop, long step) {
@@ -135,27 +135,6 @@ public interface Range<T extends Number> extends Iterable<T> {
     return ofFloats(value, value + 1d);
   }
 
-  private static float toFloatExact(double value) {
-    if ((float) value != value) {
-      throw new ArithmeticException("float overflow");
-    }
-    return (float) value;
-  }
-
-  private static short toShortExact(long value) {
-    if ((short) value != value) {
-      throw new ArithmeticException("short overflow");
-    }
-    return (short) value;
-  }
-
-  private static byte toByteExact(long value) {
-    if ((byte) value != value) {
-      throw new ArithmeticException("byte overflow");
-    }
-    return (byte) value;
-  }
-
   private static <T extends Number, R extends Number> Range<R> map(
       Range<T> range, Function<T, R> cast) {
     return () ->
@@ -172,5 +151,26 @@ public interface Range<T extends Number> extends Iterable<T> {
             return cast.apply(iterator.next());
           }
         };
+  }
+
+  private static short toShortExact(long value) {
+    if ((short) value != value) {
+      throw new ArithmeticException("short overflow");
+    }
+    return (short) value;
+  }
+
+  private static byte toByteExact(long value) {
+    if ((byte) value != value) {
+      throw new ArithmeticException("byte overflow");
+    }
+    return (byte) value;
+  }
+
+  private static float toFloatExact(double value) {
+    if ((float) value != value) {
+      throw new ArithmeticException("float overflow");
+    }
+    return (float) value;
   }
 }
