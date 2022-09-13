@@ -3,6 +3,8 @@ package org.sharetrace.util;
 import java.math.BigDecimal;
 import java.util.Iterator;
 import java.util.function.Function;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 public interface Range<T extends Number> extends Iterable<T> {
 
@@ -172,5 +174,9 @@ public interface Range<T extends Number> extends Iterable<T> {
       throw new ArithmeticException("float overflow");
     }
     return (float) value;
+  }
+
+  default Stream<T> stream() {
+    return StreamSupport.stream(spliterator(), false);
   }
 }
