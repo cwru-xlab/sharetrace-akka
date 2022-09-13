@@ -24,13 +24,14 @@ public interface Range<T extends Number> extends Iterable<T> {
 
   static Range<Long> ofLongs(long start, long stop, long step) {
     long first = Math.subtractExact(start, step);
+    boolean ascending = step > 0;
     return () ->
         new Iterator<>() {
           private long value = first;
 
           @Override
           public boolean hasNext() {
-            return step > 0 ? value < stop : value > stop;
+            return ascending ? value < stop : value > stop;
           }
 
           @Override
@@ -66,6 +67,22 @@ public interface Range<T extends Number> extends Iterable<T> {
 
   static Range<Short> ofShort(long value) {
     return ofShorts(value, value + 1L);
+  }
+
+  static Range<Byte> ofBytes(long start, long stop, long step) {
+    return map(ofLongs(start, stop, step), Range::toByteExact);
+  }
+
+  static Range<Byte> ofBytes(long start, long stop) {
+    return ofBytes(start, stop, 1L);
+  }
+
+  static Range<Byte> ofBytes(long stop) {
+    return ofBytes(0L, stop);
+  }
+
+  static Range<Byte> ofByte(long value) {
+    return ofBytes(value, value + 1L);
   }
 
   static Range<Double> ofDoubles(double start, double stop, double step) {
@@ -129,6 +146,13 @@ public interface Range<T extends Number> extends Iterable<T> {
       throw new ArithmeticException("short overflow");
     }
     return (short) value;
+  }
+
+  private static byte toByteExact(long value) {
+    if ((byte) value != value) {
+      throw new ArithmeticException("byte overflow");
+    }
+    return (byte) value;
   }
 
   private static <T extends Number, R extends Number> Range<R> map(
