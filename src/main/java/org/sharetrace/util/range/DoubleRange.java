@@ -9,7 +9,7 @@ public final class DoubleRange implements Range<Double> {
 
   private final Range<Double> doubles;
 
-  public DoubleRange(Range<BigDecimal> bigDecimals) {
+  private DoubleRange(Range<BigDecimal> bigDecimals) {
     doubles = bigDecimals.map(DoubleRange::toDoubleExact);
   }
 
