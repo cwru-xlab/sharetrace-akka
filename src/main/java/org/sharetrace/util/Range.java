@@ -41,7 +41,7 @@ public interface Range<T extends Number> extends Iterable<T> {
   }
 
   static Range<Integer> ofInts(long start, long stop, long step) {
-    return map(ofLongs(start, stop, step), Range::toIntExact);
+    return ofLongs(start, stop, step).map(Range::toIntExact);
   }
 
   static Range<Integer> ofInts(long start, long stop) {
@@ -57,7 +57,7 @@ public interface Range<T extends Number> extends Iterable<T> {
   }
 
   static Range<Short> ofShorts(long start, long stop, long step) {
-    return map(ofLongs(start, stop, step), Range::toShortExact);
+    return ofLongs(start, stop, step).map(Range::toShortExact);
   }
 
   static Range<Short> ofShorts(long start, long stop) {
@@ -73,7 +73,7 @@ public interface Range<T extends Number> extends Iterable<T> {
   }
 
   static Range<Byte> ofBytes(long start, long stop, long step) {
-    return map(ofLongs(start, stop, step), Range::toByteExact);
+    return ofLongs(start, stop, step).map(Range::toByteExact);
   }
 
   static Range<Byte> ofBytes(long start, long stop) {
@@ -122,7 +122,7 @@ public interface Range<T extends Number> extends Iterable<T> {
   }
 
   static Range<Float> ofFloats(double start, double stop, double step) {
-    return map(ofDoubles(start, stop, step), Range::toFloatExact);
+    return ofDoubles(start, stop, step).map(Range::toFloatExact);
   }
 
   static Range<Float> ofFloats(double start, double stop) {
@@ -135,24 +135,6 @@ public interface Range<T extends Number> extends Iterable<T> {
 
   static Range<Float> ofFloat(double value) {
     return ofFloats(value, value + 1d);
-  }
-
-  private static <T extends Number, R extends Number> Range<R> map(
-      Range<T> range, Function<T, R> cast) {
-    return () ->
-        new Iterator<>() {
-          private final Iterator<T> iterator = range.iterator();
-
-          @Override
-          public boolean hasNext() {
-            return iterator.hasNext();
-          }
-
-          @Override
-          public R next() {
-            return cast.apply(iterator.next());
-          }
-        };
   }
 
   private static int toIntExact(long value) {
@@ -178,6 +160,23 @@ public interface Range<T extends Number> extends Iterable<T> {
       throw new ArithmeticException("float overflow");
     }
     return (float) value;
+  }
+
+  default <R extends Number> Range<R> map(Function<T, R> mapper) {
+    return () ->
+        new Iterator<>() {
+          private final Iterator<T> iterator = iterator();
+
+          @Override
+          public boolean hasNext() {
+            return iterator.hasNext();
+          }
+
+          @Override
+          public R next() {
+            return mapper.apply(iterator.next());
+          }
+        };
   }
 
   default Stream<T> stream() {
