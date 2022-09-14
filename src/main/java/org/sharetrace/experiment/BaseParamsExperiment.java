@@ -6,7 +6,8 @@ import org.immutables.value.Value;
 import org.sharetrace.experiment.state.Defaults;
 import org.sharetrace.experiment.state.ExperimentState;
 import org.sharetrace.logging.metric.GraphTopology;
-import org.sharetrace.util.Range;
+import org.sharetrace.util.range.DoubleRange;
+import org.sharetrace.util.range.Range;
 
 @Value.Immutable
 abstract class BaseParamsExperiment implements Experiment {
@@ -51,12 +52,12 @@ abstract class BaseParamsExperiment implements Experiment {
   @Value.Parameter
   @Value.Default
   protected Range<Double> transRates() {
-    return Range.ofDoubles(0.1, 1.0, 0.1);
+    return DoubleRange.of(0.1, 1.0, 0.1);
   }
 
   @Value.Parameter
   @Value.Default
   protected Range<Double> sendCoeffs() {
-    return Range.ofDoubles(0.1, 1.1, 0.1);
+    return DoubleRange.of(0.1, 1.1, 0.1);
   }
 }
