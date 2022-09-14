@@ -41,7 +41,7 @@ public interface Range<T extends Number> extends Iterable<T> {
   }
 
   static Range<Integer> ofInts(long start, long stop, long step) {
-    return map(ofLongs(start, stop, step), Math::toIntExact);
+    return map(ofLongs(start, stop, step), Range::toIntExact);
   }
 
   static Range<Integer> ofInts(long start, long stop) {
@@ -153,6 +153,10 @@ public interface Range<T extends Number> extends Iterable<T> {
             return cast.apply(iterator.next());
           }
         };
+  }
+
+  private static int toIntExact(long value) {
+    return Math.toIntExact(value);
   }
 
   private static short toShortExact(long value) {
