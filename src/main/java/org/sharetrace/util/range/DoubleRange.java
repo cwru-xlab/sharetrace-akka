@@ -1,6 +1,5 @@
 package org.sharetrace.util.range;
 
-import com.google.common.primitives.Doubles;
 import java.math.BigDecimal;
 import java.util.Iterator;
 import javax.annotation.Nonnull;
@@ -34,7 +33,7 @@ public final class DoubleRange implements Range<Double> {
 
   private static double toDoubleExact(BigDecimal value) {
     double v = value.doubleValue();
-    if (!Doubles.isFinite(v)) {
+    if (v == Double.NEGATIVE_INFINITY || v == Double.POSITIVE_INFINITY) {
       throw new ArithmeticException("double overflow");
     }
     return v;

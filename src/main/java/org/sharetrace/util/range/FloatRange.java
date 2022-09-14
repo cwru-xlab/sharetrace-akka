@@ -1,6 +1,5 @@
 package org.sharetrace.util.range;
 
-import com.google.common.primitives.Floats;
 import java.math.BigDecimal;
 import java.util.Iterator;
 import javax.annotation.Nonnull;
@@ -34,7 +33,7 @@ public final class FloatRange implements Range<Float> {
 
   private static float toFloatExact(BigDecimal value) {
     float v = value.floatValue();
-    if (!Floats.isFinite(v)) {
+    if (v == Float.NEGATIVE_INFINITY || v == Float.POSITIVE_INFINITY) {
       throw new ArithmeticException("float overflow");
     }
     return v;
