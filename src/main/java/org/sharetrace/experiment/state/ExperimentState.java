@@ -188,6 +188,7 @@ public final class ExperimentState {
     private String id;
     private MsgParams msgParams;
     private CacheParams<RiskScoreMsg> cacheParams;
+    private ScoreFactoryType scoreFactoryType;
     private DistributionFactory scoreNoiseFactory;
     private DistributionFactory scoreValuesFactory;
     private DistributionFactory scoreTimesFactory;
@@ -196,7 +197,6 @@ public final class ExperimentState {
     private RealDistribution scoreValues;
     private RealDistribution scoreTimes;
     private RealDistribution contactTimes;
-    private ScoreFactoryType scoreFactoryType;
     private RiskScoreFactory scoreFactory;
     private ContactTimeFactory contactTimeFactory;
     private Dataset dataset;
