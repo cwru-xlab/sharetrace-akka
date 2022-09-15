@@ -243,7 +243,7 @@ public final class ExperimentState {
     }
 
     private static String newId() {
-      return String.valueOf(ThreadLocalRandom.current().nextLong());
+      return String.valueOf(ThreadLocalRandom.current().nextLong(Long.MAX_VALUE));
     }
 
     private static Function<DistributionFactoryContext, DistributionFactory> defaultFactory() {
