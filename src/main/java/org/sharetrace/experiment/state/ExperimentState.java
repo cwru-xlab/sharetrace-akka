@@ -3,7 +3,6 @@ package org.sharetrace.experiment.state;
 import akka.actor.typed.Behavior;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import java.time.Clock;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.EnumMap;
@@ -19,7 +18,9 @@ import org.sharetrace.actor.Runner;
 import org.sharetrace.data.Dataset;
 import org.sharetrace.data.factory.ContactTimeFactory;
 import org.sharetrace.data.factory.DistributionFactory;
+import org.sharetrace.data.factory.NoisyRiskScoreFactory;
 import org.sharetrace.data.factory.RiskScoreFactory;
+import org.sharetrace.data.factory.ScoreFactoryType;
 import org.sharetrace.data.sampler.RiskScoreSampler;
 import org.sharetrace.data.sampler.Sampler;
 import org.sharetrace.data.sampler.TimeSampler;
@@ -47,9 +48,13 @@ public final class ExperimentState {
   private final String id;
   private final GraphType graphType;
   private final Map<String, String> mdc;
+  private final ScoreFactoryType scoreFactoryType;
+  private final DistributionFactory scoreNoiseFactory;
   private final DistributionFactory scoreValuesFactory;
   private final DistributionFactory scoreTimesFactory;
   private final DistributionFactory contactTimesFactory;
+  private final RiskScoreFactory scoreFactory;
+  private final ContactTimeFactory contactTimeFactory;
   private final Dataset dataset;
   private final UserParams userParams;
   private final MsgParams msgParams;
@@ -61,9 +66,13 @@ public final class ExperimentState {
     graphType = builder.graphType;
     id = builder.id;
     mdc = builder.mdc;
+    scoreFactoryType = builder.scoreFactoryType;
+    scoreNoiseFactory = builder.scoreNoiseFactory;
     scoreValuesFactory = builder.scoreValuesFactory;
     scoreTimesFactory = builder.scoreTimesFactory;
     contactTimesFactory = builder.contactTimesFactory;
+    scoreFactory = builder.scoreFactory;
+    contactTimeFactory = builder.contactTimeFactory;
     dataset = builder.dataset;
     userParams = builder.userParams;
     msgParams = builder.msgParams;
@@ -85,6 +94,10 @@ public final class ExperimentState {
 
   public Builder toBuilder() {
     return Builder.from(this);
+  }
+
+  public RiskScoreFactory scoreFactory() {
+    return scoreFactory;
   }
 
   public Dataset dataset() {
@@ -144,11 +157,14 @@ public final class ExperimentState {
     MDC,
     MSG_PARAMS,
     CACHE_PARAMS,
+    SCORE_FACTORY_TYPE,
+    SCORE_NOISE,
     SCORE_VALUES,
     SCORE_TIMES,
     CONTACT_TIMES,
     DISTRIBUTIONS,
-    FACTORIES,
+    SCORE_FACTORY,
+    CONTACT_TIME_FACTORY,
     DATASET,
     USER_PARAMS
   }
@@ -160,6 +176,7 @@ public final class ExperimentState {
           MsgParamsContext,
           CacheParamsContext,
           DistributionFactoryContext,
+          DataFactoryContext,
           DatasetContext,
           UserParamsContext {
 
@@ -171,12 +188,15 @@ public final class ExperimentState {
     private String id;
     private MsgParams msgParams;
     private CacheParams<RiskScoreMsg> cacheParams;
+    private DistributionFactory scoreNoiseFactory;
     private DistributionFactory scoreValuesFactory;
     private DistributionFactory scoreTimesFactory;
     private DistributionFactory contactTimesFactory;
+    private RealDistribution scoreNoise;
     private RealDistribution scoreValues;
     private RealDistribution scoreTimes;
     private RealDistribution contactTimes;
+    private ScoreFactoryType scoreFactoryType;
     private RiskScoreFactory scoreFactory;
     private ContactTimeFactory contactTimeFactory;
     private Dataset dataset;
@@ -195,9 +215,13 @@ public final class ExperimentState {
           .id(ctx -> newId())
           .msgParams(state.msgParams)
           .cacheParams(state.cacheParams)
+          .scoreFactoryType(state.scoreFactoryType)
+          .scoreNoiseFactory(state.scoreNoiseFactory)
           .scoreValuesFactory(state.scoreValuesFactory)
           .scoreTimesFactory(state.scoreTimesFactory)
           .contactTimesFactory(state.contactTimesFactory)
+          .scoreFactory(state.scoreFactory)
+          .contactTimeFactory(state.contactTimeFactory)
           .dataset(state.dataset)
           .userParams(state.userParams);
     }
@@ -208,9 +232,13 @@ public final class ExperimentState {
           .mdc(ctx -> Logging.mdc(ctx.id(), ctx.graphType()))
           .msgParams(ctx -> Defaults.msgParams())
           .cacheParams(ctx -> Defaults.cacheParams())
+          .scoreFactoryType(ctx -> ScoreFactoryType.SAMPLED)
+          .scoreNoiseFactory(defaultFactory())
           .scoreTimesFactory(defaultFactory())
           .scoreValuesFactory(defaultFactory())
           .contactTimesFactory(defaultFactory())
+          .scoreFactory(Builder::newScoreFactory)
+          .contactTimeFactory(Builder::newContactTimeFactory)
           .userParams(ctx -> Defaults.userParams(ctx.dataset()));
     }
 
@@ -220,6 +248,38 @@ public final class ExperimentState {
 
     private static Function<DistributionFactoryContext, DistributionFactory> defaultFactory() {
       return ctx -> seed -> new UniformRealDistribution(new Well512a(seed), 0d, 1d);
+    }
+
+    private static RiskScoreFactory newScoreFactory(DataFactoryContext ctx) {
+      RiskScoreFactory scoreFactory = RiskScoreFactory.from(newScoreSampler(ctx)::sample);
+      if (ctx.scoreFactoryType() == ScoreFactoryType.NOISY) {
+        scoreFactory = NoisyRiskScoreFactory.of(ctx.scoreNoise(), scoreFactory);
+      }
+      return scoreFactory;
+    }
+
+    private static Sampler<RiskScore> newScoreSampler(DataFactoryContext ctx) {
+      return RiskScoreSampler.builder()
+          .values(ctx.scoreValues())
+          .timeSampler(
+              TimeSampler.builder()
+                  .lookBacks(ctx.scoreTimes())
+                  .maxLookBack(ctx.msgParams().scoreTtl())
+                  .refTime(ctx.refTime())
+                  .build())
+          .build();
+    }
+
+    private static ContactTimeFactory newContactTimeFactory(DataFactoryContext ctx) {
+      return ContactTimeFactory.from(newContactTimeSampler(ctx)::sample);
+    }
+
+    private static Sampler<Instant> newContactTimeSampler(DataFactoryContext ctx) {
+      return TimeSampler.builder()
+          .lookBacks(ctx.contactTimes())
+          .maxLookBack(ctx.msgParams().contactTtl())
+          .refTime(ctx.refTime())
+          .build();
     }
 
     public Builder id(Function<IdContext, String> factory) {
@@ -254,6 +314,28 @@ public final class ExperimentState {
     public Builder scoreValuesFactory(DistributionFactory factory) {
       scoreValuesFactory = factory;
       setters.remove(Setter.SCORE_VALUES);
+      return this;
+    }
+
+    public Builder scoreFactory(RiskScoreFactory factory) {
+      scoreFactory = factory;
+      setters.remove(Setter.SCORE_FACTORY);
+      return this;
+    }
+
+    public Builder scoreFactory(Function<DataFactoryContext, RiskScoreFactory> factory) {
+      setters.put(Setter.SCORE_FACTORY, factory.andThen(this::scoreFactory));
+      return this;
+    }
+
+    public Builder contactTimeFactory(ContactTimeFactory factory) {
+      contactTimeFactory = factory;
+      setters.remove(Setter.CONTACT_TIME_FACTORY);
+      return this;
+    }
+
+    public Builder contactTimeFactory(Function<DataFactoryContext, ContactTimeFactory> factory) {
+      setters.put(Setter.CONTACT_TIME_FACTORY, factory.andThen(this::contactTimeFactory));
       return this;
     }
 
@@ -314,6 +396,30 @@ public final class ExperimentState {
       return this;
     }
 
+    public Builder scoreNoiseFactory(DistributionFactory factory) {
+      scoreNoiseFactory = factory;
+      setters.remove(Setter.SCORE_NOISE);
+      return this;
+    }
+
+    public Builder scoreNoiseFactory(
+        Function<DistributionFactoryContext, DistributionFactory> factory) {
+      setters.put(Setter.SCORE_NOISE, factory.andThen(this::scoreNoiseFactory));
+      return this;
+    }
+
+    public Builder scoreFactoryType(ScoreFactoryType type) {
+      scoreFactoryType = type;
+      setters.remove(Setter.SCORE_FACTORY_TYPE);
+      return this;
+    }
+
+    public Builder scoreFactoryType(
+        Function<DistributionFactoryContext, ScoreFactoryType> factory) {
+      setters.put(Setter.SCORE_FACTORY_TYPE, factory.andThen(this::scoreFactoryType));
+      return this;
+    }
+
     public Builder contactTimesFactory(
         Function<DistributionFactoryContext, DistributionFactory> factory) {
       setters.put(Setter.CONTACT_TIMES, factory.andThen(this::contactTimesFactory));
@@ -327,7 +433,6 @@ public final class ExperimentState {
 
     public ExperimentState build() {
       setters.put(Setter.DISTRIBUTIONS, x -> setDistributions());
-      setters.put(Setter.FACTORIES, x -> setFactories());
       setters.values().forEach(setter -> setter.apply(this));
       return new ExperimentState(this);
     }
@@ -378,6 +483,31 @@ public final class ExperimentState {
     }
 
     @Override
+    public ScoreFactoryType scoreFactoryType() {
+      return scoreFactoryType;
+    }
+
+    @Override
+    public RealDistribution scoreNoise() {
+      return scoreNoise;
+    }
+
+    @Override
+    public RealDistribution scoreValues() {
+      return scoreValues;
+    }
+
+    @Override
+    public RealDistribution scoreTimes() {
+      return scoreTimes;
+    }
+
+    @Override
+    public RealDistribution contactTimes() {
+      return contactTimes;
+    }
+
+    @Override
     public RiskScoreFactory scoreFactory() {
       return scoreFactory;
     }
@@ -403,35 +533,11 @@ public final class ExperimentState {
     }
 
     private Void setDistributions() {
+      scoreNoise = scoreNoiseFactory.distribution(ctx.seed());
       scoreValues = scoreValuesFactory.distribution(ctx.seed());
       scoreTimes = scoreTimesFactory.distribution(ctx.seed());
       contactTimes = contactTimesFactory.distribution(ctx.seed());
       return null;
-    }
-
-    private Void setFactories() {
-      scoreFactory = RiskScoreFactory.from(newScoreSampler()::sample);
-      contactTimeFactory = ContactTimeFactory.from(newContactTimeSampler()::sample);
-      return null;
-    }
-
-    private Sampler<RiskScore> newScoreSampler() {
-      return RiskScoreSampler.builder()
-          .values(scoreValues)
-          .timeSampler(newTimeSampler(scoreTimes, msgParams.scoreTtl()))
-          .build();
-    }
-
-    private Sampler<Instant> newTimeSampler(RealDistribution lookBacks, Duration maxLookBack) {
-      return TimeSampler.builder()
-          .lookBacks(lookBacks)
-          .maxLookBack(maxLookBack)
-          .refTime(ctx.refTime())
-          .build();
-    }
-
-    private Sampler<Instant> newContactTimeSampler() {
-      return newTimeSampler(contactTimes, msgParams.contactTtl());
     }
   }
 }
