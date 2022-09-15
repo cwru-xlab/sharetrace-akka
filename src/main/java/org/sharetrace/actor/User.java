@@ -176,7 +176,7 @@ public final class User extends AbstractBehavior<UserMsg> {
   }
 
   private RiskScore transmitted(RiskScore score) {
-    return RiskScore.of((float) (score.value() * msgParams.transRate()), score.time());
+    return score.withValue((float) (score.value() * msgParams.transRate()));
   }
 
   private void startRefreshTimer() {

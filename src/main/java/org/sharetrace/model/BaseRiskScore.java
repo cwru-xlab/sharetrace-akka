@@ -17,7 +17,8 @@ import org.sharetrace.util.Checks;
  * @see User
  * @see RiskPropagation
  */
-@Value.Immutable
+@SuppressWarnings("DefaultAnnotationParam")
+@Value.Immutable(copy = true)
 abstract class BaseRiskScore implements Comparable<RiskScore> {
 
   public static final float MIN_VALUE = 0f;
