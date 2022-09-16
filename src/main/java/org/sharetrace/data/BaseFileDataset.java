@@ -13,7 +13,7 @@ import org.sharetrace.model.TimeRef;
 abstract class BaseFileDataset implements Dataset, TimeRef {
 
   @Override
-  @Value.Derived
+  @Value.Lazy
   public ContactNetwork contactNetwork() {
     return FileContactNetwork.builder()
         .addAllLoggable(loggable())

@@ -15,7 +15,7 @@ import org.sharetrace.model.RiskScore;
 abstract class BaseSampledDataset implements Dataset {
 
   @Override
-  @Value.Derived
+  @Value.Lazy
   public ContactNetwork contactNetwork() {
     return SampledContactNetwork.builder()
         .addAllLoggable(loggable())
@@ -29,7 +29,7 @@ abstract class BaseSampledDataset implements Dataset {
     return riskScoreFactory().riskScore(user);
   }
 
-  @Value.Derived
+  @Value.Lazy
   protected GraphGenerator<Integer, DefaultEdge, ?> graphGenerator() {
     return graphGeneratorFactory().graphGenerator(numNodes());
   }

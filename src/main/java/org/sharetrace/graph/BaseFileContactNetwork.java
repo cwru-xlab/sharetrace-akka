@@ -48,12 +48,12 @@ abstract class BaseFileContactNetwork implements ContactNetwork, TimeRef, Loggab
     helper().logMetrics();
   }
 
-  @Value.Derived
+  @Value.Lazy
   protected ContactNetworkHelper helper() {
     return ContactNetworkHelper.of(graphGenerator(), loggable());
   }
 
-  @Value.Derived
+  @Value.Lazy
   protected Map<Set<Integer>, Instant> contactMap() {
     try (BufferedReader reader = Files.newBufferedReader(path())) {
       return toContacts(reader.lines()::iterator);
