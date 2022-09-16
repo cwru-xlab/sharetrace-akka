@@ -4,7 +4,7 @@ import java.nio.file.Path;
 import org.immutables.value.Value;
 import org.sharetrace.experiment.state.Defaults;
 import org.sharetrace.experiment.state.ExperimentState;
-import org.sharetrace.util.range.ShortRange;
+import org.sharetrace.util.range.IntRange;
 
 @Value.Immutable
 abstract class BaseFileExperiment implements Experiment {
@@ -26,7 +26,7 @@ abstract class BaseFileExperiment implements Experiment {
 
   @Override
   public void run(ExperimentState initialState) {
-    ShortRange.of(numIterations()).forEach(x -> initialState.withNewId().run());
+    IntRange.of(numIterations()).forEach(x -> initialState.withNewId().run());
   }
 
   @Value.Parameter
