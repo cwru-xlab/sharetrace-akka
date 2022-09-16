@@ -78,7 +78,7 @@ public final class Defaults {
         .build();
   }
 
-  public static Dataset fileDataset(DatasetContext ctx, Path path) {
+  public static FileDataset fileDataset(DatasetContext ctx, Path path) {
     return FileDataset.builder()
         .delimiter(WHITESPACE_DELIMITER)
         .path(path)
@@ -88,7 +88,7 @@ public final class Defaults {
         .build();
   }
 
-  public static Dataset sampledDataset(DatasetContext ctx, int numNodes) {
+  public static SampledDataset sampledDataset(DatasetContext ctx, int numNodes) {
     return SampledDataset.builder()
         .addAllLoggable(ctx.loggable())
         .riskScoreFactory(ctx.scoreFactory())
