@@ -190,6 +190,7 @@ public final class ExperimentState {
       return new Builder(state.ctx)
           .graphType(state.graphType)
           .id(ctx -> newId())
+          .mdc(state.mdc)
           .msgParams(state.msgParams)
           .cacheParams(state.cacheParams)
           .scoreValuesFactory(state.scoreValuesFactory)
@@ -407,6 +408,7 @@ public final class ExperimentState {
       scoreValues = scoreValuesFactory.distribution(ctx.seed());
       scoreTimes = scoreTimesFactory.distribution(ctx.seed());
       contactTimes = contactTimesFactory.distribution(ctx.seed());
+      setters.remove(Setter.DISTRIBUTIONS);
       return this;
     }
   }
