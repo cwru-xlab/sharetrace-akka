@@ -24,10 +24,10 @@ import org.sharetrace.util.Stats;
 @Value.Immutable
 abstract class BaseGraphStats<V, E> {
 
-  private static List<Float> getScores(VertexScoringAlgorithm<?, Double> algorithm) {
-    Collection<Double> scores = algorithm.getScores().values();
+  private static List<Float> getScores(VertexScoringAlgorithm<?, ? extends Number> algorithm) {
+    Collection<? extends Number> scores = algorithm.getScores().values();
     return scores.stream()
-        .map(Double::floatValue)
+        .map(Number::floatValue)
         .collect(() -> new FloatArrayList(scores.size()), List::add, List::addAll);
   }
 
