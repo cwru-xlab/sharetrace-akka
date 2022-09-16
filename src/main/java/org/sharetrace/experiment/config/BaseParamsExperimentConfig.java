@@ -1,5 +1,6 @@
 package org.sharetrace.experiment.config;
 
+import java.util.Optional;
 import org.immutables.value.Value;
 import org.sharetrace.experiment.GraphType;
 import org.sharetrace.util.range.DoubleRange;
@@ -8,9 +9,9 @@ import org.sharetrace.util.range.Range;
 @Value.Immutable
 interface BaseParamsExperimentConfig {
 
-  GraphType graphType();
+  Optional<GraphType> graphType();
 
-  int numNodes();
+  Optional<Integer> numNodes();
 
   @Value.Default
   default Range<Double> transRates() {

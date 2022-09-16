@@ -42,9 +42,11 @@ public final class ParamsExperiment implements Experiment<ParamsExperimentConfig
 
   @Override
   public ExperimentState newDefaultState(ParamsExperimentConfig config) {
+    GraphType graphType = getProperty(config.graphType(), "graphType");
+    int numNodes = getProperty(config.numNodes(), "numNodes");
     return ExperimentState.builder(DEFAULT_CTX)
-        .graphType(config.graphType())
-        .dataset(ctx -> Defaults.sampledDataset(ctx, config.numNodes()))
+        .graphType(graphType)
+        .dataset(ctx -> Defaults.sampledDataset(ctx, numNodes))
         .build();
   }
 }

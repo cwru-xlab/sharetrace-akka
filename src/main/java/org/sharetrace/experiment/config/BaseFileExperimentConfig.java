@@ -1,6 +1,7 @@
 package org.sharetrace.experiment.config;
 
 import java.nio.file.Path;
+import java.util.Optional;
 import org.immutables.value.Value;
 import org.sharetrace.experiment.GraphType;
 
@@ -12,7 +13,7 @@ interface BaseFileExperimentConfig {
     return 1;
   }
 
-  GraphType graphType();
+  Optional<GraphType> graphType();
 
-  Path path();
+  Optional<Path> path();
 }

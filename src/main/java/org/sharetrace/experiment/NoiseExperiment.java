@@ -66,9 +66,8 @@ public final class NoiseExperiment implements Experiment<NoiseExperimentConfig> 
 
   @Override
   public ExperimentState newDefaultState(NoiseExperimentConfig config) {
-    return ExperimentState.builder(DEFAULT_CTX)
-        .dataset(config.dataset())
-        .graphType(config.graphType())
-        .build();
+    GraphType graphType = getProperty(config.graphType(), "graphType");
+    Dataset dataset = getProperty(config.dataset(), "dataset");
+    return ExperimentState.builder(DEFAULT_CTX).dataset(dataset).graphType(graphType).build();
   }
 }

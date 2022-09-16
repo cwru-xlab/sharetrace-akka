@@ -1,5 +1,6 @@
 package org.sharetrace.experiment;
 
+import java.nio.file.Path;
 import org.sharetrace.experiment.config.FileExperimentConfig;
 import org.sharetrace.experiment.state.Defaults;
 import org.sharetrace.experiment.state.ExperimentContext;
@@ -23,9 +24,11 @@ public final class FileExperiment implements Experiment<FileExperimentConfig> {
 
   @Override
   public ExperimentState newDefaultState(FileExperimentConfig config) {
+    GraphType graphType = getProperty(config.graphType(), "graphType");
+    Path path = getProperty(config.path(), "path");
     return ExperimentState.builder(ExperimentContext.create())
-        .graphType(config.graphType())
-        .dataset(ctx -> Defaults.fileDataset(ctx, config.path()))
+        .graphType(graphType)
+        .dataset(ctx -> Defaults.fileDataset(ctx, path))
         .build();
   }
 }

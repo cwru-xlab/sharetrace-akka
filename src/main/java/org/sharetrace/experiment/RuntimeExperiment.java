@@ -50,7 +50,7 @@ public final class RuntimeExperiment implements Experiment<RuntimeExperimentConf
   @Override
   public ExperimentState newDefaultState(RuntimeExperimentConfig config) {
     return ExperimentState.builder(DEFAULT_CTX)
-        .graphType(config.graphType())
+        .graphType(getProperty(config.graphType(), "graphType"))
         .dataset(ctx -> Defaults.sampledDataset(ctx, IGNORED))
         .build();
   }

@@ -1,5 +1,6 @@
 package org.sharetrace.experiment.config;
 
+import java.util.Optional;
 import org.apache.commons.math3.distribution.RealDistribution;
 import org.immutables.value.Value;
 import org.sharetrace.data.Dataset;
@@ -10,9 +11,9 @@ import org.sharetrace.util.range.Range;
 @Value.Immutable
 interface BaseNoiseExperimentConfig {
 
-  GraphType graphType();
+  Optional<GraphType> graphType();
 
-  Dataset dataset();
+  Optional<Dataset> dataset();
 
   Iterable<RealDistribution> noises();
 
