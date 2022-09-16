@@ -1,11 +1,12 @@
 package org.sharetrace.experiment.state;
 
-import org.sharetrace.data.factory.ContactTimeFactory;
-import org.sharetrace.data.factory.RiskScoreFactory;
+import org.apache.commons.math3.distribution.RealDistribution;
 
-public interface DatasetContext extends CacheParamsContext {
+public interface DatasetContext extends DistributionFactoryContext {
 
-  RiskScoreFactory scoreFactory();
+  RealDistribution scoreValues();
 
-  ContactTimeFactory contactTimeFactory();
+  RealDistribution scoreTimes();
+
+  RealDistribution contactTimes();
 }

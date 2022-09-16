@@ -40,18 +40,18 @@ public final class Defaults {
     return CACHE_PARAMS;
   }
 
-  public static RiskScoreFactory scoreFactory(DataFactoryContext ctx) {
+  public static RiskScoreFactory scoreFactory(DatasetContext ctx) {
     return RiskScoreFactory.from(scoreSampler(ctx)::sample);
   }
 
-  public static Sampler<RiskScore> scoreSampler(DataFactoryContext ctx) {
+  public static Sampler<RiskScore> scoreSampler(DatasetContext ctx) {
     return RiskScoreSampler.builder()
         .values(ctx.scoreValues())
         .timeSampler(scoreTimeSampler(ctx))
         .build();
   }
 
-  public static Sampler<Instant> scoreTimeSampler(DataFactoryContext ctx) {
+  public static Sampler<Instant> scoreTimeSampler(DatasetContext ctx) {
     return TimeSampler.builder()
         .lookBacks(ctx.scoreTimes())
         .maxLookBack(ctx.msgParams().scoreTtl())
@@ -59,11 +59,11 @@ public final class Defaults {
         .build();
   }
 
-  public static ContactTimeFactory contactTimeFactory(DataFactoryContext ctx) {
+  public static ContactTimeFactory contactTimeFactory(DatasetContext ctx) {
     return ContactTimeFactory.from(contactTimeSampler(ctx)::sample);
   }
 
-  public static Sampler<Instant> contactTimeSampler(DataFactoryContext ctx) {
+  public static Sampler<Instant> contactTimeSampler(DatasetContext ctx) {
     return TimeSampler.builder()
         .lookBacks(ctx.contactTimes())
         .maxLookBack(ctx.msgParams().contactTtl())
@@ -84,15 +84,15 @@ public final class Defaults {
         .path(path)
         .addAllLoggable(ctx.loggable())
         .refTime(ctx.refTime())
-        .scoreFactory(ctx.scoreFactory())
+        .scoreFactory(scoreFactory(ctx))
         .build();
   }
 
   public static SampledDataset sampledDataset(DatasetContext ctx, int numNodes) {
     return SampledDataset.builder()
         .addAllLoggable(ctx.loggable())
-        .riskScoreFactory(ctx.scoreFactory())
-        .contactTimeFactory(ctx.contactTimeFactory())
+        .riskScoreFactory(scoreFactory(ctx))
+        .contactTimeFactory(contactTimeFactory(ctx))
         .graphGeneratorFactory(defaultFactory(ctx))
         .numNodes(numNodes)
         .build();

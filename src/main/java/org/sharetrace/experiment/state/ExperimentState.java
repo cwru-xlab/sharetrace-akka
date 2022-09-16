@@ -16,9 +16,7 @@ import org.apache.commons.math3.random.Well512a;
 import org.sharetrace.actor.RiskPropagationBuilder;
 import org.sharetrace.actor.Runner;
 import org.sharetrace.data.Dataset;
-import org.sharetrace.data.factory.ContactTimeFactory;
 import org.sharetrace.data.factory.DistributionFactory;
-import org.sharetrace.data.factory.RiskScoreFactory;
 import org.sharetrace.experiment.ExperimentContext;
 import org.sharetrace.experiment.GraphType;
 import org.sharetrace.logging.Loggable;
@@ -47,8 +45,6 @@ public final class ExperimentState {
   private final DistributionFactory scoreValuesFactory;
   private final DistributionFactory scoreTimesFactory;
   private final DistributionFactory contactTimesFactory;
-  private final RiskScoreFactory scoreFactory;
-  private final ContactTimeFactory contactTimeFactory;
   private final Dataset dataset;
   private final UserParams userParams;
 
@@ -61,8 +57,6 @@ public final class ExperimentState {
     scoreValuesFactory = builder.scoreValuesFactory;
     scoreTimesFactory = builder.scoreTimesFactory;
     contactTimesFactory = builder.contactTimesFactory;
-    scoreFactory = builder.scoreFactory;
-    contactTimeFactory = builder.contactTimeFactory;
     dataset = builder.dataset;
     userParams = builder.userParams;
     msgParams = builder.msgParams;
@@ -86,48 +80,12 @@ public final class ExperimentState {
     Runner.run(newAlgorithm(), "RiskPropagation");
   }
 
-  public ExperimentContext context() {
-    return ctx;
-  }
-
-  public GraphType graphType() {
-    return graphType;
-  }
-
-  public String id() {
-    return id;
-  }
-
-  public Map<String, String> mdc() {
-    return Collections.unmodifiableMap(mdc);
-  }
-
   public MsgParams msgParams() {
     return msgParams;
   }
 
   public CacheParams<RiskScoreMsg> cacheParams() {
     return cacheParams;
-  }
-
-  public DistributionFactory scoreValuesFactory() {
-    return scoreValuesFactory;
-  }
-
-  public DistributionFactory scoreTimesFactory() {
-    return scoreTimesFactory;
-  }
-
-  public DistributionFactory contactTimesFactory() {
-    return contactTimesFactory;
-  }
-
-  public RiskScoreFactory scoreFactory() {
-    return scoreFactory;
-  }
-
-  public ContactTimeFactory contactTimeFactory() {
-    return contactTimeFactory;
   }
 
   public UserParams userParams() {
@@ -191,7 +149,6 @@ public final class ExperimentState {
     SCORE_TIMES,
     CONTACT_TIMES,
     DISTRIBUTIONS,
-    FACTORIES,
     DATASET,
     USER_PARAMS
   }
@@ -203,7 +160,6 @@ public final class ExperimentState {
           MsgParamsContext,
           CacheParamsContext,
           DistributionFactoryContext,
-          DataFactoryContext,
           DatasetContext,
           UserParamsContext {
 
@@ -221,8 +177,6 @@ public final class ExperimentState {
     private RealDistribution scoreValues;
     private RealDistribution scoreTimes;
     private RealDistribution contactTimes;
-    private RiskScoreFactory scoreFactory;
-    private ContactTimeFactory contactTimeFactory;
     private Dataset dataset;
     private UserParams userParams;
 
@@ -381,7 +335,6 @@ public final class ExperimentState {
 
     public ExperimentState build() {
       setters.put(Setter.DISTRIBUTIONS, x -> setDistributions());
-      setters.put(Setter.FACTORIES, x -> setFactories());
       setters.values().forEach(setter -> setter.apply(this));
       return new ExperimentState(this);
     }
@@ -447,16 +400,6 @@ public final class ExperimentState {
     }
 
     @Override
-    public RiskScoreFactory scoreFactory() {
-      return scoreFactory;
-    }
-
-    @Override
-    public ContactTimeFactory contactTimeFactory() {
-      return contactTimeFactory;
-    }
-
-    @Override
     public Dataset dataset() {
       return dataset;
     }
@@ -465,12 +408,6 @@ public final class ExperimentState {
       scoreValues = scoreValuesFactory.distribution(ctx.seed());
       scoreTimes = scoreTimesFactory.distribution(ctx.seed());
       contactTimes = contactTimesFactory.distribution(ctx.seed());
-      return this;
-    }
-
-    private Builder setFactories() {
-      scoreFactory = Defaults.scoreFactory(this);
-      contactTimeFactory = Defaults.contactTimeFactory(this);
       return this;
     }
   }
