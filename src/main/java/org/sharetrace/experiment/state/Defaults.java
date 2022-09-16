@@ -3,14 +3,21 @@ package org.sharetrace.experiment.state;
 import com.google.common.math.DoubleMath;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.time.Instant;
 import org.sharetrace.data.Dataset;
 import org.sharetrace.data.FileDataset;
 import org.sharetrace.data.SampledDataset;
+import org.sharetrace.data.factory.ContactTimeFactory;
 import org.sharetrace.data.factory.GraphGeneratorBuilder;
 import org.sharetrace.data.factory.GraphGeneratorFactory;
+import org.sharetrace.data.factory.RiskScoreFactory;
+import org.sharetrace.data.sampler.RiskScoreSampler;
+import org.sharetrace.data.sampler.Sampler;
+import org.sharetrace.data.sampler.TimeSampler;
 import org.sharetrace.message.RiskScoreMsg;
 import org.sharetrace.model.CacheParams;
 import org.sharetrace.model.MsgParams;
+import org.sharetrace.model.RiskScore;
 import org.sharetrace.model.UserParams;
 
 public final class Defaults {
@@ -31,6 +38,37 @@ public final class Defaults {
 
   public static CacheParams<RiskScoreMsg> cacheParams() {
     return CACHE_PARAMS;
+  }
+
+  public static RiskScoreFactory scoreFactory(DataFactoryContext ctx) {
+    return RiskScoreFactory.from(scoreSampler(ctx)::sample);
+  }
+
+  public static Sampler<RiskScore> scoreSampler(DataFactoryContext ctx) {
+    return RiskScoreSampler.builder()
+        .values(ctx.scoreValues())
+        .timeSampler(scoreTimeSampler(ctx))
+        .build();
+  }
+
+  public static Sampler<Instant> scoreTimeSampler(DataFactoryContext ctx) {
+    return TimeSampler.builder()
+        .lookBacks(ctx.scoreTimes())
+        .maxLookBack(ctx.msgParams().scoreTtl())
+        .refTime(ctx.refTime())
+        .build();
+  }
+
+  public static ContactTimeFactory contactTimeFactory(DataFactoryContext ctx) {
+    return ContactTimeFactory.from(contactTimeSampler(ctx)::sample);
+  }
+
+  public static Sampler<Instant> contactTimeSampler(DataFactoryContext ctx) {
+    return TimeSampler.builder()
+        .lookBacks(ctx.contactTimes())
+        .maxLookBack(ctx.msgParams().contactTtl())
+        .refTime(ctx.refTime())
+        .build();
   }
 
   public static UserParams userParams(Dataset dataset) {

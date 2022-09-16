@@ -18,12 +18,7 @@ import org.sharetrace.actor.Runner;
 import org.sharetrace.data.Dataset;
 import org.sharetrace.data.factory.ContactTimeFactory;
 import org.sharetrace.data.factory.DistributionFactory;
-import org.sharetrace.data.factory.NoisyRiskScoreFactory;
 import org.sharetrace.data.factory.RiskScoreFactory;
-import org.sharetrace.data.factory.ScoreFactoryType;
-import org.sharetrace.data.sampler.RiskScoreSampler;
-import org.sharetrace.data.sampler.Sampler;
-import org.sharetrace.data.sampler.TimeSampler;
 import org.sharetrace.experiment.ExperimentContext;
 import org.sharetrace.experiment.GraphType;
 import org.sharetrace.logging.Loggable;
@@ -35,7 +30,6 @@ import org.sharetrace.message.AlgorithmMsg;
 import org.sharetrace.message.RiskScoreMsg;
 import org.sharetrace.model.CacheParams;
 import org.sharetrace.model.MsgParams;
-import org.sharetrace.model.RiskScore;
 import org.sharetrace.model.UserParams;
 import org.sharetrace.util.IntervalCache;
 import org.sharetrace.util.TypedSupplier;
@@ -45,10 +39,11 @@ public final class ExperimentState {
 
   private final ExperimentContext ctx;
   private final Logger logger;
-  private final String id;
   private final GraphType graphType;
+  private final String id;
   private final Map<String, String> mdc;
-  private final ScoreFactoryType scoreFactoryType;
+  private final MsgParams msgParams;
+  private final CacheParams<RiskScoreMsg> cacheParams;
   private final DistributionFactory scoreNoiseFactory;
   private final DistributionFactory scoreValuesFactory;
   private final DistributionFactory scoreTimesFactory;
@@ -57,8 +52,6 @@ public final class ExperimentState {
   private final ContactTimeFactory contactTimeFactory;
   private final Dataset dataset;
   private final UserParams userParams;
-  private final MsgParams msgParams;
-  private final CacheParams<RiskScoreMsg> cacheParams;
 
   private ExperimentState(Builder builder) {
     ctx = builder.ctx;
@@ -66,7 +59,6 @@ public final class ExperimentState {
     graphType = builder.graphType;
     id = builder.id;
     mdc = builder.mdc;
-    scoreFactoryType = builder.scoreFactoryType;
     scoreNoiseFactory = builder.scoreNoiseFactory;
     scoreValuesFactory = builder.scoreValuesFactory;
     scoreTimesFactory = builder.scoreTimesFactory;
@@ -83,29 +75,73 @@ public final class ExperimentState {
     return Builder.withDefaults(ctx);
   }
 
-  public void run() {
-    logMetricsAndSettings();
-    Runner.run(newAlgorithm(), "RiskPropagation");
+  public Builder toBuilder() {
+    return Builder.from(this);
   }
 
   public ExperimentState withNewId() {
     return toBuilder().build();
   }
 
-  public Builder toBuilder() {
-    return Builder.from(this);
+  public void run() {
+    logMetricsAndSettings();
+    Runner.run(newAlgorithm(), "RiskPropagation");
+  }
+
+  public ExperimentContext context() {
+    return ctx;
+  }
+
+  public GraphType graphType() {
+    return graphType;
+  }
+
+  public String id() {
+    return id;
+  }
+
+  public Map<String, String> mdc() {
+    return Collections.unmodifiableMap(mdc);
+  }
+
+  public MsgParams msgParams() {
+    return msgParams;
+  }
+
+  public CacheParams<RiskScoreMsg> cacheParams() {
+    return cacheParams;
+  }
+
+  public DistributionFactory scoreNoiseFactory() {
+    return scoreNoiseFactory;
+  }
+
+  public DistributionFactory scoreValuesFactory() {
+    return scoreValuesFactory;
+  }
+
+  public DistributionFactory scoreTimesFactory() {
+    return scoreTimesFactory;
+  }
+
+  public DistributionFactory contactTimesFactory() {
+    return contactTimesFactory;
   }
 
   public RiskScoreFactory scoreFactory() {
     return scoreFactory;
   }
 
-  public Dataset dataset() {
-    return dataset;
+  public ContactTimeFactory contactTimeFactory() {
+    return contactTimeFactory;
   }
 
-  public MsgParams msgParams() {
-    return msgParams;
+  public UserParams userParams() {
+    return userParams;
+  }
+
+  public Dataset dataset() {
+    return dataset;
   }
 
   private void logMetricsAndSettings() {
@@ -157,14 +193,12 @@ public final class ExperimentState {
     MDC,
     MSG_PARAMS,
     CACHE_PARAMS,
-    SCORE_FACTORY_TYPE,
     SCORE_NOISE,
     SCORE_VALUES,
     SCORE_TIMES,
     CONTACT_TIMES,
     DISTRIBUTIONS,
-    SCORE_FACTORY,
-    CONTACT_TIME_FACTORY,
+    FACTORIES,
     DATASET,
     USER_PARAMS
   }
@@ -182,13 +216,12 @@ public final class ExperimentState {
 
     private final ExperimentContext ctx;
     private final Logger logger;
-    private final Map<Setter, Function<? super Builder, ?>> setters;
+    private final Map<Setter, Function<? super Builder, Builder>> setters;
     private final Map<String, String> mdc;
     private GraphType graphType;
     private String id;
     private MsgParams msgParams;
     private CacheParams<RiskScoreMsg> cacheParams;
-    private ScoreFactoryType scoreFactoryType;
     private DistributionFactory scoreNoiseFactory;
     private DistributionFactory scoreValuesFactory;
     private DistributionFactory scoreTimesFactory;
@@ -215,13 +248,10 @@ public final class ExperimentState {
           .id(ctx -> newId())
           .msgParams(state.msgParams)
           .cacheParams(state.cacheParams)
-          .scoreFactoryType(state.scoreFactoryType)
           .scoreNoiseFactory(state.scoreNoiseFactory)
           .scoreValuesFactory(state.scoreValuesFactory)
           .scoreTimesFactory(state.scoreTimesFactory)
           .contactTimesFactory(state.contactTimesFactory)
-          .scoreFactory(state.scoreFactory)
-          .contactTimeFactory(state.contactTimeFactory)
           .dataset(state.dataset)
           .userParams(state.userParams);
     }
@@ -232,13 +262,10 @@ public final class ExperimentState {
           .mdc(ctx -> Logging.mdc(ctx.id(), ctx.graphType()))
           .msgParams(ctx -> Defaults.msgParams())
           .cacheParams(ctx -> Defaults.cacheParams())
-          .scoreFactoryType(ctx -> ScoreFactoryType.SAMPLED)
           .scoreNoiseFactory(defaultFactory())
           .scoreTimesFactory(defaultFactory())
           .scoreValuesFactory(defaultFactory())
           .contactTimesFactory(defaultFactory())
-          .scoreFactory(Builder::newScoreFactory)
-          .contactTimeFactory(Builder::newContactTimeFactory)
           .userParams(ctx -> Defaults.userParams(ctx.dataset()));
     }
 
@@ -250,40 +277,14 @@ public final class ExperimentState {
       return ctx -> seed -> new UniformRealDistribution(new Well512a(seed), 0d, 1d);
     }
 
-    private static RiskScoreFactory newScoreFactory(DataFactoryContext ctx) {
-      RiskScoreFactory scoreFactory = RiskScoreFactory.from(newScoreSampler(ctx)::sample);
-      if (ctx.scoreFactoryType() == ScoreFactoryType.NOISY) {
-        scoreFactory = NoisyRiskScoreFactory.of(ctx.scoreNoise(), scoreFactory);
-      }
-      return scoreFactory;
+    public Builder graphType(GraphType graphType) {
+      this.graphType = graphType;
+      setters.remove(Setter.GRAPH_TYPE);
+      return this;
     }
 
-    private static Sampler<RiskScore> newScoreSampler(DataFactoryContext ctx) {
-      return RiskScoreSampler.builder()
-          .values(ctx.scoreValues())
-          .timeSampler(
-              TimeSampler.builder()
-                  .lookBacks(ctx.scoreTimes())
-                  .maxLookBack(ctx.msgParams().scoreTtl())
-                  .refTime(ctx.refTime())
-                  .build())
-          .build();
-    }
-
-    private static ContactTimeFactory newContactTimeFactory(DataFactoryContext ctx) {
-      return ContactTimeFactory.from(newContactTimeSampler(ctx)::sample);
-    }
-
-    private static Sampler<Instant> newContactTimeSampler(DataFactoryContext ctx) {
-      return TimeSampler.builder()
-          .lookBacks(ctx.contactTimes())
-          .maxLookBack(ctx.msgParams().contactTtl())
-          .refTime(ctx.refTime())
-          .build();
-    }
-
-    public Builder id(Function<IdContext, String> factory) {
-      setters.put(Setter.ID, factory.andThen(this::id));
+    public Builder graphType(Function<GraphTypeContext, GraphType> factory) {
+      setters.put(Setter.GRAPH_TYPE, factory.andThen(this::graphType));
       return this;
     }
 
@@ -293,78 +294,8 @@ public final class ExperimentState {
       return this;
     }
 
-    public Builder msgParams(MsgParams params) {
-      msgParams = params;
-      setters.remove(Setter.MSG_PARAMS);
-      return this;
-    }
-
-    public Builder cacheParams(CacheParams<RiskScoreMsg> params) {
-      cacheParams = params;
-      setters.remove(Setter.CACHE_PARAMS);
-      return this;
-    }
-
-    public Builder scoreTimesFactory(DistributionFactory factory) {
-      scoreTimesFactory = factory;
-      setters.remove(Setter.SCORE_TIMES);
-      return this;
-    }
-
-    public Builder scoreValuesFactory(DistributionFactory factory) {
-      scoreValuesFactory = factory;
-      setters.remove(Setter.SCORE_VALUES);
-      return this;
-    }
-
-    public Builder scoreFactory(RiskScoreFactory factory) {
-      scoreFactory = factory;
-      setters.remove(Setter.SCORE_FACTORY);
-      return this;
-    }
-
-    public Builder scoreFactory(Function<DataFactoryContext, RiskScoreFactory> factory) {
-      setters.put(Setter.SCORE_FACTORY, factory.andThen(this::scoreFactory));
-      return this;
-    }
-
-    public Builder contactTimeFactory(ContactTimeFactory factory) {
-      contactTimeFactory = factory;
-      setters.remove(Setter.CONTACT_TIME_FACTORY);
-      return this;
-    }
-
-    public Builder contactTimeFactory(Function<DataFactoryContext, ContactTimeFactory> factory) {
-      setters.put(Setter.CONTACT_TIME_FACTORY, factory.andThen(this::contactTimeFactory));
-      return this;
-    }
-
-    public Builder contactTimesFactory(DistributionFactory factory) {
-      contactTimesFactory = factory;
-      setters.remove(Setter.CONTACT_TIMES);
-      return this;
-    }
-
-    public Builder userParams(UserParams params) {
-      userParams = params;
-      setters.remove(Setter.USER_PARAMS);
-      return this;
-    }
-
-    public Builder graphType(GraphType graphType) {
-      this.graphType = graphType;
-      setters.remove(Setter.GRAPH_TYPE);
-      return this;
-    }
-
-    public Builder dataset(Dataset dataset) {
-      this.dataset = dataset;
-      setters.remove(Setter.DATASET);
-      return this;
-    }
-
-    public Builder mdc(Function<MdcContext, Map<String, String>> factory) {
-      setters.put(Setter.MDC, factory.andThen(this::mdc));
+    public Builder id(Function<IdContext, String> factory) {
+      setters.put(Setter.ID, factory.andThen(this::id));
       return this;
     }
 
@@ -374,25 +305,30 @@ public final class ExperimentState {
       return this;
     }
 
+    public Builder mdc(Function<MdcContext, Map<String, String>> factory) {
+      setters.put(Setter.MDC, factory.andThen(this::mdc));
+      return this;
+    }
+
+    public Builder msgParams(MsgParams params) {
+      msgParams = params;
+      setters.remove(Setter.MSG_PARAMS);
+      return this;
+    }
+
     public Builder msgParams(Function<MsgParamsContext, MsgParams> factory) {
       setters.put(Setter.MSG_PARAMS, factory.andThen(this::msgParams));
       return this;
     }
 
+    public Builder cacheParams(CacheParams<RiskScoreMsg> params) {
+      cacheParams = params;
+      setters.remove(Setter.CACHE_PARAMS);
+      return this;
+    }
+
     public Builder cacheParams(Function<CacheParamsContext, CacheParams<RiskScoreMsg>> factory) {
       setters.put(Setter.CACHE_PARAMS, factory.andThen(this::cacheParams));
-      return this;
-    }
-
-    public Builder scoreTimesFactory(
-        Function<DistributionFactoryContext, DistributionFactory> factory) {
-      setters.put(Setter.SCORE_TIMES, factory.andThen(this::scoreTimesFactory));
-      return this;
-    }
-
-    public Builder scoreValuesFactory(
-        Function<DistributionFactoryContext, DistributionFactory> factory) {
-      setters.put(Setter.SCORE_VALUES, factory.andThen(this::scoreValuesFactory));
       return this;
     }
 
@@ -408,15 +344,33 @@ public final class ExperimentState {
       return this;
     }
 
-    public Builder scoreFactoryType(ScoreFactoryType type) {
-      scoreFactoryType = type;
-      setters.remove(Setter.SCORE_FACTORY_TYPE);
+    public Builder scoreValuesFactory(DistributionFactory factory) {
+      scoreValuesFactory = factory;
+      setters.remove(Setter.SCORE_VALUES);
       return this;
     }
 
-    public Builder scoreFactoryType(
-        Function<DistributionFactoryContext, ScoreFactoryType> factory) {
-      setters.put(Setter.SCORE_FACTORY_TYPE, factory.andThen(this::scoreFactoryType));
+    public Builder scoreValuesFactory(
+        Function<DistributionFactoryContext, DistributionFactory> factory) {
+      setters.put(Setter.SCORE_VALUES, factory.andThen(this::scoreValuesFactory));
+      return this;
+    }
+
+    public Builder scoreTimesFactory(DistributionFactory factory) {
+      scoreTimesFactory = factory;
+      setters.remove(Setter.SCORE_TIMES);
+      return this;
+    }
+
+    public Builder scoreTimesFactory(
+        Function<DistributionFactoryContext, DistributionFactory> factory) {
+      setters.put(Setter.SCORE_TIMES, factory.andThen(this::scoreTimesFactory));
+      return this;
+    }
+
+    public Builder contactTimesFactory(DistributionFactory factory) {
+      contactTimesFactory = factory;
+      setters.remove(Setter.CONTACT_TIMES);
       return this;
     }
 
@@ -426,13 +380,31 @@ public final class ExperimentState {
       return this;
     }
 
+    public Builder userParams(UserParams params) {
+      userParams = params;
+      setters.remove(Setter.USER_PARAMS);
+      return this;
+    }
+
     public Builder userParams(Function<UserParamsContext, UserParams> factory) {
       setters.put(Setter.USER_PARAMS, factory.andThen(this::userParams));
       return this;
     }
 
+    public Builder dataset(Dataset dataset) {
+      this.dataset = dataset;
+      setters.remove(Setter.DATASET);
+      return this;
+    }
+
+    public Builder dataset(Function<DatasetContext, Dataset> factory) {
+      setters.put(Setter.DATASET, factory.andThen(this::dataset));
+      return this;
+    }
+
     public ExperimentState build() {
       setters.put(Setter.DISTRIBUTIONS, x -> setDistributions());
+      setters.put(Setter.FACTORIES, x -> setFactories());
       setters.values().forEach(setter -> setter.apply(this));
       return new ExperimentState(this);
     }
@@ -483,11 +455,6 @@ public final class ExperimentState {
     }
 
     @Override
-    public ScoreFactoryType scoreFactoryType() {
-      return scoreFactoryType;
-    }
-
-    @Override
     public RealDistribution scoreNoise() {
       return scoreNoise;
     }
@@ -522,22 +489,18 @@ public final class ExperimentState {
       return dataset;
     }
 
-    public Builder graphType(Function<GraphTypeContext, GraphType> factory) {
-      setters.put(Setter.GRAPH_TYPE, factory.andThen(this::graphType));
-      return this;
-    }
-
-    public Builder dataset(Function<DatasetContext, Dataset> factory) {
-      setters.put(Setter.DATASET, factory.andThen(this::dataset));
-      return this;
-    }
-
-    private Void setDistributions() {
+    private Builder setDistributions() {
       scoreNoise = scoreNoiseFactory.distribution(ctx.seed());
       scoreValues = scoreValuesFactory.distribution(ctx.seed());
       scoreTimes = scoreTimesFactory.distribution(ctx.seed());
       contactTimes = contactTimesFactory.distribution(ctx.seed());
-      return null;
+      return this;
+    }
+
+    private Builder setFactories() {
+      scoreFactory = Defaults.scoreFactory(this);
+      contactTimeFactory = Defaults.contactTimeFactory(this);
+      return this;
     }
   }
 }
