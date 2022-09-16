@@ -5,15 +5,15 @@ import org.sharetrace.experiment.state.ExperimentState;
 
 public interface Experiment<T> {
 
-  void run(ExperimentState initialState);
+  void run(ExperimentState initialState, T config);
 
-  default void runWithDefaults(T inputs) {
-    runFromDefaults(UnaryOperator.identity(), inputs);
+  default void runWithDefaults(T config) {
+    runFromDefaults(UnaryOperator.identity(), config);
   }
 
-  default void runFromDefaults(UnaryOperator<ExperimentState> overrideDefaults, T inputs) {
-    run(overrideDefaults.apply(newDefaultState(inputs)));
+  default void runFromDefaults(UnaryOperator<ExperimentState> overrideDefaults, T config) {
+    run(overrideDefaults.apply(newDefaultState(config)), config);
   }
 
-  ExperimentState newDefaultState(T inputs);
+  ExperimentState newDefaultState(T config);
 }

@@ -91,7 +91,7 @@ public final class Defaults {
   public static SampledDataset sampledDataset(DatasetContext ctx, int numNodes) {
     return SampledDataset.builder()
         .addAllLoggable(ctx.loggable())
-        .riskScoreFactory(scoreFactory(ctx))
+        .scoreFactory(scoreFactory(ctx))
         .contactTimeFactory(contactTimeFactory(ctx))
         .graphGeneratorFactory(defaultFactory(ctx))
         .numNodes(numNodes)

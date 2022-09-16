@@ -7,6 +7,9 @@ import org.sharetrace.experiment.FileExperiment;
 import org.sharetrace.experiment.GraphType;
 import org.sharetrace.experiment.ParamsExperiment;
 import org.sharetrace.experiment.RuntimeExperiment;
+import org.sharetrace.experiment.config.FileExperimentConfig;
+import org.sharetrace.experiment.config.ParamsExperimentConfig;
+import org.sharetrace.experiment.config.RuntimeExperimentConfig;
 import org.sharetrace.util.range.DoubleRange;
 import org.sharetrace.util.range.IntRange;
 
@@ -19,9 +22,12 @@ class ExperimentTests {
       value = GraphType.class,
       names = {"INVS13", "INVS15", "LH10", "LYON_SCHOOL", "SFHH", "THIERS11", "THIERS12"})
   public void testFileExperiment(GraphType graphType) {
-    Path path = Path.of(String.format(GRAPH_PATH_TEMPLATE, graphType));
-    FileExperiment.Inputs inputs = FileExperiment.Inputs.of(graphType, path);
-    Assertions.assertDoesNotThrow(() -> FileExperiment.create().runWithDefaults(inputs));
+    FileExperimentConfig config =
+        FileExperimentConfig.builder()
+            .graphType(graphType)
+            .path(Path.of(String.format(GRAPH_PATH_TEMPLATE, graphType)))
+            .build();
+    Assertions.assertDoesNotThrow(() -> FileExperiment.instance().runWithDefaults(config));
   }
 
   @ParameterizedTest
@@ -29,19 +35,23 @@ class ExperimentTests {
       value = GraphType.class,
       names = {"BARABASI_ALBERT", "GNM_RANDOM", "RANDOM_REGULAR", "SCALE_FREE", "WATTS_STROGATZ"})
   public void testParamsExperiment(GraphType graphType) {
-    ParamsExperiment experiment =
-        ParamsExperiment.builder()
+    ParamsExperimentConfig config =
+        ParamsExperimentConfig.builder()
             .transRates(DoubleRange.single(0.8))
             .sendCoeffs(DoubleRange.single(0.6))
+            .graphType(graphType)
+            .numNodes(1000)
             .build();
-    ParamsExperiment.Inputs inputs = ParamsExperiment.Inputs.of(graphType, 1000);
-    Assertions.assertDoesNotThrow(() -> experiment.runWithDefaults(inputs));
+    Assertions.assertDoesNotThrow(() -> ParamsExperiment.instance().runWithDefaults(config));
   }
 
   @Test
   public void testRuntimeExperiment() {
-    RuntimeExperiment experiment = RuntimeExperiment.of(IntRange.single(1000));
-    RuntimeExperiment.Inputs inputs = RuntimeExperiment.Inputs.of(GraphType.GNM_RANDOM);
-    Assertions.assertDoesNotThrow(() -> experiment.runWithDefaults(inputs));
+    RuntimeExperimentConfig config =
+        RuntimeExperimentConfig.builder()
+            .graphType(GraphType.GNM_RANDOM)
+            .numNodes(IntRange.single(1000))
+            .build();
+    Assertions.assertDoesNotThrow(() -> RuntimeExperiment.instance().runWithDefaults(config));
   }
 }

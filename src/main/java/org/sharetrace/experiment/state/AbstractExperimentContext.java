@@ -1,10 +1,10 @@
-package org.sharetrace.experiment;
+package org.sharetrace.experiment.state;
 
 import java.time.Clock;
 import org.sharetrace.model.LoggableRef;
 import org.sharetrace.model.TimeRef;
 
-public interface AbstractExperimentContext extends TimeRef, LoggableRef {
+interface AbstractExperimentContext extends TimeRef, LoggableRef {
 
   Clock clock();
 

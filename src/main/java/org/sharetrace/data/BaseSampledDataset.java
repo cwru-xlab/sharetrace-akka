@@ -26,7 +26,7 @@ abstract class BaseSampledDataset implements Dataset {
 
   @Override
   public RiskScore riskScore(int user) {
-    return riskScoreFactory().riskScore(user);
+    return scoreFactory().riskScore(user);
   }
 
   @Value.Lazy
@@ -40,5 +40,5 @@ abstract class BaseSampledDataset implements Dataset {
 
   protected abstract ContactTimeFactory contactTimeFactory();
 
-  protected abstract RiskScoreFactory riskScoreFactory();
+  protected abstract RiskScoreFactory scoreFactory();
 }

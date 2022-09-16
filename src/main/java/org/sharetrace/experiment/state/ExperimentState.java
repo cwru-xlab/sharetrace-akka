@@ -17,7 +17,6 @@ import org.sharetrace.actor.RiskPropagationBuilder;
 import org.sharetrace.actor.Runner;
 import org.sharetrace.data.Dataset;
 import org.sharetrace.data.factory.DistributionFactory;
-import org.sharetrace.experiment.ExperimentContext;
 import org.sharetrace.experiment.GraphType;
 import org.sharetrace.logging.Loggable;
 import org.sharetrace.logging.Logger;

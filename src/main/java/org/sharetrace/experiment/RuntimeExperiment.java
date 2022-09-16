@@ -1,10 +1,10 @@
 package org.sharetrace.experiment;
 
 import java.util.Set;
-import org.immutables.value.Value;
 import org.sharetrace.data.SampledDataset;
-import org.sharetrace.experiment.RuntimeExperiment.Inputs;
+import org.sharetrace.experiment.config.RuntimeExperimentConfig;
 import org.sharetrace.experiment.state.Defaults;
+import org.sharetrace.experiment.state.ExperimentContext;
 import org.sharetrace.experiment.state.ExperimentState;
 import org.sharetrace.logging.metric.CreateUsersRuntime;
 import org.sharetrace.logging.metric.GraphSize;
@@ -14,12 +14,17 @@ import org.sharetrace.logging.metric.SendContactsRuntime;
 import org.sharetrace.logging.metric.SendScoresRuntime;
 import org.sharetrace.logging.setting.ExperimentSettings;
 
-@Value.Immutable
-@Value.Enclosing
-abstract class BaseRuntimeExperiment implements Experiment<Inputs> {
+public final class RuntimeExperiment implements Experiment<RuntimeExperimentConfig> {
 
+  private static final RuntimeExperiment INSTANCE = new RuntimeExperiment();
   private static final int IGNORED = 50;
   private static final ExperimentContext DEFAULT_CTX = newDefaultContext();
+
+  private RuntimeExperiment() {}
+
+  public static RuntimeExperiment instance() {
+    return INSTANCE;
+  }
 
   private static ExperimentContext newDefaultContext() {
     return ExperimentContext.create()
@@ -35,28 +40,18 @@ abstract class BaseRuntimeExperiment implements Experiment<Inputs> {
   }
 
   @Override
-  public void run(ExperimentState initialState) {
+  public void run(ExperimentState initialState, RuntimeExperimentConfig config) {
     SampledDataset dataset = (SampledDataset) initialState.dataset();
-    for (int n : numNodes()) {
+    for (int n : config.numNodes()) {
       initialState.toBuilder().dataset(dataset.withNumNodes(n)).build().run();
     }
   }
 
   @Override
-  public ExperimentState newDefaultState(Inputs inputs) {
+  public ExperimentState newDefaultState(RuntimeExperimentConfig config) {
     return ExperimentState.builder(DEFAULT_CTX)
-        .graphType(inputs.graphType())
+        .graphType(config.graphType())
         .dataset(ctx -> Defaults.sampledDataset(ctx, IGNORED))
         .build();
-  }
-
-  @Value.Parameter
-  public abstract Iterable<Integer> numNodes();
-
-  @Value.Immutable
-  interface BaseInputs {
-
-    @Value.Parameter
-    GraphType graphType();
   }
 }

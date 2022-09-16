@@ -1,4 +1,4 @@
-package org.sharetrace.experiment;
+package org.sharetrace.experiment.state;
 
 import java.time.Clock;
 import java.time.Instant;
