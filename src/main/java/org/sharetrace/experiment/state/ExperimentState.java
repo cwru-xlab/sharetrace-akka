@@ -44,7 +44,6 @@ public final class ExperimentState {
   private final Map<String, String> mdc;
   private final MsgParams msgParams;
   private final CacheParams<RiskScoreMsg> cacheParams;
-  private final DistributionFactory scoreNoiseFactory;
   private final DistributionFactory scoreValuesFactory;
   private final DistributionFactory scoreTimesFactory;
   private final DistributionFactory contactTimesFactory;
@@ -59,7 +58,6 @@ public final class ExperimentState {
     graphType = builder.graphType;
     id = builder.id;
     mdc = builder.mdc;
-    scoreNoiseFactory = builder.scoreNoiseFactory;
     scoreValuesFactory = builder.scoreValuesFactory;
     scoreTimesFactory = builder.scoreTimesFactory;
     contactTimesFactory = builder.contactTimesFactory;
@@ -110,10 +108,6 @@ public final class ExperimentState {
 
   public CacheParams<RiskScoreMsg> cacheParams() {
     return cacheParams;
-  }
-
-  public DistributionFactory scoreNoiseFactory() {
-    return scoreNoiseFactory;
   }
 
   public DistributionFactory scoreValuesFactory() {
@@ -193,7 +187,6 @@ public final class ExperimentState {
     MDC,
     MSG_PARAMS,
     CACHE_PARAMS,
-    SCORE_NOISE,
     SCORE_VALUES,
     SCORE_TIMES,
     CONTACT_TIMES,
@@ -222,11 +215,9 @@ public final class ExperimentState {
     private String id;
     private MsgParams msgParams;
     private CacheParams<RiskScoreMsg> cacheParams;
-    private DistributionFactory scoreNoiseFactory;
     private DistributionFactory scoreValuesFactory;
     private DistributionFactory scoreTimesFactory;
     private DistributionFactory contactTimesFactory;
-    private RealDistribution scoreNoise;
     private RealDistribution scoreValues;
     private RealDistribution scoreTimes;
     private RealDistribution contactTimes;
@@ -248,7 +239,6 @@ public final class ExperimentState {
           .id(ctx -> newId())
           .msgParams(state.msgParams)
           .cacheParams(state.cacheParams)
-          .scoreNoiseFactory(state.scoreNoiseFactory)
           .scoreValuesFactory(state.scoreValuesFactory)
           .scoreTimesFactory(state.scoreTimesFactory)
           .contactTimesFactory(state.contactTimesFactory)
@@ -262,7 +252,6 @@ public final class ExperimentState {
           .mdc(ctx -> Logging.mdc(ctx.id(), ctx.graphType()))
           .msgParams(ctx -> Defaults.msgParams())
           .cacheParams(ctx -> Defaults.cacheParams())
-          .scoreNoiseFactory(defaultFactory())
           .scoreTimesFactory(defaultFactory())
           .scoreValuesFactory(defaultFactory())
           .contactTimesFactory(defaultFactory())
@@ -329,18 +318,6 @@ public final class ExperimentState {
 
     public Builder cacheParams(Function<CacheParamsContext, CacheParams<RiskScoreMsg>> factory) {
       setters.put(Setter.CACHE_PARAMS, factory.andThen(this::cacheParams));
-      return this;
-    }
-
-    public Builder scoreNoiseFactory(DistributionFactory factory) {
-      scoreNoiseFactory = factory;
-      setters.remove(Setter.SCORE_NOISE);
-      return this;
-    }
-
-    public Builder scoreNoiseFactory(
-        Function<DistributionFactoryContext, DistributionFactory> factory) {
-      setters.put(Setter.SCORE_NOISE, factory.andThen(this::scoreNoiseFactory));
       return this;
     }
 
@@ -455,11 +432,6 @@ public final class ExperimentState {
     }
 
     @Override
-    public RealDistribution scoreNoise() {
-      return scoreNoise;
-    }
-
-    @Override
     public RealDistribution scoreValues() {
       return scoreValues;
     }
@@ -490,7 +462,6 @@ public final class ExperimentState {
     }
 
     private Builder setDistributions() {
-      scoreNoise = scoreNoiseFactory.distribution(ctx.seed());
       scoreValues = scoreValuesFactory.distribution(ctx.seed());
       scoreTimes = scoreTimesFactory.distribution(ctx.seed());
       contactTimes = contactTimesFactory.distribution(ctx.seed());
