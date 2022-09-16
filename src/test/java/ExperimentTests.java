@@ -20,7 +20,8 @@ class ExperimentTests {
       names = {"INVS13", "INVS15", "LH10", "LYON_SCHOOL", "SFHH", "THIERS11", "THIERS12"})
   public void testFileExperiment(GraphType graphType) {
     Path path = Path.of(String.format(GRAPH_PATH_TEMPLATE, graphType));
-    Assertions.assertDoesNotThrow(() -> FileExperiment.create().runWithDefaults(graphType, path));
+    FileExperiment.Inputs inputs = FileExperiment.Inputs.of(graphType, path);
+    Assertions.assertDoesNotThrow(() -> FileExperiment.create().runWithDefaults(inputs));
   }
 
   @ParameterizedTest
@@ -33,12 +34,14 @@ class ExperimentTests {
             .transRates(DoubleRange.single(0.8))
             .sendCoeffs(DoubleRange.single(0.6))
             .build();
-    Assertions.assertDoesNotThrow(() -> experiment.runWithDefaults(graphType, 1000));
+    ParamsExperiment.Inputs inputs = ParamsExperiment.Inputs.of(graphType, 1000);
+    Assertions.assertDoesNotThrow(() -> experiment.runWithDefaults(inputs));
   }
 
   @Test
   public void testRuntimeExperiment() {
     RuntimeExperiment experiment = RuntimeExperiment.of(IntRange.single(1000));
-    Assertions.assertDoesNotThrow(() -> experiment.runWithDefaults(GraphType.GNM_RANDOM));
+    RuntimeExperiment.Inputs inputs = RuntimeExperiment.Inputs.of(GraphType.GNM_RANDOM);
+    Assertions.assertDoesNotThrow(() -> experiment.runWithDefaults(inputs));
   }
 }

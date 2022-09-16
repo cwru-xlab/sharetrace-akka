@@ -3,6 +3,7 @@ package org.sharetrace.experiment;
 import java.util.Set;
 import org.immutables.value.Value;
 import org.sharetrace.data.SampledDataset;
+import org.sharetrace.experiment.RuntimeExperiment.Inputs;
 import org.sharetrace.experiment.state.Defaults;
 import org.sharetrace.experiment.state.ExperimentState;
 import org.sharetrace.logging.metric.CreateUsersRuntime;
@@ -14,7 +15,8 @@ import org.sharetrace.logging.metric.SendScoresRuntime;
 import org.sharetrace.logging.setting.ExperimentSettings;
 
 @Value.Immutable
-abstract class BaseRuntimeExperiment implements Experiment {
+@Value.Enclosing
+abstract class BaseRuntimeExperiment implements Experiment<Inputs> {
 
   private static final int IGNORED = 50;
   private static final ExperimentContext DEFAULT_CTX = newDefaultContext();
@@ -32,17 +34,6 @@ abstract class BaseRuntimeExperiment implements Experiment {
                 ExperimentSettings.class));
   }
 
-  public static ExperimentState newDefaultState(GraphType graphType) {
-    return ExperimentState.builder(DEFAULT_CTX)
-        .graphType(graphType)
-        .dataset(ctx -> Defaults.sampledDataset(ctx, IGNORED))
-        .build();
-  }
-
-  public void runWithDefaults(GraphType graphType) {
-    run(newDefaultState(graphType));
-  }
-
   @Override
   public void run(ExperimentState initialState) {
     SampledDataset dataset = (SampledDataset) initialState.dataset();
@@ -51,6 +42,21 @@ abstract class BaseRuntimeExperiment implements Experiment {
     }
   }
 
+  @Override
+  public ExperimentState newDefaultState(Inputs inputs) {
+    return ExperimentState.builder(DEFAULT_CTX)
+        .graphType(inputs.graphType())
+        .dataset(ctx -> Defaults.sampledDataset(ctx, IGNORED))
+        .build();
+  }
+
   @Value.Parameter
   public abstract Iterable<Integer> numNodes();
+
+  @Value.Immutable
+  interface BaseInputs {
+
+    @Value.Parameter
+    GraphType graphType();
+  }
 }
