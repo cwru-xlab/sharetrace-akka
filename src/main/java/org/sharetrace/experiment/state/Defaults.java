@@ -99,7 +99,7 @@ public final class Defaults {
   }
 
   private static Duration idleTimeout(Dataset dataset) {
-    double numContacts = dataset.contactNetwork().contacts().size();
+    double numContacts = dataset.contacts().size();
     double targetBase = Math.max(MIN_BASE, MAX_BASE - DECAY_RATE * numContacts);
     long timeout = (long) Math.ceil(Math.log(numContacts) / targetBase);
     return Duration.ofSeconds(timeout);

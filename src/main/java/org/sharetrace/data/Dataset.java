@@ -4,7 +4,7 @@ import org.sharetrace.data.factory.RiskScoreFactory;
 import org.sharetrace.graph.ContactNetwork;
 import org.sharetrace.model.LoggableRef;
 
-public interface Dataset extends RiskScoreFactory, LoggableRef {
+public interface Dataset extends RiskScoreFactory, ContactNetwork, LoggableRef {
 
-  ContactNetwork contactNetwork();
+  Dataset withScoreFactory(RiskScoreFactory scoreFactory);
 }

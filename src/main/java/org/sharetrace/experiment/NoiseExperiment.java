@@ -3,9 +3,6 @@ package org.sharetrace.experiment;
 import java.util.Set;
 import org.apache.commons.math3.distribution.RealDistribution;
 import org.apache.commons.math3.distribution.UniformRealDistribution;
-import org.sharetrace.data.Dataset;
-import org.sharetrace.data.FileDataset;
-import org.sharetrace.data.SampledDataset;
 import org.sharetrace.data.factory.CachedRiskScoreFactory;
 import org.sharetrace.data.factory.NoisyRiskScoreFactory;
 import org.sharetrace.data.factory.RiskScoreFactory;
@@ -28,26 +25,12 @@ public final class NoiseExperiment implements Experiment<NoiseExperimentConfig> 
     return INSTANCE;
   }
 
-  private static RiskScoreFactory cachedScoreFactory(ExperimentState state) {
-    Dataset dataset = state.dataset();
-    return CachedRiskScoreFactory.of(
-        dataset instanceof FileDataset
-            ? ((FileDataset) dataset).scoreFactory()
-            : ((SampledDataset) dataset).scoreFactory());
-  }
-
   private static ExperimentState withScoreFactory(ExperimentState state, RiskScoreFactory factory) {
-    Dataset dataset = state.dataset();
-    return state.toBuilder()
-        .dataset(
-            dataset instanceof FileDataset
-                ? ((FileDataset) dataset).withScoreFactory(factory)
-                : ((SampledDataset) dataset).withScoreFactory(factory))
-        .build();
+    return state.toBuilder().dataset(state.dataset().withScoreFactory(factory)).build();
   }
 
   private static NoisyRiskScoreFactory newNoisyScoreFactory(ExperimentState state) {
-    return NoisyRiskScoreFactory.of(IGNORED, cachedScoreFactory(state));
+    return NoisyRiskScoreFactory.of(IGNORED, CachedRiskScoreFactory.of(state.dataset()));
   }
 
   private static ExperimentContext newDefaultContext() {
@@ -60,7 +43,7 @@ public final class NoiseExperiment implements Experiment<NoiseExperimentConfig> 
     NoisyRiskScoreFactory noisy = newNoisyScoreFactory(initialState);
     for (RealDistribution noise : config.noises()) {
       ExperimentState state = withScoreFactory(initialState, noisy.withNoise(noise));
-      config.numIterations().forEach(x -> state.withNewId().run());
+      config.numIterations().forEach(x -> state.run());
     }
   }
 

@@ -97,7 +97,7 @@ public final class ExperimentState {
 
   private void logMetricsAndSettings() {
     mdc.forEach(MDC::put);
-    dataset.contactNetwork().logMetrics();
+    dataset.logMetrics();
     logger.log(LoggableSetting.KEY, TypedSupplier.of(ExperimentSettings.class, this::settings));
   }
 
@@ -116,7 +116,7 @@ public final class ExperimentState {
     return RiskPropagationBuilder.create()
         .addAllLoggable(ctx.loggable())
         .putAllMdc(mdc)
-        .contactNetwork(dataset.contactNetwork())
+        .contactNetwork(dataset)
         .userParams(userParams)
         .msgParams(msgParams)
         .clock(ctx.clock())
