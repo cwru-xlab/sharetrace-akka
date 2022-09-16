@@ -162,6 +162,7 @@ public final class ExperimentState {
           DatasetContext,
           UserParamsContext {
 
+    private static final String NOT_SET_MSG = "Not all attributes have been set: ";
     private final ExperimentContext ctx;
     private final Logger logger;
     private final Map<Setter, Function<? super Builder, Builder>> setters;
@@ -182,7 +183,7 @@ public final class ExperimentState {
     private Builder(ExperimentContext context) {
       ctx = context;
       logger = Logging.settingsLogger(ctx.loggable());
-      setters = new EnumMap<>(Setter.class);
+      setters = newSetters();
       mdc = new Object2ObjectOpenHashMap<>();
     }
 
@@ -210,6 +211,14 @@ public final class ExperimentState {
           .scoreValuesFactory(defaultFactory())
           .contactTimesFactory(defaultFactory())
           .userParams(ctx -> Defaults.userParams(ctx.dataset()));
+    }
+
+    private static <V> Map<Setter, V> newSetters() {
+      Map<Setter, V> setters = new EnumMap<>(Setter.class);
+      for (Setter setter : Setter.values()) {
+        setters.put(setter, null);
+      }
+      return setters;
     }
 
     private static String newId() {
@@ -336,6 +345,7 @@ public final class ExperimentState {
     public ExperimentState build() {
       setters.put(Setter.DISTRIBUTIONS, x -> setDistributions());
       setters.values().forEach(setter -> setter.apply(this));
+      ensureSet();
       return new ExperimentState(this);
     }
 
@@ -402,6 +412,12 @@ public final class ExperimentState {
     @Override
     public Dataset dataset() {
       return dataset;
+    }
+
+    private void ensureSet() {
+      if (!setters.isEmpty()) {
+        throw new IllegalStateException(NOT_SET_MSG + setters.keySet());
+      }
     }
 
     private Builder setDistributions() {
