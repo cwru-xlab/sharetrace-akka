@@ -150,11 +150,11 @@ public final class Defaults {
 
   private static MsgParams newMsgParams() {
     return MsgParams.builder()
-        .transRate(0.8f)
-        .sendCoeff(0.6f)
+        .transRate(0.8)
+        .sendCoeff(0.6)
         .scoreTtl(DEFAULT_TTL)
         .contactTtl(DEFAULT_TTL)
-        .tolerance(0.01f)
+        .tolerance(0.01)
         .timeBuffer(Duration.ofDays(2L))
         .build();
   }
