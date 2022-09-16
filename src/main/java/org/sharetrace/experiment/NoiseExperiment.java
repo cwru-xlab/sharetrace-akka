@@ -46,8 +46,8 @@ public final class NoiseExperiment implements Experiment<NoiseExperimentConfig> 
         .build();
   }
 
-  private static NoisyRiskScoreFactory newNoisyScoreFactory(ExperimentState initialState) {
-    return NoisyRiskScoreFactory.of(IGNORED, cachedScoreFactory(initialState));
+  private static NoisyRiskScoreFactory newNoisyScoreFactory(ExperimentState state) {
+    return NoisyRiskScoreFactory.of(IGNORED, cachedScoreFactory(state));
   }
 
   private static ExperimentContext newDefaultContext() {
