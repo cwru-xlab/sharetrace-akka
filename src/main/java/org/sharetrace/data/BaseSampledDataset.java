@@ -15,7 +15,7 @@ import org.sharetrace.model.RiskScore;
 abstract class BaseSampledDataset implements Dataset {
 
   @Override
-  @Value.Lazy
+  @Value.Default // Allows the contact network to be passed on to a copied instance.
   public ContactNetwork contactNetwork() {
     return SampledContactNetwork.builder()
         .addAllLoggable(loggable())
