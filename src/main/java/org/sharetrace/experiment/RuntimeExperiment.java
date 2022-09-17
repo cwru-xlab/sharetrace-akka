@@ -43,11 +43,14 @@ public final class RuntimeExperiment implements Experiment<RuntimeExperimentConf
   public void run(ExperimentState initialState, RuntimeExperimentConfig config) {
     SampledDataset dataset = (SampledDataset) initialState.dataset();
     for (int n : config.numNodes()) {
-      initialState.toBuilder()
-          .dataset(dataset.withNumNodes(n).withNewContactNetwork())
-          .userParams(ctx -> Defaults.userParams(ctx.dataset()))
-          .build()
-          .run();
+      dataset = dataset.withNumNodes(n);
+      for (int i : config.numIterations()) {
+        initialState.toBuilder()
+            .dataset(dataset.withNewContactNetwork())
+            .userParams(ctx -> Defaults.userParams(ctx.dataset()))
+            .build()
+            .run();
+      }
     }
   }
 
