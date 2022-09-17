@@ -10,10 +10,10 @@ public interface Experiment<T> {
   void run(ExperimentState initialState, T config);
 
   default void runWithDefaults(T config) {
-    runFromDefaults(UnaryOperator.identity(), config);
+    runWithDefaults(UnaryOperator.identity(), config);
   }
 
-  default void runFromDefaults(UnaryOperator<ExperimentState> overrideDefaults, T config) {
+  default void runWithDefaults(UnaryOperator<ExperimentState> overrideDefaults, T config) {
     run(overrideDefaults.apply(newDefaultState(config)), config);
   }
 

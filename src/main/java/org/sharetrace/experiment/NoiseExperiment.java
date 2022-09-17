@@ -29,8 +29,8 @@ public final class NoiseExperiment implements Experiment<NoiseExperimentConfig> 
     return state.toBuilder().dataset(state.dataset().withScoreFactory(factory)).build();
   }
 
-  private static NoisyRiskScoreFactory newNoisyScoreFactory(ExperimentState state) {
-    return NoisyRiskScoreFactory.of(IGNORED, CachedRiskScoreFactory.of(state.dataset()));
+  private static NoisyRiskScoreFactory newNoisyScoreFactory(ExperimentState initialState) {
+    return NoisyRiskScoreFactory.of(IGNORED, CachedRiskScoreFactory.of(initialState.dataset()));
   }
 
   private static ExperimentContext newDefaultContext() {
@@ -40,10 +40,10 @@ public final class NoiseExperiment implements Experiment<NoiseExperimentConfig> 
 
   @Override
   public void run(ExperimentState initialState, NoiseExperimentConfig config) {
-    NoisyRiskScoreFactory noisy = newNoisyScoreFactory(initialState);
+    NoisyRiskScoreFactory noisyFactory = newNoisyScoreFactory(initialState);
     for (RealDistribution noise : config.noises()) {
-      ExperimentState state = withScoreFactory(initialState, noisy.withNoise(noise));
-      config.numIterations().forEach(x -> state.run());
+      ExperimentState state = withScoreFactory(initialState, noisyFactory.withNoise(noise));
+      config.numIterations().forEach(x -> state.withNewId().run());
     }
   }
 
