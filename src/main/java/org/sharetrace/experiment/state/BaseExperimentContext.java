@@ -48,7 +48,7 @@ abstract class BaseExperimentContext implements AbstractExperimentContext {
   @Override
   @Value.Default
   public long seed() {
-    return ThreadLocalRandom.current().nextLong();
+    return ThreadLocalRandom.current().nextLong(Long.MAX_VALUE);
   }
 
   @Override
