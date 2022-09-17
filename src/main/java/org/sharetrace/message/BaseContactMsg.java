@@ -18,8 +18,8 @@ import org.sharetrace.graph.Contact;
 interface BaseContactMsg extends UserMsg {
 
   /** Returns the time at which the two users came in contact. */
-  Instant time();
+  Instant contactTime();
 
   /** Returns the actor reference of the contacted user. */
-  ActorRef<UserMsg> replyTo();
+  ActorRef<UserMsg> contact();
 }

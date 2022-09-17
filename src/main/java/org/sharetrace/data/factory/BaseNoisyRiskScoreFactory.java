@@ -15,7 +15,8 @@ abstract class BaseNoisyRiskScoreFactory implements RiskScoreFactory {
   @Override
   public RiskScore riskScore(int user) {
     RiskScore score = scoreFactory().riskScore(user);
-    return score.withValue(constrain(score.value() + noise().sample()));
+    float noisy = constrain(score.value() + noise().sample());
+    return score.withValue(noisy);
   }
 
   @Value.Parameter
