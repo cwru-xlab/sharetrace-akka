@@ -142,7 +142,7 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
   @Override
   public Receive<AlgorithmMsg> createReceive() {
     return newReceiveBuilder()
-        .onMessage(RunMsg.class, this::onRunMessage)
+        .onMessage(RunMsg.class, this::onRunMsg)
         .onSignal(Terminated.class, this::onTerminateMsg)
         .build();
   }
@@ -151,7 +151,7 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
     return milli(timer.nanos(metric));
   }
 
-  private Behavior<AlgorithmMsg> onRunMessage(RunMsg msg) {
+  private Behavior<AlgorithmMsg> onRunMsg(RunMsg msg) {
     Behavior<AlgorithmMsg> behavior = this;
     if (numUsers > 0) {
       timer.start();
