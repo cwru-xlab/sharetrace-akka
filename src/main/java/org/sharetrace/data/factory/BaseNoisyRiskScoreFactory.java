@@ -8,14 +8,14 @@ import org.sharetrace.model.RiskScore;
 @Value.Immutable(copy = true)
 abstract class BaseNoisyRiskScoreFactory implements RiskScoreFactory {
 
-  private static float constrain(double value) {
-    return (float) Math.max(RiskScore.MIN_VALUE, Math.min(RiskScore.MAX_VALUE, value));
+  private static float constrain(float value) {
+    return Math.max(RiskScore.MIN_VALUE, Math.min(RiskScore.MAX_VALUE, value));
   }
 
   @Override
   public RiskScore riskScore(int user) {
     RiskScore score = scoreFactory().riskScore(user);
-    float noisy = constrain(score.value() + noise().sample());
+    float noisy = constrain(score.value() + (float) noise().sample());
     return score.withValue(noisy);
   }
 

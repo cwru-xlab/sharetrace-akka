@@ -32,8 +32,8 @@ public final class ParamsExperiment implements Experiment<ParamsExperimentConfig
   @Override
   public void run(ExperimentState initialState, ParamsExperimentConfig config) {
     MsgParams msgParams;
-    for (double tr : config.transRates()) {
-      for (double sc : config.sendCoeffs()) {
+    for (float tr : config.transRates()) {
+      for (float sc : config.sendCoeffs()) {
         msgParams = initialState.msgParams().withTransRate(tr).withSendCoeff(sc);
         initialState.toBuilder().msgParams(msgParams).build().run();
       }

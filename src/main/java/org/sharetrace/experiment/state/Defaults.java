@@ -1,6 +1,5 @@
 package org.sharetrace.experiment.state;
 
-import com.google.common.math.DoubleMath;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
@@ -144,17 +143,16 @@ public final class Defaults {
   }
 
   private static boolean isApproxEqual(RiskScoreMsg msg1, RiskScoreMsg msg2) {
-    return DoubleMath.fuzzyEquals(
-        msg1.score().value(), msg2.score().value(), MSG_PARAMS.tolerance());
+    return Math.abs(msg1.score().value() - msg2.score().value()) <= MSG_PARAMS.tolerance();
   }
 
   private static MsgParams newMsgParams() {
     return MsgParams.builder()
-        .transRate(0.8)
-        .sendCoeff(0.6)
+        .transRate(0.8f)
+        .sendCoeff(0.6f)
         .scoreTtl(DEFAULT_TTL)
         .contactTtl(DEFAULT_TTL)
-        .tolerance(0.01)
+        .tolerance(0.01f)
         .timeBuffer(Duration.ofDays(2L))
         .build();
   }

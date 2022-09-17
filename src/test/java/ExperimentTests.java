@@ -10,7 +10,7 @@ import org.sharetrace.experiment.RuntimeExperiment;
 import org.sharetrace.experiment.config.FileExperimentConfig;
 import org.sharetrace.experiment.config.ParamsExperimentConfig;
 import org.sharetrace.experiment.config.RuntimeExperimentConfig;
-import org.sharetrace.util.range.DoubleRange;
+import org.sharetrace.util.range.FloatRange;
 import org.sharetrace.util.range.IntRange;
 
 class ExperimentTests {
@@ -37,8 +37,8 @@ class ExperimentTests {
   public void testParamsExperiment(GraphType graphType) {
     ParamsExperimentConfig config =
         ParamsExperimentConfig.builder()
-            .transRates(DoubleRange.single(0.8))
-            .sendCoeffs(DoubleRange.single(0.6))
+            .transRates(FloatRange.single(0.8))
+            .sendCoeffs(FloatRange.single(0.6))
             .graphType(graphType)
             .numNodes(1000)
             .build();
