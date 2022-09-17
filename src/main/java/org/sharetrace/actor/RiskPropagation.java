@@ -203,8 +203,8 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
     for (Contact contact : contactNetwork.contacts()) {
       user1 = users.get(contact.user1());
       user2 = users.get(contact.user2());
-      user1.tell(ContactMsg.builder().replyTo(user2).time(contact.time()).build());
-      user2.tell(ContactMsg.builder().replyTo(user1).time(contact.time()).build());
+      user1.tell(ContactMsg.builder().contact(user2).contactTime(contact.time()).build());
+      user2.tell(ContactMsg.builder().contact(user1).contactTime(contact.time()).build());
     }
   }
 

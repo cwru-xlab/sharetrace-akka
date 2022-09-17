@@ -36,6 +36,16 @@ abstract class BaseSampledDataset implements Dataset {
     return scoreFactory().riskScore(user);
   }
 
+  public SampledDataset withNewContactNetwork() {
+    return SampledDataset.builder()
+        .addAllLoggable(loggable())
+        .graphGeneratorFactory(graphGeneratorFactory())
+        .numNodes(numNodes())
+        .scoreFactory(scoreFactory())
+        .contactTimeFactory(contactTimeFactory())
+        .build();
+  }
+
   @Value.Default // Allows the contact network to be passed on to a copied instance.
   protected ContactNetwork contactNetwork() {
     return SampledContactNetwork.builder()

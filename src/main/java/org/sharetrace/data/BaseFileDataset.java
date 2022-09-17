@@ -34,6 +34,16 @@ abstract class BaseFileDataset implements Dataset, TimeRef {
     contactNetwork().logMetrics();
   }
 
+  public FileDataset withNewContactNetwork() {
+    return FileDataset.builder()
+        .addAllLoggable(loggable())
+        .path(path())
+        .refTime(refTime())
+        .delimiter(delimiter())
+        .scoreFactory(scoreFactory())
+        .build();
+  }
+
   @Value.Default // Allows the contact network to be passed on to a copied instance.
   protected ContactNetwork contactNetwork() {
     return FileContactNetwork.builder()
