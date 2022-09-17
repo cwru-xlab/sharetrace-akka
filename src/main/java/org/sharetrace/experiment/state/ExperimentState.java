@@ -13,8 +13,8 @@ import java.util.function.Function;
 import org.apache.commons.math3.distribution.RealDistribution;
 import org.apache.commons.math3.distribution.UniformRealDistribution;
 import org.apache.commons.math3.random.Well512a;
+import org.sharetrace.actor.Algorithm;
 import org.sharetrace.actor.RiskPropagationBuilder;
-import org.sharetrace.actor.Runner;
 import org.sharetrace.data.Dataset;
 import org.sharetrace.data.factory.DistributionFactory;
 import org.sharetrace.experiment.GraphType;
@@ -76,7 +76,7 @@ public final class ExperimentState {
 
   public void run() {
     logMetricsAndSettings();
-    Runner.run(newAlgorithm(), "RiskPropagation");
+    Algorithm.of(newRiskPropagation(), "RiskPropagation").run();
   }
 
   public MsgParams msgParams() {
@@ -112,7 +112,7 @@ public final class ExperimentState {
         .build();
   }
 
-  private Behavior<AlgorithmMsg> newAlgorithm() {
+  private Behavior<AlgorithmMsg> newRiskPropagation() {
     return RiskPropagationBuilder.create()
         .addAllLoggable(ctx.loggable())
         .putAllMdc(mdc)
@@ -213,10 +213,10 @@ public final class ExperimentState {
           .userParams(ctx -> Defaults.userParams(ctx.dataset()));
     }
 
-    private static <V> Map<Setter, V> newSetters() {
-      Map<Setter, V> setters = new EnumMap<>(Setter.class);
+    private static Map<Setter, Function<? super Builder, Builder>> newSetters() {
+      Map<Setter, Function<? super Builder, Builder>> setters = new EnumMap<>(Setter.class);
       for (Setter setter : Setter.values()) {
-        setters.put(setter, null);
+        setters.put(setter, Function.identity());
       }
       return setters;
     }
