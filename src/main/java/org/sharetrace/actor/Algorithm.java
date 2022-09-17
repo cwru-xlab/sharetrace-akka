@@ -9,7 +9,7 @@ import akka.actor.typed.javadsl.Behaviors;
 import org.sharetrace.message.AlgorithmMsg;
 import org.sharetrace.message.RunMsg;
 
-public class Algorithm {
+public final class Algorithm {
 
   private final Behavior<AlgorithmMsg> behavior;
   private final String name;
