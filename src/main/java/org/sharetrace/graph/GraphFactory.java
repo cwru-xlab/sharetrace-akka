@@ -1,6 +1,5 @@
 package org.sharetrace.graph;
 
-import java.util.function.Supplier;
 import org.jgrapht.Graph;
 import org.jgrapht.GraphTests;
 import org.jgrapht.GraphType;
@@ -8,6 +7,7 @@ import org.jgrapht.Graphs;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.DefaultGraphType;
 import org.jgrapht.opt.graph.fastutil.FastutilMapIntVertexGraph;
+import org.jgrapht.util.SupplierUtil;
 import org.sharetrace.util.Indexer;
 
 public final class GraphFactory {
@@ -76,12 +76,8 @@ public final class GraphFactory {
   }
 
   private static Graph<Integer, DefaultEdge> newGraph(GraphType graphType) {
-    return new FastutilMapIntVertexGraph<>(vertexIdFactory(), DefaultEdge::new, graphType, false);
-  }
-
-  private static Supplier<Integer> vertexIdFactory() {
-    int[] id = new int[] {0};
-    return () -> id[0]++;
+    return new FastutilMapIntVertexGraph<>(
+        SupplierUtil.createIntegerSupplier(), DefaultEdge::new, graphType, false);
   }
 
   private static Graph<Integer, DefaultEdge> newGraphFor(Graph<?, ?> graph) {
