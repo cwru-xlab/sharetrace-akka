@@ -123,31 +123,31 @@ public final class VertexIndependentPaths {
     Graph<Integer, ?> graph = GraphFactory.copyDirected(directed);
     KShortestPathAlgorithm<Integer, ?> shortestPaths = newKShortestPaths(graph);
     List<? extends GraphPath<Integer, ?>> paths;
-    int nFound = 1; // Trivial path along edge incident to source and target.
+    int numFound = 1; // Trivial path along edge incident to source and target.
     do {
       if ((paths = shortestPaths.getPaths(source, target, 2)).size() == 2) {
-        nFound++;
+        numFound++;
         // Remove the vertices along the path that is not the edge between the source and target.
         graph.removeAllVertices(withoutEndpoints(paths.get(1)));
         // Suurballe copies internally, so we must pass in the updated graph.
         shortestPaths = newKShortestPaths(graph);
       }
-    } while (paths.size() > 1 && nFound < maxFind);
-    return nFound;
+    } while (paths.size() > 1 && numFound < maxFind);
+    return numFound;
   }
 
   private int nonadjacentPathCount(int source, int target, int maxFind) {
     Graph<Integer, ?> graph = GraphFactory.copyGraph(this.graph);
     ShortestPathAlgorithm<Integer, ?> shortestPaths = newShortestPaths(graph);
     GraphPath<Integer, ?> path;
-    int nFound = 0;
+    int numFound = 0;
     do {
       if ((path = shortestPaths.getPath(source, target)) != null) {
-        nFound++;
+        numFound++;
         graph.removeAllVertices(withoutEndpoints(path));
       }
-    } while (path != null && nFound < maxFind);
-    return nFound;
+    } while (path != null && numFound < maxFind);
+    return numFound;
   }
 
   private IntStream vertices(boolean allowParallel) {
