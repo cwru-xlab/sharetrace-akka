@@ -18,12 +18,11 @@ import org.jgrapht.Graphs;
 import org.jgrapht.generate.GraphGenerator;
 import org.jgrapht.graph.DefaultEdge;
 import org.sharetrace.data.factory.ContactTimeFactory;
-import org.sharetrace.model.LoggableRef;
 import org.sharetrace.model.TimeRef;
 import org.sharetrace.util.Indexer;
 
 @Value.Immutable
-abstract class BaseFileContactNetwork implements ContactNetwork, TimeRef, LoggableRef {
+abstract class BaseFileContactNetwork extends AbstractContactNetwork implements TimeRef {
 
   private static Set<Integer> key(int user1, int user2) {
     return IntSet.of(user1, user2);
@@ -31,26 +30,6 @@ abstract class BaseFileContactNetwork implements ContactNetwork, TimeRef, Loggab
 
   private static Instant newer(Instant time1, Instant time2) {
     return time1.isAfter(time2) ? time1 : time2;
-  }
-
-  @Override
-  public Set<Integer> users() {
-    return impl().users();
-  }
-
-  @Override
-  public Set<Contact> contacts() {
-    return impl().contacts();
-  }
-
-  @Override
-  public void logMetrics() {
-    impl().logMetrics();
-  }
-
-  @Value.Lazy
-  protected ContactNetwork impl() {
-    return ContactNetworkImpl.of(graphGenerator(), contactTimeFactory(), loggable());
   }
 
   @Value.Lazy
@@ -66,8 +45,14 @@ abstract class BaseFileContactNetwork implements ContactNetwork, TimeRef, Loggab
 
   protected abstract String delimiter();
 
-  private GraphGenerator<Integer, DefaultEdge, ?> graphGenerator() {
+  @Override
+  protected GraphGenerator<Integer, DefaultEdge, ?> graphGenerator() {
     return (target, x) -> generate(target);
+  }
+
+  @Override
+  protected ContactTimeFactory contactTimeFactory() {
+    return (user1, user2) -> contactMap().get(key(user1, user2));
   }
 
   private void generate(Graph<Integer, DefaultEdge> target) {
@@ -95,9 +80,5 @@ abstract class BaseFileContactNetwork implements ContactNetwork, TimeRef, Loggab
     Duration offset = Duration.between(lastContactTime, refTime());
     contacts.replaceAll((x, time) -> time.plus(offset));
     return contacts;
-  }
-
-  private ContactTimeFactory contactTimeFactory() {
-    return (user1, user2) -> contactMap().get(key(user1, user2));
   }
 }
