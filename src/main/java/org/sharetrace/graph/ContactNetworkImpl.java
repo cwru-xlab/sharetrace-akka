@@ -27,26 +27,26 @@ import org.sharetrace.logging.metric.GraphTopology;
 import org.sharetrace.logging.metric.LoggableMetric;
 import org.sharetrace.util.TypedSupplier;
 
-final class ContactNetworkHelper implements ContactNetwork {
+final class ContactNetworkImpl implements ContactNetwork {
 
   private final Graph<Integer, DefaultEdge> contactNetwork;
   private final ContactTimeFactory timeFactory;
   private final Logger logger;
 
-  private ContactNetworkHelper(
+  private ContactNetworkImpl(
       Graph<Integer, DefaultEdge> contactNetwork, ContactTimeFactory timeFactory, Logger logger) {
     this.contactNetwork = contactNetwork;
     this.timeFactory = timeFactory;
     this.logger = logger;
   }
 
-  public static ContactNetworkHelper of(
+  public static ContactNetworkImpl of(
       GraphGenerator<Integer, DefaultEdge, ?> graphGenerator,
       ContactTimeFactory timeFactory,
       Set<Class<? extends Loggable>> loggable) {
     Graph<Integer, DefaultEdge> contactNetwork = GraphFactory.newUndirectedGraph();
     graphGenerator.generateGraph(contactNetwork);
-    return new ContactNetworkHelper(contactNetwork, timeFactory, Logging.metricsLogger(loggable));
+    return new ContactNetworkImpl(contactNetwork, timeFactory, Logging.metricsLogger(loggable));
   }
 
   private static TypedSupplier<LoggableMetric> graphTopology(String filename) {
