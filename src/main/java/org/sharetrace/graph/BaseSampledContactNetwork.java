@@ -12,24 +12,24 @@ abstract class BaseSampledContactNetwork implements ContactNetwork, LoggableRef 
 
   @Override
   public Set<Integer> users() {
-    return network().users();
+    return impl().users();
   }
 
   @Override
   @Value.Lazy
   public Set<Contact> contacts() {
-    return network().contacts();
+    return impl().contacts();
   }
 
   @Override
   public void logMetrics() {
-    network().logMetrics();
+    impl().logMetrics();
   }
 
   protected abstract ContactTimeFactory contactTimeFactory();
 
   @Value.Lazy
-  protected ContactNetworkImpl network() {
+  protected ContactNetwork impl() {
     return ContactNetworkImpl.of(graphGenerator(), contactTimeFactory(), loggable());
   }
 

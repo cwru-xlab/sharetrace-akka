@@ -29,13 +29,13 @@ import org.sharetrace.util.TypedSupplier;
 
 final class ContactNetworkImpl implements ContactNetwork {
 
-  private final Graph<Integer, DefaultEdge> contactNetwork;
+  private final Graph<Integer, DefaultEdge> graph;
   private final ContactTimeFactory timeFactory;
   private final Logger logger;
 
   private ContactNetworkImpl(
-      Graph<Integer, DefaultEdge> contactNetwork, ContactTimeFactory timeFactory, Logger logger) {
-    this.contactNetwork = contactNetwork;
+      Graph<Integer, DefaultEdge> graph, ContactTimeFactory timeFactory, Logger logger) {
+    this.graph = graph;
     this.timeFactory = timeFactory;
     this.logger = logger;
   }
@@ -44,9 +44,9 @@ final class ContactNetworkImpl implements ContactNetwork {
       GraphGenerator<Integer, DefaultEdge, ?> graphGenerator,
       ContactTimeFactory timeFactory,
       Set<Class<? extends Loggable>> loggable) {
-    Graph<Integer, DefaultEdge> contactNetwork = GraphFactory.newUndirectedGraph();
-    graphGenerator.generateGraph(contactNetwork);
-    return new ContactNetworkImpl(contactNetwork, timeFactory, Logging.metricsLogger(loggable));
+    Graph<Integer, DefaultEdge> graph = GraphFactory.newUndirectedGraph();
+    graphGenerator.generateGraph(graph);
+    return new ContactNetworkImpl(graph, timeFactory, Logging.metricsLogger(loggable));
   }
 
   private static TypedSupplier<LoggableMetric> graphTopology(String filename) {
@@ -55,19 +55,19 @@ final class ContactNetworkImpl implements ContactNetwork {
 
   @Override
   public Set<Integer> users() {
-    return Collections.unmodifiableSet(contactNetwork.vertexSet());
+    return Collections.unmodifiableSet(graph.vertexSet());
   }
 
   @Override
   public Set<Contact> contacts() {
-    Set<Contact> contacts = new ObjectOpenHashSet<>(contactNetwork.edgeSet().size());
-    contactNetwork.edgeSet().forEach(edge -> contacts.add(contactFrom(edge)));
+    Set<Contact> contacts = new ObjectOpenHashSet<>(graph.edgeSet().size());
+    graph.edgeSet().forEach(edge -> contacts.add(contactFrom(edge)));
     return Collections.unmodifiableSet(contacts);
   }
 
   @Override
   public void logMetrics() {
-    GraphStats<?, ?> stats = GraphStats.of(contactNetwork);
+    GraphStats<?, ?> stats = GraphStats.of(graph);
     String key = LoggableMetric.KEY;
     logger.log(key, TypedSupplier.of(GraphSize.class, stats::graphSize));
     logger.log(key, TypedSupplier.of(GraphCycles.class, stats::graphCycles));
@@ -75,28 +75,28 @@ final class ContactNetworkImpl implements ContactNetwork {
     logger.log(key, TypedSupplier.of(GraphScores.class, stats::graphScores));
     String filename = UUID.randomUUID().toString();
     if (logger.log(key, graphTopology(filename))) {
-      exportNetwork(filename);
+      exportGraph(filename);
     }
   }
 
   private Contact contactFrom(DefaultEdge edge) {
-    int user1 = contactNetwork.getEdgeSource(edge);
-    int user2 = contactNetwork.getEdgeTarget(edge);
-    Instant time = timeFactory.contactTime(user1, user2);
-    return Contact.builder().user1(user1).user2(user2).time(time).build();
+    int user1 = graph.getEdgeSource(edge);
+    int user2 = graph.getEdgeTarget(edge);
+    Instant contactTime = timeFactory.contactTime(user1, user2);
+    return Contact.builder().user1(user1).user2(user2).time(contactTime).build();
   }
 
-  private void exportNetwork(String filename) {
-    new NetworkExporter<Integer, DefaultEdge>(filename).export(contactNetwork);
+  private void exportGraph(String filename) {
+    new Exporter<Integer, DefaultEdge>(filename).export(graph);
   }
 
-  private static final class NetworkExporter<V, E> {
+  private static final class Exporter<V, E> {
 
     private static final String FILE_EXT = ".graphml";
     private final GraphExporter<V, E> exporter;
     private final File file;
 
-    public NetworkExporter(String filename) {
+    public Exporter(String filename) {
       file = newFile(filename);
       exporter = new GraphMLExporter<>(String::valueOf);
     }
@@ -117,8 +117,8 @@ final class ContactNetworkImpl implements ContactNetwork {
       return path;
     }
 
-    public void export(Graph<V, E> network) {
-      exporter.exportGraph(network, file);
+    public void export(Graph<V, E> graph) {
+      exporter.exportGraph(graph, file);
     }
   }
 }

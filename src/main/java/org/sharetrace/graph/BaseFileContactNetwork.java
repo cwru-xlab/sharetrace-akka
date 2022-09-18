@@ -35,21 +35,21 @@ abstract class BaseFileContactNetwork implements ContactNetwork, TimeRef, Loggab
 
   @Override
   public Set<Integer> users() {
-    return network().users();
+    return impl().users();
   }
 
   @Override
   public Set<Contact> contacts() {
-    return network().contacts();
+    return impl().contacts();
   }
 
   @Override
   public void logMetrics() {
-    network().logMetrics();
+    impl().logMetrics();
   }
 
   @Value.Lazy
-  protected ContactNetworkImpl network() {
+  protected ContactNetwork impl() {
     return ContactNetworkImpl.of(graphGenerator(), contactTimeFactory(), loggable());
   }
 
