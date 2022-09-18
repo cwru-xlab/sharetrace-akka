@@ -1,0 +1,2 @@
+@ImmutableStyle
+package io.sharetrace;

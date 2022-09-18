@@ -1,17 +1,17 @@
+import io.sharetrace.experiment.FileExperiment;
+import io.sharetrace.experiment.GraphType;
+import io.sharetrace.experiment.ParamsExperiment;
+import io.sharetrace.experiment.RuntimeExperiment;
+import io.sharetrace.experiment.config.FileExperimentConfig;
+import io.sharetrace.experiment.config.ParamsExperimentConfig;
+import io.sharetrace.experiment.config.RuntimeExperimentConfig;
+import io.sharetrace.util.range.FloatRange;
+import io.sharetrace.util.range.IntRange;
 import java.nio.file.Path;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
-import org.sharetrace.experiment.FileExperiment;
-import org.sharetrace.experiment.GraphType;
-import org.sharetrace.experiment.ParamsExperiment;
-import org.sharetrace.experiment.RuntimeExperiment;
-import org.sharetrace.experiment.config.FileExperimentConfig;
-import org.sharetrace.experiment.config.ParamsExperimentConfig;
-import org.sharetrace.experiment.config.RuntimeExperimentConfig;
-import org.sharetrace.util.range.FloatRange;
-import org.sharetrace.util.range.IntRange;
 
 class ExperimentTests {
 

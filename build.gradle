@@ -2,7 +2,7 @@ plugins {
     id "java"
 }
 
-group "org.sharetrace"
+group "io.sharetrace"
 version "0.1.0"
 
 repositories {
