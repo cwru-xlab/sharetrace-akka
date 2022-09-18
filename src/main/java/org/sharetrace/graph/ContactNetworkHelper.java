@@ -27,38 +27,45 @@ import org.sharetrace.logging.metric.GraphTopology;
 import org.sharetrace.logging.metric.LoggableMetric;
 import org.sharetrace.util.TypedSupplier;
 
-final class ContactNetworkHelper {
+final class ContactNetworkHelper implements ContactNetwork {
 
   private final Graph<Integer, DefaultEdge> contactNetwork;
+  private final ContactTimeFactory timeFactory;
   private final Logger logger;
 
-  private ContactNetworkHelper(Graph<Integer, DefaultEdge> contactNetwork, Logger logger) {
+  private ContactNetworkHelper(
+      Graph<Integer, DefaultEdge> contactNetwork, ContactTimeFactory timeFactory, Logger logger) {
     this.contactNetwork = contactNetwork;
+    this.timeFactory = timeFactory;
     this.logger = logger;
   }
 
   public static ContactNetworkHelper of(
       GraphGenerator<Integer, DefaultEdge, ?> graphGenerator,
+      ContactTimeFactory timeFactory,
       Set<Class<? extends Loggable>> loggable) {
     Graph<Integer, DefaultEdge> contactNetwork = GraphFactory.newUndirectedGraph();
     graphGenerator.generateGraph(contactNetwork);
-    return new ContactNetworkHelper(contactNetwork, Logging.metricsLogger(loggable));
+    return new ContactNetworkHelper(contactNetwork, timeFactory, Logging.metricsLogger(loggable));
   }
 
   private static TypedSupplier<LoggableMetric> graphTopology(String filename) {
     return TypedSupplier.of(GraphTopology.class, () -> GraphTopology.of(filename));
   }
 
-  public Set<Contact> contacts(ContactTimeFactory timeFactory) {
-    Set<Contact> contacts = new ObjectOpenHashSet<>(contactNetwork.edgeSet().size());
-    contactNetwork.edgeSet().forEach(edge -> contacts.add(contactOf(edge, timeFactory)));
-    return Collections.unmodifiableSet(contacts);
-  }
-
+  @Override
   public Set<Integer> users() {
     return Collections.unmodifiableSet(contactNetwork.vertexSet());
   }
 
+  @Override
+  public Set<Contact> contacts() {
+    Set<Contact> contacts = new ObjectOpenHashSet<>(contactNetwork.edgeSet().size());
+    contactNetwork.edgeSet().forEach(edge -> contacts.add(contactFrom(edge)));
+    return Collections.unmodifiableSet(contacts);
+  }
+
+  @Override
   public void logMetrics() {
     GraphStats<?, ?> stats = GraphStats.of(contactNetwork);
     String key = LoggableMetric.KEY;
@@ -72,10 +79,10 @@ final class ContactNetworkHelper {
     }
   }
 
-  private Contact contactOf(DefaultEdge edge, ContactTimeFactory factory) {
+  private Contact contactFrom(DefaultEdge edge) {
     int user1 = contactNetwork.getEdgeSource(edge);
     int user2 = contactNetwork.getEdgeTarget(edge);
-    Instant time = factory.contactTime(user1, user2);
+    Instant time = timeFactory.contactTime(user1, user2);
     return Contact.builder().user1(user1).user2(user2).time(time).build();
   }
 

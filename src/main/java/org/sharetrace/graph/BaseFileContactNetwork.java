@@ -40,7 +40,7 @@ abstract class BaseFileContactNetwork implements ContactNetwork, TimeRef, Loggab
 
   @Override
   public Set<Contact> contacts() {
-    return helper().contacts(contactTimeFactory());
+    return helper().contacts();
   }
 
   @Override
@@ -50,7 +50,7 @@ abstract class BaseFileContactNetwork implements ContactNetwork, TimeRef, Loggab
 
   @Value.Lazy
   protected ContactNetworkHelper helper() {
-    return ContactNetworkHelper.of(graphGenerator(), loggable());
+    return ContactNetworkHelper.of(graphGenerator(), contactTimeFactory(), loggable());
   }
 
   @Value.Lazy

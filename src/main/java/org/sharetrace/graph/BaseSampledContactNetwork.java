@@ -18,7 +18,7 @@ abstract class BaseSampledContactNetwork implements ContactNetwork, LoggableRef 
   @Override
   @Value.Lazy
   public Set<Contact> contacts() {
-    return helper().contacts(contactTimeFactory());
+    return helper().contacts();
   }
 
   @Override
@@ -30,7 +30,7 @@ abstract class BaseSampledContactNetwork implements ContactNetwork, LoggableRef 
 
   @Value.Lazy
   protected ContactNetworkHelper helper() {
-    return ContactNetworkHelper.of(graphGenerator(), loggable());
+    return ContactNetworkHelper.of(graphGenerator(), contactTimeFactory(), loggable());
   }
 
   protected abstract GraphGenerator<Integer, DefaultEdge, ?> graphGenerator();
