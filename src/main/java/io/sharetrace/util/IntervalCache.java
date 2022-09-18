@@ -34,7 +34,7 @@ public final class IntervalCache<T> {
 
   public static final int MIN_INTERVALS = 1;
   public static final int MIN_LOOK_AHEAD = 0;
-  private static final String TEMPORAL = "temporal";
+  private static final String TIME = "time";
   private final Map<Long, T> cache;
   private final BinaryOperator<T> mergeStrategy;
   private final Comparator<T> comparator;
@@ -136,7 +136,7 @@ public final class IntervalCache<T> {
   }
 
   private long checkedFloorKey(long time) {
-    return floorKey(Checks.inRange(time, range, TEMPORAL));
+    return floorKey(Checks.inRange(time, range, TIME));
   }
 
   private long getTime() {
