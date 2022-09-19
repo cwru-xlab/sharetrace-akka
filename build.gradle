@@ -5,6 +5,13 @@ plugins {
 group "io.sharetrace"
 version "0.1.0"
 
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(11)
+        vendor = JvmVendorSpec.ADOPTIUM
+    }
+}
+
 repositories {
     mavenCentral()
 }
