@@ -104,7 +104,7 @@ public final class User extends AbstractBehavior<UserMsg> {
           Behavior<UserMsg> user =
               Behaviors.withTimers(
                   timers -> new User(ctx, timers, loggable, userParams, msgParams, clock, cache));
-          return Behaviors.withMdc(UserMsg.class, message -> mdc, user);
+          return Behaviors.withMdc(UserMsg.class, msg -> mdc, user);
         });
   }
 
