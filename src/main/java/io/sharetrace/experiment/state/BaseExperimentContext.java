@@ -48,7 +48,7 @@ abstract class BaseExperimentContext implements AbstractExperimentContext {
   @Override
   @Value.Default
   public long seed() {
-    return Uid.ofLong();
+    return Uid.ofInt();
   }
 
   @Override
