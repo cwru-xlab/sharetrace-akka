@@ -10,11 +10,11 @@ abstract class BaseCachedRiskScoreFactory implements RiskScoreFactory {
 
   @Override
   public RiskScore riskScore(int user) {
-    return cache().computeIfAbsent(user, scoreFactory()::riskScore);
+    return cache().computeIfAbsent(user, cached()::riskScore);
   }
 
   @Value.Parameter
-  protected abstract RiskScoreFactory scoreFactory();
+  protected abstract RiskScoreFactory cached();
 
   @Value.Lazy
   protected Map<Integer, RiskScore> cache() {
