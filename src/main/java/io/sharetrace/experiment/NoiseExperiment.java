@@ -28,6 +28,7 @@ public final class NoiseExperiment implements Experiment<NoiseExperimentConfig> 
 
   private static RiskScoreFactory newNoisyFactory(
       RiskScoreFactory factory, RealDistribution noise) {
+    // Cache the original scores so that the independent effect of noise can be observed.
     return NoisyRiskScoreFactory.of(noise, CachedRiskScoreFactory.of(factory));
   }
 
