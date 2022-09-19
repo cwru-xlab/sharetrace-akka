@@ -4,7 +4,7 @@ import akka.actor.typed.ActorRef;
 import io.sharetrace.actor.RiskPropagation;
 import io.sharetrace.actor.User;
 import io.sharetrace.model.RiskScore;
-import java.util.concurrent.ThreadLocalRandom;
+import io.sharetrace.util.Uid;
 import org.immutables.value.Value;
 
 /**
@@ -30,6 +30,6 @@ abstract class BaseRiskScoreMsg implements UserMsg, Comparable<RiskScoreMsg> {
   /** Returns a unique identifier to track this message during {@link RiskPropagation}. */
   @Value.Default
   public String id() {
-    return String.valueOf(ThreadLocalRandom.current().nextLong(Long.MAX_VALUE));
+    return Uid.ofLongString();
   }
 }

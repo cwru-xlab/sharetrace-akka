@@ -19,10 +19,10 @@ import io.sharetrace.logging.metric.RiskPropRuntime;
 import io.sharetrace.logging.metric.SendContactsRuntime;
 import io.sharetrace.logging.metric.SendScoresRuntime;
 import io.sharetrace.logging.setting.ExperimentSettings;
+import io.sharetrace.util.Uid;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.Set;
-import java.util.concurrent.ThreadLocalRandom;
 import org.immutables.value.Value;
 
 @SuppressWarnings("DefaultAnnotationParam")
@@ -48,7 +48,7 @@ abstract class BaseExperimentContext implements AbstractExperimentContext {
   @Override
   @Value.Default
   public long seed() {
-    return ThreadLocalRandom.current().nextInt(Integer.MAX_VALUE);
+    return Uid.ofLong();
   }
 
   @Override

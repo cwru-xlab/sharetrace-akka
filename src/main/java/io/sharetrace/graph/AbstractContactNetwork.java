@@ -12,6 +12,7 @@ import io.sharetrace.logging.metric.GraphTopology;
 import io.sharetrace.logging.metric.LoggableMetric;
 import io.sharetrace.model.LoggableRef;
 import io.sharetrace.util.TypedSupplier;
+import io.sharetrace.util.Uid;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import java.io.File;
 import java.io.IOException;
@@ -21,7 +22,6 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.Set;
-import java.util.UUID;
 import org.jgrapht.Graph;
 import org.jgrapht.generate.GraphGenerator;
 import org.jgrapht.graph.DefaultEdge;
@@ -60,7 +60,7 @@ abstract class AbstractContactNetwork implements ContactNetwork, LoggableRef {
     logger().log(key, TypedSupplier.of(GraphCycles.class, stats::graphCycles));
     logger().log(key, TypedSupplier.of(GraphEccentricity.class, stats::graphEccentricity));
     logger().log(key, TypedSupplier.of(GraphScores.class, stats::graphScores));
-    String filename = UUID.randomUUID().toString();
+    String filename = Uid.ofLongString();
     if (logger().log(key, graphTopology(filename))) {
       exportGraph(filename);
     }

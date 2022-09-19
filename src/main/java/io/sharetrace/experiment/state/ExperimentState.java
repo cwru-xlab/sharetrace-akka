@@ -18,6 +18,7 @@ import io.sharetrace.model.MsgParams;
 import io.sharetrace.model.UserParams;
 import io.sharetrace.util.IntervalCache;
 import io.sharetrace.util.TypedSupplier;
+import io.sharetrace.util.Uid;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import java.time.Clock;
 import java.time.Instant;
@@ -25,7 +26,6 @@ import java.util.Collections;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
 import org.apache.commons.math3.distribution.RealDistribution;
 import org.apache.commons.math3.distribution.UniformRealDistribution;
@@ -222,7 +222,7 @@ public final class ExperimentState {
     }
 
     private static String newId() {
-      return String.valueOf(ThreadLocalRandom.current().nextInt(Integer.MAX_VALUE));
+      return Uid.ofIntString();
     }
 
     private static Function<DistributionFactoryContext, DistributionFactory> defaultFactory() {
