@@ -9,7 +9,6 @@ import io.sharetrace.util.range.FloatRange;
 import io.sharetrace.util.range.IntRange;
 import java.nio.file.Path;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
@@ -45,11 +44,14 @@ class ExperimentTests {
     Assertions.assertDoesNotThrow(() -> ParamsExperiment.instance().runWithDefaults(config));
   }
 
-  @Test
-  public void testRuntimeExperiment() {
+  @ParameterizedTest
+  @EnumSource(
+      value = GraphType.class,
+      names = {"BARABASI_ALBERT", "GNM_RANDOM", "RANDOM_REGULAR", "SCALE_FREE", "WATTS_STROGATZ"})
+  public void testRuntimeExperiment(GraphType graphType) {
     RuntimeExperimentConfig config =
         RuntimeExperimentConfig.builder()
-            .graphType(GraphType.GNM_RANDOM)
+            .graphType(graphType)
             .numNodes(IntRange.single(1000))
             .build();
     Assertions.assertDoesNotThrow(() -> RuntimeExperiment.instance().runWithDefaults(config));
