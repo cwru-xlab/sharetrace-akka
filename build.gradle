@@ -11,17 +11,17 @@ repositories {
 
 dependencies {
     // Logging
-    implementation 'ch.qos.logback:logback-classic:1.2.11'
-    implementation 'net.logstash.logback:logstash-logback-encoder:7.2'
+    implementation "ch.qos.logback:logback-classic:1.2.11"
+    implementation "net.logstash.logback:logstash-logback-encoder:7.2"
     // Jackson
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.4'
-    runtimeOnly 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.13.4'
-    runtimeOnly 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.13.4'
-    runtimeOnly 'com.fasterxml.jackson.module:jackson-module-blackbird:2.13.4'
+    implementation "com.fasterxml.jackson.core:jackson-databind:2.13.4"
+    runtimeOnly "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.13.4"
+    runtimeOnly "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.13.4"
+    runtimeOnly "com.fasterxml.jackson.module:jackson-module-blackbird:2.13.4"
     // Immutables
-    annotationProcessor 'org.immutables:value:2.9.2'
-    implementation 'org.immutables:value:2.9.2'
-    implementation 'org.immutables:builder:2.9.2'
+    annotationProcessor "org.immutables:value:2.9.2"
+    implementation "org.immutables:value:2.9.2"
+    implementation "org.immutables:builder:2.9.2"
     // Data structures and utilities
     implementation "com.google.guava:guava:31.1-jre"
     implementation "it.unimi.dsi:fastutil:8.5.8"
@@ -30,11 +30,11 @@ dependencies {
     implementation "org.jgrapht:jgrapht-io:1.5.1"
     implementation "org.jgrapht:jgrapht-opt:1.5.1"
     // Akka
-    implementation 'com.typesafe.akka:akka-actor-typed_2.13:2.6.20'
+    implementation "com.typesafe.akka:akka-actor-typed_2.13:2.6.20"
     // Testing
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.0'
-    testImplementation 'org.junit.jupiter:junit-jupiter-params:5.9.0'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.0'
+    testImplementation "org.junit.jupiter:junit-jupiter-api:5.9.0"
+    testImplementation "org.junit.jupiter:junit-jupiter-params:5.9.0"
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:5.9.0"
 }
 
 test {
