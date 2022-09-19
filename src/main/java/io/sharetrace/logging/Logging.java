@@ -1,7 +1,6 @@
 package io.sharetrace.logging;
 
 import ch.qos.logback.core.spi.PropertyContainer;
-import io.sharetrace.experiment.GraphType;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
@@ -42,7 +41,7 @@ public final class Logging {
     return Path.of(properties.getProperty("graphs.log.dir"));
   }
 
-  public static Map<String, String> mdc(String stateId, GraphType graphType) {
-    return Map.of("stateId", stateId, "graphType", graphType.toString());
+  public static Map<String, String> mdc(String stateId) {
+    return Map.of("sid", stateId);
   }
 }

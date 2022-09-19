@@ -204,7 +204,7 @@ public final class ExperimentState {
     protected static Builder withDefaults(ExperimentContext context) {
       return new Builder(context)
           .id(ctx -> newId())
-          .mdc(ctx -> Logging.mdc(ctx.id(), ctx.graphType()))
+          .mdc(ctx -> Logging.mdc(ctx.id()))
           .msgParams(ctx -> Defaults.msgParams())
           .cacheParams(ctx -> Defaults.cacheParams())
           .scoreTimesFactory(defaultFactory())
@@ -222,7 +222,7 @@ public final class ExperimentState {
     }
 
     private static String newId() {
-      return String.valueOf(ThreadLocalRandom.current().nextLong(Long.MAX_VALUE));
+      return String.valueOf(ThreadLocalRandom.current().nextInt(Integer.MAX_VALUE));
     }
 
     private static Function<DistributionFactoryContext, DistributionFactory> defaultFactory() {

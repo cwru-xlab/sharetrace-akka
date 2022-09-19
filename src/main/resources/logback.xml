@@ -21,8 +21,7 @@
           <version>[ignore]</version>
         </fieldNames>
         <includeContext>false</includeContext>
-        <includeMdcKeyName>graphType</includeMdcKeyName>
-        <includeMdcKeyName>stateId</includeMdcKeyName>
+        <includeMdcKeyName>sid</includeMdcKeyName>
       </encoder>
     </appender> <!--Default: 8192-->
 
@@ -46,8 +45,7 @@
           <version>[ignore]</version>
         </fieldNames>
         <includeContext>false</includeContext>
-        <includeMdcKeyName>graphType</includeMdcKeyName>
-        <includeMdcKeyName>stateId</includeMdcKeyName>
+        <includeMdcKeyName>sid</includeMdcKeyName>
       </encoder>
       <immediateFlush>false</immediateFlush>
       <rollingPolicy
@@ -81,8 +79,7 @@
           <version>[ignore]</version>
         </fieldNames>
         <includeContext>false</includeContext>
-        <includeMdcKeyName>graphType</includeMdcKeyName>
-        <includeMdcKeyName>stateId</includeMdcKeyName>
+        <includeMdcKeyName>sid</includeMdcKeyName>
       </encoder>
       <file>${log.dir}/metrics.log</file>
       <immediateFlush>false</immediateFlush>
@@ -109,8 +106,7 @@
           <version>[ignore]</version>
         </fieldNames>
         <includeContext>false</includeContext>
-        <includeMdcKeyName>graphType</includeMdcKeyName>
-        <includeMdcKeyName>stateId</includeMdcKeyName>
+        <includeMdcKeyName>sid</includeMdcKeyName>
       </encoder>
       <file>${log.dir}/settings.log</file>
       <immediateFlush>false</immediateFlush>
