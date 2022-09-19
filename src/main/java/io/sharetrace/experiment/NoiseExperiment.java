@@ -1,23 +1,24 @@
 package io.sharetrace.experiment;
 
+import io.sharetrace.data.Dataset;
 import io.sharetrace.data.factory.CachedRiskScoreFactory;
 import io.sharetrace.data.factory.NoisyRiskScoreFactory;
 import io.sharetrace.data.factory.RiskScoreFactory;
 import io.sharetrace.experiment.config.NoiseExperimentConfig;
+import io.sharetrace.experiment.state.Defaults;
 import io.sharetrace.experiment.state.ExperimentContext;
 import io.sharetrace.experiment.state.ExperimentState;
 import io.sharetrace.logging.event.UpdateEvent;
 import io.sharetrace.logging.metric.GraphSize;
 import io.sharetrace.logging.setting.ExperimentSettings;
+import io.sharetrace.util.range.IntRange;
 import java.util.Set;
 import org.apache.commons.math3.distribution.RealDistribution;
-import org.apache.commons.math3.distribution.UniformRealDistribution;
 
 public final class NoiseExperiment implements Experiment<NoiseExperimentConfig> {
 
   private static final NoiseExperiment INSTANCE = new NoiseExperiment();
   private static final ExperimentContext DEFAULT_CTX = newDefaultContext();
-  private static final RealDistribution IGNORED = new UniformRealDistribution();
 
   private NoiseExperiment() {}
 
@@ -25,12 +26,9 @@ public final class NoiseExperiment implements Experiment<NoiseExperimentConfig> 
     return INSTANCE;
   }
 
-  private static ExperimentState withScoreFactory(ExperimentState state, RiskScoreFactory factory) {
-    return state.toBuilder().dataset(state.dataset().withScoreFactory(factory)).build();
-  }
-
-  private static NoisyRiskScoreFactory newNoisyScoreFactory(ExperimentState initialState) {
-    return NoisyRiskScoreFactory.of(IGNORED, CachedRiskScoreFactory.of(initialState.dataset()));
+  private static RiskScoreFactory newNoisyFactory(
+      RiskScoreFactory factory, RealDistribution noise) {
+    return NoisyRiskScoreFactory.of(noise, CachedRiskScoreFactory.of(factory));
   }
 
   private static ExperimentContext newDefaultContext() {
@@ -38,13 +36,26 @@ public final class NoiseExperiment implements Experiment<NoiseExperimentConfig> 
         .withLoggable(Set.of(UpdateEvent.class, GraphSize.class, ExperimentSettings.class));
   }
 
+  private static ExperimentState withNewNetworkAndFactory(
+      ExperimentState state, Dataset withNewNetwork, RealDistribution noise) {
+    RiskScoreFactory noisyFactory = newNoisyFactory(withNewNetwork, noise);
+    return state.toBuilder()
+        .dataset(withNewNetwork.withScoreFactory(noisyFactory))
+        .userParams(ctx -> Defaults.userParams(ctx.dataset()))
+        .build();
+  }
+
+  private static void forEachNetwork(ExperimentState state, NoiseExperimentConfig config) {
+    Dataset withNewNetwork = state.dataset().withNewContactNetwork();
+    for (RealDistribution noise : config.noises()) {
+      ExperimentState newState = withNewNetworkAndFactory(state, withNewNetwork, noise);
+      IntRange.of(config.numIterations()).forEach(x -> newState.withNewId().run());
+    }
+  }
+
   @Override
   public void run(ExperimentState initialState, NoiseExperimentConfig config) {
-    NoisyRiskScoreFactory noisyFactory = newNoisyScoreFactory(initialState);
-    for (RealDistribution noise : config.noises()) {
-      ExperimentState state = withScoreFactory(initialState, noisyFactory.withNoise(noise));
-      config.numIterations().forEach(x -> state.withNewId().run());
-    }
+    IntRange.of(config.numIterations()).forEach(x -> forEachNetwork(initialState, config));
   }
 
   @Override

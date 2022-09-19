@@ -6,7 +6,7 @@ import io.sharetrace.experiment.state.ExperimentContext;
 import io.sharetrace.experiment.state.ExperimentState;
 import io.sharetrace.logging.Loggable;
 import io.sharetrace.logging.metric.GraphTopology;
-import io.sharetrace.model.MsgParams;
+import io.sharetrace.util.range.IntRange;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import java.util.Collections;
 import java.util.Set;
@@ -29,13 +29,20 @@ public final class ParamsExperiment implements Experiment<ParamsExperimentConfig
     return ctx.withLoggable(Collections.unmodifiableSet(loggable));
   }
 
+  private static void forEachParameters(ExperimentState state, float transRate, float sendCoeff) {
+    state.toBuilder()
+        .msgParams(state.msgParams().withTransRate(transRate).withSendCoeff(sendCoeff))
+        .dataset(state.dataset().withNewContactNetwork())
+        .userParams(ctx -> Defaults.userParams(ctx.dataset()))
+        .build()
+        .run();
+  }
+
   @Override
   public void run(ExperimentState initialState, ParamsExperimentConfig config) {
-    MsgParams msgParams;
     for (float tr : config.transRates()) {
       for (float sc : config.sendCoeffs()) {
-        msgParams = initialState.msgParams().withTransRate(tr).withSendCoeff(sc);
-        initialState.toBuilder().msgParams(msgParams).build().run();
+        IntRange.of(config.numIterations()).forEach(x -> forEachParameters(initialState, tr, sc));
       }
     }
   }

@@ -22,4 +22,9 @@ interface BaseParamsExperimentConfig {
   default Range<Float> sendCoeffs() {
     return FloatRange.of(0.1, 1.1, 0.1);
   }
+
+  @Value.Default
+  default int numIterations() {
+    return 1;
+  }
 }

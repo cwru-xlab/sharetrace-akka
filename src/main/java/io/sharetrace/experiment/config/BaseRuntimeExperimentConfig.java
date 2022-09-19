@@ -1,7 +1,6 @@
 package io.sharetrace.experiment.config;
 
 import io.sharetrace.experiment.GraphType;
-import io.sharetrace.util.range.IntRange;
 import io.sharetrace.util.range.Range;
 import java.util.Optional;
 import org.immutables.value.Value;
@@ -14,7 +13,7 @@ interface BaseRuntimeExperimentConfig {
   Range<Integer> numNodes();
 
   @Value.Default
-  default Range<Integer> numIterations() {
-    return IntRange.single(1);
+  default int numIterations() {
+    return 1;
   }
 }

@@ -1,5 +1,6 @@
 package io.sharetrace.experiment;
 
+import io.sharetrace.data.Dataset;
 import io.sharetrace.data.SampledDataset;
 import io.sharetrace.experiment.config.RuntimeExperimentConfig;
 import io.sharetrace.experiment.state.Defaults;
@@ -12,6 +13,7 @@ import io.sharetrace.logging.metric.RiskPropRuntime;
 import io.sharetrace.logging.metric.SendContactsRuntime;
 import io.sharetrace.logging.metric.SendScoresRuntime;
 import io.sharetrace.logging.setting.ExperimentSettings;
+import io.sharetrace.util.range.IntRange;
 import java.util.Set;
 
 public final class RuntimeExperiment implements Experiment<RuntimeExperimentConfig> {
@@ -39,18 +41,19 @@ public final class RuntimeExperiment implements Experiment<RuntimeExperimentConf
                 ExperimentSettings.class));
   }
 
+  private static void forEachDataset(ExperimentState state, Dataset dataset) {
+    state.toBuilder()
+        .dataset(dataset.withNewContactNetwork())
+        .userParams(ctx -> Defaults.userParams(ctx.dataset()))
+        .build()
+        .run();
+  }
+
   @Override
   public void run(ExperimentState initialState, RuntimeExperimentConfig config) {
-    SampledDataset dataset = (SampledDataset) initialState.dataset();
     for (int n : config.numNodes()) {
-      dataset = dataset.withNumNodes(n);
-      for (int i : config.numIterations()) {
-        initialState.toBuilder()
-            .dataset(dataset.withNewContactNetwork())
-            .userParams(ctx -> Defaults.userParams(ctx.dataset()))
-            .build()
-            .run();
-      }
+      Dataset newDataset = ((SampledDataset) initialState.dataset()).withNumNodes(n);
+      IntRange.of(config.numIterations()).forEach(x -> forEachDataset(initialState, newDataset));
     }
   }
 
