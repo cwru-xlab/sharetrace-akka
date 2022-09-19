@@ -30,8 +30,6 @@ abstract class AbstractDataset implements Dataset {
     contactNetwork().logMetrics();
   }
 
-  public abstract AbstractDataset withNewContactNetwork();
-
   protected abstract RiskScoreFactory scoreFactory();
 
   protected abstract ContactNetwork contactNetwork();
