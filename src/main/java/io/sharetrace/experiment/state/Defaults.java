@@ -143,7 +143,7 @@ public final class Defaults {
   }
 
   private static boolean isApproxEqual(RiskScoreMsg msg1, RiskScoreMsg msg2) {
-    return Math.abs(msg1.score().value() - msg2.score().value()) <= MSG_PARAMS.tolerance();
+    return Math.abs(msg1.score().value() - msg2.score().value()) < MSG_PARAMS.tolerance();
   }
 
   private static MsgParams newMsgParams() {

@@ -59,7 +59,7 @@ public final class User extends AbstractBehavior<UserMsg> {
 
   private final TimerScheduler<UserMsg> timers;
   private final Logger logger;
-  private final Map<ActorRef<UserMsg>, Instant> contacts;
+  private final Map<ActorRef<UserMsg>, ContactInfo> contacts;
   private final UserParams userParams;
   private final MsgParams msgParams;
   private final Clock clock;
@@ -108,8 +108,8 @@ public final class User extends AbstractBehavior<UserMsg> {
         });
   }
 
-  private static Predicate<Entry<ActorRef<UserMsg>, ?>> isNotFrom(RiskScoreMsg received) {
-    return Predicate.not(contact -> contact.getKey().equals(received.replyTo()));
+  private static boolean isFrom(ActorRef<UserMsg> contact, RiskScoreMsg received) {
+    return contact.equals(received.replyTo());
   }
 
   private static SendCurrentEvent sendCurrentEvent(ActorRef<UserMsg> contact, RiskScoreMsg curr) {
@@ -184,8 +184,9 @@ public final class User extends AbstractBehavior<UserMsg> {
   }
 
   private Behavior<UserMsg> onContactMsg(ContactMsg msg) {
-    addContactIfAlive(msg);
-    sendToContact(msg);
+    if (addContactIfAlive(msg)) {
+      sendToContact(msg);
+    }
     return this;
   }
 
@@ -211,7 +212,7 @@ public final class User extends AbstractBehavior<UserMsg> {
   }
 
   private void sendCurrentTo(ActorRef<UserMsg> contact) {
-    contact.tell(transmitted);
+    tell(contact, transmitted);
     logSendCurrent(contact);
   }
 
@@ -241,11 +242,13 @@ public final class User extends AbstractBehavior<UserMsg> {
     return cache.max(clock.instant()).orElseGet(this::defaultMsg);
   }
 
-  private void addContactIfAlive(ContactMsg msg) {
-    if (isContactAlive(msg.contactTime())) {
-      contacts.put(msg.contact(), msg.contactTime());
+  private boolean addContactIfAlive(ContactMsg msg) {
+    boolean added = isContactAlive(msg.contactTime());
+    if (added) {
+      contacts.put(msg.contact(), ContactInfo.of(msg.contactTime()));
       logContact(msg.contact());
     }
+    return added;
   }
 
   private void sendCachedTo(ContactMsg msg) {
@@ -253,29 +256,45 @@ public final class User extends AbstractBehavior<UserMsg> {
     cache.max(contactTime).ifPresent(cached -> sendCachedTo(msg.contact(), cached));
   }
 
-  private Predicate<Entry<?, Instant>> isContactRecent(RiskScoreMsg relativeTo) {
-    return contact -> isScoreRecent(relativeTo, contact.getValue());
+  private boolean isContactRecent(ContactInfo contactInfo, RiskScoreMsg relativeTo) {
+    return isScoreRecent(relativeTo, contactInfo.contactTime);
   }
 
   private void sendCachedTo(ActorRef<UserMsg> contact, RiskScoreMsg cached) {
     if (isScoreAlive(cached)) {
-      contact.tell(cached);
+      tell(contact, cached);
       logSendCached(contact, cached);
     }
+  }
+
+  private void tell(ActorRef<UserMsg> contact, RiskScoreMsg msg) {
+    contact.tell(msg);
+    contacts.get(contact).lastSent = msg.score();
   }
 
   private void propagate(RiskScoreMsg msg) {
     if (isScoreAlive(msg) && isHighEnough(msg)) {
       contacts.entrySet().stream()
-          .filter(isNotFrom(msg))
-          .filter(isContactRecent(msg))
+          .filter(entry -> shouldPropagateTo(entry, msg))
           .map(Entry::getKey)
           .forEach(contact -> propagate(contact, msg));
     }
   }
 
+  private boolean shouldPropagateTo(Entry<ActorRef<UserMsg>, ContactInfo> entry, RiskScoreMsg msg) {
+    ActorRef<UserMsg> contact = entry.getKey();
+    ContactInfo contactInfo = entry.getValue();
+    return !isFrom(contact, msg)
+        && isContactRecent(contactInfo, msg)
+        && isHighEnough(msg, contactInfo);
+  }
+
   private boolean isHighEnough(RiskScoreMsg msg) {
-    return msg.score().value() >= sendThresh;
+    return msg.score().value() > sendThresh;
+  }
+
+  private boolean isHighEnough(RiskScoreMsg msg, ContactInfo contactInfo) {
+    return msg.score().value() > contactInfo.lastSent.value() + msgParams.tolerance();
   }
 
   private void logSendCached(ActorRef<UserMsg> contact, RiskScoreMsg cached) {
@@ -290,6 +309,10 @@ public final class User extends AbstractBehavior<UserMsg> {
     return time.plus(msgParams.timeBuffer());
   }
 
+  private boolean isContactAlive(ContactInfo contactInfo) {
+    return isContactAlive(contactInfo.contactTime);
+  }
+
   private boolean isContactAlive(Temporal contactTime) {
     return isAlive(contactTime, msgParams.contactTtl());
   }
@@ -299,7 +322,7 @@ public final class User extends AbstractBehavior<UserMsg> {
   }
 
   private void propagate(ActorRef<UserMsg> contact, RiskScoreMsg msg) {
-    contact.tell(msg);
+    tell(contact, msg);
     logPropagate(contact, msg);
   }
 
@@ -392,5 +415,20 @@ public final class User extends AbstractBehavior<UserMsg> {
 
   private boolean isAlive(Temporal temporal, Duration ttl) {
     return Duration.between(temporal, clock.instant()).compareTo(ttl) < 0;
+  }
+
+  private static final class ContactInfo {
+
+    private static final RiskScore DEFAULT_LAST_SENT = RiskScore.ofMinValue(Instant.EPOCH);
+    private final Instant contactTime;
+    private RiskScore lastSent = DEFAULT_LAST_SENT;
+
+    private ContactInfo(Instant contactTime) {
+      this.contactTime = contactTime;
+    }
+
+    public static ContactInfo of(Instant contactTime) {
+      return new ContactInfo(contactTime);
+    }
   }
 }
