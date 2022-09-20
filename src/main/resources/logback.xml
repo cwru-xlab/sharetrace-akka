@@ -8,8 +8,8 @@
   <appender
     class="net.logstash.logback.appender.LoggingEventAsyncDisruptorAppender"
     name="ConsoleAppender">
-    <appendRetryFrequency>5</appendRetryFrequency> <!--Default: 5ms-->
-    <appendTimeout>-1</appendTimeout> <!--Default: 0-->
+    <appendRetryFrequency>5</appendRetryFrequency>
+    <appendTimeout>-1</appendTimeout>
 
     <appender class="ch.qos.logback.core.ConsoleAppender">
       <encoder class="net.logstash.logback.encoder.LogstashEncoder">
@@ -23,17 +23,17 @@
         <includeContext>false</includeContext>
         <includeMdcKeyName>sid</includeMdcKeyName>
       </encoder>
-    </appender> <!--Default: 8192-->
+    </appender>
 
-    <ringBufferSize>8192</ringBufferSize> <!--Default: blocking-->
+    <ringBufferSize>8192</ringBufferSize>
     <waitStrategyType>blocking</waitStrategyType>
   </appender>
 
   <appender
     class="net.logstash.logback.appender.LoggingEventAsyncDisruptorAppender"
     name="EventsAppender">
-    <appendRetryFrequency>5</appendRetryFrequency> <!--Default: 5ms-->
-    <appendTimeout>-1</appendTimeout> <!--Default: 0-->
+    <appendRetryFrequency>5</appendRetryFrequency>
+    <appendTimeout>-1</appendTimeout>
 
     <appender class="ch.qos.logback.core.rolling.RollingFileAppender">
       <encoder class="net.logstash.logback.encoder.LogstashEncoder">
@@ -50,23 +50,23 @@
       <immediateFlush>false</immediateFlush>
       <rollingPolicy
         class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-        <fileNamePattern>${log.dir}/events/${bySecond}-%d{yyyyMMdd}-%i.log.zip
+        <fileNamePattern>${log.dir}/events/%d-%i.log.zip
         </fileNamePattern>
         <maxFileSize>1GB</maxFileSize>
         <maxHistory>30</maxHistory>
         <totalSizeCap>20GB</totalSizeCap>
       </rollingPolicy>
-    </appender> <!--Default: 8192-->
+    </appender>
 
-    <ringBufferSize>8192</ringBufferSize> <!--Default: blocking-->
+    <ringBufferSize>8192</ringBufferSize>
     <waitStrategyType>blocking</waitStrategyType>
   </appender>
 
   <appender
     class="net.logstash.logback.appender.LoggingEventAsyncDisruptorAppender"
     name="MetricsAppender">
-    <appendRetryFrequency>5</appendRetryFrequency> <!--Default: 5ms-->
-    <appendTimeout>-1</appendTimeout> <!--Default: 0-->
+    <appendRetryFrequency>5</appendRetryFrequency>
+    <appendTimeout>-1</appendTimeout>
 
     <appender class="ch.qos.logback.core.FileAppender">
       <append>true</append>
@@ -83,17 +83,17 @@
       </encoder>
       <file>${log.dir}/metrics.log</file>
       <immediateFlush>false</immediateFlush>
-    </appender> <!--Default: 8192-->
+    </appender>
 
-    <ringBufferSize>8192</ringBufferSize> <!--Default: blocking-->
+    <ringBufferSize>8192</ringBufferSize>
     <waitStrategyType>blocking</waitStrategyType>
   </appender>
 
   <appender
     class="net.logstash.logback.appender.LoggingEventAsyncDisruptorAppender"
     name="SettingsAppender">
-    <appendRetryFrequency>5</appendRetryFrequency> <!--Default: 5ms-->
-    <appendTimeout>-1</appendTimeout> <!--Default: 0-->
+    <appendRetryFrequency>5</appendRetryFrequency>
+    <appendTimeout>-1</appendTimeout>
 
     <appender class="ch.qos.logback.core.FileAppender">
       <append>true</append>
@@ -110,9 +110,9 @@
       </encoder>
       <file>${log.dir}/settings.log</file>
       <immediateFlush>false</immediateFlush>
-    </appender> <!--Default: 8192-->
+    </appender>
 
-    <ringBufferSize>8192</ringBufferSize> <!--Default: blocking-->
+    <ringBufferSize>8192</ringBufferSize>
     <waitStrategyType>blocking</waitStrategyType>
   </appender>
   <root level="debug">
