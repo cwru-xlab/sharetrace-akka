@@ -191,7 +191,7 @@ public final class ExperimentState {
       return new Builder(state.ctx)
           .graphType(state.graphType)
           .id(ctx -> newId())
-          .mdc(state.mdc)
+          .mdc(ctx -> Logging.mdc(ctx.id()))
           .msgParams(state.msgParams)
           .cacheParams(state.cacheParams)
           .scoreValuesFactory(state.scoreValuesFactory)
