@@ -1,7 +1,8 @@
 package io.sharetrace.data.factory;
 
 import io.sharetrace.experiment.GraphType;
-import java.util.Optional;
+import java.util.OptionalDouble;
+import java.util.OptionalInt;
 import org.immutables.builder.Builder;
 import org.jgrapht.generate.BarabasiAlbertGraphGenerator;
 import org.jgrapht.generate.GnmRandomGraphGenerator;
@@ -21,12 +22,12 @@ final class GraphGenerators {
       @Builder.Parameter GraphType graphType,
       @Builder.Parameter int numNodes,
       @Builder.Parameter long seed,
-      Optional<Integer> numInitialNodes,
-      Optional<Integer> numNewEdges,
-      Optional<Integer> numEdges,
-      Optional<Integer> degree,
-      Optional<Integer> numNearestNeighbors,
-      Optional<Double> rewiringProbability) {
+      OptionalInt numInitialNodes,
+      OptionalInt numNewEdges,
+      OptionalInt numEdges,
+      OptionalInt degree,
+      OptionalInt numNearestNeighbors,
+      OptionalDouble rewiringProbability) {
     switch (graphType) {
         // Random
       case GNM_RANDOM:
@@ -56,7 +57,12 @@ final class GraphGenerators {
   }
 
   @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-  private static <T> T getOrThrow(Optional<T> optional, String name, GraphType graphType) {
+  private static int getOrThrow(OptionalInt optional, String name, GraphType graphType) {
+    return optional.orElseThrow(() -> missingParam(name, graphType));
+  }
+
+  @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
+  private static double getOrThrow(OptionalDouble optional, String name, GraphType graphType) {
     return optional.orElseThrow(() -> missingParam(name, graphType));
   }
 

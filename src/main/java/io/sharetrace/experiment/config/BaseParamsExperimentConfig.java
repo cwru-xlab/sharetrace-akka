@@ -5,6 +5,7 @@ import io.sharetrace.util.Checks;
 import io.sharetrace.util.range.FloatRange;
 import io.sharetrace.util.range.Range;
 import java.util.Optional;
+import java.util.OptionalInt;
 import org.immutables.value.Value;
 
 @Value.Immutable
@@ -12,7 +13,7 @@ abstract class BaseParamsExperimentConfig {
 
   public abstract Optional<GraphType> graphType();
 
-  public abstract Optional<Integer> numNodes();
+  public abstract OptionalInt numNodes();
 
   @Value.Default
   public Range<Float> transRates() {

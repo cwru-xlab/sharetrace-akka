@@ -4,6 +4,7 @@ import io.sharetrace.model.TimeRef;
 import io.sharetrace.util.Checks;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import org.apache.commons.math3.distribution.RealDistribution;
 import org.immutables.value.Value;
 
@@ -24,7 +25,17 @@ abstract class BaseTimeSampler extends BaseSampler<Instant> implements TimeRef {
   protected abstract Duration maxLookBack();
 
   @Value.Check
-  protected void check() {
+  protected BaseTimeSampler check() {
     Checks.isGreaterThan(maxLookBack(), Duration.ZERO, "maxLookBack");
+    BaseTimeSampler truncated = this;
+    if (refTime().getNano() != 0) {
+      truncated =
+          TimeSampler.builder()
+              .refTime(refTime().truncatedTo(ChronoUnit.SECONDS))
+              .lookBacks(lookBacks())
+              .maxLookBack(maxLookBack())
+              .build();
+    }
+    return truncated;
   }
 }
