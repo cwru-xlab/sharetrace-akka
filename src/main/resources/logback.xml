@@ -23,6 +23,8 @@
         </fieldNames>
         <includeContext>false</includeContext>
         <includeMdcKeyName>sid</includeMdcKeyName>
+        <findAndRegisterJacksonModules>false</findAndRegisterJacksonModules>
+        <jsonFactoryDecorator class="io.sharetrace.logging.LoggingDecorator"/>
       </encoder>
     </appender>
 
@@ -47,6 +49,8 @@
         </fieldNames>
         <includeContext>false</includeContext>
         <includeMdcKeyName>sid</includeMdcKeyName>
+        <findAndRegisterJacksonModules>false</findAndRegisterJacksonModules>
+        <jsonFactoryDecorator class="io.sharetrace.logging.LoggingDecorator"/>
       </encoder>
       <immediateFlush>false</immediateFlush>
       <rollingPolicy
@@ -81,6 +85,8 @@
         </fieldNames>
         <includeContext>false</includeContext>
         <includeMdcKeyName>sid</includeMdcKeyName>
+        <findAndRegisterJacksonModules>false</findAndRegisterJacksonModules>
+        <jsonFactoryDecorator class="io.sharetrace.logging.LoggingDecorator"/>
       </encoder>
       <file>${log.dir}/metrics.log</file>
       <immediateFlush>false</immediateFlush>
@@ -108,6 +114,8 @@
         </fieldNames>
         <includeContext>false</includeContext>
         <includeMdcKeyName>sid</includeMdcKeyName>
+        <findAndRegisterJacksonModules>false</findAndRegisterJacksonModules>
+        <jsonFactoryDecorator class="io.sharetrace.logging.LoggingDecorator"/>
       </encoder>
       <file>${log.dir}/settings.log</file>
       <immediateFlush>false</immediateFlush>
