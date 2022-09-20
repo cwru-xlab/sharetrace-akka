@@ -50,7 +50,7 @@
       <immediateFlush>false</immediateFlush>
       <rollingPolicy
         class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-        <fileNamePattern>${log.dir}/events/%d-%i.log.zip
+        <fileNamePattern>${log.dir}/events/%i.log.zip
         </fileNamePattern>
         <maxFileSize>1GB</maxFileSize>
         <maxHistory>30</maxHistory>
