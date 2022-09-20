@@ -8,6 +8,7 @@ import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import io.sharetrace.message.AlgorithmMsg;
 import io.sharetrace.message.RunMsg;
+import java.util.concurrent.ExecutionException;
 
 public final class Algorithm {
 
@@ -23,8 +24,16 @@ public final class Algorithm {
     return new Algorithm(behavior, name);
   }
 
+  private static void waitUntilDone(ActorSystem<Void> running) {
+    try {
+      running.getWhenTerminated().toCompletableFuture().get();
+    } catch (InterruptedException | ExecutionException exception) {
+      throw new RuntimeException(exception);
+    }
+  }
+
   public void run() {
-    ActorSystem.create(Behaviors.setup(this::newRunner), name);
+    waitUntilDone(ActorSystem.create(Behaviors.setup(this::newRunner), name));
   }
 
   private Behavior<Void> newRunner(ActorContext<Void> ctx) {
