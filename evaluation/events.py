@@ -282,8 +282,8 @@ class ReachabilityCallback(EventCallback):
             the initial message of user `i` reached user `j`,
             and 0 otherwise.
         msg_idx: A dictionary that maps a message ID to the origin user.
-        msgs: A list of (source, destination) pairs that passed the initial
-            score of user i.
+        msgs: A list of source-destination pairs where the `i`-th entry
+        are the edges along which the initial score of user `i` was passed.
     """
 
     __slots__ = (
@@ -355,7 +355,7 @@ class ReachabilityCallback(EventCallback):
             row_add(repeat(user, len(destinations)))
             col_add(destinations)
             data_add(repeat(ONE, len(destinations)))
-        # adj[i][j] = 1: user j is reachable from user i
+        # adj[i][j] = 1: user `j` is reachable from user `i`
         self.adj = sparse.csr_matrix((data, (row, col)))
 
     def _compute_msg_reaches(self) -> None:
