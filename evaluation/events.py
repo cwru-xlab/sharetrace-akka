@@ -18,6 +18,8 @@ from scipy import sparse
 
 Predicate = Callable[[Any], bool]
 EventRecord = dict[str, Any]
+Edges = set[tuple[int, int]]
+Index = dict[int, int]
 
 ONE = np.int8(1)
 
@@ -33,10 +35,10 @@ class Event(str, enum.Enum):
     SEND_CURRENT = "SendCurrentEvent"
     UPDATE = "UpdateEvent"
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.value
 
-    def __int__(self):
+    def __int__(self) -> int:
         return _EVENTS[self.value]
 
     @classmethod
@@ -88,7 +90,7 @@ def _split(it: Iterable, predicate: Predicate) -> tuple[Iterable, Iterable]:
 class EventCounter(collections.Counter):
     """Counts the number of occurrences of each event type."""
 
-    def __setitem__(self, key, value):
+    def __setitem__(self, key, value) -> None:
         if key in _EVENTS:
             super().__setitem__(key, value)
         else:
@@ -170,9 +172,11 @@ class EventCounterCallback(EventCounter, EventCallback):
 
 @dataclasses.dataclass(slots=True)
 class UserUpdates:
+    _DEFAULT_N = np.uint16(0)
+
     initial: np.float32
     final: np.float32 | None = None
-    n: np.uint16 = np.uint16(0)
+    n: np.uint16 = _DEFAULT_N
 
     def __post_init__(self) -> None:
         if self.final is None:
@@ -190,10 +194,10 @@ class UserUpdatesCallback(EventCallback, Sized):
     __slots__ = "updates", "initials", "finals", "_n"
 
     def __init__(self) -> None:
-        self.updates: dict[np.uint32, UserUpdates] | np.ndarray = {}
-        self.initials: np.ndarray | None = None
-        self.finals: np.ndarray | None = None
-        self._n = 0
+        self.updates: dict[np.uint32, UserUpdates] | np.ndarray[np.uint16] = {}
+        self.initials: np.ndarray[np.float32] | None = None
+        self.finals: np.ndarray[np.float32] | None = None
+        self._n: int = 0
 
     def __call__(self, record: EventRecord, **kwargs) -> None:
         if Event.of(record) == Event.UPDATE:
@@ -208,7 +212,7 @@ class UserUpdatesCallback(EventCallback, Sized):
 
     def on_complete(self) -> None:
         n_users = len(self.updates)
-        updates = np.zeros(n_users, dtype=np.int16)
+        updates = np.zeros(n_users, dtype=np.uint16)
         initials = np.zeros(n_users, dtype=np.float32)
         finals = np.zeros(n_users, dtype=np.float32)
         for u, user in self.updates.items():
@@ -228,9 +232,9 @@ class TimelineCallback(EventCallback):
     __slots__ = "_events", "_repeats", "_idx"
 
     def __init__(self):
-        self._events: list[Event | None] | np.ndarray = [None]
-        self._repeats: list[int] | np.ndarray = [0]
-        self._idx: dict | np.ndarray = dict()
+        self._events: list[Event | None] | np.ndarray[np.uint8] = [None]
+        self._repeats: list[int] | np.ndarray[np.uint16] = [0]
+        self._idx: dict[Event, int] | np.ndarray[Event] = {}
 
     def __call__(self, record: EventRecord, **kwargs) -> None:
         if (name := Event.of(record)) not in self._idx:
@@ -245,11 +249,11 @@ class TimelineCallback(EventCallback):
             self._repeats.append(1)
 
     def on_complete(self) -> None:
-        self._events = np.array(self._events[1:])
-        self._repeats = np.array(self._repeats[1:])
+        self._events = np.array(self._events[1:], dtype=np.uint8)
+        self._repeats = np.array(self._repeats[1:], dtype=np.uint16)
         self._idx = np.array(list(self._idx))
 
-    def flatten(self, labeled: bool = False) -> np.ndarray:
+    def flatten(self, labeled: bool = False) -> np.ndarray[np.uint8]:
         """Returns a 1D array of events.
 
         Args:
@@ -270,7 +274,8 @@ class TimelineCallback(EventCallback):
         """
         return np.array(list(zip(self._get_events(labeled), self._repeats)))
 
-    def _get_events(self, labeled: bool = False) -> np.ndarray:
+    def _get_events(
+            self, labeled: bool = False) -> np.ndarray[Event | np.uint8]:
         return self._idx[self._events] if labeled else self._events
 
 
@@ -299,10 +304,10 @@ class ReachabilityCallback(EventCallback):
         self.adj: sparse.csr_matrix | None = None
         self.msg_idx: dict[str, np.uint32] = {}
         self.msgs: dict[str, list] | list = collections.defaultdict(list)
-        self._msg_reach: np.ndarray | None = None
+        self._msg_reach: np.ndarray[np.uint8] | None = None
         self._reach_ratio: float | None = None
-        self._influence: np.ndarray | None = None
-        self._source_size: np.ndarray | None = None
+        self._influence: np.ndarray[int] | None = None
+        self._source_size: np.ndarray[int] | None = None
 
     def __call__(self, record: dict, **kwargs) -> None:
         if Event.of(record) == Event.RECEIVE:
@@ -327,11 +332,11 @@ class ReachabilityCallback(EventCallback):
     def _to_numpy(self) -> None:
         self.msgs = [np.array(self.msgs[v]) for v in range(len(self.msgs))]
 
-    def influence(self, user: int | None = None) -> int | np.ndarray:
+    def influence(self, user: int | None = None) -> int | np.ndarray[int]:
         """Returns the cardinality of the influence set for a given user."""
         return self._influence if user is None else self._influence[user]
 
-    def source_size(self, user: int | None = None) -> int | np.ndarray:
+    def source_size(self, user: int | None = None) -> int | np.ndarray[int]:
         """Returns the cardinality of the source set for a given user."""
         return self._source_size if user is None else self._source_size[user]
 
@@ -362,7 +367,7 @@ class ReachabilityCallback(EventCallback):
         shortest_path = sparse.csgraph.shortest_path
         longest = np.max
         nan2num = np.nan_to_num
-        msg_reach = np.zeros(len(self.msgs), dtype=np.int8)
+        msg_reach = np.zeros(len(self.msgs), dtype=np.uint8)
         for user, edges in enumerate(self.msgs):
             if len(edges) > 0:
                 idx, adj = edges_to_adj(edges)
@@ -381,16 +386,16 @@ class ReachabilityCallback(EventCallback):
         self._source_size = np.count_nonzero(self.adj.toarray(), axis=1)
 
 
-def edges_to_adj(edges: set[tuple]) -> tuple[dict, sparse.spmatrix]:
+def edges_to_adj(edges: Edges) -> tuple[Index, sparse.spmatrix]:
     """Encodes a set of edges as an adjacency matrix."""
     idx = index_edges(edges)
-    adj = np.zeros((len(idx), len(idx)), dtype=np.int8)
+    adj = np.zeros((len(idx), len(idx)), dtype=np.uint8)
     for v1, v2 in edges:
         adj[idx[v1], idx[v2]] = ONE
     return idx, sparse.csr_matrix(adj)
 
 
-def index_edges(edges: set[tuple]) -> dict[int, int]:
+def index_edges(edges: Edges) -> Index:
     """Encodes the vertices of the edges as 0-based integers."""
     return {v: i for i, v in enumerate(set(itertools.chain(*edges)))}
 
