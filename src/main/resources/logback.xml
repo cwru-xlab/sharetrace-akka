@@ -7,11 +7,8 @@
   <property name="graphs.log.dir" value="${log.dir}/graphs" scope="context"/>
 
   <appender
-    class="net.logstash.logback.appender.LoggingEventAsyncDisruptorAppender"
-    name="ConsoleAppender">
-    <appendRetryFrequency>5</appendRetryFrequency>
+    class="net.logstash.logback.appender.LoggingEventAsyncDisruptorAppender" name="ConsoleAppender">
     <appendTimeout>-1</appendTimeout>
-
     <appender class="ch.qos.logback.core.ConsoleAppender">
       <encoder class="net.logstash.logback.encoder.LogstashEncoder">
         <fieldNames class="net.logstash.logback.fieldnames.ShortenedFieldNames">
@@ -27,17 +24,11 @@
         <jsonFactoryDecorator class="io.sharetrace.logging.LoggingDecorator"/>
       </encoder>
     </appender>
-
-    <ringBufferSize>8192</ringBufferSize>
-    <waitStrategyType>blocking</waitStrategyType>
   </appender>
 
   <appender
-    class="net.logstash.logback.appender.LoggingEventAsyncDisruptorAppender"
-    name="EventsAppender">
-    <appendRetryFrequency>5</appendRetryFrequency>
+    class="net.logstash.logback.appender.LoggingEventAsyncDisruptorAppender" name="EventsAppender">
     <appendTimeout>-1</appendTimeout>
-
     <appender class="ch.qos.logback.core.rolling.RollingFileAppender">
       <encoder class="net.logstash.logback.encoder.LogstashEncoder">
         <fieldNames class="net.logstash.logback.fieldnames.ShortenedFieldNames">
@@ -53,28 +44,19 @@
         <jsonFactoryDecorator class="io.sharetrace.logging.LoggingDecorator"/>
       </encoder>
       <immediateFlush>false</immediateFlush>
-      <rollingPolicy
-        class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-        <fileNamePattern>${log.dir}/events/%d-%i.log.zip
-        </fileNamePattern>
+      <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+        <fileNamePattern>${log.dir}/events/%d-%i.log.zip</fileNamePattern>
         <maxFileSize>1GB</maxFileSize>
         <maxHistory>30</maxHistory>
         <totalSizeCap>20GB</totalSizeCap>
       </rollingPolicy>
     </appender>
-
-    <ringBufferSize>8192</ringBufferSize>
-    <waitStrategyType>blocking</waitStrategyType>
   </appender>
 
   <appender
-    class="net.logstash.logback.appender.LoggingEventAsyncDisruptorAppender"
-    name="MetricsAppender">
-    <appendRetryFrequency>5</appendRetryFrequency>
+    class="net.logstash.logback.appender.LoggingEventAsyncDisruptorAppender" name="MetricsAppender">
     <appendTimeout>-1</appendTimeout>
-
     <appender class="ch.qos.logback.core.FileAppender">
-      <append>true</append>
       <encoder class="net.logstash.logback.encoder.LogstashEncoder">
         <fieldNames class="net.logstash.logback.fieldnames.ShortenedFieldNames">
           <levelValue>[ignore]</levelValue>
@@ -91,19 +73,13 @@
       <file>${log.dir}/metrics.log</file>
       <immediateFlush>false</immediateFlush>
     </appender>
-
-    <ringBufferSize>8192</ringBufferSize>
-    <waitStrategyType>blocking</waitStrategyType>
   </appender>
 
   <appender
     class="net.logstash.logback.appender.LoggingEventAsyncDisruptorAppender"
     name="SettingsAppender">
-    <appendRetryFrequency>5</appendRetryFrequency>
     <appendTimeout>-1</appendTimeout>
-
     <appender class="ch.qos.logback.core.FileAppender">
-      <append>true</append>
       <encoder class="net.logstash.logback.encoder.LogstashEncoder">
         <fieldNames class="net.logstash.logback.fieldnames.ShortenedFieldNames">
           <levelValue>[ignore]</levelValue>
@@ -120,10 +96,8 @@
       <file>${log.dir}/settings.log</file>
       <immediateFlush>false</immediateFlush>
     </appender>
-
-    <ringBufferSize>8192</ringBufferSize>
-    <waitStrategyType>blocking</waitStrategyType>
   </appender>
+
   <root level="debug">
     <appender-ref ref="ConsoleAppender"/>
   </root>
