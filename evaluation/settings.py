@@ -1,10 +1,17 @@
 from __future__ import annotations
 
+import collections
+import json
 import os
-from json import loads
-from typing import AnyStr
+from typing import AnyStr, Any
 
 
-def load_settings(path: os.PathLike | AnyStr) -> dict:
+def load(path: os.PathLike | AnyStr) -> dict:
     with open(path) as f:
-        return loads(f.readline())["setting"]
+        settings = collections.defaultdict(dict)
+        for line in f:
+            record: dict[str, Any] = json.loads(line)
+            info: dict[str, Any] = record["setting"]
+            info.pop("type")
+            settings[record["sid"]] = info
+        return dict(settings)
