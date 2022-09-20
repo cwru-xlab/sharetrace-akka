@@ -28,7 +28,7 @@ public final class RuntimeExperiment implements Experiment<RuntimeExperimentConf
     return INSTANCE;
   }
 
-  private static ExperimentContext newDefaultContext() {
+  public static ExperimentContext newDefaultContext() {
     return ExperimentContext.create()
         .withLoggable(
             Set.of(
@@ -59,7 +59,13 @@ public final class RuntimeExperiment implements Experiment<RuntimeExperimentConf
 
   @Override
   public ExperimentState newDefaultState(RuntimeExperimentConfig config) {
-    return ExperimentState.builder(DEFAULT_CTX)
+    return newDefaultState(DEFAULT_CTX, config);
+  }
+
+  @Override
+  public ExperimentState newDefaultState(
+      ExperimentContext context, RuntimeExperimentConfig config) {
+    return ExperimentState.builder(context)
         .graphType(getProperty(config.graphType(), "graphType"))
         .dataset(ctx -> Defaults.sampledDataset(ctx, IGNORED))
         .build();

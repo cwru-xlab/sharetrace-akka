@@ -10,12 +10,16 @@ import java.nio.file.Path;
 public final class FileExperiment implements Experiment<FileExperimentConfig> {
 
   private static final FileExperiment INSTANCE = new FileExperiment();
-  private static final ExperimentContext DEFAULT_CTX = ExperimentContext.create();
+  private static final ExperimentContext DEFAULT_CTX = newDefaultContext();
 
   private FileExperiment() {}
 
   public static FileExperiment instance() {
     return INSTANCE;
+  }
+
+  public static ExperimentContext newDefaultContext() {
+    return ExperimentContext.create();
   }
 
   @Override
@@ -25,9 +29,14 @@ public final class FileExperiment implements Experiment<FileExperimentConfig> {
 
   @Override
   public ExperimentState newDefaultState(FileExperimentConfig config) {
+    return newDefaultState(DEFAULT_CTX, config);
+  }
+
+  @Override
+  public ExperimentState newDefaultState(ExperimentContext context, FileExperimentConfig config) {
     GraphType graphType = getProperty(config.graphType(), "graphType");
     Path path = getProperty(config.path(), "path");
-    return ExperimentState.builder(DEFAULT_CTX)
+    return ExperimentState.builder(context)
         .graphType(graphType)
         .dataset(ctx -> Defaults.fileDataset(ctx, path))
         .build();

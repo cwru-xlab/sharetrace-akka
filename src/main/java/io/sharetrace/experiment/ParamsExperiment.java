@@ -22,7 +22,7 @@ public final class ParamsExperiment implements Experiment<ParamsExperimentConfig
     return INSTANCE;
   }
 
-  private static ExperimentContext newDefaultContext() {
+  public static ExperimentContext newDefaultContext() {
     ExperimentContext ctx = ExperimentContext.create();
     Set<Class<? extends Loggable>> loggable = new ObjectOpenHashSet<>(ctx.loggable());
     loggable.remove(GraphTopology.class);
@@ -49,9 +49,14 @@ public final class ParamsExperiment implements Experiment<ParamsExperimentConfig
 
   @Override
   public ExperimentState newDefaultState(ParamsExperimentConfig config) {
+    return newDefaultState(DEFAULT_CTX, config);
+  }
+
+  @Override
+  public ExperimentState newDefaultState(ExperimentContext context, ParamsExperimentConfig config) {
     GraphType graphType = getProperty(config.graphType(), "graphType");
     int numNodes = getProperty(config.numNodes(), "numNodes");
-    return ExperimentState.builder(DEFAULT_CTX)
+    return ExperimentState.builder(context)
         .graphType(graphType)
         .dataset(ctx -> Defaults.sampledDataset(ctx, numNodes))
         .build();

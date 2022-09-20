@@ -32,7 +32,7 @@ public final class NoiseExperiment implements Experiment<NoiseExperimentConfig> 
     return NoisyRiskScoreFactory.of(noise, CachedRiskScoreFactory.of(factory));
   }
 
-  private static ExperimentContext newDefaultContext() {
+  public static ExperimentContext newDefaultContext() {
     return ExperimentContext.create()
         .withLoggable(Set.of(UpdateEvent.class, GraphSize.class, ExperimentSettings.class));
   }
@@ -61,7 +61,12 @@ public final class NoiseExperiment implements Experiment<NoiseExperimentConfig> 
 
   @Override
   public ExperimentState newDefaultState(NoiseExperimentConfig config) {
-    return ExperimentState.builder(DEFAULT_CTX)
+    return newDefaultState(DEFAULT_CTX, config);
+  }
+
+  @Override
+  public ExperimentState newDefaultState(ExperimentContext context, NoiseExperimentConfig config) {
+    return ExperimentState.builder(context)
         .dataset(getProperty(config.datasetFactory(), "datasetFactory"))
         .graphType(getProperty(config.graphType(), "graphType"))
         .build();

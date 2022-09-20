@@ -1,6 +1,7 @@
 package io.sharetrace.experiment;
 
 import io.sharetrace.experiment.config.MissingConfigException;
+import io.sharetrace.experiment.state.ExperimentContext;
 import io.sharetrace.experiment.state.ExperimentState;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -19,6 +20,8 @@ public interface Experiment<T> {
   }
 
   ExperimentState newDefaultState(T config);
+
+  ExperimentState newDefaultState(ExperimentContext context, T config);
 
   @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
   default <R> R getProperty(Optional<R> property, String name) {
