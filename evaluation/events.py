@@ -5,32 +5,32 @@ import collections
 import dataclasses
 import enum
 import itertools
+import json
 import os
 import pathlib
 import tempfile
 import zipfile
-from collections.abc import Callable, Iterable, Collection, Sized
-from json import loads
+from collections.abc import Callable, Iterable, Sized
 from typing import Any
 
 import numpy as np
 from scipy import sparse
-from scipy.sparse import csgraph
 
 Predicate = Callable[[Any], bool]
+EventRecord = dict[str, Any]
 
 ONE = np.int8(1)
 
 
 class Event(str, enum.Enum):
-    SEND_CURRENT = "SendCurrentEvent"
-    SEND_CACHED = "SendCachedEvent"
-    UPDATE = "UpdateEvent"
-    PROPAGATE = "PropagateEvent"
     CONTACT = "ContactEvent"
-    RECEIVE = "ReceiveEvent"
     CONTACTS_REFRESH = "ContactsRefreshEvent"
     CURRENT_REFRESH = "CurrentRefreshEvent"
+    PROPAGATE = "PropagateEvent"
+    RECEIVE = "ReceiveEvent"
+    SEND_CACHED = "SendCachedEvent"
+    SEND_CURRENT = "SendCurrentEvent"
+    UPDATE = "UpdateEvent"
 
     def __repr__(self):
         return self.value
@@ -38,11 +38,15 @@ class Event(str, enum.Enum):
     def __int__(self):
         return _EVENTS[self.value]
 
+    @classmethod
+    def of(cls, record: EventRecord) -> Event:
+        return Event(record["type"])
+
 
 _EVENTS = {v: i for i, v in enumerate(Event)}
 
 
-def event_stream(logdir: os.PathLike | str) -> Iterable[dict]:
+def event_stream(logdir: os.PathLike | str) -> Iterable[EventRecord]:
     logdir = pathlib.Path(logdir).absolute()
     zipped, unzipped = _split(logdir.iterdir(), _is_zipped)
     # Iterate over zipped first! Unzipped events occur last.
@@ -55,21 +59,21 @@ def event_stream(logdir: os.PathLike | str) -> Iterable[dict]:
         yield event
 
 
-def _stream(filenames: Iterable[pathlib.Path]) -> Iterable[dict]:
+def _stream(filenames: Iterable[pathlib.Path]) -> Iterable[EventRecord]:
     for filename in sorted(filenames):
         with filename.open() as log:
             for line in log:
-                yield loads(line)["event"]
+                yield json.loads(line)["event"]
 
 
 def _is_zipped(path: pathlib.Path) -> bool:
     return path.name.endswith(".zip")
 
 
-def _unzip(zipped: Iterable[os.PathLike], dst: os.PathLike) -> None:
+def _unzip(zipped: Iterable[os.PathLike], dest: os.PathLike) -> None:
     for filename in zipped:
         with zipfile.ZipFile(filename) as f:
-            f.extractall(dst)
+            f.extractall(dest)
 
 
 def _split(it: Iterable, predicate: Predicate) -> tuple[Iterable, Iterable]:
@@ -81,58 +85,61 @@ def _split(it: Iterable, predicate: Predicate) -> tuple[Iterable, Iterable]:
 
 class EventCounter(collections.Counter):
 
-    def __init__(self):
-        super().__init__()
-
     def __setitem__(self, key, value):
         if key in _EVENTS:
             super().__setitem__(key, value)
         else:
             raise ValueError("'key' must be an Event instance")
 
-    def n_to_contacts(self) -> int:
-        return self.n_current_sent() + self.n_cached_sent()
+    @property
+    def num_sent_to_contacts(self) -> int:
+        return self.num_curr_sent + self.num_cached_sent
 
-    def n_received(self) -> int:
+    @property
+    def num_received(self) -> int:
         return self[Event.RECEIVE]
 
-    def n_current_sent(self) -> int:
+    @property
+    def num_curr_sent(self) -> int:
         return self[Event.SEND_CURRENT]
 
-    def n_cached_sent(self) -> int:
+    @property
+    def num_cached_sent(self) -> int:
         return self[Event.SEND_CACHED]
 
-    def n_propagated(self) -> int:
+    @property
+    def num_propagated(self) -> int:
         return self[Event.PROPAGATE]
 
-    def n_updates(self) -> int:
+    @property
+    def num_updates(self) -> int:
         return self[Event.UPDATE]
 
-    def n_contacts(self) -> int:
+    @property
+    def num_contacts(self) -> int:
         # Each user logs a contact, so each contact is double counted.
         return int(self[Event.CONTACT] / 2)
 
-    def n_contact_refreshes(self) -> int:
+    @property
+    def num_contact_refreshes(self) -> int:
         return self[Event.CONTACTS_REFRESH]
 
-    def n_current_refreshes(self) -> int:
+    @property
+    def num_curr_refreshes(self) -> int:
         return self[Event.CURRENT_REFRESH]
 
-    def n_not_to_contacts(self) -> int:
+    @property
+    def num_not_to_contacts(self) -> int:
         # Each user sends a message, so double the number of contacts.
-        return 2 * self.n_contacts() - self.n_to_contacts()
+        return 2 * self.num_contacts - self.num_sent_to_contacts
 
 
 # Callbacks
 
-class EventCallback(Callable[[dict], None]):
-    __slots__ = ()
-
-    def __init__(self):
-        super().__init__()
+class EventCallback(Callable):
 
     @abc.abstractmethod
-    def __call__(self, event: dict, **kwargs) -> None:
+    def __call__(self, record: EventRecord, **kwargs) -> None:
         pass
 
     def on_complete(self) -> None:
@@ -141,22 +148,17 @@ class EventCallback(Callable[[dict], None]):
 
 class EventCounterCallback(EventCounter, EventCallback):
 
-    def __init__(self):
-        super().__init__()
-
-    def __call__(self, event: dict, **kwargs) -> None:
-        self.update((event["name"],))
+    def __call__(self, record: EventRecord, **kwargs) -> None:
+        self.update((Event.of(record),))
 
 
 @dataclasses.dataclass(slots=True)
 class UserUpdates:
-    _DEFAULT_N = np.uint16(0)
-
     initial: np.float32
-    final: np.float32 = None
-    n: np.uint16 = _DEFAULT_N
+    final: np.float32 | None = None
+    n: np.uint16 = np.uint16(0)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         if self.final is None:
             self.final = self.initial
 
@@ -164,48 +166,52 @@ class UserUpdates:
 class UserUpdatesCallback(EventCallback, Sized):
     __slots__ = "updates", "initials", "finals", "_n"
 
-    def __init__(self):
-        super().__init__()
-        self.updates = {}
-        self.initials = None
-        self.finals = None
+    def __init__(self) -> None:
+        self.updates: dict[np.uint32, UserUpdates] | np.ndarray = {}
+        self.initials: np.ndarray | None = None
+        self.finals: np.ndarray | None = None
         self._n = 0
 
-    def __call__(self, event: dict, **kwargs) -> None:
-        if event["name"] == Event.UPDATE:
-            if (name := np.uint32(event["to"])) in self.updates:
+    def __call__(self, record: EventRecord, **kwargs) -> None:
+        if Event.of(record) == Event.UPDATE:
+            if (name := np.uint32(record["to"])) in self.updates:
                 user = self.updates[name]
                 user.n += 1
-                user.final = event["newScore"]["value"]
+                user.final = record["newScore"]["value"]
                 self._n += 1  # Only count non-initial updates
             else:
-                self.updates[name] = UserUpdates(
-                    initial=np.float32(event["newScore"]["value"]))
+                initial = np.float32(record["newScore"]["value"])
+                self.updates[name] = UserUpdates(initial=initial)
 
     def on_complete(self) -> None:
-        updates = np.zeros(n_users := len(self.updates), dtype=np.int16)
-        inits, finals = np.zeros((2, n_users), dtype=np.float32)
+        n_users = len(self.updates)
+        updates = np.zeros(n_users, dtype=np.int16)
+        initials = np.zeros(n_users, dtype=np.float32)
+        finals = np.zeros(n_users, dtype=np.float32)
         for u, user in self.updates.items():
-            updates[u], inits[u], finals[u] = user.n, user.initial, user.final
-        self.updates, self.initials, self.finals = updates, inits, finals
+            updates[u] = user.n
+            initials[u] = user.initial
+            finals[u] = user.final
+        self.updates = updates
+        self.initials = initials
+        self.finals = finals
 
     def __len__(self) -> int:
         return self._n
 
 
 class TimelineCallback(EventCallback):
-    __slots__ = "_events", "_repeats", "labels"
+    __slots__ = "_events", "_repeats", "idx"
 
     def __init__(self):
-        super().__init__()
-        self._events = [None]
-        self._repeats = [0]
-        self.labels: dict | np.ndarray = dict()
+        self._events: list[Event | None] | np.ndarray = [None]
+        self._repeats: list[int] | np.ndarray = [0]
+        self.idx: dict | np.ndarray = dict()
 
-    def __call__(self, event: dict, **kwargs) -> None:
-        if (name := event["name"]) not in self.labels:
-            self.labels[name] = len(self.labels)
-        if (label := self.labels[name]) == self._events[-1]:
+    def __call__(self, record: EventRecord, **kwargs) -> None:
+        if (name := Event.of(record)) not in self.idx:
+            self.idx[name] = len(self.idx)
+        if (label := self.idx[name]) == self._events[-1]:
             self._repeats[-1] += 1
         else:
             self._events.append(label)
@@ -214,7 +220,7 @@ class TimelineCallback(EventCallback):
     def on_complete(self) -> None:
         self._events = np.array(self._events[1:])
         self._repeats = np.array(self._repeats[1:])
-        self.labels = np.array(list(self.labels))
+        self.idx = np.array(list(self.idx))
 
     def flatten(self, labeled: bool = False) -> np.ndarray:
         return np.repeat(self._get_events(labeled), self._repeats)
@@ -223,7 +229,7 @@ class TimelineCallback(EventCallback):
         return np.array(list(zip(self._get_events(labeled), self._repeats)))
 
     def _get_events(self, labeled: bool = False) -> np.ndarray:
-        return self.labels[self._events] if labeled else self._events
+        return self.idx[self._events] if labeled else self._events
 
 
 class ReachabilityCallback(EventCallback):
@@ -238,33 +244,36 @@ class ReachabilityCallback(EventCallback):
 
     def __init__(self):
         super().__init__()
-        self.adj = None
-        self.msg_idx = {}
+        self.adj: sparse.csr_matrix | None = None
+        self.msg_idx: dict[str, np.uint32] = {}
         self.msgs: dict | list = collections.defaultdict(list)
-        self._msg_reach = None
-        self._reach_ratio = None
-        self._influence = None
-        self._source_size = None
+        self._msg_reach: np.ndarray | None = None
+        self._reach_ratio: float | None = None
+        self._influence: np.ndarray | None = None
+        self._source_size: np.ndarray | None = None
 
-    def __call__(self, event: dict, **kwargs) -> None:
-        if event["name"] == Event.RECEIVE:
-            src, dst = np.uint32(event["from"]), np.uint32(event["to"])
-            uuid = event["uuid"]
-            if src == dst:
-                self.msg_idx[uuid] = src
+    def __call__(self, record: dict, **kwargs) -> None:
+        if Event.of(record) == Event.RECEIVE:
+            source = np.uint32(record["from"])
+            dest = np.uint32(record["to"])
+            uid = record["id"]
+            if source == dest:
+                self.msg_idx[uid] = source
             else:
-                origin = self.msg_idx[uuid]
-                self.msgs[origin].append(np.array([src, dst]))
+                origin = self.msg_idx[uid]
+                edge = np.array([source, dest])
+                self.msgs[origin].append(edge)
 
     def on_complete(self) -> None:
         self._to_numpy()
         self._sparsify()
         self._compute_source_size()
         self._compute_influence()
-        self._compute_reach_ratio()  # Must come after influence calculation.
+        self._compute_reach_ratio()
         self._compute_msg_reaches()
 
-    def _to_numpy(self):
+    def _to_numpy(self) -> None:
+        # msgs[i] = (to, from) pairs that sent message starting from user i.
         self.msgs = [np.array(self.msgs[v]) for v in range(len(self.msgs))]
 
     def influence(self, user: int | None = None) -> int | np.ndarray:
@@ -285,25 +294,29 @@ class ReachabilityCallback(EventCallback):
 
     def _sparsify(self) -> None:
         row, col, data = [], [], []
-        row_add, col_add, data_add = row.extend, col.extend, data.extend
+        row_add = row.extend
+        col_add = col.extend
+        data_add = data.extend
         repeat = itertools.repeat
         for user, edges in enumerate(self.msgs):
             # Keep user as a destination to show loops in the network.
-            dst = set(dst for _, dst in edges)
-            row_add(repeat(user, len(dst)))
-            col_add(dst)
-            data_add(repeat(ONE, len(dst)))
+            destinations = {dest for _, dest in edges}
+            row_add(repeat(user, len(destinations)))
+            col_add(destinations)
+            data_add(repeat(ONE, len(destinations)))
+        # adj[i][j] = 1: user j is reachable from user i
         self.adj = sparse.csr_matrix((data, (row, col)))
 
-    # noinspection PyTypeChecker
     def _compute_msg_reaches(self) -> None:
-        shortest_path = csgraph.shortest_path
-        longest, nan2num = np.max, np.nan_to_num
+        shortest_path = sparse.csgraph.shortest_path
+        longest = np.max
+        nan2num = np.nan_to_num
         msg_reach = np.zeros(len(self.msgs), dtype=np.int8)
         for user, edges in enumerate(self.msgs):
             if len(edges) > 0:
                 idx, adj = edges_to_adj(edges)
                 sp = shortest_path(adj, indices=idx[user])
+                # Longest shortest path starting from the user
                 msg_reach[user] = longest(nan2num(sp, copy=False, posinf=0))
         self._msg_reach = msg_reach
 
@@ -317,7 +330,7 @@ class ReachabilityCallback(EventCallback):
         self._source_size = np.count_nonzero(self.adj.toarray(), axis=1)
 
 
-def edges_to_adj(edges: Collection[tuple]) -> tuple[dict, sparse.spmatrix]:
+def edges_to_adj(edges: set[tuple]) -> tuple[dict, sparse.spmatrix]:
     idx = index_edges(edges)
     adj = np.zeros((len(idx), len(idx)), dtype=np.int8)
     for v1, v2 in edges:
@@ -325,7 +338,7 @@ def edges_to_adj(edges: Collection[tuple]) -> tuple[dict, sparse.spmatrix]:
     return idx, sparse.csr_matrix(adj)
 
 
-def index_edges(edges: Collection[tuple]) -> dict[int, int]:
+def index_edges(edges: set[tuple]) -> dict[int, int]:
     return {v: i for i, v in enumerate(set(itertools.chain(*edges)))}
 
 
