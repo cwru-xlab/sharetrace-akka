@@ -1,30 +1,36 @@
 package io.sharetrace.experiment.config;
 
 import io.sharetrace.experiment.GraphType;
+import io.sharetrace.util.Checks;
 import io.sharetrace.util.range.FloatRange;
 import io.sharetrace.util.range.Range;
 import java.util.Optional;
 import org.immutables.value.Value;
 
 @Value.Immutable
-interface BaseParamsExperimentConfig {
+abstract class BaseParamsExperimentConfig {
 
-  Optional<GraphType> graphType();
+  public abstract Optional<GraphType> graphType();
 
-  Optional<Integer> numNodes();
+  public abstract Optional<Integer> numNodes();
 
   @Value.Default
-  default Range<Float> transRates() {
+  public Range<Float> transRates() {
     return FloatRange.of(0.1, 1.0, 0.1);
   }
 
   @Value.Default
-  default Range<Float> sendCoeffs() {
+  public Range<Float> sendCoeffs() {
     return FloatRange.of(0.1, 1.1, 0.1);
   }
 
   @Value.Default
-  default int numIterations() {
+  public int numIterations() {
     return 1;
+  }
+
+  @Value.Check
+  protected void check() {
+    Checks.isAtLeast(numIterations(), 1, "numIterations");
   }
 }

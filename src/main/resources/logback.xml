@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE configuration>
+
 <configuration debug="true">
   <timestamp key="bySecond" datePattern="yyyy-MM-dd_HH-mm-ss"/>
   <property name="log.dir" value="logs/${bySecond}"/>
