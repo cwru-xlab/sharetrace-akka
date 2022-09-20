@@ -245,7 +245,7 @@ public final class User extends AbstractBehavior<UserMsg> {
   private boolean addContactIfAlive(ContactMsg msg) {
     boolean added = isContactAlive(msg.contactTime());
     if (added) {
-      contacts.put(msg.contact(), ContactInfo.of(msg.contactTime()));
+      contacts.put(msg.contact(), new ContactInfo(msg.contactTime()));
       logContact(msg.contact());
     }
     return added;
@@ -283,10 +283,8 @@ public final class User extends AbstractBehavior<UserMsg> {
 
   private boolean shouldPropagateTo(Entry<ActorRef<UserMsg>, ContactInfo> entry, RiskScoreMsg msg) {
     ActorRef<UserMsg> contact = entry.getKey();
-    ContactInfo contactInfo = entry.getValue();
-    return !isFrom(contact, msg)
-        && isContactRecent(contactInfo, msg)
-        && isHighEnough(msg, contactInfo);
+    ContactInfo info = entry.getValue();
+    return !isFrom(contact, msg) && isContactRecent(info, msg) && isHighEnough(msg, info);
   }
 
   private boolean isHighEnough(RiskScoreMsg msg) {
@@ -423,12 +421,8 @@ public final class User extends AbstractBehavior<UserMsg> {
     private final Instant contactTime;
     private RiskScore lastSent = DEFAULT_LAST_SENT;
 
-    private ContactInfo(Instant contactTime) {
+    public ContactInfo(Instant contactTime) {
       this.contactTime = contactTime;
-    }
-
-    public static ContactInfo of(Instant contactTime) {
-      return new ContactInfo(contactTime);
     }
   }
 }
