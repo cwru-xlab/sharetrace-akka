@@ -25,7 +25,7 @@ ONE = np.int8(1)
 
 
 class Event(str, enum.Enum):
-    """Typed of events logged by user actors."""
+    """Types of events logged by user actors."""
     CONTACT = "ContactEvent"
     CONTACTS_REFRESH = "ContactsRefreshEvent"
     CURRENT_REFRESH = "CurrentRefreshEvent"
