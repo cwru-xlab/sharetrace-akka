@@ -33,7 +33,7 @@ public final class VertexIndependentPaths {
     this.isDirected = graph.getType().isDirected();
     this.numVertices = graph.vertexSet().size();
     this.numPairs = numVertices * (numVertices - 1) / (isDirected ? 1 : 2);
-    this.directed = GraphFactory.toDirected(this.graph);
+    this.directed = GraphFactory.toDirected(graph);
   }
 
   private static <V, E> KShortestPathAlgorithm<V, E> newKShortestPaths(Graph<V, E> graph) {
