@@ -162,7 +162,6 @@ public final class ExperimentState {
           DatasetContext,
           UserParamsContext {
 
-    private static final String NOT_SET_MSG = "Not all attributes have been set: ";
     private final ExperimentContext ctx;
     private final Logger logger;
     private final Map<Setter, Function<? super Builder, Builder>> setters;
@@ -416,7 +415,7 @@ public final class ExperimentState {
 
     private void ensureSet() {
       if (!setters.isEmpty()) {
-        throw new IllegalStateException(NOT_SET_MSG + setters.keySet());
+        throw new IllegalStateException("Not all attributes have been set: " + setters.keySet());
       }
     }
 
