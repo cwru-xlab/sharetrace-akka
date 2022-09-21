@@ -36,7 +36,7 @@ abstract class AbstractContactNetwork implements ContactNetwork, LoggableRef {
 
   protected AbstractContactNetwork() {}
 
-  private static TypedSupplier<LoggableMetric> graphTopology(String filename) {
+  private static TypedSupplier<GraphTopology> graphTopology(String filename) {
     return TypedSupplier.of(GraphTopology.class, () -> GraphTopology.of(filename));
   }
 
