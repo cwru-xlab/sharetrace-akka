@@ -152,8 +152,8 @@ public final class VertexIndependentPaths {
 
   private IntStream vertices(boolean allowParallel) {
     return numVertices > MIN_PARALLEL_VERTICES && allowParallel
-        ? graph.vertexSet().parallelStream().mapToInt(Integer::valueOf)
-        : graph.vertexSet().stream().mapToInt(Integer::valueOf);
+        ? graph.vertexSet().parallelStream().mapToInt(Number::intValue)
+        : graph.vertexSet().stream().mapToInt(Number::intValue);
   }
 
   private IntStream uniqueSourceCounts(int source, int maxFind) {
