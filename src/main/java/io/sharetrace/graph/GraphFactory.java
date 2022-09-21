@@ -5,6 +5,7 @@ import org.jgrapht.Graph;
 import org.jgrapht.GraphTests;
 import org.jgrapht.GraphType;
 import org.jgrapht.Graphs;
+import org.jgrapht.generate.GraphGenerator;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.DefaultGraphType;
 import org.jgrapht.opt.graph.fastutil.FastutilMapIntVertexGraph;
@@ -57,6 +58,20 @@ public final class GraphFactory {
 
   public static Graph<Integer, DefaultEdge> newDirectedGraph() {
     return newGraph(DefaultGraphType.directedSimple());
+  }
+
+  public static Graph<Integer, DefaultEdge> newDirectedGraph(
+      GraphGenerator<Integer, DefaultEdge, ?> generator) {
+    Graph<Integer, DefaultEdge> graph = newDirectedGraph();
+    generator.generateGraph(graph);
+    return graph;
+  }
+
+  public static Graph<Integer, DefaultEdge> newUndirectedGraph(
+      GraphGenerator<Integer, DefaultEdge, ?> generator) {
+    Graph<Integer, DefaultEdge> graph = newUndirectedGraph();
+    generator.generateGraph(graph);
+    return graph;
   }
 
   public static Graph<Integer, DefaultEdge> copyDirected(Graph<Integer, DefaultEdge> directed) {
