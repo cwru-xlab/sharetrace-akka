@@ -365,7 +365,7 @@ public final class ExperimentState {
 
     @Override
     public Set<Class<? extends Loggable>> loggable() {
-      return ctx.loggable();
+      return Collections.unmodifiableSet(ctx.loggable());
     }
 
     @Override
