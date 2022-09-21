@@ -22,10 +22,10 @@ import java.time.Instant;
 public final class Defaults {
 
   private static final String WHITESPACE_DELIMITER = "\\s+";
+  private static final Duration TTL = Duration.ofDays(14L);
   private static final double MIN_BASE = Math.log(1.1);
   private static final double MAX_BASE = Math.log(10d);
   private static final double DECAY_RATE = 1.75E-7;
-  private static final Duration DEFAULT_TTL = Duration.ofDays(14L);
   private static final MsgParams MSG_PARAMS = newMsgParams();
   private static final CacheParams<RiskScoreMsg> CACHE_PARAMS = newCacheParams();
 
@@ -37,6 +37,14 @@ public final class Defaults {
 
   public static CacheParams<RiskScoreMsg> cacheParams() {
     return CACHE_PARAMS;
+  }
+
+  public static Duration ttl() {
+    return TTL;
+  }
+
+  public static String delimiter() {
+    return WHITESPACE_DELIMITER;
   }
 
   public static RiskScoreFactory scoreFactory(DatasetContext ctx) {
@@ -92,19 +100,19 @@ public final class Defaults {
         .addAllLoggable(ctx.loggable())
         .scoreFactory(scoreFactory(ctx))
         .contactTimeFactory(contactTimeFactory(ctx))
-        .graphGeneratorFactory(defaultFactory(ctx))
+        .graphGeneratorFactory(graphGeneratorFactory(ctx))
         .numNodes(numNodes)
         .build();
   }
 
-  private static Duration idleTimeout(Dataset dataset) {
+  public static Duration idleTimeout(Dataset dataset) {
     double numContacts = dataset.contacts().size();
     double targetBase = Math.max(MIN_BASE, MAX_BASE - DECAY_RATE * numContacts);
     long timeout = (long) Math.ceil(Math.log(numContacts) / targetBase);
     return Duration.ofSeconds(timeout);
   }
 
-  private static GraphGeneratorFactory defaultFactory(DatasetContext ctx) {
+  public static GraphGeneratorFactory graphGeneratorFactory(DatasetContext ctx) {
     return numNodes ->
         GraphGeneratorBuilder.create(ctx.graphType(), numNodes, ctx.seed())
             .numEdges(numNodes * 2)
@@ -116,22 +124,22 @@ public final class Defaults {
             .build();
   }
 
-  private static CacheParams<RiskScoreMsg> newCacheParams() {
-    return CacheParams.<RiskScoreMsg>builder()
-        .interval(Duration.ofDays(1L))
-        .numIntervals((int) (2 * DEFAULT_TTL.toDays()))
-        .refreshPeriod(Duration.ofHours(1L))
-        .mergeStrategy(Defaults::cacheMerge)
-        .numLookAhead(1)
-        .build();
-  }
-
-  private static RiskScoreMsg cacheMerge(RiskScoreMsg oldMsg, RiskScoreMsg newMsg) {
+  public static RiskScoreMsg cacheMerge(RiskScoreMsg oldMsg, RiskScoreMsg newMsg) {
     // Simpler to check for higher value first.
     // Most will likely not be older, which avoids checking for approximate equality.
     return isHigher(newMsg, oldMsg) || (isOlder(newMsg, oldMsg) && isApproxEqual(newMsg, oldMsg))
         ? newMsg
         : oldMsg;
+  }
+
+  private static CacheParams<RiskScoreMsg> newCacheParams() {
+    return CacheParams.<RiskScoreMsg>builder()
+        .interval(Duration.ofDays(1L))
+        .numIntervals((int) (2 * TTL.toDays()))
+        .refreshPeriod(Duration.ofHours(1L))
+        .mergeStrategy(Defaults::cacheMerge)
+        .numLookAhead(1)
+        .build();
   }
 
   private static boolean isHigher(RiskScoreMsg msg1, RiskScoreMsg msg2) {
@@ -150,8 +158,8 @@ public final class Defaults {
     return MsgParams.builder()
         .transRate(0.8f)
         .sendCoeff(0.6f)
-        .scoreTtl(DEFAULT_TTL)
-        .contactTtl(DEFAULT_TTL)
+        .scoreTtl(TTL)
+        .contactTtl(TTL)
         .tolerance(0.01f)
         .timeBuffer(Duration.ofDays(2L))
         .build();
