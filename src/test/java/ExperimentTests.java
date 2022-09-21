@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
-class ExperimentTests {
+public class ExperimentTests {
 
   private static final String GRAPH_PATH_TEMPLATE = "src/main/resources/datasets/%s.txt";
 

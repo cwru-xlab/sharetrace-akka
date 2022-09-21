@@ -5,7 +5,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-class IntervalCacheTests {
+public class IntervalCacheTests {
 
   @Test
   public void getFromEmptyReturnsEmpty() {
