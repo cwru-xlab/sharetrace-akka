@@ -25,10 +25,10 @@ final class DefaultLogger implements Logger {
     return new DefaultLogger(loggable, logger);
   }
 
-  public boolean log(String message, String key, TypedSupplier<? extends Loggable> supplier) {
+  public boolean log(String msg, String key, TypedSupplier<? extends Loggable> supplier) {
     boolean logged = logger.get().isInfoEnabled() && loggable.contains(supplier.getType());
     if (logged) {
-      logger.get().info(message, StructuredArguments.value(key, supplier.get()));
+      logger.get().info(msg, StructuredArguments.value(key, supplier.get()));
     }
     return logged;
   }

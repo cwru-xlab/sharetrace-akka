@@ -4,13 +4,13 @@ import io.sharetrace.util.TypedSupplier;
 
 public interface Logger {
 
-  default boolean log(String messageAndKey, Loggable loggable) {
-    return log(messageAndKey, messageAndKey, TypedSupplier.of(loggable));
+  default boolean log(String msgAndKey, Loggable loggable) {
+    return log(msgAndKey, msgAndKey, TypedSupplier.of(loggable));
   }
 
-  boolean log(String message, String key, TypedSupplier<? extends Loggable> supplier);
+  boolean log(String msg, String key, TypedSupplier<? extends Loggable> supplier);
 
-  default boolean log(String messageAndKey, TypedSupplier<? extends Loggable> supplier) {
-    return log(messageAndKey, messageAndKey, supplier);
+  default boolean log(String msgAndKey, TypedSupplier<? extends Loggable> supplier) {
+    return log(msgAndKey, msgAndKey, supplier);
   }
 }
