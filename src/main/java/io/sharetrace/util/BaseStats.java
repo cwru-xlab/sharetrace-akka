@@ -39,7 +39,7 @@ abstract class BaseStats {
 
   @Value.Derived
   public float median() {
-    return (float) statistics().getPercentile(50);
+    return (float) statistics().getPercentile(50d);
   }
 
   @Value.Derived
@@ -49,7 +49,7 @@ abstract class BaseStats {
 
   @Value.Derived
   public float lowerQuartile() {
-    return (float) statistics().getPercentile(25);
+    return (float) statistics().getPercentile(25d);
   }
 
   @Value.Derived
@@ -59,7 +59,7 @@ abstract class BaseStats {
 
   @Value.Derived
   public float upperQuartile() {
-    return (float) statistics().getPercentile(75);
+    return (float) statistics().getPercentile(75d);
   }
 
   @Value.Derived
