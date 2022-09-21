@@ -104,7 +104,7 @@ public final class ExperimentState {
   private ExperimentSettings settings() {
     return ExperimentSettings.builder()
         .graphType(graphType.toString())
-        .stateId(id)
+        .sid(id)
         .seed(ctx.seed())
         .userParams(userParams)
         .msgParams(msgParams)
