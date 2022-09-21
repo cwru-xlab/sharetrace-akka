@@ -5,7 +5,6 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.BeanProperty;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -28,7 +27,6 @@ public final class LoggingDecorator implements JsonFactoryDecorator {
     module.addSerializer(Instant.class, new SecondsInstantSerializer());
     module.addSerializer(Duration.class, new SecondsDurationSerializer());
     mapper.registerModule(module);
-    mapper.disable(SerializationFeature.WRITE_DATE_TIMESTAMPS_AS_NANOSECONDS);
   }
 
   private static void registerBlackbird(ObjectMapper mapper) {
