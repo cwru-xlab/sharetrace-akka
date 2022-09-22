@@ -330,6 +330,7 @@ class ReachabilityCallback(EventCallback):
         self._compute_msg_reaches()
 
     def _to_numpy(self) -> None:
+        # Assumes users are 0-based enumerated.
         self.msgs = [np.array(self.msgs[v]) for v in range(len(self.msgs))]
 
     def influence(self, user: int | None = None) -> int | np.ndarray[int]:
@@ -374,7 +375,7 @@ class ReachabilityCallback(EventCallback):
                 sp = shortest_path(adj, indices=idx[user])
                 # Longest shortest path starting from the user
                 msg_reach[user] = longest(nan2num(sp, copy=False, posinf=0))
-        self._msg_reach = msg_reach
+        self._msg_reach = msg_reach  # TODO Could this be a csr_matrix?
 
     def _compute_reach_ratio(self) -> None:
         self._reach_ratio = np.mean(self._influence) / self.adj.shape[0]
