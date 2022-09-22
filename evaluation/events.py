@@ -46,6 +46,7 @@ class Event(str, enum.Enum):
         return Event(record["type"])
 
 
+_EVENT_WIDTH = max((len(e) for e in Event))
 _EVENTS = {v: i for i, v in enumerate(Event)}
 
 
@@ -228,20 +229,26 @@ class UserUpdatesCallback(EventCallback, Sized):
 
 
 class TimelineCallback(EventCallback):
-    """An event callback for recording the order of events."""
-    __slots__ = "_events", "_repeats", "_idx"
+    """An event callback for recording the order of events.
+
+    Attributes:
+        e2i: An dictionary that maps an Event to its encoded integer.
+        i2e: An array where the i-th entry is the Event value encoded as i.
+    """
+    __slots__ = "e2i", "i2e", "_events", "_repeats"
 
     def __init__(self):
-        self._events: list[Event | None] | np.ndarray[np.uint8] = [None]
+        self.e2i: dict[Event, int] = {}
+        self.i2e: np.ndarray[np.str] | None = None
+        self._events: list[int | None] | np.ndarray[np.uint8] = [None]
         self._repeats: list[int] | np.ndarray[np.uint16] = [0]
-        self._idx: dict[Event, int] | np.ndarray[Event] = {}
 
     def __call__(self, record: EventRecord, **kwargs) -> None:
-        if (name := Event.of(record)) not in self._idx:
+        if (event := Event.of(record)) not in self.e2i:
             # Encode the event as an integer.
-            self._idx[name] = len(self._idx)
+            self.e2i[event] = len(self.e2i)
         # If the previous event was also this type...
-        if (label := self._idx[name]) == self._events[-1]:
+        if (label := self.e2i[event]) == self._events[-1]:
             # ...increment its count.
             self._repeats[-1] += 1
         else:
@@ -251,32 +258,33 @@ class TimelineCallback(EventCallback):
     def on_complete(self) -> None:
         self._events = np.array(self._events[1:], dtype=np.uint8)
         self._repeats = np.array(self._repeats[1:], dtype=np.uint16)
-        self._idx = np.array(list(self._idx))
+        # Use an array to use numpy indexing to map back to decoded values.
+        self.i2e = np.array(
+            [e.value for e in self.e2i], dtype=f"<U{_EVENT_WIDTH}")
 
-    def flatten(self, labeled: bool = False) -> np.ndarray[np.uint8]:
-        """Returns a 1D array of events.
+    def flatten(self, decoded: bool = False) -> np.ndarray[np.uint8]:
+        """Returns a 1-D array of events.
 
         Args:
-            labeled: If true, entries are the names of the events. Otherwise,
+            decoded: If true, entries are the names of the events. Otherwise,
                 entries are encoded integers.
         """
-        return np.repeat(self._get_events(labeled), self._repeats)
+        return np.repeat(self._get_events(decoded), self._repeats)
 
-    def run_length_encoded(self, labeled: bool = False) -> np.ndarray:
-        """Returns a 2D array of run-length encoded events.
+    def run_length_encoded(self, decoded: bool = False) -> np.ndarray:
+        """Returns a 2-D array of run-length encoded events.
 
         An entry (`e`, `n`) corresponds to the event `e` and the number `n` of
         times it occurred consecutively.
 
         Args:
-            labeled: If true, entries are the names of the events. Otherwise,
+            decoded: If true, entries are the names of the events. Otherwise,
                 entries are encoded integers.
         """
-        return np.array(list(zip(self._get_events(labeled), self._repeats)))
+        return np.column_stack((self._get_events(decoded), self._repeats))
 
-    def _get_events(
-            self, labeled: bool = False) -> np.ndarray[Event | np.uint8]:
-        return self._idx[self._events] if labeled else self._events
+    def _get_events(self, decoded: bool) -> np.ndarray[np.str | np.uint8]:
+        return self.i2e[self._events] if decoded else self._events
 
 
 class ReachabilityCallback(EventCallback):
