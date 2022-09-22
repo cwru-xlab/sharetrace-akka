@@ -46,7 +46,7 @@ class Event(str, enum.Enum):
         return Event(record["type"])
 
 
-_EVENT_WIDTH = max((len(e) for e in Event))
+_EVENT_WIDTH = f"<U{max(len(e) for e in Event)}"
 _EVENTS = {v: i for i, v in enumerate(Event)}
 
 
@@ -259,8 +259,7 @@ class TimelineCallback(EventCallback):
         self._events = np.array(self._events[1:], dtype=np.uint8)
         self._repeats = np.array(self._repeats[1:], dtype=np.uint16)
         # Use an array to use numpy indexing to map back to decoded values.
-        self.i2e = np.array(
-            [e.value for e in self.e2i], dtype=f"<U{_EVENT_WIDTH}")
+        self.i2e = np.array([e.value for e in self.e2i], dtype=_EVENT_WIDTH)
 
     def flatten(self, decoded: bool = False) -> np.ndarray[np.uint8]:
         """Returns a 1-D array of events.
@@ -281,7 +280,15 @@ class TimelineCallback(EventCallback):
             decoded: If true, entries are the names of the events. Otherwise,
                 entries are encoded integers.
         """
-        return np.column_stack((self._get_events(decoded), self._repeats))
+        events = self._get_events(decoded)
+        repeats = self._repeats
+        if decoded:
+            encoded = np.array(
+                list(zip(events, repeats)),
+                dtype=[("event", _EVENT_WIDTH), ("count", np.uint16)])
+        else:
+            encoded = np.column_stack((events, repeats))
+        return encoded
 
     def _get_events(self, decoded: bool) -> np.ndarray[np.str | np.uint8]:
         return self.i2e[self._events] if decoded else self._events
