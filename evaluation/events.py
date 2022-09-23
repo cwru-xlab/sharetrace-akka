@@ -34,6 +34,7 @@ class Event(str, enum.Enum):
     SEND_CACHED = "SendCachedEvent"
     SEND_CURRENT = "SendCurrentEvent"
     UPDATE = "UpdateEvent"
+    TIMEOUT = "TimeoutEvent"
 
     def __repr__(self) -> str:
         return self.value
@@ -228,6 +229,20 @@ class UserUpdatesCallback(EventCallback, Sized):
         return self._n
 
 
+class ReceivedCallBack(EventCallback):
+    __slots__ = "values"
+
+    def __init__(self):
+        self.values: list[float] | np.ndarray[np.float32] = []
+
+    def __call__(self, record: EventRecord, **kwargs) -> None:
+        if Event.of(record) == Event.RECEIVE:
+            self.values.append(record["score"]["value"])
+
+    def on_complete(self) -> None:
+        self.values = np.array(self.values, dtype=np.float32)
+
+
 class TimelineCallback(EventCallback):
     """An event callback for recording the order of events.
 
@@ -235,11 +250,12 @@ class TimelineCallback(EventCallback):
         e2i: An dictionary that maps an Event to its encoded integer.
         i2e: An array where the i-th entry is the Event value encoded as i.
     """
-    __slots__ = "e2i", "i2e", "_events", "_repeats"
+    __slots__ = "e2i", "i2e", "timestamps", "_events", "_repeats"
 
     def __init__(self):
         self.e2i: dict[Event, int] = {}
         self.i2e: np.ndarray[np.str] | None = None
+        self.timestamps: list[int | None] | np.ndarray[np.uint64] = []
         self._events: list[int | None] | np.ndarray[np.uint8] = [None]
         self._repeats: list[int] | np.ndarray[np.uint16] = [0]
 
@@ -247,6 +263,7 @@ class TimelineCallback(EventCallback):
         if (event := Event.of(record)) not in self.e2i:
             # Encode the event as an integer.
             self.e2i[event] = len(self.e2i)
+        self.timestamps.append(record["timestamp"])
         # If the previous event was also this type...
         if (label := self.e2i[event]) == self._events[-1]:
             # ...increment its count.
@@ -256,6 +273,8 @@ class TimelineCallback(EventCallback):
             self._repeats.append(1)
 
     def on_complete(self) -> None:
+        t0 = min(times := self.timestamps)
+        self.timestamps = np.array([t - t0 for t in times], dtype=np.uint64)
         self._events = np.array(self._events[1:], dtype=np.uint8)
         self._repeats = np.array(self._repeats[1:], dtype=np.uint16)
         # Use an array to use numpy indexing to map back to decoded values.
@@ -390,7 +409,7 @@ class ReachabilityCallback(EventCallback):
                 sp = shortest_path(adj, indices=idx[user])
                 # Longest shortest path starting from the user
                 msg_reach[user] = longest(nan2num(sp, copy=False, posinf=0))
-        self._msg_reach = msg_reach  # TODO Could this be a csr_matrix?
+        self._msg_reach = msg_reach
 
     def _compute_reach_ratio(self) -> None:
         self._reach_ratio = np.mean(self._influence) / self.adj.shape[0]
