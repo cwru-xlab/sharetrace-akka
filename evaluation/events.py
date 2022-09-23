@@ -11,7 +11,7 @@ import pathlib
 import tempfile
 import zipfile
 from collections.abc import Callable, Iterable, Sized
-from typing import Any
+from typing import Any, Iterator, final
 
 import numpy as np
 from scipy import sparse
@@ -64,7 +64,7 @@ def _stream(filenames: Iterable[pathlib.Path]) -> Iterable[Record]:
     for filename in sorted(filenames):
         with filename.open() as log:
             for line in log:
-                yield json.loads(line)["event"]
+                yield json.loads(line)
 
 
 def _is_zipped(path: pathlib.Path) -> bool:
@@ -150,20 +150,45 @@ class EventCounter(collections.Counter):
         return 2 * self.num_contacts - self.num_sent_to_contacts
 
 
-class EventCallback(Callable):
-    """A callable that processes event records."""
+class CallbackData(Callable):
 
     @abc.abstractmethod
     def __call__(self, record: Record, **kwargs) -> None:
-        """Processes the record."""
         pass
 
     def on_complete(self) -> None:
-        """Finalizes the callback for inspection after processing records."""
         pass
 
 
-class EventCounterCallback(EventCounter, EventCallback):
+@final
+class EventCallback(CallbackData):
+    """A callable that processes event records."""
+    __slots__ = "_states"
+
+    def __init__(self, factory: Callable[[], CallbackData]):
+        self._states = collections.defaultdict(factory)
+
+    def __call__(self, record: Record, **kwargs) -> None:
+        """Processes the record."""
+        return self[record["sid"]](record["event"], **kwargs)
+
+    def __getitem__(self, key: str | int | slice) -> CallbackData:
+        return self._states[key]
+
+    def __len__(self) -> int:
+        return len(self._states)
+
+    def __iter__(self) -> Iterator[EventCallback]:
+        return iter(self._states)
+
+    def on_complete(self) -> None:
+        """Finalizes the callback for inspection after processing records."""
+        self._states = list(self._states.values())
+        for state in self._states:
+            state.on_complete()
+
+
+class EventCounterData(EventCounter, CallbackData):
     """An event callback for counting the occurrences of events."""
 
     def __call__(self, record: Record, **kwargs) -> None:
@@ -183,7 +208,7 @@ class UserUpdates:
             self.final = self.initial
 
 
-class UserUpdatesCallback(EventCallback, Sized):
+class UpdatesData(CallbackData, Sized):
     """An event callback for tracking user updates.
 
     Attributes:
@@ -227,7 +252,7 @@ class UserUpdatesCallback(EventCallback, Sized):
         return self._n
 
 
-class ReceivedCallBack(EventCallback):
+class ReceivedData(CallbackData):
     __slots__ = "values"
 
     def __init__(self):
@@ -241,7 +266,7 @@ class ReceivedCallBack(EventCallback):
         self.values = np.array(self.values, dtype=np.float32)
 
 
-class TimelineCallback(EventCallback):
+class TimelineData(CallbackData):
     """An event callback for recording the order of events.
 
     Attributes:
@@ -314,7 +339,7 @@ class TimelineCallback(EventCallback):
 ONE = np.int8(1)
 
 
-class ReachabilityCallback(EventCallback):
+class ReachabilityData(CallbackData):
     """An event callback for computing reachability metrics.
 
     Attributes:
@@ -344,7 +369,7 @@ class ReachabilityCallback(EventCallback):
         self._influence: np.ndarray[int] | None = None
         self._source_size: np.ndarray[int] | None = None
 
-    def __call__(self, record: dict, **kwargs) -> None:
+    def __call__(self, record: Record, **kwargs) -> None:
         if Event.of(record) == Event.RECEIVE:
             source = np.uint32(record["from"])
             dest = np.uint32(record["to"])
@@ -364,10 +389,6 @@ class ReachabilityCallback(EventCallback):
         self._compute_reach_ratio()
         self._compute_msg_reaches()
 
-    def _to_numpy(self) -> None:
-        # Assumes users are 0-based enumerated.
-        self.msgs = [np.array(self.msgs[v]) for v in range(len(self.msgs))]
-
     def influence(self, user: int | None = None) -> int | np.ndarray[int]:
         """Returns the cardinality of the influence set for a given user."""
         return self._influence if user is None else self._influence[user]
@@ -383,6 +404,10 @@ class ReachabilityCallback(EventCallback):
     def msg_reach(self, user: int | None = None) -> int | np.ndarray:
         """Returns the message reachability for a given user's initial score."""
         return self._msg_reach if user is None else self._msg_reach[user]
+
+    def _to_numpy(self) -> None:
+        # Assumes users are 0-based enumerated.
+        self.msgs = [np.array(self.msgs[v]) for v in range(len(self.msgs))]
 
     def _sparsify(self) -> None:
         row, col, data = [], [], []
