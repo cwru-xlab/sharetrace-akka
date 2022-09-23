@@ -2,35 +2,21 @@ package io.sharetrace.actor;
 
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
-import akka.actor.typed.javadsl.AbstractBehavior;
-import akka.actor.typed.javadsl.ActorContext;
-import akka.actor.typed.javadsl.Behaviors;
-import akka.actor.typed.javadsl.Receive;
-import akka.actor.typed.javadsl.TimerScheduler;
+import akka.actor.typed.javadsl.*;
 import io.sharetrace.graph.ContactNetwork;
 import io.sharetrace.logging.Loggable;
 import io.sharetrace.logging.Logger;
 import io.sharetrace.logging.Logging;
-import io.sharetrace.logging.event.ContactEvent;
-import io.sharetrace.logging.event.ContactsRefreshEvent;
-import io.sharetrace.logging.event.CurrentRefreshEvent;
-import io.sharetrace.logging.event.LoggableEvent;
-import io.sharetrace.logging.event.PropagateEvent;
-import io.sharetrace.logging.event.ReceiveEvent;
-import io.sharetrace.logging.event.SendCachedEvent;
-import io.sharetrace.logging.event.SendCurrentEvent;
-import io.sharetrace.logging.event.UpdateEvent;
-import io.sharetrace.message.ContactMsg;
-import io.sharetrace.message.RefreshMsg;
-import io.sharetrace.message.RiskScoreMsg;
-import io.sharetrace.message.TimeoutMsg;
-import io.sharetrace.message.UserMsg;
+import io.sharetrace.logging.event.*;
+import io.sharetrace.message.*;
 import io.sharetrace.model.MsgParams;
 import io.sharetrace.model.RiskScore;
 import io.sharetrace.model.UserParams;
 import io.sharetrace.util.IntervalCache;
 import io.sharetrace.util.TypedSupplier;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import org.immutables.builder.Builder;
+
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -40,7 +26,6 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-import org.immutables.builder.Builder;
 
 /**
  * An actor that corresponds to a vertex in a {@link ContactNetwork}. Collectively, all {@link
@@ -148,7 +133,7 @@ public final class User extends AbstractBehavior<UserMsg> {
     return newReceiveBuilder()
         .onMessage(ContactMsg.class, this::onContactMsg)
         .onMessage(RiskScoreMsg.class, this::onRiskScoreMsg)
-        .onMessage(TimeoutMsg.class, x -> Behaviors.stopped())
+        .onMessage(TimeoutMsg.class, this::onTimeoutMsg)
         .onMessage(RefreshMsg.class, this::onRefreshMsg)
         .build();
   }
@@ -209,6 +194,11 @@ public final class User extends AbstractBehavior<UserMsg> {
     refreshContacts();
     refreshCurrent();
     return this;
+  }
+
+  private Behavior<UserMsg> onTimeoutMsg(TimeoutMsg msg) {
+    logTimeout();
+    return Behaviors.stopped();
   }
 
   private void sendCurrentTo(ActorRef<UserMsg> contact) {
@@ -409,6 +399,14 @@ public final class User extends AbstractBehavior<UserMsg> {
         .score(received.score())
         .id(received.id())
         .build();
+  }
+
+  private void logTimeout() {
+    logEvent(TimeoutEvent.class, this::timeoutEvent);
+  }
+
+  private TimeoutEvent timeoutEvent() {
+    return TimeoutEvent.builder().user(name()).build();
   }
 
   private boolean isAlive(Temporal temporal, Duration ttl) {
