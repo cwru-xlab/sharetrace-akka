@@ -2,7 +2,7 @@
 <!DOCTYPE configuration>
 
 <configuration debug="true">
-  <timestamp key="bySecond" datePattern="yyyy-MM-dd_HH-mm-ss"/>
+  <timestamp key="bySecond" datePattern="yyyyMMddHHmmss"/>
   <property name="log.dir" value="logs/${bySecond}"/>
   <property name="graphs.log.dir" value="${log.dir}/graphs" scope="context"/>
 
@@ -45,7 +45,7 @@
       </encoder>
       <immediateFlush>false</immediateFlush>
       <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-        <fileNamePattern>${log.dir}/events/%d-%i.log.zip</fileNamePattern>
+        <fileNamePattern>${log.dir}/events/%d{yyyyMMdd}-%i.log.zip</fileNamePattern>
         <maxFileSize>1GB</maxFileSize>
         <maxHistory>30</maxHistory>
         <totalSizeCap>20GB</totalSizeCap>
