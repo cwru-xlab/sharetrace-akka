@@ -5,13 +5,13 @@ from numbers import Real
 
 import numpy as np
 
-from events import TimelineCallback
+from events import TimelineData
 
 EventPlotPositions = namedtuple("EventPlotPositions", "positions n_events")
 
 
 def event_plot_positions(
-        timeline: TimelineCallback,
+        timeline: TimelineData,
         x_axis: str = "time",
         timescale: Real = 1e9
 ) -> EventPlotPositions:
