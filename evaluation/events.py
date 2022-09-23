@@ -16,12 +16,7 @@ from typing import Any
 import numpy as np
 from scipy import sparse
 
-Predicate = Callable[[Any], bool]
-EventRecord = dict[str, Any]
-Edges = set[tuple[int, int]]
-Index = dict[int, int]
-
-ONE = np.int8(1)
+from hints import Record
 
 
 class Event(str, enum.Enum):
@@ -43,7 +38,7 @@ class Event(str, enum.Enum):
         return _EVENTS[self.value]
 
     @classmethod
-    def of(cls, record: EventRecord) -> Event:
+    def of(cls, record: Record) -> Event:
         return Event(record["type"])
 
 
@@ -51,7 +46,7 @@ _EVENT_WIDTH = f"<U{max(len(e) for e in Event)}"
 _EVENTS = {v: i for i, v in enumerate(Event)}
 
 
-def stream(logdir: os.PathLike | str) -> Iterable[EventRecord]:
+def stream(logdir: os.PathLike | str) -> Iterable[Record]:
     """Returns a stream of event records from the logging directory."""
     logdir = pathlib.Path(logdir).absolute()
     zipped, unzipped = _split(logdir.iterdir(), _is_zipped)
@@ -65,7 +60,7 @@ def stream(logdir: os.PathLike | str) -> Iterable[EventRecord]:
         yield record
 
 
-def _stream(filenames: Iterable[pathlib.Path]) -> Iterable[EventRecord]:
+def _stream(filenames: Iterable[pathlib.Path]) -> Iterable[Record]:
     for filename in sorted(filenames):
         with filename.open() as log:
             for line in log:
@@ -80,6 +75,9 @@ def _unzip(zipped: Iterable[os.PathLike], dest: os.PathLike) -> None:
     for filename in zipped:
         with zipfile.ZipFile(filename) as f:
             f.extractall(dest)
+
+
+Predicate = Callable[[Any], bool]
 
 
 def _split(it: Iterable, predicate: Predicate) -> tuple[Iterable, Iterable]:
@@ -156,7 +154,7 @@ class EventCallback(Callable):
     """A callable that processes event records."""
 
     @abc.abstractmethod
-    def __call__(self, record: EventRecord, **kwargs) -> None:
+    def __call__(self, record: Record, **kwargs) -> None:
         """Processes the record."""
         pass
 
@@ -168,7 +166,7 @@ class EventCallback(Callable):
 class EventCounterCallback(EventCounter, EventCallback):
     """An event callback for counting the occurrences of events."""
 
-    def __call__(self, record: EventRecord, **kwargs) -> None:
+    def __call__(self, record: Record, **kwargs) -> None:
         self.update((Event.of(record),))
 
 
@@ -201,7 +199,7 @@ class UserUpdatesCallback(EventCallback, Sized):
         self.finals: np.ndarray[np.float32] | None = None
         self._n: int = 0
 
-    def __call__(self, record: EventRecord, **kwargs) -> None:
+    def __call__(self, record: Record, **kwargs) -> None:
         if Event.of(record) == Event.UPDATE:
             if (name := np.uint32(record["to"])) in self.updates:
                 user = self.updates[name]
@@ -235,7 +233,7 @@ class ReceivedCallBack(EventCallback):
     def __init__(self):
         self.values: list[float] | np.ndarray[np.float32] = []
 
-    def __call__(self, record: EventRecord, **kwargs) -> None:
+    def __call__(self, record: Record, **kwargs) -> None:
         if Event.of(record) == Event.RECEIVE:
             self.values.append(record["score"]["value"])
 
@@ -259,7 +257,7 @@ class TimelineCallback(EventCallback):
         self._events: list[int | None] | np.ndarray[np.uint8] = [None]
         self._repeats: list[int] | np.ndarray[np.uint16] = [0]
 
-    def __call__(self, record: EventRecord, **kwargs) -> None:
+    def __call__(self, record: Record, **kwargs) -> None:
         if (event := Event.of(record)) not in self.e2i:
             # Encode the event as an integer.
             self.e2i[event] = len(self.e2i)
@@ -311,6 +309,9 @@ class TimelineCallback(EventCallback):
 
     def _get_events(self, decoded: bool) -> np.ndarray[np.str | np.uint8]:
         return self.i2e[self._events] if decoded else self._events
+
+
+ONE = np.int8(1)
 
 
 class ReachabilityCallback(EventCallback):
@@ -419,6 +420,10 @@ class ReachabilityCallback(EventCallback):
 
     def _compute_source_size(self) -> None:
         self._source_size = np.count_nonzero(self.adj.toarray(), axis=1)
+
+
+Edges = set[tuple[int, int]]
+Index = dict[int, int]
 
 
 def edges_to_adj(edges: Edges) -> tuple[Index, sparse.spmatrix]:

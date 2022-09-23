@@ -4,7 +4,9 @@ import collections
 import enum
 import json
 import os
-from typing import AnyStr, Any
+from typing import AnyStr
+
+from hints import Record, Records
 
 
 class Metric(str, enum.Enum):
@@ -23,12 +25,12 @@ class Metric(str, enum.Enum):
         return self.value
 
 
-def load(path: os.PathLike | AnyStr) -> dict[str, Any]:
+def load(path: os.PathLike | AnyStr) -> Records:
     metrics = collections.defaultdict(dict)
     with open(path) as f:
         for line in f:
-            record: dict[str, Any] = json.loads(line)
-            metric: dict[str, Any] = record["metric"]
+            record: Record = json.loads(line)
+            metric: Record = record["metric"]
             label = Metric(metric.pop("type"))
             metrics[record["sid"]][label] = metric
     return dict(metric)
