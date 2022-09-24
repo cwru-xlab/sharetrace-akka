@@ -26,8 +26,8 @@ class Metric(str, enum.Enum):
 
 
 def load(path: os.PathLike | AnyStr) -> Records:
-    metrics = collections.defaultdict(dict)
     with open(path) as f:
+        metrics = collections.defaultdict(dict)
         for line in f:
             record: Record = json.loads(line)
             metric: Record = record["metric"]
