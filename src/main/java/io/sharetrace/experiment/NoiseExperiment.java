@@ -46,17 +46,16 @@ public final class NoiseExperiment extends Experiment<NoiseExperimentConfig> {
         .build();
   }
 
-  private static void forEachNetwork(ExperimentState state, NoiseExperimentConfig config) {
+  private static void onIteration(ExperimentState state, NoiseExperimentConfig config) {
     Dataset withNewNetwork = state.dataset().withNewContactNetwork();
     for (RealDistribution noise : config.noises()) {
-      ExperimentState newState = withNewNetworkAndFactory(state, withNewNetwork, noise);
-      IntRange.of(config.numIterations()).forEach(x -> newState.withNewId().run());
+      withNewNetworkAndFactory(state, withNewNetwork, noise).run(config.numIterations());
     }
   }
 
   @Override
   public void run(ExperimentState initialState, NoiseExperimentConfig config) {
-    IntRange.of(config.numIterations()).forEach(x -> forEachNetwork(initialState, config));
+    IntRange.of(config.numIterations()).forEach(x -> onIteration(initialState, config));
   }
 
   @Override

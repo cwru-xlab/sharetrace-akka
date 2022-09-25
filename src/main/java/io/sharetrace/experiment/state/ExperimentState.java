@@ -19,6 +19,7 @@ import io.sharetrace.model.UserParams;
 import io.sharetrace.util.IntervalCache;
 import io.sharetrace.util.TypedSupplier;
 import io.sharetrace.util.Uid;
+import io.sharetrace.util.range.IntRange;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import java.time.Clock;
 import java.time.Instant;
@@ -70,13 +71,13 @@ public final class ExperimentState {
     return Builder.from(this);
   }
 
-  public ExperimentState withNewId() {
-    return toBuilder().build();
-  }
-
   public void run() {
     logMetricsAndSettings();
     Algorithm.of(newRiskPropagation(), "RiskPropagation").run();
+  }
+
+  public void run(int numIterations) {
+    IntRange.of(numIterations).forEach(x -> toBuilder().build().run());
   }
 
   public MsgParams msgParams() {
