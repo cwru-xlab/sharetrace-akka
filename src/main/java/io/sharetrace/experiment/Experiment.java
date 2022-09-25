@@ -3,33 +3,36 @@ package io.sharetrace.experiment;
 import io.sharetrace.experiment.config.MissingConfigException;
 import io.sharetrace.experiment.state.ExperimentContext;
 import io.sharetrace.experiment.state.ExperimentState;
+
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.function.UnaryOperator;
 
-public interface Experiment<T> {
+public abstract class Experiment<Config> {
 
-  void run(ExperimentState initialState, T config);
+  protected Experiment() {}
 
-  default void runWithDefaults(T config) {
+  public abstract void run(ExperimentState initialState, Config config);
+
+  public void runWithDefaults(Config config) {
     runWithDefaults(UnaryOperator.identity(), config);
   }
 
-  default void runWithDefaults(UnaryOperator<ExperimentState> overrideDefaults, T config) {
+  public void runWithDefaults(UnaryOperator<ExperimentState> overrideDefaults, Config config) {
     run(overrideDefaults.apply(newDefaultState(config)), config);
   }
 
-  ExperimentState newDefaultState(T config);
+  public abstract ExperimentState newDefaultState(Config config);
 
-  ExperimentState newDefaultState(ExperimentContext context, T config);
+  public abstract ExperimentState newDefaultState(ExperimentContext context, Config config);
 
   @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-  default <R> R getProperty(Optional<R> property, String name) {
+  protected <R> R getProperty(Optional<R> property, String name) {
     return property.orElseThrow(() -> new MissingConfigException(name));
   }
 
   @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-  default int getProperty(OptionalInt property, String name) {
+  protected int getProperty(OptionalInt property, String name) {
     return property.orElseThrow(() -> new MissingConfigException(name));
   }
 }

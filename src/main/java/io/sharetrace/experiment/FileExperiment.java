@@ -5,9 +5,10 @@ import io.sharetrace.experiment.state.Defaults;
 import io.sharetrace.experiment.state.ExperimentContext;
 import io.sharetrace.experiment.state.ExperimentState;
 import io.sharetrace.util.range.IntRange;
+
 import java.nio.file.Path;
 
-public final class FileExperiment implements Experiment<FileExperimentConfig> {
+public final class FileExperiment extends Experiment<FileExperimentConfig> {
 
   private static final FileExperiment INSTANCE = new FileExperiment();
   private static final ExperimentContext DEFAULT_CTX = newDefaultContext();

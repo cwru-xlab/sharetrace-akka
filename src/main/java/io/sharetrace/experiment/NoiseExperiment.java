@@ -12,10 +12,11 @@ import io.sharetrace.logging.event.UpdateEvent;
 import io.sharetrace.logging.metric.GraphSize;
 import io.sharetrace.logging.setting.ExperimentSettings;
 import io.sharetrace.util.range.IntRange;
-import java.util.Set;
 import org.apache.commons.math3.distribution.RealDistribution;
 
-public final class NoiseExperiment implements Experiment<NoiseExperimentConfig> {
+import java.util.Set;
+
+public final class NoiseExperiment extends Experiment<NoiseExperimentConfig> {
 
   private static final NoiseExperiment INSTANCE = new NoiseExperiment();
   private static final ExperimentContext DEFAULT_CTX = newDefaultContext();

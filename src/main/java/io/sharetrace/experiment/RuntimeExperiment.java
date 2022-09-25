@@ -6,17 +6,13 @@ import io.sharetrace.experiment.config.RuntimeExperimentConfig;
 import io.sharetrace.experiment.state.Defaults;
 import io.sharetrace.experiment.state.ExperimentContext;
 import io.sharetrace.experiment.state.ExperimentState;
-import io.sharetrace.logging.metric.CreateUsersRuntime;
-import io.sharetrace.logging.metric.GraphSize;
-import io.sharetrace.logging.metric.MsgPassingRuntime;
-import io.sharetrace.logging.metric.RiskPropRuntime;
-import io.sharetrace.logging.metric.SendContactsRuntime;
-import io.sharetrace.logging.metric.SendScoresRuntime;
+import io.sharetrace.logging.metric.*;
 import io.sharetrace.logging.setting.ExperimentSettings;
 import io.sharetrace.util.range.IntRange;
+
 import java.util.Set;
 
-public final class RuntimeExperiment implements Experiment<RuntimeExperimentConfig> {
+public final class RuntimeExperiment extends Experiment<RuntimeExperimentConfig> {
 
   private static final RuntimeExperiment INSTANCE = new RuntimeExperiment();
   private static final int IGNORED = 50;

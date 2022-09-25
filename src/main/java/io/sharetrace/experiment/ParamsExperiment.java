@@ -8,10 +8,11 @@ import io.sharetrace.logging.Loggable;
 import io.sharetrace.logging.metric.GraphTopology;
 import io.sharetrace.util.range.IntRange;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
+
 import java.util.Collections;
 import java.util.Set;
 
-public final class ParamsExperiment implements Experiment<ParamsExperimentConfig> {
+public final class ParamsExperiment extends Experiment<ParamsExperimentConfig> {
 
   private static final ParamsExperiment INSTANCE = new ParamsExperiment();
   private static final ExperimentContext DEFAULT_CTX = newDefaultContext();
