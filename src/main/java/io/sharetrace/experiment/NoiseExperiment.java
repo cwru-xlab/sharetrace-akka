@@ -37,25 +37,22 @@ public final class NoiseExperiment extends Experiment<NoiseExperimentConfig> {
     return NoisyRiskScoreFactory.of(noise, CachedRiskScoreFactory.of(factory));
   }
 
-  private static ExperimentState withNewNetworkAndFactory(
-      ExperimentState state, Dataset withNewNetwork, RealDistribution noise) {
-    RiskScoreFactory noisyFactory = newNoisyFactory(withNewNetwork, noise);
-    return state.toBuilder()
-        .dataset(withNewNetwork.withScoreFactory(noisyFactory))
-        .userParams(ctx -> Defaults.userParams(ctx.dataset()))
-        .build();
-  }
-
-  private static void onIteration(ExperimentState state, NoiseExperimentConfig config) {
-    Dataset withNewNetwork = state.dataset().withNewContactNetwork();
-    for (RealDistribution noise : config.noises()) {
-      withNewNetworkAndFactory(state, withNewNetwork, noise).run(config.numIterations());
-    }
-  }
-
   @Override
   public void run(ExperimentState initialState, NoiseExperimentConfig config) {
-    IntRange.of(config.numIterations()).forEach(x -> onIteration(initialState, config));
+    Dataset withNewNetwork;
+    RiskScoreFactory noisyFactory;
+    // Average over the generated network for the given noise distributions.
+    for (int i : IntRange.of(config.numIterations())) {
+      withNewNetwork = initialState.dataset().withNewContactNetwork();
+      for (RealDistribution noise : config.noises()) {
+        noisyFactory = newNoisyFactory(withNewNetwork, noise);
+        initialState.toBuilder()
+            .dataset(withNewNetwork.withScoreFactory(noisyFactory))
+            .userParams(ctx -> Defaults.userParams(ctx.dataset()))
+            .build()
+            .run(config.numIterations()); // Average over the sampled data for the given network.
+      }
+    }
   }
 
   @Override

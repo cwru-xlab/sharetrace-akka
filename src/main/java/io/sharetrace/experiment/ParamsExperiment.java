@@ -29,20 +29,18 @@ public final class ParamsExperiment extends Experiment<ParamsExperimentConfig> {
     return ctx.withLoggable(Collections.unmodifiableSet(loggable));
   }
 
-  private static void forEachParameters(ExperimentState state, float transRate, float sendCoeff) {
-    state.toBuilder()
-        .msgParams(state.msgParams().withTransRate(transRate).withSendCoeff(sendCoeff))
-        .dataset(state.dataset().withNewContactNetwork())
-        .userParams(ctx -> Defaults.userParams(ctx.dataset()))
-        .build()
-        .run();
-  }
-
   @Override
   public void run(ExperimentState initialState, ParamsExperimentConfig config) {
     for (float tr : config.transRates()) {
       for (float sc : config.sendCoeffs()) {
-        IntRange.of(config.numIterations()).forEach(x -> forEachParameters(initialState, tr, sc));
+        // Average over the generated network for the given parameters.
+        for (int iNetwork : IntRange.of(config.numIterations()))
+          initialState.toBuilder()
+              .msgParams(initialState.msgParams().withTransRate(tr).withSendCoeff(sc))
+              .dataset(initialState.dataset().withNewContactNetwork())
+              .userParams(ctx -> Defaults.userParams(ctx.dataset()))
+              .build()
+              .run(config.numIterations()); // Average over the sampled data for the given network.
       }
     }
   }

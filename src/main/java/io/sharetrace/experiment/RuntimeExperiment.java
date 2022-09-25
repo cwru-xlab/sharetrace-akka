@@ -41,19 +41,19 @@ public final class RuntimeExperiment extends Experiment<RuntimeExperimentConfig>
                 ExperimentSettings.class));
   }
 
-  private static void forEachDataset(ExperimentState state, Dataset dataset) {
-    state.toBuilder()
-        .dataset(dataset.withNewContactNetwork())
-        .userParams(ctx -> Defaults.userParams(ctx.dataset()))
-        .build()
-        .run();
-  }
-
   @Override
   public void run(ExperimentState initialState, RuntimeExperimentConfig config) {
+    Dataset newDataset;
     for (int n : config.numNodes()) {
-      Dataset newDataset = ((SampledDataset) initialState.dataset()).withNumNodes(n);
-      IntRange.of(config.numIterations()).forEach(x -> forEachDataset(initialState, newDataset));
+      newDataset = ((SampledDataset) initialState.dataset()).withNumNodes(n);
+      // Average over the generated network for the given number of users.
+      for (int iNetwork : IntRange.of(config.numIterations())) {
+        initialState.toBuilder()
+            .dataset(newDataset.withNewContactNetwork())
+            .userParams(ctx -> Defaults.userParams(ctx.dataset()))
+            .build()
+            .run(config.numIterations()); // Average over the sampled data for the given network.
+      }
     }
   }
 
