@@ -3,7 +3,6 @@ package io.sharetrace.experiment;
 import io.sharetrace.experiment.config.MissingConfigException;
 import io.sharetrace.experiment.state.ExperimentContext;
 import io.sharetrace.experiment.state.ExperimentState;
-
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.function.UnaryOperator;

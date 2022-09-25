@@ -12,9 +12,8 @@ import io.sharetrace.logging.event.UpdateEvent;
 import io.sharetrace.logging.metric.GraphSize;
 import io.sharetrace.logging.setting.ExperimentSettings;
 import io.sharetrace.util.range.IntRange;
-import org.apache.commons.math3.distribution.RealDistribution;
-
 import java.util.Set;
+import org.apache.commons.math3.distribution.RealDistribution;
 
 public final class NoiseExperiment extends Experiment<NoiseExperimentConfig> {
 
@@ -27,15 +26,15 @@ public final class NoiseExperiment extends Experiment<NoiseExperimentConfig> {
     return INSTANCE;
   }
 
+  public static ExperimentContext newDefaultContext() {
+    return ExperimentContext.create()
+        .withLoggable(Set.of(UpdateEvent.class, GraphSize.class, ExperimentSettings.class));
+  }
+
   private static RiskScoreFactory newNoisyFactory(
       RiskScoreFactory factory, RealDistribution noise) {
     // Cache the original scores so that the independent effect of noise can be observed.
     return NoisyRiskScoreFactory.of(noise, CachedRiskScoreFactory.of(factory));
-  }
-
-  public static ExperimentContext newDefaultContext() {
-    return ExperimentContext.create()
-        .withLoggable(Set.of(UpdateEvent.class, GraphSize.class, ExperimentSettings.class));
   }
 
   private static ExperimentState withNewNetworkAndFactory(

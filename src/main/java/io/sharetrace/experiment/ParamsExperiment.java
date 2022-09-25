@@ -8,7 +8,6 @@ import io.sharetrace.logging.Loggable;
 import io.sharetrace.logging.metric.GraphTopology;
 import io.sharetrace.util.range.IntRange;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
-
 import java.util.Collections;
 import java.util.Set;
 
