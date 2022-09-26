@@ -110,7 +110,7 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
   }
 
   @Builder.Factory
-  static Algorithm riskPropagation(
+  static Runnable riskPropagation(
       ContactNetwork contactNetwork,
       Set<Class<? extends Loggable>> loggable,
       Map<String, String> mdc,

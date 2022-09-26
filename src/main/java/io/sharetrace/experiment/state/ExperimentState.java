@@ -1,6 +1,5 @@
 package io.sharetrace.experiment.state;
 
-import io.sharetrace.actor.Algorithm;
 import io.sharetrace.actor.RiskPropagationBuilder;
 import io.sharetrace.data.Dataset;
 import io.sharetrace.data.factory.DistributionFactory;
@@ -31,7 +30,7 @@ import org.apache.commons.math3.distribution.UniformRealDistribution;
 import org.apache.commons.math3.random.Well512a;
 import org.slf4j.MDC;
 
-public final class ExperimentState {
+public final class ExperimentState implements Runnable {
 
   private final ExperimentContext ctx;
   private final Logger logger;
@@ -69,6 +68,7 @@ public final class ExperimentState {
     return Builder.from(this);
   }
 
+  @Override
   public void run() {
     logMetricsAndSettings();
     newRiskPropagation().run();
@@ -111,7 +111,7 @@ public final class ExperimentState {
         .build();
   }
 
-  private Algorithm newRiskPropagation() {
+  private Runnable newRiskPropagation() {
     return RiskPropagationBuilder.create()
         .addAllLoggable(ctx.loggable())
         .putAllMdc(mdc)

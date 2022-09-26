@@ -10,7 +10,7 @@ import io.sharetrace.message.AlgorithmMsg;
 import io.sharetrace.message.RunMsg;
 import java.util.concurrent.ExecutionException;
 
-public final class Algorithm {
+public final class Algorithm implements Runnable {
 
   private final Behavior<AlgorithmMsg> behavior;
   private final String name;
@@ -20,7 +20,7 @@ public final class Algorithm {
     this.name = name;
   }
 
-  public static Algorithm of(Behavior<AlgorithmMsg> behavior, String name) {
+  public static Runnable of(Behavior<AlgorithmMsg> behavior, String name) {
     return new Algorithm(behavior, name);
   }
 
@@ -32,6 +32,7 @@ public final class Algorithm {
     }
   }
 
+  @Override
   public void run() {
     waitUntilDone(ActorSystem.create(Behaviors.setup(this::newRunner), name));
   }
