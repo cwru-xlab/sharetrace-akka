@@ -82,14 +82,6 @@ public final class ExperimentState implements Runnable {
     return msgParams;
   }
 
-  public CacheParams<RiskScoreMsg> cacheParams() {
-    return cacheParams;
-  }
-
-  public UserParams userParams() {
-    return userParams;
-  }
-
   public Dataset dataset() {
     return dataset;
   }
@@ -211,8 +203,8 @@ public final class ExperimentState implements Runnable {
           .userParams(ctx -> Defaults.userParams(ctx.dataset()));
     }
 
-    private static Map<Setter, Function<? super Builder, Builder>> newSetters() {
-      Map<Setter, Function<? super Builder, Builder>> setters = new EnumMap<>(Setter.class);
+    private static <B> Map<Setter, Function<? super B, B>> newSetters() {
+      Map<Setter, Function<? super B, B>> setters = new EnumMap<>(Setter.class);
       for (Setter setter : Setter.values()) {
         setters.put(setter, Function.identity());
       }
