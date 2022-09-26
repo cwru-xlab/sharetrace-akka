@@ -5,9 +5,8 @@ import io.sharetrace.experiment.RuntimeExperiment;
 import io.sharetrace.experiment.config.FileExperimentConfig;
 import io.sharetrace.experiment.config.ParamsExperimentConfig;
 import io.sharetrace.experiment.config.RuntimeExperimentConfig;
-import io.sharetrace.util.range.FloatRange;
-import io.sharetrace.util.range.IntRange;
 import java.nio.file.Path;
+import java.util.List;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -36,8 +35,8 @@ public class ExperimentTests {
   public void testParamsExperiment(GraphType graphType) {
     ParamsExperimentConfig config =
         ParamsExperimentConfig.builder()
-            .transRates(FloatRange.single(0.8))
-            .sendCoeffs(FloatRange.single(0.6))
+            .transRates(List.of(0.8f))
+            .sendCoeffs(List.of(0.6f))
             .graphType(graphType)
             .numNodes(1000)
             .build();
@@ -50,10 +49,7 @@ public class ExperimentTests {
       names = {"BARABASI_ALBERT", "GNM_RANDOM", "RANDOM_REGULAR", "SCALE_FREE", "WATTS_STROGATZ"})
   public void testRuntimeExperiment(GraphType graphType) {
     RuntimeExperimentConfig config =
-        RuntimeExperimentConfig.builder()
-            .graphType(graphType)
-            .numNodes(IntRange.single(1000))
-            .build();
+        RuntimeExperimentConfig.builder().graphType(graphType).numNodes(List.of(1000)).build();
     Assertions.assertDoesNotThrow(() -> RuntimeExperiment.instance().runWithDefaults(config));
   }
 }

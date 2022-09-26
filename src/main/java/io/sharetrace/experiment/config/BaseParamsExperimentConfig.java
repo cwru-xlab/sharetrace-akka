@@ -1,7 +1,6 @@
 package io.sharetrace.experiment.config;
 
-import io.sharetrace.util.range.FloatRange;
-import io.sharetrace.util.range.Range;
+import java.util.List;
 import java.util.OptionalInt;
 import org.immutables.value.Value;
 
@@ -11,12 +10,12 @@ abstract class BaseParamsExperimentConfig extends ExperimentConfig {
   public abstract OptionalInt numNodes();
 
   @Value.Default
-  public Range<Float> transRates() {
-    return FloatRange.of(0.1, 1.0, 0.1);
+  public Iterable<Float> transRates() {
+    return List.of(0.8f);
   }
 
   @Value.Default
-  public Range<Float> sendCoeffs() {
-    return FloatRange.of(0.1, 1.1, 0.1);
+  public Iterable<Float> sendCoeffs() {
+    return List.of(0.6f);
   }
 }

@@ -11,7 +11,6 @@ import io.sharetrace.experiment.state.ExperimentState;
 import io.sharetrace.logging.event.UpdateEvent;
 import io.sharetrace.logging.metric.GraphSize;
 import io.sharetrace.logging.setting.ExperimentSettings;
-import io.sharetrace.util.range.IntRange;
 import java.util.Set;
 import org.apache.commons.math3.distribution.RealDistribution;
 
@@ -42,7 +41,7 @@ public final class NoiseExperiment extends Experiment<NoiseExperimentConfig> {
     Dataset withNewNetwork;
     RiskScoreFactory noisyFactory;
     // Average over the generated network for the given noise distributions.
-    for (int i : IntRange.of(config.numIterations())) {
+    for (int i = 0; i < config.numIterations(); i++) {
       withNewNetwork = initialState.dataset().withNewContactNetwork();
       for (RealDistribution noise : config.noises()) {
         noisyFactory = newNoisyFactory(withNewNetwork, noise);

@@ -16,7 +16,6 @@ import io.sharetrace.util.CacheParams;
 import io.sharetrace.util.IntervalCache;
 import io.sharetrace.util.TypedSupplier;
 import io.sharetrace.util.Uid;
-import io.sharetrace.util.range.IntRange;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import java.time.Clock;
 import java.time.Instant;
@@ -25,6 +24,7 @@ import java.util.EnumMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.IntStream;
 import org.apache.commons.math3.distribution.RealDistribution;
 import org.apache.commons.math3.distribution.UniformRealDistribution;
 import org.apache.commons.math3.random.Well512a;
@@ -75,7 +75,7 @@ public final class ExperimentState implements Runnable {
   }
 
   public void run(int numIterations) {
-    IntRange.of(numIterations).forEach(x -> toBuilder().build().run());
+    IntStream.range(0, numIterations).forEach(x -> toBuilder().build().run());
   }
 
   public MsgParams msgParams() {

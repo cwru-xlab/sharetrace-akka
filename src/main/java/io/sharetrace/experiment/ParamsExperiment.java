@@ -6,7 +6,6 @@ import io.sharetrace.experiment.state.ExperimentContext;
 import io.sharetrace.experiment.state.ExperimentState;
 import io.sharetrace.logging.Loggable;
 import io.sharetrace.logging.metric.GraphTopology;
-import io.sharetrace.util.range.IntRange;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import java.util.Collections;
 import java.util.Set;
@@ -34,7 +33,7 @@ public final class ParamsExperiment extends Experiment<ParamsExperimentConfig> {
     for (float tr : config.transRates()) {
       for (float sc : config.sendCoeffs()) {
         // Average over the generated network for the given parameters.
-        for (int iNetwork : IntRange.of(config.numIterations()))
+        for (int iNetwork = 0; iNetwork < config.numIterations(); iNetwork++)
           initialState.toBuilder()
               .msgParams(initialState.msgParams().withTransRate(tr).withSendCoeff(sc))
               .dataset(initialState.dataset().withNewContactNetwork())

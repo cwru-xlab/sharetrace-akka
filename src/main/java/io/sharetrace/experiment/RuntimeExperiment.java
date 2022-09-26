@@ -13,7 +13,6 @@ import io.sharetrace.logging.metric.RiskPropRuntime;
 import io.sharetrace.logging.metric.SendContactsRuntime;
 import io.sharetrace.logging.metric.SendScoresRuntime;
 import io.sharetrace.logging.setting.ExperimentSettings;
-import io.sharetrace.util.range.IntRange;
 import java.util.Set;
 
 public final class RuntimeExperiment extends Experiment<RuntimeExperimentConfig> {
@@ -47,7 +46,7 @@ public final class RuntimeExperiment extends Experiment<RuntimeExperimentConfig>
     for (int n : config.numNodes()) {
       newDataset = ((SampledDataset) initialState.dataset()).withNumNodes(n);
       // Average over the generated network for the given number of users.
-      for (int iNetwork : IntRange.of(config.numIterations())) {
+      for (int iNetwork = 0; iNetwork < config.numIterations(); iNetwork++) {
         initialState.toBuilder()
             .dataset(newDataset.withNewContactNetwork())
             .userParams(ctx -> Defaults.userParams(ctx.dataset()))
