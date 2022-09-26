@@ -19,7 +19,6 @@ public final class Indexer<T> {
   }
 
   public int index(T value) {
-    Checks.isNotNull(value, "value");
     return index.computeIfAbsent(value, x -> this.value++);
   }
 
