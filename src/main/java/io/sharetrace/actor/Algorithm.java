@@ -34,10 +34,10 @@ public final class Algorithm implements Runnable {
 
   @Override
   public void run() {
-    waitUntilDone(ActorSystem.create(Behaviors.setup(this::newRunner), name));
+    waitUntilDone(ActorSystem.create(Behaviors.setup(this::newInstance), name));
   }
 
-  private Behavior<Void> newRunner(ActorContext<Void> ctx) {
+  private Behavior<Void> newInstance(ActorContext<Void> ctx) {
     ActorRef<AlgorithmMsg> instance = ctx.spawn(behavior, name);
     ctx.watch(instance);
     instance.tell(RunMsg.INSTANCE);
