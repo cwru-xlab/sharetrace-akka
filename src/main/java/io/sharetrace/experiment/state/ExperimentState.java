@@ -1,6 +1,5 @@
 package io.sharetrace.experiment.state;
 
-import akka.actor.typed.Behavior;
 import io.sharetrace.actor.Algorithm;
 import io.sharetrace.actor.RiskPropagationBuilder;
 import io.sharetrace.data.Dataset;
@@ -11,7 +10,6 @@ import io.sharetrace.logging.Logger;
 import io.sharetrace.logging.Logging;
 import io.sharetrace.logging.setting.ExperimentSettings;
 import io.sharetrace.logging.setting.LoggableSetting;
-import io.sharetrace.message.AlgorithmMsg;
 import io.sharetrace.message.RiskScoreMsg;
 import io.sharetrace.model.CacheParams;
 import io.sharetrace.model.MsgParams;
@@ -73,7 +71,7 @@ public final class ExperimentState {
 
   public void run() {
     logMetricsAndSettings();
-    Algorithm.of(newRiskPropagation(), "RiskPropagation").run();
+    newRiskPropagation().run();
   }
 
   public void run(int numIterations) {
@@ -113,7 +111,7 @@ public final class ExperimentState {
         .build();
   }
 
-  private Behavior<AlgorithmMsg> newRiskPropagation() {
+  private Algorithm newRiskPropagation() {
     return RiskPropagationBuilder.create()
         .addAllLoggable(ctx.loggable())
         .putAllMdc(mdc)

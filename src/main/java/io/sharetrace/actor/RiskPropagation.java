@@ -110,7 +110,7 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
   }
 
   @Builder.Factory
-  static Behavior<AlgorithmMsg> riskPropagation(
+  static Algorithm riskPropagation(
       ContactNetwork contactNetwork,
       Set<Class<? extends Loggable>> loggable,
       Map<String, String> mdc,
@@ -119,20 +119,22 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
       Clock clock,
       CacheFactory<RiskScoreMsg> cacheFactory,
       RiskScoreFactory scoreFactory) {
-    return Behaviors.setup(
-        ctx -> {
-          ctx.setLoggerName(Logging.metricsLoggerName());
-          return new RiskPropagation(
-              ctx,
-              loggable,
-              mdc,
-              contactNetwork,
-              userParams,
-              msgParams,
-              clock,
-              cacheFactory,
-              scoreFactory);
-        });
+    Behavior<AlgorithmMsg> behavior =
+        Behaviors.setup(
+            ctx -> {
+              ctx.setLoggerName(Logging.metricsLoggerName());
+              return new RiskPropagation(
+                  ctx,
+                  loggable,
+                  mdc,
+                  contactNetwork,
+                  userParams,
+                  msgParams,
+                  clock,
+                  cacheFactory,
+                  scoreFactory);
+            });
+    return Algorithm.of(behavior, "RiskPropagation");
   }
 
   private static long milli(long nanos) {
