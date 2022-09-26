@@ -10,9 +10,9 @@ import io.sharetrace.logging.Logging;
 import io.sharetrace.logging.setting.ExperimentSettings;
 import io.sharetrace.logging.setting.LoggableSetting;
 import io.sharetrace.message.RiskScoreMsg;
-import io.sharetrace.model.CacheParams;
 import io.sharetrace.model.MsgParams;
 import io.sharetrace.model.UserParams;
+import io.sharetrace.util.CacheParams;
 import io.sharetrace.util.IntervalCache;
 import io.sharetrace.util.TypedSupplier;
 import io.sharetrace.util.Uid;
@@ -117,15 +117,7 @@ public final class ExperimentState implements Runnable {
   }
 
   private IntervalCache<RiskScoreMsg> newCache() {
-    return IntervalCache.<RiskScoreMsg>builder()
-        .clock(ctx.clock())
-        .numIntervals(cacheParams.numIntervals())
-        .numLookAhead(cacheParams.numLookAhead())
-        .interval(cacheParams.interval())
-        .refreshPeriod(cacheParams.refreshPeriod())
-        .mergeStrategy(cacheParams.mergeStrategy())
-        .comparator(RiskScoreMsg::compareTo)
-        .build();
+    return IntervalCache.create(cacheParams);
   }
 
   private enum Setter {

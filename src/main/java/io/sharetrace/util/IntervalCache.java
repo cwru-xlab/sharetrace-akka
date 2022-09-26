@@ -32,8 +32,6 @@ import java.util.function.Predicate;
  */
 public final class IntervalCache<T> {
 
-  public static final int MIN_INTERVALS = 1;
-  public static final int MIN_LOOK_AHEAD = 0;
   private static final String TIME = "time";
   private final Map<Long, T> cache;
   private final BinaryOperator<T> mergeStrategy;
@@ -47,20 +45,20 @@ public final class IntervalCache<T> {
   private long rangeStart;
   private Range<Long> range;
 
-  private IntervalCache(Builder<T> builder) {
-    cache = builder.cache;
-    mergeStrategy = builder.mergeStrategy;
-    comparator = builder.comparator;
-    clock = builder.clock;
-    interval = toLong(builder.interval);
-    lookBack = toLong(builder.lookBack);
-    lookAhead = toLong(builder.lookAhead);
-    refreshPeriod = toLong(builder.refreshPeriod);
+  private IntervalCache(CacheParams<T> params) {
+    cache = new Long2ObjectOpenHashMap<>();
+    mergeStrategy = params.mergeStrategy();
+    comparator = params.comparator();
+    clock = params.clock();
+    interval = toLong(params.interval());
+    lookBack = interval * (params.numIntervals() - params.numLookAhead());
+    lookAhead = interval * params.numLookAhead();
+    refreshPeriod = toLong(params.refreshPeriod());
     lastRefresh = toLong(Instant.MIN);
   }
 
-  public static <T> Builder<T> builder() {
-    return new Builder<>();
+  public static <T> IntervalCache<T> create(CacheParams<T> params) {
+    return new IntervalCache<>(params);
   }
 
   private static long toLong(Duration duration) {
@@ -141,74 +139,5 @@ public final class IntervalCache<T> {
 
   private long getTime() {
     return toLong(clock.instant());
-  }
-
-  public static final class Builder<T> {
-
-    private BinaryOperator<T> mergeStrategy;
-    private Comparator<T> comparator;
-    private Clock clock;
-    private Duration interval;
-    private int numIntervals;
-    private int numLookAhead;
-    private Duration lookBack;
-    private Duration lookAhead;
-    private Duration refreshPeriod;
-    private Map<Long, T> cache;
-
-    public Builder<T> interval(Duration interval) {
-      this.interval = interval;
-      return this;
-    }
-
-    public Builder<T> numIntervals(int numIntervals) {
-      this.numIntervals = numIntervals;
-      return this;
-    }
-
-    public Builder<T> numLookAhead(int numLookAhead) {
-      this.numLookAhead = numLookAhead;
-      return this;
-    }
-
-    public Builder<T> refreshPeriod(Duration refreshPeriod) {
-      this.refreshPeriod = refreshPeriod;
-      return this;
-    }
-
-    public Builder<T> clock(Clock clock) {
-      this.clock = clock;
-      return this;
-    }
-
-    public Builder<T> mergeStrategy(BinaryOperator<T> mergeStrategy) {
-      this.mergeStrategy = mergeStrategy;
-      return this;
-    }
-
-    public Builder<T> comparator(Comparator<T> comparator) {
-      this.comparator = comparator;
-      return this;
-    }
-
-    public IntervalCache<T> build() {
-      checkFields();
-      lookBack = interval.multipliedBy(numIntervals - numLookAhead);
-      lookAhead = interval.multipliedBy(numLookAhead);
-      cache = new Long2ObjectOpenHashMap<>();
-      return new IntervalCache<>(this);
-    }
-
-    private void checkFields() {
-      Checks.isNotNull(interval, "interval");
-      Checks.isNotNull(refreshPeriod, "refreshPeriod");
-      Checks.isNotNull(clock, "clock");
-      Checks.isNotNull(mergeStrategy, "mergeStrategy");
-      Checks.isNotNull(comparator, "comparator");
-      Checks.isAtLeast(interval, Duration.ZERO, "interval");
-      Checks.isAtLeast(numIntervals, MIN_INTERVALS, "numIntervals");
-      Checks.inClosedOpen(numLookAhead, MIN_LOOK_AHEAD, numIntervals, "numLookAhead");
-      Checks.isAtLeast(refreshPeriod, Duration.ZERO, "refreshPeriod");
-    }
   }
 }

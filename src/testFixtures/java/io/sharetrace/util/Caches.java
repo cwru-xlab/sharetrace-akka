@@ -15,15 +15,16 @@ public final class Caches {
   }
 
   public static IntervalCache<Integer> empty(Clock clock) {
-    return IntervalCache.<Integer>builder()
-        .clock(clock)
-        .interval(INTERVAL)
-        .numIntervals(1)
-        .refreshPeriod(Duration.ofMinutes(1L))
-        .numLookAhead(0)
-        .comparator(Integer::compare)
-        .mergeStrategy(Integer::max)
-        .build();
+    return IntervalCache.create(
+        CacheParams.<Integer>builder()
+            .clock(clock)
+            .interval(INTERVAL)
+            .numIntervals(1)
+            .refreshPeriod(Duration.ofMinutes(1L))
+            .numLookAhead(0)
+            .comparator(Integer::compare)
+            .mergeStrategy(Integer::max)
+            .build());
   }
 
   public static Duration interval() {

@@ -11,11 +11,12 @@ import io.sharetrace.data.sampler.RiskScoreSampler;
 import io.sharetrace.data.sampler.Sampler;
 import io.sharetrace.data.sampler.TimeSampler;
 import io.sharetrace.message.RiskScoreMsg;
-import io.sharetrace.model.CacheParams;
 import io.sharetrace.model.MsgParams;
 import io.sharetrace.model.RiskScore;
 import io.sharetrace.model.UserParams;
+import io.sharetrace.util.CacheParams;
 import java.nio.file.Path;
+import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 
@@ -136,9 +137,11 @@ public final class Defaults {
     return CacheParams.<RiskScoreMsg>builder()
         .interval(Duration.ofDays(1L))
         .numIntervals((int) (2 * TTL.toDays()))
+        .numLookAhead(1)
         .refreshPeriod(Duration.ofHours(1L))
         .mergeStrategy(Defaults::cacheMerge)
-        .numLookAhead(1)
+        .clock(Clock.systemUTC())
+        .comparator(RiskScoreMsg::compareTo)
         .build();
   }
 
