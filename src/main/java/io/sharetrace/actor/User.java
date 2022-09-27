@@ -101,7 +101,7 @@ public final class User extends AbstractBehavior<UserMsg> {
       IntervalCache<RiskScoreMsg> cache) {
     return Behaviors.setup(
         ctx -> {
-          ctx.setLoggerName(Logging.eventsLoggerName());
+          ctx.setLoggerName(Logging.EVENTS_LOGGER_NAME);
           Behavior<UserMsg> user =
               Behaviors.withTimers(
                   timers -> new User(ctx, timers, loggable, userParams, msgParams, clock, cache));

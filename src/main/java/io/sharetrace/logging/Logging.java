@@ -9,6 +9,10 @@ import org.slf4j.LoggerFactory;
 
 public final class Logging {
 
+  public static final String EVENTS_LOGGER_NAME = "EventsLogger";
+  public static final String METRICS_LOGGER_NAME = "MetricsLogger";
+  public static final String SETTINGS_LOGGER_NAME = "SettingsLogger";
+
   private Logging() {}
 
   public static Logger logger(
@@ -16,20 +20,12 @@ public final class Logging {
     return DefaultLogger.of(loggable, logger);
   }
 
-  public static String eventsLoggerName() {
-    return "EventsLogger";
-  }
-
   public static Logger metricsLogger(Set<Class<? extends Loggable>> loggable) {
-    return logger(loggable, () -> LoggerFactory.getLogger(metricsLoggerName()));
-  }
-
-  public static String metricsLoggerName() {
-    return "MetricsLogger";
+    return logger(loggable, () -> LoggerFactory.getLogger(METRICS_LOGGER_NAME));
   }
 
   public static Logger settingsLogger(Set<Class<? extends Loggable>> loggable) {
-    return logger(loggable, () -> LoggerFactory.getLogger("SettingsLogger"));
+    return logger(loggable, () -> LoggerFactory.getLogger(SETTINGS_LOGGER_NAME));
   }
 
   public static Path graphsPath() {

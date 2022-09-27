@@ -122,7 +122,7 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
     Behavior<AlgorithmMsg> behavior =
         Behaviors.setup(
             ctx -> {
-              ctx.setLoggerName(Logging.metricsLoggerName());
+              ctx.setLoggerName(Logging.METRICS_LOGGER_NAME);
               return new RiskPropagation(
                   ctx,
                   loggable,
@@ -134,7 +134,7 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
                   cacheFactory,
                   scoreFactory);
             });
-    return Algorithm.of(behavior, "RiskPropagation");
+    return Algorithm.of(behavior, RiskPropagation.class.getSimpleName());
   }
 
   private static long milli(long nanos) {
