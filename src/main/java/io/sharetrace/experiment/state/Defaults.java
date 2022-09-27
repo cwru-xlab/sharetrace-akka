@@ -10,11 +10,31 @@ import io.sharetrace.data.factory.RiskScoreFactory;
 import io.sharetrace.data.sampler.RiskScoreSampler;
 import io.sharetrace.data.sampler.Sampler;
 import io.sharetrace.data.sampler.TimeSampler;
+import io.sharetrace.logging.event.ContactEvent;
+import io.sharetrace.logging.event.ContactsRefreshEvent;
+import io.sharetrace.logging.event.CurrentRefreshEvent;
+import io.sharetrace.logging.event.ReceiveEvent;
+import io.sharetrace.logging.event.SendCachedEvent;
+import io.sharetrace.logging.event.SendCurrentEvent;
+import io.sharetrace.logging.event.TimeoutEvent;
+import io.sharetrace.logging.event.UpdateEvent;
+import io.sharetrace.logging.metric.CreateUsersRuntime;
+import io.sharetrace.logging.metric.GraphCycles;
+import io.sharetrace.logging.metric.GraphEccentricity;
+import io.sharetrace.logging.metric.GraphScores;
+import io.sharetrace.logging.metric.GraphSize;
+import io.sharetrace.logging.metric.GraphTopology;
+import io.sharetrace.logging.metric.MsgPassingRuntime;
+import io.sharetrace.logging.metric.RiskPropRuntime;
+import io.sharetrace.logging.metric.SendContactsRuntime;
+import io.sharetrace.logging.metric.SendScoresRuntime;
+import io.sharetrace.logging.setting.ExperimentSettings;
 import io.sharetrace.message.RiskScoreMsg;
 import io.sharetrace.model.MsgParams;
 import io.sharetrace.model.RiskScore;
 import io.sharetrace.model.UserParams;
 import io.sharetrace.util.CacheParams;
+import io.sharetrace.util.Uid;
 import java.nio.file.Path;
 import java.time.Clock;
 import java.time.Duration;
@@ -29,6 +49,7 @@ public final class Defaults {
   private static final double DECAY_RATE = 1.75E-7;
   private static final MsgParams MSG_PARAMS = newMsgParams();
   private static final CacheParams<RiskScoreMsg> CACHE_PARAMS = newCacheParams();
+  private static final ExperimentContext CONTEXT = newContext();
 
   private Defaults() {}
 
@@ -40,12 +61,8 @@ public final class Defaults {
     return CACHE_PARAMS;
   }
 
-  public static Duration ttl() {
-    return TTL;
-  }
-
-  public static String delimiter() {
-    return WHITESPACE_DELIMITER;
+  public static ExperimentContext context() {
+    return CONTEXT;
   }
 
   public static RiskScoreFactory scoreFactory(DatasetContext ctx) {
@@ -133,18 +150,6 @@ public final class Defaults {
         : oldMsg;
   }
 
-  private static CacheParams<RiskScoreMsg> newCacheParams() {
-    return CacheParams.<RiskScoreMsg>builder()
-        .interval(Duration.ofDays(1L))
-        .numIntervals((int) (2 * TTL.toDays()))
-        .numLookAhead(1)
-        .refreshPeriod(Duration.ofHours(1L))
-        .mergeStrategy(Defaults::cacheMerge)
-        .clock(Clock.systemUTC())
-        .comparator(RiskScoreMsg::compareTo)
-        .build();
-  }
-
   private static boolean isHigher(RiskScoreMsg msg1, RiskScoreMsg msg2) {
     return msg1.score().value() > msg2.score().value();
   }
@@ -157,6 +162,18 @@ public final class Defaults {
     return Math.abs(msg1.score().value() - msg2.score().value()) < MSG_PARAMS.tolerance();
   }
 
+  private static CacheParams<RiskScoreMsg> newCacheParams() {
+    return CacheParams.<RiskScoreMsg>builder()
+        .interval(Duration.ofDays(1L))
+        .numIntervals((int) (2 * TTL.toDays()))
+        .numLookAhead(1)
+        .refreshPeriod(Duration.ofHours(1L))
+        .mergeStrategy(Defaults::cacheMerge)
+        .clock(Clock.systemUTC())
+        .comparator(RiskScoreMsg::compareTo)
+        .build();
+  }
+
   private static MsgParams newMsgParams() {
     return MsgParams.builder()
         .transRate(0.8f)
@@ -165,6 +182,37 @@ public final class Defaults {
         .contactTtl(TTL)
         .tolerance(0.01f)
         .timeBuffer(Duration.ofDays(2L))
+        .build();
+  }
+
+  private static ExperimentContext newContext() {
+    return ExperimentContext.builder()
+        .clock(Clock.systemUTC())
+        .refTime(Instant.now())
+        .seed(Uid.ofInt())
+        .addLoggable(
+            // Events
+            ContactEvent.class,
+            ContactsRefreshEvent.class,
+            CurrentRefreshEvent.class,
+            ReceiveEvent.class,
+            SendCachedEvent.class,
+            SendCurrentEvent.class,
+            UpdateEvent.class,
+            TimeoutEvent.class,
+            // Metrics
+            GraphCycles.class,
+            GraphEccentricity.class,
+            GraphScores.class,
+            GraphSize.class,
+            GraphTopology.class,
+            CreateUsersRuntime.class,
+            SendScoresRuntime.class,
+            SendContactsRuntime.class,
+            RiskPropRuntime.class,
+            MsgPassingRuntime.class,
+            // Settings
+            ExperimentSettings.class)
         .build();
   }
 }

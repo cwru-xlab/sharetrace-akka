@@ -7,7 +7,6 @@ import io.sharetrace.experiment.state.ExperimentState;
 import io.sharetrace.logging.Loggable;
 import io.sharetrace.logging.metric.GraphTopology;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
-import java.util.Collections;
 import java.util.Set;
 
 public final class ParamsExperiment extends Experiment<ParamsExperimentConfig> {
@@ -22,10 +21,10 @@ public final class ParamsExperiment extends Experiment<ParamsExperimentConfig> {
   }
 
   public static ExperimentContext newDefaultContext() {
-    ExperimentContext ctx = ExperimentContext.create();
+    ExperimentContext ctx = Defaults.context();
     Set<Class<? extends Loggable>> loggable = new ObjectOpenHashSet<>(ctx.loggable());
     loggable.remove(GraphTopology.class);
-    return ctx.withLoggable(Collections.unmodifiableSet(loggable));
+    return ctx.withLoggable(loggable);
   }
 
   @Override

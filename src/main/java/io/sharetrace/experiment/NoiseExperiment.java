@@ -11,7 +11,6 @@ import io.sharetrace.experiment.state.ExperimentState;
 import io.sharetrace.logging.event.UpdateEvent;
 import io.sharetrace.logging.metric.GraphSize;
 import io.sharetrace.logging.setting.ExperimentSettings;
-import java.util.Set;
 import org.apache.commons.math3.distribution.RealDistribution;
 
 public final class NoiseExperiment extends Experiment<NoiseExperimentConfig> {
@@ -26,8 +25,8 @@ public final class NoiseExperiment extends Experiment<NoiseExperimentConfig> {
   }
 
   public static ExperimentContext newDefaultContext() {
-    return ExperimentContext.create()
-        .withLoggable(Set.of(UpdateEvent.class, GraphSize.class, ExperimentSettings.class));
+    return Defaults.context()
+        .withLoggable(UpdateEvent.class, GraphSize.class, ExperimentSettings.class);
   }
 
   private static RiskScoreFactory newNoisyFactory(
@@ -38,15 +37,15 @@ public final class NoiseExperiment extends Experiment<NoiseExperimentConfig> {
 
   @Override
   public void run(ExperimentState initialState, NoiseExperimentConfig config) {
-    Dataset withNewNetwork;
+    Dataset dataset = initialState.dataset();
     RiskScoreFactory noisyFactory;
     // Average over the generated network for the given noise distributions.
-    for (int i = 0; i < config.numIterations(); i++) {
-      withNewNetwork = initialState.dataset().withNewContactNetwork();
+    for (int iNetwork = 0; iNetwork < config.numIterations(); iNetwork++) {
+      dataset = dataset.withNewContactNetwork();
       for (RealDistribution noise : config.noises()) {
-        noisyFactory = newNoisyFactory(withNewNetwork, noise);
+        noisyFactory = newNoisyFactory(dataset, noise);
         initialState.toBuilder()
-            .dataset(withNewNetwork.withScoreFactory(noisyFactory))
+            .dataset(dataset.withScoreFactory(noisyFactory))
             .userParams(ctx -> Defaults.userParams(ctx.dataset()))
             .build()
             .run(config.numIterations()); // Average over the sampled data for the given network.

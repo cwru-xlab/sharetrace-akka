@@ -1,6 +1,5 @@
 package io.sharetrace.experiment;
 
-import io.sharetrace.data.Dataset;
 import io.sharetrace.data.SampledDataset;
 import io.sharetrace.experiment.config.RuntimeExperimentConfig;
 import io.sharetrace.experiment.state.Defaults;
@@ -13,7 +12,6 @@ import io.sharetrace.logging.metric.RiskPropRuntime;
 import io.sharetrace.logging.metric.SendContactsRuntime;
 import io.sharetrace.logging.metric.SendScoresRuntime;
 import io.sharetrace.logging.setting.ExperimentSettings;
-import java.util.Set;
 
 public final class RuntimeExperiment extends Experiment<RuntimeExperimentConfig> {
 
@@ -28,27 +26,26 @@ public final class RuntimeExperiment extends Experiment<RuntimeExperimentConfig>
   }
 
   public static ExperimentContext newDefaultContext() {
-    return ExperimentContext.create()
+    return Defaults.context()
         .withLoggable(
-            Set.of(
-                GraphSize.class,
-                CreateUsersRuntime.class,
-                SendScoresRuntime.class,
-                SendContactsRuntime.class,
-                RiskPropRuntime.class,
-                MsgPassingRuntime.class,
-                ExperimentSettings.class));
+            GraphSize.class,
+            CreateUsersRuntime.class,
+            SendScoresRuntime.class,
+            SendContactsRuntime.class,
+            RiskPropRuntime.class,
+            MsgPassingRuntime.class,
+            ExperimentSettings.class);
   }
 
   @Override
   public void run(ExperimentState initialState, RuntimeExperimentConfig config) {
-    Dataset newDataset;
+    SampledDataset dataset = (SampledDataset) initialState.dataset();
     for (int n : config.numNodes()) {
-      newDataset = ((SampledDataset) initialState.dataset()).withNumNodes(n);
+      dataset = dataset.withNumNodes(n);
       // Average over the generated network for the given number of users.
       for (int iNetwork = 0; iNetwork < config.numIterations(); iNetwork++) {
         initialState.toBuilder()
-            .dataset(newDataset.withNewContactNetwork())
+            .dataset(dataset.withNewContactNetwork())
             .userParams(ctx -> Defaults.userParams(ctx.dataset()))
             .build()
             .run(config.numIterations()); // Average over the sampled data for the given network.

@@ -9,16 +9,11 @@ import java.nio.file.Path;
 public final class FileExperiment extends Experiment<FileExperimentConfig> {
 
   private static final FileExperiment INSTANCE = new FileExperiment();
-  private static final ExperimentContext DEFAULT_CTX = newDefaultContext();
 
   private FileExperiment() {}
 
   public static FileExperiment instance() {
     return INSTANCE;
-  }
-
-  public static ExperimentContext newDefaultContext() {
-    return ExperimentContext.create();
   }
 
   @Override
@@ -28,7 +23,7 @@ public final class FileExperiment extends Experiment<FileExperimentConfig> {
 
   @Override
   public ExperimentState newDefaultState(FileExperimentConfig config) {
-    return newDefaultState(DEFAULT_CTX, config);
+    return newDefaultState(Defaults.context(), config);
   }
 
   @Override
