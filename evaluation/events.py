@@ -4,6 +4,7 @@ import abc
 import collections
 import dataclasses
 import enum
+import fileinput
 import itertools
 import json
 import os
@@ -49,24 +50,15 @@ _EVENTS = {v: i for i, v in enumerate(Event)}
 def stream(logdir: os.PathLike | str) -> Iterable[Record]:
     """Returns a stream of event records from the logging directory."""
     logdir = pathlib.Path(logdir).absolute()
-    zipped, unzipped = _split(logdir.iterdir(), _is_zipped)
+    zipped, unzipped = _split(
+        logdir.iterdir(), lambda f: f.name.endswith(".zip"))
     # Iterate over zipped first! Unzipped events occur last.
     with tempfile.TemporaryDirectory() as tmpdir:
         tmpdir = pathlib.Path(tmpdir).absolute()
         _unzip(zipped, tmpdir)
-        yield from _stream(tmpdir.iterdir())
-    yield from _stream(unzipped)
-
-
-def _stream(filenames: Iterable[pathlib.Path]) -> Iterable[Record]:
-    for file in sorted(filenames):
-        with file.open() as log:
-            for line in log:
-                yield json.loads(line)
-
-
-def _is_zipped(path: pathlib.Path) -> bool:
-    return path.name.endswith(".zip")
+        filenames = itertools.chain(tmpdir.iterdir(), unzipped)
+        with fileinput.input(filenames) as lines:
+            yield from map(json.loads, lines)
 
 
 def _unzip(zipped: Iterable[os.PathLike], dest: os.PathLike) -> None:
