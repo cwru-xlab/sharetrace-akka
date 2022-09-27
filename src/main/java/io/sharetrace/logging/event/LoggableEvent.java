@@ -9,6 +9,6 @@ public interface LoggableEvent extends Loggable {
 
   @Value.Default
   default long timestamp() {
-    return System.nanoTime();
+    return System.currentTimeMillis();
   }
 }

@@ -295,7 +295,7 @@ class TimelineData(CallbackData):
 
     def on_complete(self) -> None:
         t0 = min(times := self.timestamps)
-        self.timestamps = np.array([t - t0 for t in times], dtype=np.uint64)
+        self.timestamps = np.array([t - t0 for t in times], dtype=np.uint32)
         self._events = np.array(self._events[1:], dtype=np.uint8)
         self._repeats = np.array(self._repeats[1:], dtype=np.uint16)
         # Use an array to use numpy indexing to map back to decoded values.
