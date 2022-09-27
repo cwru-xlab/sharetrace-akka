@@ -54,15 +54,13 @@ def stream(logdir: os.PathLike | str) -> Iterable[Record]:
     with tempfile.TemporaryDirectory() as tmpdir:
         tmpdir = pathlib.Path(tmpdir).absolute()
         _unzip(zipped, tmpdir)
-        for record in _stream(tmpdir.iterdir()):
-            yield record
-    for record in _stream(unzipped):
-        yield record
+        yield from _stream(tmpdir.iterdir())
+    yield from _stream(unzipped)
 
 
 def _stream(filenames: Iterable[pathlib.Path]) -> Iterable[Record]:
-    for filename in sorted(filenames):
-        with filename.open() as log:
+    for file in sorted(filenames):
+        with file.open() as log:
             for line in log:
                 yield json.loads(line)
 
