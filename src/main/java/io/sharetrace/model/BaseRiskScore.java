@@ -24,7 +24,8 @@ abstract class BaseRiskScore implements Comparable<RiskScore> {
   public static final float MIN_VALUE = 0f;
   public static final float MAX_VALUE = 1f;
   public static final float VALUE_RANGE = MAX_VALUE - MIN_VALUE;
-  public static final RiskScore MIN = RiskScore.of(MIN_VALUE, Instant.EPOCH);
+  public static final Instant MIN_TIME = Instant.EPOCH;
+  public static final RiskScore MIN = RiskScore.of(MIN_VALUE, MIN_TIME);
 
   @Override
   public int compareTo(RiskScore score) {
@@ -45,6 +46,6 @@ abstract class BaseRiskScore implements Comparable<RiskScore> {
   @Value.Check
   protected void check() {
     Checks.inClosed(value(), MIN_VALUE, MAX_VALUE, "value");
-    Checks.isAtLeast(time(), Instant.EPOCH, "time");
+    Checks.isAtLeast(time(), MIN_TIME, "time");
   }
 }
