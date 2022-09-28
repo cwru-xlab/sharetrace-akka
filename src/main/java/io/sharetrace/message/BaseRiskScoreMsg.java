@@ -5,9 +5,6 @@ import io.sharetrace.actor.RiskPropagation;
 import io.sharetrace.actor.User;
 import io.sharetrace.model.RiskScore;
 import io.sharetrace.util.Uid;
-import java.time.Clock;
-import java.time.Duration;
-import java.time.Instant;
 import org.immutables.value.Value;
 
 /**
@@ -34,29 +31,5 @@ abstract class BaseRiskScoreMsg implements UserMsg, Comparable<RiskScoreMsg> {
   @Value.Default
   public String id() {
     return Uid.ofLongString();
-  }
-
-  public boolean isAfter(Instant time) {
-    return score().time().isAfter(time);
-  }
-
-  public boolean isGreaterThan(double value) {
-    return score().value() > value;
-  }
-
-  public boolean isGreaterThan(RiskScoreMsg msg) {
-    return isGreaterThan(msg.score().value());
-  }
-
-  public float scaledValue(float scale) {
-    return score().value() * scale;
-  }
-
-  protected abstract Clock clock();
-
-  protected abstract Duration scoreTtl();
-
-  public boolean isAlive() {
-    return Duration.between(score().time(), clock().instant()).compareTo(scoreTtl()) < 0;
   }
 }
