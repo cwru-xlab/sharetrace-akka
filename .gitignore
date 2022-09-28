@@ -34,3 +34,5 @@ gradle-app.setting
 build
 /gradle/wrapper/
 /.idea/
+out
+**/.DS_Store
