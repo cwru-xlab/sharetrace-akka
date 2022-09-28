@@ -17,18 +17,14 @@ import org.immutables.value.Value;
  * @see User
  * @see RiskPropagation
  */
-@SuppressWarnings("DefaultAnnotationParam")
+@SuppressWarnings({"DefaultAnnotationParam", "StaticInitializerReferencesSubClass"})
 @Value.Immutable(copy = true)
 abstract class BaseRiskScore implements Comparable<RiskScore> {
 
   public static final float MIN_VALUE = 0f;
   public static final float MAX_VALUE = 1f;
   public static final float VALUE_RANGE = MAX_VALUE - MIN_VALUE;
-
-  /** Returns a risk score of minimum value and the given time. */
-  public static RiskScore ofMinValue(Instant time) {
-    return RiskScore.of(MIN_VALUE, time);
-  }
+  public static final RiskScore MIN = RiskScore.of(MIN_VALUE, Instant.EPOCH);
 
   @Override
   public int compareTo(RiskScore score) {

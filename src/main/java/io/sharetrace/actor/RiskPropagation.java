@@ -26,13 +26,13 @@ import io.sharetrace.message.RiskScoreMsg;
 import io.sharetrace.message.RunMsg;
 import io.sharetrace.message.UserMsg;
 import io.sharetrace.model.MsgParams;
-import io.sharetrace.model.RiskScore;
 import io.sharetrace.model.UserParams;
 import io.sharetrace.util.CacheParams;
 import io.sharetrace.util.TypedSupplier;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import java.time.Clock;
+import java.time.Instant;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -191,13 +191,20 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
   private void sendSymptomScores(Map<Integer, ActorRef<UserMsg>> users) {
     int name;
     ActorRef<UserMsg> user;
-    RiskScore symptomScore;
     for (Entry<Integer, ActorRef<UserMsg>> entry : users.entrySet()) {
       name = entry.getKey();
       user = entry.getValue();
-      symptomScore = scoreFactory.riskScore(name);
-      user.tell(RiskScoreMsg.builder().score(symptomScore).replyTo(user).build());
+      user.tell(newScoreMsg(name, user));
     }
+  }
+
+  private RiskScoreMsg newScoreMsg(int name, ActorRef<UserMsg> user) {
+    return RiskScoreMsg.builder()
+        .score(scoreFactory.riskScore(name))
+        .clock(clock)
+        .scoreTtl(msgParams.scoreTtl())
+        .replyTo(user)
+        .build();
   }
 
   private void sendContacts(Map<Integer, ActorRef<UserMsg>> users) {
@@ -205,9 +212,18 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
     for (Contact contact : contactNetwork.contacts()) {
       user1 = users.get(contact.user1());
       user2 = users.get(contact.user2());
-      user1.tell(ContactMsg.builder().contact(user2).contactTime(contact.time()).build());
-      user2.tell(ContactMsg.builder().contact(user1).contactTime(contact.time()).build());
+      user1.tell(newContactMsg(user2, contact.time()));
+      user2.tell(newContactMsg(user1, contact.time()));
     }
+  }
+
+  private ContactMsg newContactMsg(ActorRef<UserMsg> contact, Instant contactTime) {
+    return ContactMsg.builder()
+        .contact(contact)
+        .contactTime(contactTime)
+        .clock(clock)
+        .contactTtl(msgParams.contactTtl())
+        .build();
   }
 
   private Behavior<AlgorithmMsg> onTerminateMsg(Terminated msg) {
