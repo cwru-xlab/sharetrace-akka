@@ -25,7 +25,7 @@ class Metric(str, enum.Enum):
         return self.value
 
 
-def load(path: os.PathLike | AnyStr) -> Records:
+def load(path: os.PathLike | AnyStr) -> list[Records]:
     with open(path) as f:
         metrics = collections.defaultdict(dict)
         for line in f:
@@ -33,4 +33,4 @@ def load(path: os.PathLike | AnyStr) -> Records:
             metric: Record = record["metric"]
             label = Metric(metric.pop("type"))
             metrics[record["sid"]][label] = metric
-    return dict(metrics)
+    return list(metrics.values())
