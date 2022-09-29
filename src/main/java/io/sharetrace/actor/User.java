@@ -115,7 +115,7 @@ public final class User extends AbstractBehavior<UserMsg> {
 
   private Behavior<UserMsg> onContactMsg(ContactMsg msg) {
     if (msgUtil.isAlive(msg)) {
-      ContactActor contact = new ContactActor(msg, timers, msgUtil, cache, defaultMsg);
+      ContactActor contact = new ContactActor(msg, timers, msgUtil, cache);
       contacts.put(contact.ref(), contact);
       logger.logContact(contact.ref());
       sendToContact(contact);

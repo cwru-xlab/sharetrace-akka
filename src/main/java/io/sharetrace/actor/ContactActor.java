@@ -13,29 +13,25 @@ import java.util.function.BiConsumer;
 
 final class ContactActor {
 
+  private static final float DEFAULT_THRESHOLD = RiskScore.MIN_VALUE;
   private final ActorRef<UserMsg> ref;
   private final Instant contactTime;
   private final IntervalCache<RiskScoreMsg> cache;
   private final MsgUtil msgUtil;
   private final TimerScheduler<UserMsg> timers;
-  private final RiskScoreMsg defaultMsg;
-  private RiskScoreMsg thresholdMsg;
   private float sendThreshold;
 
   public ContactActor(
       ContactMsg msg,
       TimerScheduler<UserMsg> timers,
       MsgUtil msgUtil,
-      IntervalCache<RiskScoreMsg> cache,
-      RiskScoreMsg defaultMsg) {
+      IntervalCache<RiskScoreMsg> cache) {
     this.ref = msg.contact();
     this.contactTime = msg.contactTime();
     this.cache = cache;
     this.msgUtil = msgUtil;
     this.timers = timers;
-    this.defaultMsg = defaultMsg;
-    this.thresholdMsg = defaultMsg;
-    this.sendThreshold = RiskScore.MIN_VALUE;
+    this.sendThreshold = DEFAULT_THRESHOLD;
   }
 
   public boolean shouldReceive(RiskScoreMsg msg) {
@@ -53,8 +49,12 @@ final class ContactActor {
   }
 
   public void updateThreshold() {
-    thresholdMsg = cache.max(bufferedContactTime()).filter(msgUtil::isAlive).orElse(defaultMsg);
-    sendThreshold = msgUtil.computeThreshold(thresholdMsg);
+    sendThreshold =
+        cache
+            .max(bufferedContactTime())
+            .filter(msgUtil::isAlive)
+            .map(msgUtil::computeThreshold)
+            .orElse(DEFAULT_THRESHOLD);
   }
 
   public ActorRef<UserMsg> ref() {
@@ -77,8 +77,7 @@ final class ContactActor {
     float threshold = msgUtil.computeThreshold(msg);
     if (threshold > sendThreshold) {
       sendThreshold = threshold;
-      thresholdMsg = msg;
-      timers.startSingleTimer(ThresholdMsg.of(ref), msgUtil.computeTtl(thresholdMsg));
+      timers.startSingleTimer(ThresholdMsg.of(ref), msgUtil.computeTtl(msg));
     }
   }
 
