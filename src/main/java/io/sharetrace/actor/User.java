@@ -7,7 +7,6 @@ import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import akka.actor.typed.javadsl.TimerScheduler;
-import io.sharetrace.data.factory.CacheFactory;
 import io.sharetrace.graph.ContactNetwork;
 import io.sharetrace.logging.Loggable;
 import io.sharetrace.logging.Logger;
@@ -64,9 +63,8 @@ public final class User extends AbstractBehavior<UserMsg> {
   private final EventLogger logger;
   private final UserParams userParams;
   private final Clock clock;
-  private final CacheFactory<RiskScoreMsg> cacheFactory;
   private final IntervalCache<RiskScoreMsg> cache;
-  private final Map<ActorRef<UserMsg>, Contact> contacts;
+  private final Map<ActorRef<UserMsg>, ContactActor> contacts;
   private final MsgUtil msgUtil;
   private final RiskScoreMsg defaultMsg;
   private RiskScoreMsg current;
@@ -79,14 +77,13 @@ public final class User extends AbstractBehavior<UserMsg> {
       UserParams userParams,
       MsgParams msgParams,
       Clock clock,
-      CacheFactory<RiskScoreMsg> cacheFactory) {
+      IntervalCache<RiskScoreMsg> cache) {
     super(ctx);
     this.timers = timers;
     this.logger = new EventLogger(loggable, getContext());
     this.userParams = userParams;
     this.clock = clock;
-    this.cacheFactory = cacheFactory;
-    this.cache = cacheFactory.newCache();
+    this.cache = cache;
     this.contacts = new Object2ObjectOpenHashMap<>();
     this.msgUtil = new MsgUtil(getContext(), clock, msgParams);
     this.defaultMsg = msgUtil.defaultMsg();
@@ -101,14 +98,13 @@ public final class User extends AbstractBehavior<UserMsg> {
       UserParams userParams,
       MsgParams msgParams,
       Clock clock,
-      CacheFactory<RiskScoreMsg> cacheFactory) {
+      IntervalCache<RiskScoreMsg> cache) {
     return Behaviors.setup(
         ctx -> {
           ctx.setLoggerName(Logging.EVENTS_LOGGER_NAME);
           Behavior<UserMsg> user =
               Behaviors.withTimers(
-                  timers ->
-                      new User(ctx, timers, loggable, userParams, msgParams, clock, cacheFactory));
+                  timers -> new User(ctx, timers, loggable, userParams, msgParams, clock, cache));
           return Behaviors.withMdc(UserMsg.class, msg -> mdc, user);
         });
   }
@@ -137,7 +133,7 @@ public final class User extends AbstractBehavior<UserMsg> {
 
   private Behavior<UserMsg> onContactMsg(ContactMsg msg) {
     if (msgUtil.isAlive(msg)) {
-      Contact contact = new Contact(msg, msgUtil, cacheFactory.newCache(), defaultMsg, timers);
+      ContactActor contact = new ContactActor(msg, timers, msgUtil, cache, defaultMsg);
       contacts.put(contact.ref, contact);
       logger.logContact(contact.ref);
       sendToContact(contact);
@@ -145,7 +141,7 @@ public final class User extends AbstractBehavior<UserMsg> {
     return this;
   }
 
-  private void sendToContact(Contact contact) {
+  private void sendToContact(ContactActor contact) {
     if (contact.shouldReceive(current)) {
       sendCurrent(contact);
     } else {
@@ -153,14 +149,14 @@ public final class User extends AbstractBehavior<UserMsg> {
     }
   }
 
-  private void sendCurrent(Contact contact) {
+  private void sendCurrent(ContactActor contact) {
     contact.tell(transmitted, logger::logSendCurrent);
   }
 
-  private void sendCached(Contact contact) {
+  private void sendCached(ContactActor contact) {
     cache
         .max(contact.bufferedContactTime())
-        .filter(contact::shouldReceive)
+        .filter(msgUtil::isAlive)
         .ifPresent(cached -> contact.tell(cached, logger::logSendCached));
   }
 
@@ -171,6 +167,7 @@ public final class User extends AbstractBehavior<UserMsg> {
     return this;
   }
 
+  @SuppressWarnings("unused")
   private Behavior<UserMsg> onRefreshMsg(RefreshMsg msg) {
     refreshContacts();
     refreshCurrent();
@@ -178,10 +175,11 @@ public final class User extends AbstractBehavior<UserMsg> {
   }
 
   private Behavior<UserMsg> onThresholdMsg(ThresholdMsg msg) {
-    contacts.get(msg.contact()).replaceExpiredThreshold();
+    contacts.get(msg.contact()).updateThreshold();
     return this;
   }
 
+  @SuppressWarnings("unused")
   private Behavior<UserMsg> onTimeoutMsg(TimeoutMsg msg) {
     logger.logTimeout();
     return Behaviors.stopped();
@@ -193,7 +191,7 @@ public final class User extends AbstractBehavior<UserMsg> {
 
   private void refreshContacts() {
     int numContacts = contacts.size();
-    contacts.values().removeIf(Predicate.not(Contact::isAlive));
+    contacts.values().removeIf(Predicate.not(ContactActor::isAlive));
     int numRemaining = contacts.size();
     logger.logContactsRefresh(numRemaining, numContacts - numRemaining);
   }
@@ -226,29 +224,29 @@ public final class User extends AbstractBehavior<UserMsg> {
     return propagate;
   }
 
-  private static final class Contact {
+  private static final class ContactActor {
 
     private final ActorRef<UserMsg> ref;
     private final Instant contactTime;
-    private final MsgUtil msgUtil;
     private final IntervalCache<RiskScoreMsg> cache;
-    private final RiskScoreMsg defaultMsg;
+    private final MsgUtil msgUtil;
     private final TimerScheduler<UserMsg> timers;
+    private final RiskScoreMsg defaultMsg;
     private RiskScoreMsg thresholdMsg;
     private float sendThreshold;
 
-    public Contact(
+    public ContactActor(
         ContactMsg msg,
+        TimerScheduler<UserMsg> timers,
         MsgUtil msgUtil,
         IntervalCache<RiskScoreMsg> cache,
-        RiskScoreMsg defaultMsg,
-        TimerScheduler<UserMsg> timers) {
+        RiskScoreMsg defaultMsg) {
       this.ref = msg.contact();
       this.contactTime = msg.contactTime();
-      this.msgUtil = msgUtil;
       this.cache = cache;
-      this.defaultMsg = defaultMsg;
+      this.msgUtil = msgUtil;
       this.timers = timers;
+      this.defaultMsg = defaultMsg;
       this.thresholdMsg = defaultMsg;
       this.sendThreshold = RiskScore.MIN_VALUE;
     }
@@ -261,26 +259,25 @@ public final class User extends AbstractBehavior<UserMsg> {
       return msgUtil.isGreaterThan(msg, sendThreshold);
     }
 
-    public boolean isNotSender(RiskScoreMsg received) {
-      return !ref.equals(received.replyTo());
+    public boolean isRelevant(RiskScoreMsg msg) {
+      return msgUtil.isNotAfter(msg, bufferedContactTime());
     }
 
-    public boolean isRelevant(RiskScoreMsg msg) {
-      return msgUtil.isNotAfter(msg, msgUtil.buffered(contactTime));
+    public boolean isNotSender(RiskScoreMsg msg) {
+      return !ref.equals(msg.replyTo());
     }
 
     public Instant bufferedContactTime() {
       return msgUtil.buffered(contactTime);
     }
 
-    public void tell(RiskScoreMsg msg, BiConsumer<ActorRef<?>, RiskScoreMsg> log) {
+    public void tell(RiskScoreMsg msg, BiConsumer<ActorRef<?>, RiskScoreMsg> logEvent) {
       ref.tell(msg);
-      log.accept(ref, msg);
-      cache.put(msg.score().time(), msg);
+      logEvent.accept(ref, msg);
       updateThreshold(msg);
     }
 
-    public void replaceExpiredThreshold() {
+    public void updateThreshold() {
       thresholdMsg = cache.max(bufferedContactTime()).filter(msgUtil::isAlive).orElse(defaultMsg);
       sendThreshold = msgUtil.computeThreshold(thresholdMsg);
     }
@@ -305,7 +302,7 @@ public final class User extends AbstractBehavior<UserMsg> {
     private final Clock clock;
     private final MsgParams params;
 
-    private MsgUtil(ActorContext<UserMsg> ctx, Clock clock, MsgParams params) {
+    public MsgUtil(ActorContext<UserMsg> ctx, Clock clock, MsgParams params) {
       this.ctx = ctx;
       this.clock = clock;
       this.params = params;
@@ -337,6 +334,10 @@ public final class User extends AbstractBehavior<UserMsg> {
       return isGreaterThan(msg1, msg2.score().value());
     }
 
+    public boolean isGreaterThan(RiskScoreMsg msg, float value) {
+      return msg.score().value() > value;
+    }
+
     public Duration computeTtl(RiskScoreMsg msg) {
       Duration sinceComputed = elapsedSince(msg.score().time());
       return params.scoreTtl().minus(sinceComputed);
@@ -352,10 +353,6 @@ public final class User extends AbstractBehavior<UserMsg> {
 
     public boolean isAlive(Instant contactTime) {
       return isAlive(contactTime, params.contactTtl());
-    }
-
-    private boolean isGreaterThan(RiskScoreMsg msg, float value) {
-      return msg.score().value() > value;
     }
 
     private boolean isAlive(Temporal temporal, Duration ttl) {

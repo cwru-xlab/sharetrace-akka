@@ -184,7 +184,7 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
         .userParams(userParams)
         .msgParams(msgParams)
         .clock(clock)
-        .cacheFactory(cacheFactory)
+        .cache(cacheFactory.newCache())
         .build();
   }
 
