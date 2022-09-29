@@ -33,4 +33,4 @@ def load(path: os.PathLike | AnyStr) -> Records:
             metric: Record = record["metric"]
             label = Metric(metric.pop("type"))
             metrics[record["sid"]][label] = metric
-    return dict(metric)
+    return dict(metrics)

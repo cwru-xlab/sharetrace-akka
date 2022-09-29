@@ -1,5 +1,6 @@
 package io.sharetrace.experiment;
 
+import io.sharetrace.data.Dataset;
 import io.sharetrace.experiment.config.ParamsExperimentConfig;
 import io.sharetrace.experiment.state.Defaults;
 import io.sharetrace.experiment.state.ExperimentContext;
@@ -7,6 +8,7 @@ import io.sharetrace.experiment.state.ExperimentState;
 import io.sharetrace.logging.Loggable;
 import io.sharetrace.logging.metric.GraphTopology;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
+
 import java.util.Set;
 
 public final class ParamsExperiment extends Experiment<ParamsExperimentConfig> {
@@ -29,16 +31,18 @@ public final class ParamsExperiment extends Experiment<ParamsExperimentConfig> {
 
   @Override
   public void run(ExperimentState initialState, ParamsExperimentConfig config) {
-    for (float tr : config.transRates()) {
-      for (float sc : config.sendCoeffs()) {
-        // Average over the generated network for the given parameters.
-        for (int iNetwork = 0; iNetwork < config.numIterations(); iNetwork++)
+    Dataset dataset = initialState.dataset();
+    for (int iNetwork = 0; iNetwork < config.numIterations(); iNetwork++) {
+      dataset = dataset.withNewContactNetwork();
+      for (float tr : config.transRates()) {
+        for (float sc : config.sendCoeffs()) {
           initialState.toBuilder()
               .msgParams(initialState.msgParams().withTransRate(tr).withSendCoeff(sc))
-              .dataset(initialState.dataset().withNewContactNetwork())
+              .dataset(dataset)
               .userParams(ctx -> Defaults.userParams(ctx.dataset()))
               .build()
               .run(config.numIterations()); // Average over the sampled data for the given network.
+        }
       }
     }
   }
