@@ -204,11 +204,9 @@ public final class User extends AbstractBehavior<UserMsg> {
   }
 
   private void propagate(RiskScoreMsg msg) {
-    if (msgUtil.isAlive(msg)) {
-      contacts.values().stream()
-          .filter(contact -> contact.shouldReceive(msg))
-          .forEach(contact -> contact.tell(msg, logger::logPropagate));
-    }
+    contacts.values().stream()
+        .filter(contact -> contact.shouldReceive(msg))
+        .forEach(contact -> contact.tell(msg, logger::logPropagate));
   }
 
   private RiskScoreMsg updateAndCache(RiskScoreMsg msg) {
