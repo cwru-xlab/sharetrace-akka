@@ -12,7 +12,7 @@ import pathlib
 import sys
 import tempfile
 import zipfile
-from collections.abc import Callable, Iterable, Sized
+from collections.abc import Callable, Iterable
 from typing import Any, Iterator, final, ContextManager
 
 import numpy as np
@@ -21,9 +21,9 @@ from tqdm.notebook import tqdm
 
 from hints import Record
 
-ONE_8 = np.uint8(1)
-ONE_16 = np.uint16(1)
-ONE_32 = np.uint32(1)
+_ONE_8 = np.uint8(1)
+_ONE_16 = np.uint16(1)
+_ONE_32 = np.uint32(1)
 
 
 class Event(str, enum.Enum):
@@ -215,57 +215,57 @@ class EventCounterData(EventCounter, CallbackData):
 class UserUpdates:
     _DEFAULT_N = np.uint16(0)
 
-    initial: np.float32
-    final: np.float32 | None = None
+    symptom: np.float32
+    exposure: np.float32 | None = None
     n: np.uint16 = _DEFAULT_N
 
     def __post_init__(self) -> None:
-        if self.final is None:
-            self.final = self.initial
+        if self.exposure is None:
+            self.exposure = self.symptom
 
 
-class UpdatesData(CallbackData, Sized):
+class UpdatesData(CallbackData):
     """An event callback for tracking user updates.
 
     Attributes:
-       updates: An array where the i-th entry is number of updates of user i.
-       initials: An array where the i-th entry is the initial value of user i.
-       finals: An array where the i-th entry is the final value of user i.
+       updates (ndarray): i-th entry is the number of updates of user i.
+       symptoms (ndarray): i-th entry is the symptom score of user i.
+       exposures (ndarray): i-th entry is the exposure score of user i.
+       num_updated (int): Number of users that were updated.
+       num_updates (int): Number of updates for all users.
     """
-    __slots__ = "updates", "initials", "finals", "_n"
+    __slots__ = "updates", "symptoms", "exposures", "num_updated", "num_updates"
 
     def __init__(self) -> None:
         self.updates: dict[np.uint32, UserUpdates] | np.ndarray[np.uint16] = {}
-        self.initials: np.ndarray[np.float32] | None = None
-        self.finals: np.ndarray[np.float32] | None = None
-        self._n: int = 0
+        self.symptoms: np.ndarray[np.float32] | None = None
+        self.exposures: np.ndarray[np.float32] | None = None
+        self.num_updated = 0
+        self.num_updates = 0
 
     def __call__(self, record: Record, **kwargs) -> None:
         if Event.of(record) == Event.UPDATE:
             if (name := np.uint32(record["to"])) in self.updates:
                 user = self.updates[name]
-                user.n += ONE_16
-                user.final = np.float32(record["newScore"]["value"])
-                self._n += 1  # Only count non-initial updates
+                user.n += _ONE_16
+                user.exposure = np.float32(record["newScore"]["value"])
             else:
-                initial = np.float32(record["newScore"]["value"])
-                self.updates[name] = UserUpdates(initial=initial)
+                symptom = np.float32(record["newScore"]["value"])
+                self.updates[name] = UserUpdates(symptom=symptom)
 
     def on_complete(self) -> None:
-        n_users = len(self.updates)
-        updates = np.zeros(n_users, dtype=np.uint16)
-        initials = np.zeros(n_users, dtype=np.float32)
-        finals = np.zeros(n_users, dtype=np.float32)
+        num_users = len(self.updates)
+        updates = np.zeros(num_users, dtype=np.uint16)
+        symptoms, exposures = np.zeros((2, num_users), dtype=np.float32)
         for u, user in self.updates.items():
             updates[u] = user.n
-            initials[u] = user.initial
-            finals[u] = user.final
+            symptoms[u] = user.symptom
+            exposures[u] = user.exposure
+        self.num_updates = np.sum(updates)
+        self.num_updated = np.count_nonzero(updates)
         self.updates = updates
-        self.initials = initials
-        self.finals = finals
-
-    def __len__(self) -> int:
-        return self._n
+        self.symptoms = symptoms
+        self.exposures = exposures
 
 
 class ReceivedData(CallbackData):
@@ -306,10 +306,10 @@ class TimelineData(CallbackData):
         # If the previous event was also this type...
         if (label := self.e2i[event]) == self._events[-1]:
             # ...increment its count.
-            self._repeats[-1] += ONE_32
+            self._repeats[-1] += _ONE_32
         else:
             self._events.append(label)
-            self._repeats.append(ONE_32)
+            self._repeats.append(_ONE_32)
 
     def on_complete(self) -> None:
         t0 = min(times := self.timestamps)
@@ -430,7 +430,7 @@ class ReachabilityData(CallbackData):
             destinations = {dest for _, dest in edges}
             row.extend(itertools.repeat(user, len(destinations)))
             col.extend(destinations)
-            data.extend(itertools.repeat(ONE_8, len(destinations)))
+            data.extend(itertools.repeat(_ONE_8, len(destinations)))
         # adj[i][j] = 1: user `j` is reachable from user `i`
         self.adj = sparse.csr_matrix((data, (row, col)))
 
@@ -466,7 +466,7 @@ def edges_to_adj(edges: Edges) -> tuple[Index, sparse.spmatrix]:
     idx = index_edges(edges)
     adj = np.zeros((len(idx), len(idx)), dtype=np.uint8)
     for v1, v2 in edges:
-        adj[idx[v1], idx[v2]] = ONE_8
+        adj[idx[v1], idx[v2]] = _ONE_8
     return idx, sparse.csr_matrix(adj)
 
 
