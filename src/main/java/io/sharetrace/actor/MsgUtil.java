@@ -37,8 +37,8 @@ final class MsgUtil {
 
   public RiskScoreMsg transmitted(RiskScoreMsg msg) {
     RiskScore original = msg.score();
-    RiskScore modified = original.withValue(original.value() * params.transRate());
-    return RiskScoreMsg.builder().score(modified).replyTo(ctx.getSelf()).id(msg.id()).build();
+    RiskScore transmitted = original.withValue(original.value() * params.transRate());
+    return RiskScoreMsg.builder().score(transmitted).replyTo(ctx.getSelf()).id(msg.id()).build();
   }
 
   public RiskScoreMsg defaultMsg() {
@@ -54,7 +54,7 @@ final class MsgUtil {
   }
 
   public Duration computeTtl(RiskScoreMsg msg) {
-    Duration sinceComputed = elapsedSince(msg.score().time());
+    Duration sinceComputed = since(msg.score().time());
     return params.scoreTtl().minus(sinceComputed);
   }
 
@@ -71,10 +71,10 @@ final class MsgUtil {
   }
 
   private boolean isAlive(Temporal temporal, Duration ttl) {
-    return elapsedSince(temporal).compareTo(ttl) < 0;
+    return since(temporal).compareTo(ttl) < 0;
   }
 
-  private Duration elapsedSince(Temporal temporal) {
+  private Duration since(Temporal temporal) {
     return Duration.between(temporal, clock.instant());
   }
 }
