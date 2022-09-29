@@ -372,6 +372,24 @@ optional = false
 python-versions = "*"
 
 [[package]]
+name = "ipywidgets"
+version = "8.0.2"
+description = "Jupyter interactive widgets"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+ipykernel = ">=4.5.1"
+ipython = ">=6.1.0"
+jupyterlab-widgets = ">=3.0,<4.0"
+traitlets = ">=4.3.1"
+widgetsnbextension = ">=4.0,<5.0"
+
+[package.extras]
+test = ["jsonschema", "pytest (>=3.6.0)", "pytest-cov", "pytz"]
+
+[[package]]
 name = "jedi"
 version = "0.18.1"
 description = "An autocompletion tool for Python that can be used for text editors."
@@ -465,7 +483,7 @@ test = ["ipykernel", "pre-commit", "pytest", "pytest-cov", "pytest-timeout"]
 
 [[package]]
 name = "jupyter-server"
-version = "1.19.0"
+version = "1.19.1"
 description = "The backend—i.e. core services, APIs, and REST endpoints—to Jupyter web applications."
 category = "main"
 optional = false
@@ -547,6 +565,14 @@ openapi = ["openapi-core (>=0.14.2)", "ruamel-yaml"]
 test = ["codecov", "ipykernel", "jupyter-server", "openapi-core (>=0.14.2,<0.15.0)", "openapi-spec-validator (<0.5)", "pytest-console-scripts", "pytest-cov", "pytest (>=5.3.2)", "ruamel-yaml", "strict-rfc3339"]
 
 [[package]]
+name = "jupyterlab-widgets"
+version = "3.0.3"
+description = "Jupyter interactive widgets for JupyterLab"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[[package]]
 name = "kiwisolver"
 version = "1.4.4"
 description = "A fast implementation of the Cassowary constraint solver"
@@ -617,7 +643,7 @@ python-versions = "*"
 
 [[package]]
 name = "nbclassic"
-version = "0.4.3"
+version = "0.4.4"
 description = "A web-based notebook environment for interactive computing"
 category = "main"
 optional = false
@@ -1151,7 +1177,7 @@ tests = ["cython", "littleutils", "pygments", "typeguard", "pytest"]
 
 [[package]]
 name = "terminado"
-version = "0.15.0"
+version = "0.16.0"
 description = "Tornado websocket backend for the Xterm.js Javascript terminal emulator library."
 category = "main"
 optional = false
@@ -1195,6 +1221,23 @@ description = "Tornado is a Python web framework and asynchronous networking lib
 category = "main"
 optional = false
 python-versions = ">= 3.7"
+
+[[package]]
+name = "tqdm"
+version = "4.64.1"
+description = "Fast, Extensible Progress Meter"
+category = "main"
+optional = false
+python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,>=2.7"
+
+[package.dependencies]
+colorama = { version = "*", markers = "platform_system == \"Windows\"" }
+
+[package.extras]
+dev = ["py-make (>=0.1.0)", "twine", "wheel"]
+notebook = ["ipywidgets (>=6)"]
+slack = ["slack-sdk"]
+telegram = ["requests"]
 
 [[package]]
 name = "traitlets"
@@ -1258,6 +1301,14 @@ optional = ["python-socks", "wsaccel"]
 test = ["websockets"]
 
 [[package]]
+name = "widgetsnbextension"
+version = "4.0.3"
+description = "Jupyter interactive widgets for Jupyter Notebook"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[[package]]
 name = "zipp"
 version = "3.8.1"
 description = "Backport of pathlib-compatible object wrapper for zip files"
@@ -1272,7 +1323,7 @@ testing = ["pytest (>=6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytest-
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.9,<3.12"  # Setup for scipy
-content-hash = "fb09d4f0776654b1c95b26284ee5b7d9f9bfaa9880051ea84cad6f22a06b8c61"
+content-hash = "84f2e67b0fed97460cfa92c12e9fc3f8575d319dd85ef3467bcef85a7626d0f4"
 
 [metadata.files]
 anyio = [
@@ -1555,6 +1606,10 @@ ipython-genutils = [
     { file = "ipython_genutils-0.2.0-py2.py3-none-any.whl", hash = "sha256:72dd37233799e619666c9f639a9da83c34013a73e8bbc79a7a6348d93c61fab8" },
     { file = "ipython_genutils-0.2.0.tar.gz", hash = "sha256:eb2e116e75ecef9d4d228fdc66af54269afa26ab4463042e33785b887c628ba8" },
 ]
+ipywidgets = [
+    { file = "ipywidgets-8.0.2-py3-none-any.whl", hash = "sha256:1dc3dd4ee19ded045ea7c86eb273033d238d8e43f9e7872c52d092683f263891" },
+    { file = "ipywidgets-8.0.2.tar.gz", hash = "sha256:08cb75c6e0a96836147cbfdc55580ae04d13e05d26ffbc377b4e1c68baa28b1f" },
+]
 jedi = [
     { file = "jedi-0.18.1-py2.py3-none-any.whl", hash = "sha256:637c9635fcf47945ceb91cd7f320234a7be540ded6f3e99a50cb6febdfd1ba8d" },
     { file = "jedi-0.18.1.tar.gz", hash = "sha256:74137626a64a99c8eb6ae5832d99b3bdd7d29a3850fe2aa80a4126b2a7d949ab" },
@@ -1580,8 +1635,8 @@ jupyter-core = [
     { file = "jupyter_core-4.11.1.tar.gz", hash = "sha256:2e5f244d44894c4154d06aeae3419dd7f1b0ef4494dc5584929b398c61cfd314" },
 ]
 jupyter-server = [
-    { file = "jupyter_server-1.19.0-py3-none-any.whl", hash = "sha256:310531a4ed1a5088daec9b930cfda08952d1e3809d0605e4b137af0a6da11669" },
-    { file = "jupyter_server-1.19.0.tar.gz", hash = "sha256:5d9b58c92011db1854a8ddeeac46e16bb37281e8f45156d4d0b2fb745f9561dd" },
+    { file = "jupyter_server-1.19.1-py3-none-any.whl", hash = "sha256:ea3587840f2a906883c9eecb6bc85ef87ba1b7ba4cb6eafbacfac4a568862106" },
+    { file = "jupyter_server-1.19.1.tar.gz", hash = "sha256:d1cc3596945849742bc3eedf0699feeb50ad6c6045ebef02a9298b7f13c27e9f" },
 ]
 jupyterlab = [
     { file = "jupyterlab-3.4.7-py3-none-any.whl", hash = "sha256:30c64bc0aa0ba09959ab6fd5c74f08a6ae64656b46a29e2522142a5fda0dc486" },
@@ -1594,6 +1649,10 @@ jupyterlab-pygments = [
 jupyterlab-server = [
     { file = "jupyterlab_server-2.15.2-py3-none-any.whl", hash = "sha256:ec7cc9ddd16c407ba3ecd3579771fa7ae4c8f239ba401649f35e44ecbc3d41cc" },
     { file = "jupyterlab_server-2.15.2.tar.gz", hash = "sha256:c0bcdd4606e640e6f16d236ceac55336dc8bf98cbbce067af27524ccc2fb2640" },
+]
+jupyterlab-widgets = [
+    { file = "jupyterlab_widgets-3.0.3-py3-none-any.whl", hash = "sha256:6aa1bc0045470d54d76b9c0b7609a8f8f0087573bae25700a370c11f82cb38c8" },
+    { file = "jupyterlab_widgets-3.0.3.tar.gz", hash = "sha256:c767181399b4ca8b647befe2d913b1260f51bf9d8ef9b7a14632d4c1a7b536bd" },
 ]
 kiwisolver = [
     { file = "kiwisolver-1.4.4-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:2f5e60fabb7343a836360c4f0919b8cd0d6dbf08ad2ca6b9cf90bf0c76a3c4f6" },
@@ -1831,8 +1890,8 @@ mistune = [
     { file = "mistune-2.0.4.tar.gz", hash = "sha256:9ee0a66053e2267aba772c71e06891fa8f1af6d4b01d5e84e267b4570d4d9808" },
 ]
 nbclassic = [
-    { file = "nbclassic-0.4.3-py3-none-any.whl", hash = "sha256:4b01076effdac53e775cd1b6a4e891663568b32621468e205b502a23b2921899" },
-    { file = "nbclassic-0.4.3.tar.gz", hash = "sha256:f03111b2cebaa69b88370a7b23b19b2b37c9bb71767f1828cdfd7a047eae8edd" },
+    { file = "nbclassic-0.4.4-py3-none-any.whl", hash = "sha256:6dbea338e67d36cdaf491178e9544d9f0088763ca8bb1f0901dd6cab15aba548" },
+    { file = "nbclassic-0.4.4.tar.gz", hash = "sha256:f6c4fbac2c5efc6f5e7c02a69f5359a6040b90ac648719990d059bdec380afec" },
 ]
 nbclient = [
     { file = "nbclient-0.6.8-py3-none-any.whl", hash = "sha256:7cce8b415888539180535953f80ea2385cdbb444944cdeb73ffac1556fdbc228" },
@@ -2293,8 +2352,8 @@ stack-data = [
     { file = "stack_data-0.5.1.tar.gz", hash = "sha256:95eb784942e861a3d80efd549ff9af6cf847d88343a12eb681d7157cfcb6e32b" },
 ]
 terminado = [
-    { file = "terminado-0.15.0-py3-none-any.whl", hash = "sha256:0d5f126fbfdb5887b25ae7d9d07b0d716b1cc0ccaacc71c1f3c14d228e065197" },
-    { file = "terminado-0.15.0.tar.gz", hash = "sha256:ab4eeedccfcc1e6134bfee86106af90852c69d602884ea3a1e8ca6d4486e9bfe" },
+    { file = "terminado-0.16.0-py3-none-any.whl", hash = "sha256:3e995072a7178a104c41134548ce9b03e4e7f0a538e9c29df4f1fbc81c7cfc75" },
+    { file = "terminado-0.16.0.tar.gz", hash = "sha256:fac14374eb5498bdc157ed32e510b1f60d5c3c7981a9f5ba018bb9a64cec0c25" },
 ]
 tinycss2 = [
     { file = "tinycss2-1.1.1-py3-none-any.whl", hash = "sha256:fe794ceaadfe3cf3e686b22155d0da5780dd0e273471a51846d0a02bc204fec8" },
@@ -2316,6 +2375,10 @@ tornado = [
     { file = "tornado-6.2-cp37-abi3-win32.whl", hash = "sha256:5c87076709343557ef8032934ce5f637dbb552efa7b21d08e89ae7619ed0eb23" },
     { file = "tornado-6.2-cp37-abi3-win_amd64.whl", hash = "sha256:e5f923aa6a47e133d1cf87d60700889d7eae68988704e20c75fb2d65677a8e4b" },
     { file = "tornado-6.2.tar.gz", hash = "sha256:9b630419bde84ec666bfd7ea0a4cb2a8a651c2d5cccdbdd1972a0c859dfc3c13" },
+]
+tqdm = [
+    { file = "tqdm-4.64.1-py2.py3-none-any.whl", hash = "sha256:6fee160d6ffcd1b1c68c65f14c829c22832bc401726335ce92c52d395944a6a1" },
+    { file = "tqdm-4.64.1.tar.gz", hash = "sha256:5f4f682a004951c1b450bc753c710e9280c5746ce6ffedee253ddbcbf54cf1e4" },
 ]
 traitlets = [
     { file = "traitlets-5.4.0-py3-none-any.whl", hash = "sha256:93663cc8236093d48150e2af5e2ed30fc7904a11a6195e21bab0408af4e6d6c8" },
@@ -2340,6 +2403,10 @@ webencodings = [
 websocket-client = [
     { file = "websocket-client-1.4.1.tar.gz", hash = "sha256:f9611eb65c8241a67fb373bef040b3cf8ad377a9f6546a12b620b6511e8ea9ef" },
     { file = "websocket_client-1.4.1-py3-none-any.whl", hash = "sha256:398909eb7e261f44b8f4bd474785b6ec5f5b499d4953342fe9755e01ef624090" },
+]
+widgetsnbextension = [
+    { file = "widgetsnbextension-4.0.3-py3-none-any.whl", hash = "sha256:7f3b0de8fda692d31ef03743b598620e31c2668b835edbd3962d080ccecf31eb" },
+    { file = "widgetsnbextension-4.0.3.tar.gz", hash = "sha256:34824864c062b0b3030ad78210db5ae6a3960dfb61d5b27562d6631774de0286" },
 ]
 zipp = [
     { file = "zipp-3.8.1-py3-none-any.whl", hash = "sha256:47c40d7fe183a6f21403a199b3e4192cca5774656965b0a4988ad2f8feb5f009" },

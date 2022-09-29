@@ -9,15 +9,21 @@ import itertools
 import json
 import os
 import pathlib
+import sys
 import tempfile
 import zipfile
 from collections.abc import Callable, Iterable, Sized
-from typing import Any, Iterator, final
+from typing import Any, Iterator, final, ContextManager
 
 import numpy as np
 from scipy import sparse
+from tqdm.notebook import tqdm
 
 from hints import Record
+
+ONE_8 = np.uint8(1)
+ONE_16 = np.uint16(1)
+ONE_32 = np.uint32(1)
 
 
 class Event(str, enum.Enum):
@@ -47,18 +53,38 @@ _EVENT_WIDTH = f"<U{max(len(e) for e in Event)}"
 _EVENTS = {v: i for i, v in enumerate(Event)}
 
 
-def stream(logdir: os.PathLike | str) -> Iterable[Record]:
-    """Returns a stream of event records from the logging directory."""
-    logdir = pathlib.Path(logdir).absolute()
-    zipped, unzipped = _split(
-        logdir.iterdir(), lambda f: f.name.endswith(".zip"))
-    # Iterate over zipped first! Unzipped events occur last.
-    with tempfile.TemporaryDirectory() as tmpdir:
-        tmpdir = pathlib.Path(tmpdir).absolute()
-        _unzip(zipped, tmpdir)
-        filenames = itertools.chain(tmpdir.iterdir(), unzipped)
-        with fileinput.input(filenames) as lines:
-            yield from map(json.loads, lines)
+class LogStream(Callable, ContextManager):
+    __slots__ = "logdir", "bytes", "_tmp_dir", "_files",
+
+    def __init__(self, logdir: os.PathLike | str):
+        self.logdir = pathlib.Path(logdir).absolute()
+        self.bytes = 0
+        self._tmp_dir: tempfile.TemporaryDirectory | None = None
+        self._files: list[os.PathLike] | None = None
+
+    def __enter__(self) -> LogStream:
+        zipped, unzipped = _split(
+            self.logdir.iterdir(), lambda f: f.name.endswith(".zip"))
+        self._tmp_dir = tempfile.TemporaryDirectory()
+        tmp_path = pathlib.Path(self._tmp_dir.name).absolute()
+        _unzip(zipped, tmp_path)
+        self.bytes = _dir_size(self.logdir) + _dir_size(tmp_path)
+        self._files = [*sorted(tmp_path.iterdir()), *sorted(unzipped)]
+        return self
+
+    def __exit__(self, *args) -> None:
+        self._tmp_dir.cleanup()
+        self._tmp_dir = None
+        self._files = None
+        self.bytes = 0
+
+    def __call__(self) -> Iterable[str]:
+        with fileinput.input(self._files) as lines:
+            yield from lines
+
+
+def _dir_size(directory: pathlib.Path) -> int:
+    return sum(f.stat().st_size for f in directory.iterdir())
 
 
 def _unzip(zipped: Iterable[os.PathLike], dest: os.PathLike) -> None:
@@ -218,8 +244,8 @@ class UpdatesData(CallbackData, Sized):
         if Event.of(record) == Event.UPDATE:
             if (name := np.uint32(record["to"])) in self.updates:
                 user = self.updates[name]
-                user.n += 1
-                user.final = record["newScore"]["value"]
+                user.n += ONE_16
+                user.final = np.float32(record["newScore"]["value"])
                 self._n += 1  # Only count non-initial updates
             else:
                 initial = np.float32(record["newScore"]["value"])
@@ -276,14 +302,14 @@ class TimelineData(CallbackData):
         if (event := Event.of(record)) not in self.e2i:
             # Encode the event as an integer.
             self.e2i[event] = len(self.e2i)
-        self.timestamps.append(record["timestamp"])
+        self.timestamps.append(np.uint64(record["timestamp"]))
         # If the previous event was also this type...
         if (label := self.e2i[event]) == self._events[-1]:
             # ...increment its count.
-            self._repeats[-1] += 1
+            self._repeats[-1] += ONE_32
         else:
             self._events.append(label)
-            self._repeats.append(1)
+            self._repeats.append(ONE_32)
 
     def on_complete(self) -> None:
         t0 = min(times := self.timestamps)
@@ -326,9 +352,6 @@ class TimelineData(CallbackData):
         return self.i2e[self._events] if decoded else self._events
 
 
-ONE = np.int8(1)
-
-
 class ReachabilityData(CallbackData):
     """An event callback for computing reachability metrics.
 
@@ -359,6 +382,7 @@ class ReachabilityData(CallbackData):
         self._influence: np.ndarray[int] | None = None
         self._source_size: np.ndarray[int] | None = None
 
+    # TODO How can we account for users that cannot send their message?
     def __call__(self, record: Record, **kwargs) -> None:
         if Event.of(record) == Event.RECEIVE:
             source = np.uint32(record["from"])
@@ -401,30 +425,26 @@ class ReachabilityData(CallbackData):
 
     def _sparsify(self) -> None:
         row, col, data = [], [], []
-        row_add = row.extend
-        col_add = col.extend
-        data_add = data.extend
-        repeat = itertools.repeat
         for user, edges in enumerate(self.msgs):
             # Keep user as a destination to show loops in the network.
             destinations = {dest for _, dest in edges}
-            row_add(repeat(user, len(destinations)))
-            col_add(destinations)
-            data_add(repeat(ONE, len(destinations)))
+            row.extend(itertools.repeat(user, len(destinations)))
+            col.extend(destinations)
+            data.extend(itertools.repeat(ONE_8, len(destinations)))
         # adj[i][j] = 1: user `j` is reachable from user `i`
         self.adj = sparse.csr_matrix((data, (row, col)))
 
     def _compute_msg_reaches(self) -> None:
-        shortest_path = sparse.csgraph.shortest_path
-        longest = np.max
-        nan2num = np.nan_to_num
         msg_reach = np.zeros(len(self.msgs), dtype=np.uint8)
         for user, edges in enumerate(self.msgs):
             if len(edges) > 0:
                 idx, adj = edges_to_adj(edges)
-                sp = shortest_path(adj, indices=idx[user])
+                sp = sparse.csgraph.shortest_path(adj, indices=idx[user])
                 # Longest shortest path starting from the user
-                msg_reach[user] = longest(nan2num(sp, copy=False, posinf=0))
+                reach = np.max(np.nan_to_num(sp, copy=False, posinf=0))
+            else:
+                reach = 0
+            msg_reach[user] = reach
         self._msg_reach = msg_reach
 
     def _compute_reach_ratio(self) -> None:
@@ -446,7 +466,7 @@ def edges_to_adj(edges: Edges) -> tuple[Index, sparse.spmatrix]:
     idx = index_edges(edges)
     adj = np.zeros((len(idx), len(idx)), dtype=np.uint8)
     for v1, v2 in edges:
-        adj[idx[v1], idx[v2]] = ONE
+        adj[idx[v1], idx[v2]] = ONE_8
     return idx, sparse.csr_matrix(adj)
 
 
@@ -457,7 +477,12 @@ def index_edges(edges: Edges) -> Index:
 
 def analyze(logdir: str, *callbacks: EventCallback) -> None:
     """Analyze the event logs in the logging directory."""
-    for event, callback in itertools.product(stream(logdir), callbacks):
-        callback(event)
-    for callback in callbacks:
-        callback.on_complete()
+    with LogStream(logdir) as stream:
+        size = (stream.bytes + 1) * len(callbacks)
+        with tqdm(total=size, unit_scale=True) as t:
+            for event, callback in itertools.product(stream(), callbacks):
+                callback(json.loads(event))
+                t.update(sys.getsizeof(event))
+            for callback in callbacks:
+                callback.on_complete()
+                t.update(1)
