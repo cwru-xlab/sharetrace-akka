@@ -180,7 +180,8 @@ public final class User extends AbstractBehavior<UserMsg> {
 
   private void refreshCurrent() {
     if (!msgUtil.isAlive(current)) {
-      RiskScoreMsg previous = updateWith(cache.max(clock.instant()).orElse(defaultMsg));
+      RiskScoreMsg newCurrent = cache.max(clock.instant()).orElse(defaultMsg);
+      RiskScoreMsg previous = updateWith(newCurrent);
       logger.logCurrentRefresh(previous, current);
     }
   }
