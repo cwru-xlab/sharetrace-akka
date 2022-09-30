@@ -66,7 +66,7 @@ final class MsgUtil {
     return isAlive(msg.contactTime());
   }
 
-  public boolean isAlive(Instant contactTime) {
+  public boolean isAlive(Temporal contactTime) {
     return isAlive(contactTime, params.contactTtl());
   }
 
