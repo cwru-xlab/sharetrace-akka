@@ -16,6 +16,7 @@ final class ContactActor {
   private static final float DEFAULT_THRESHOLD = RiskScore.MIN_VALUE;
   private final ActorRef<UserMsg> ref;
   private final Instant contactTime;
+  private final Instant bufferedContactTime;
   private final IntervalCache<RiskScoreMsg> cache;
   private final MsgUtil msgUtil;
   private final TimerScheduler<UserMsg> timers;
@@ -28,6 +29,7 @@ final class ContactActor {
       IntervalCache<RiskScoreMsg> cache) {
     this.ref = msg.contact();
     this.contactTime = msg.contactTime();
+    this.bufferedContactTime = msgUtil.buffered(contactTime);
     this.cache = cache;
     this.msgUtil = msgUtil;
     this.timers = timers;
@@ -39,7 +41,7 @@ final class ContactActor {
   }
 
   public Instant bufferedContactTime() {
-    return msgUtil.buffered(contactTime);
+    return bufferedContactTime;
   }
 
   public void tell(RiskScoreMsg msg, BiConsumer<ActorRef<?>, RiskScoreMsg> logEvent) {
@@ -51,7 +53,7 @@ final class ContactActor {
   public void updateThreshold() {
     sendThreshold =
         cache
-            .max(bufferedContactTime())
+            .max(bufferedContactTime)
             .filter(msgUtil::isAlive)
             .map(msgUtil::computeThreshold)
             .orElse(DEFAULT_THRESHOLD);
@@ -66,7 +68,7 @@ final class ContactActor {
   }
 
   private boolean isRelevant(RiskScoreMsg msg) {
-    return msgUtil.isNotAfter(msg, bufferedContactTime());
+    return msgUtil.isNotAfter(msg, bufferedContactTime);
   }
 
   private boolean isNotSender(RiskScoreMsg msg) {
