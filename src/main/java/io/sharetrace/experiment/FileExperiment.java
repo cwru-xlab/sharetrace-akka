@@ -1,5 +1,7 @@
 package io.sharetrace.experiment;
 
+import io.sharetrace.actor.RiskPropagation;
+import io.sharetrace.data.FileDataset;
 import io.sharetrace.experiment.config.FileExperimentConfig;
 import io.sharetrace.experiment.state.Defaults;
 import io.sharetrace.experiment.state.ExperimentContext;
@@ -16,6 +18,7 @@ public final class FileExperiment extends Experiment<FileExperimentConfig> {
     return INSTANCE;
   }
 
+  /** Evaluates {@link RiskPropagation} on a given {@link FileDataset} 1 or more times. */
   @Override
   public void run(ExperimentState initialState, FileExperimentConfig config) {
     initialState.run(config.numIterations());
