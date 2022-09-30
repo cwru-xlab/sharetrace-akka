@@ -1,5 +1,6 @@
 package io.sharetrace.experiment;
 
+import io.sharetrace.data.CachedDataset;
 import io.sharetrace.data.Dataset;
 import io.sharetrace.experiment.config.ParamsExperimentConfig;
 import io.sharetrace.experiment.state.Defaults;
@@ -8,6 +9,7 @@ import io.sharetrace.experiment.state.ExperimentState;
 import io.sharetrace.logging.Loggable;
 import io.sharetrace.logging.metric.GraphTopology;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
+
 import java.util.Set;
 
 public final class ParamsExperiment extends Experiment<ParamsExperimentConfig> {
@@ -30,7 +32,7 @@ public final class ParamsExperiment extends Experiment<ParamsExperimentConfig> {
 
   @Override
   public void run(ExperimentState initialState, ParamsExperimentConfig config) {
-    Dataset dataset = initialState.dataset();
+    Dataset dataset = CachedDataset.of(initialState.dataset());
     for (int iNetwork = 0; iNetwork < config.numNetworks(); iNetwork++) {
       dataset = dataset.withNewContactNetwork();
       for (float tr : config.transRates()) {
