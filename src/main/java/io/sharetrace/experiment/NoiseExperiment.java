@@ -31,7 +31,6 @@ public final class NoiseExperiment extends Experiment<NoiseExperimentConfig> {
 
   private static RiskScoreFactory newNoisyFactory(
       RiskScoreFactory factory, RealDistribution noise) {
-    // Cache the original scores so that the independent effect of noise can be observed.
     return NoisyRiskScoreFactory.of(noise, CachedRiskScoreFactory.of(factory));
   }
 
@@ -39,8 +38,7 @@ public final class NoiseExperiment extends Experiment<NoiseExperimentConfig> {
   public void run(ExperimentState initialState, NoiseExperimentConfig config) {
     Dataset dataset = initialState.dataset();
     RiskScoreFactory noisyFactory;
-    // Average over the generated network for the given noise distributions.
-    for (int iNetwork = 0; iNetwork < config.numIterations(); iNetwork++) {
+    for (int iNetwork = 0; iNetwork < config.numNetworks(); iNetwork++) {
       dataset = dataset.withNewContactNetwork();
       for (RealDistribution noise : config.noises()) {
         noisyFactory = newNoisyFactory(dataset, noise);
@@ -48,7 +46,7 @@ public final class NoiseExperiment extends Experiment<NoiseExperimentConfig> {
             .dataset(dataset.withScoreFactory(noisyFactory))
             .userParams(ctx -> Defaults.userParams(ctx.dataset()))
             .build()
-            .run(config.numIterations()); // Average over the sampled data for the given network.
+            .run(config.numIterations());
       }
     }
   }

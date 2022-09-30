@@ -13,4 +13,9 @@ abstract class BaseNoiseExperimentConfig extends ExperimentConfig {
   public abstract Optional<Function<DatasetContext, Dataset>> datasetFactory();
 
   public abstract Iterable<RealDistribution> noises();
+
+  @Value.Default
+  public int numNetworks() {
+    return 1;
+  }
 }
