@@ -1,15 +1,16 @@
 package io.sharetrace.experiment;
 
-import io.sharetrace.data.CachedDataset;
+import io.sharetrace.actor.RiskPropagation;
 import io.sharetrace.data.Dataset;
+import io.sharetrace.data.factory.CachedRiskScoreFactory;
 import io.sharetrace.experiment.config.ParamsExperimentConfig;
 import io.sharetrace.experiment.state.Defaults;
 import io.sharetrace.experiment.state.ExperimentContext;
 import io.sharetrace.experiment.state.ExperimentState;
+import io.sharetrace.graph.ContactNetwork;
 import io.sharetrace.logging.Loggable;
 import io.sharetrace.logging.metric.GraphTopology;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
-
 import java.util.Set;
 
 public final class ParamsExperiment extends Experiment<ParamsExperimentConfig> {
@@ -30,11 +31,20 @@ public final class ParamsExperiment extends Experiment<ParamsExperimentConfig> {
     return ctx.withLoggable(loggable);
   }
 
+  private static Dataset cacheScores(Dataset dataset) {
+    return dataset.withScoreFactory(CachedRiskScoreFactory.of(dataset));
+  }
+
+  /**
+   * Evaluates the effects of the transmission rate and the send coefficient on the accuracy and
+   * efficiency of {@link RiskPropagation}. Risk scores are cached across parameter values for a
+   * given {@link ContactNetwork} so that cross-parameter comparisons are possible.
+   */
   @Override
   public void run(ExperimentState initialState, ParamsExperimentConfig config) {
-    Dataset dataset = CachedDataset.of(initialState.dataset());
-    for (int iNetwork = 0; iNetwork < config.numNetworks(); iNetwork++) {
-      dataset = dataset.withNewContactNetwork();
+    Dataset dataset = initialState.dataset();
+    for (int iNetwork = 0; iNetwork < config.numIterations(); iNetwork++) {
+      dataset = cacheScores(dataset.withNewContactNetwork());
       for (float tr : config.transRates()) {
         for (float sc : config.sendCoeffs()) {
           initialState.toBuilder()
@@ -42,7 +52,7 @@ public final class ParamsExperiment extends Experiment<ParamsExperimentConfig> {
               .dataset(dataset)
               .userParams(ctx -> Defaults.userParams(ctx.dataset()))
               .build()
-              .run(config.numIterations()); // Average over the sampled data for the given network.
+              .run();
         }
       }
     }

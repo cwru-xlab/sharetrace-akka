@@ -11,9 +11,4 @@ abstract class BaseParamsExperimentConfig extends ExperimentConfig {
   public abstract Iterable<Float> transRates();
 
   public abstract Iterable<Float> sendCoeffs();
-
-  @Value.Default
-  public int numNetworks() {
-    return 1;
-  }
 }

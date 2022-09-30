@@ -1,10 +1,12 @@
 package io.sharetrace.experiment;
 
+import io.sharetrace.actor.RiskPropagation;
 import io.sharetrace.data.SampledDataset;
 import io.sharetrace.experiment.config.RuntimeExperimentConfig;
 import io.sharetrace.experiment.state.Defaults;
 import io.sharetrace.experiment.state.ExperimentContext;
 import io.sharetrace.experiment.state.ExperimentState;
+import io.sharetrace.graph.ContactNetwork;
 import io.sharetrace.logging.metric.CreateUsersRuntime;
 import io.sharetrace.logging.metric.GraphSize;
 import io.sharetrace.logging.metric.MsgPassingRuntime;
@@ -37,18 +39,21 @@ public final class RuntimeExperiment extends Experiment<RuntimeExperimentConfig>
             ExperimentSettings.class);
   }
 
+  /**
+   * Evaluates the runtime performance of {@link RiskPropagation} for a given {@link GraphType}. The
+   * same {@link ContactNetwork} is evaluated 1 or more times for each number of nodes.
+   */
   @Override
   public void run(ExperimentState initialState, RuntimeExperimentConfig config) {
     SampledDataset dataset = (SampledDataset) initialState.dataset();
     for (int n : config.numNodes()) {
       dataset = dataset.withNumNodes(n);
-      // Average over the generated network for the given number of users.
       for (int iNetwork = 0; iNetwork < config.numIterations(); iNetwork++) {
         initialState.toBuilder()
             .dataset(dataset.withNewContactNetwork())
             .userParams(ctx -> Defaults.userParams(ctx.dataset()))
             .build()
-            .run(config.numIterations()); // Average over the sampled data for the given network.
+            .run(config.numIterations());
       }
     }
   }
