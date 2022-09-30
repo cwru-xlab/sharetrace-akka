@@ -3,8 +3,11 @@ package io.sharetrace.util;
 import com.google.common.collect.Range;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import java.time.Clock;
-import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoField;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.Temporal;
+import java.time.temporal.TemporalAmount;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -32,7 +35,7 @@ import java.util.function.Predicate;
  */
 public final class IntervalCache<T> {
 
-  private static final String TIME = "time";
+  private static final String TEMPORAL = "temporal";
   private final Map<Long, T> cache;
   private final BinaryOperator<T> mergeStrategy;
   private final Comparator<T> comparator;
@@ -50,27 +53,27 @@ public final class IntervalCache<T> {
     mergeStrategy = params.mergeStrategy();
     comparator = params.comparator();
     clock = params.clock();
-    interval = toLong(params.interval());
+    interval = getLong(params.interval());
     lookBack = interval * (params.numIntervals() - params.numLookAhead());
     lookAhead = interval * params.numLookAhead();
-    refreshPeriod = toLong(params.refreshPeriod());
-    lastRefresh = toLong(Instant.MIN);
+    refreshPeriod = getLong(params.refreshPeriod());
+    lastRefresh = getLong(Instant.MIN);
   }
 
   public static <T> IntervalCache<T> create(CacheParams<T> params) {
     return new IntervalCache<>(params);
   }
 
-  private static long toLong(Duration duration) {
-    return duration.getSeconds();
+  private static long getLong(TemporalAmount temporalAmount) {
+    return temporalAmount.get(ChronoUnit.SECONDS);
   }
 
-  private static long toLong(Instant time) {
-    return time.getEpochSecond();
+  private static long getLong(Temporal temporal) {
+    return temporal.getLong(ChronoField.INSTANT_SECONDS);
   }
 
-  private static Predicate<Entry<Long, ?>> isNotAfter(Instant time) {
-    long t = toLong(time);
+  private static Predicate<Entry<Long, ?>> isNotAfter(Temporal temporal) {
+    long t = getLong(temporal);
     return entry -> entry.getKey() <= t;
   }
 
@@ -81,9 +84,9 @@ public final class IntervalCache<T> {
    * to retrieving the value, the cache is possibly refreshed if it has been sufficiently long since
    * its previous refresh.
    */
-  public Optional<T> get(Instant time) {
+  public Optional<T> get(Temporal temporal) {
     refresh();
-    long key = floorKey(toLong(time));
+    long key = floorKey(getLong(temporal));
     return Optional.ofNullable(cache.get(key));
   }
 
@@ -95,9 +98,9 @@ public final class IntervalCache<T> {
    *
    * @throws IllegalArgumentException if the timespan does not contain the specified timestamp.
    */
-  public void put(Instant time, T value) {
+  public void put(Temporal temporal, T value) {
     refresh();
-    long key = checkedFloorKey(toLong(time));
+    long key = checkedFloorKey(temporal);
     T oldValue = cache.get(key);
     T newValue = (oldValue == null) ? value : mergeStrategy.apply(oldValue, value);
     cache.put(key, newValue);
@@ -110,9 +113,12 @@ public final class IntervalCache<T> {
    * Prior to retrieving the value, the cache is possibly refreshed if it has been sufficiently long
    * since its previous refresh.
    */
-  public Optional<T> max(Instant time) {
+  public Optional<T> max(Temporal temporal) {
     refresh();
-    return cache.entrySet().stream().filter(isNotAfter(time)).map(Entry::getValue).max(comparator);
+    return cache.entrySet().stream()
+        .filter(isNotAfter(temporal))
+        .map(Entry::getValue)
+        .max(comparator);
   }
 
   private void refresh() {
@@ -129,15 +135,15 @@ public final class IntervalCache<T> {
     return entry -> entry.getKey() < rangeStart;
   }
 
-  private long floorKey(long time) {
-    return rangeStart + interval * Math.floorDiv(time - rangeStart, interval);
+  private long floorKey(long temporal) {
+    return rangeStart + interval * Math.floorDiv(temporal - rangeStart, interval);
   }
 
-  private long checkedFloorKey(long time) {
-    return floorKey(Checks.inRange(time, range, TIME));
+  private long checkedFloorKey(Temporal temporal) {
+    return floorKey(Checks.inRange(getLong(temporal), range, TEMPORAL));
   }
 
   private long getTime() {
-    return toLong(clock.instant());
+    return getLong(clock.instant());
   }
 }
