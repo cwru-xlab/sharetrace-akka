@@ -42,12 +42,4 @@ public enum GraphType {
   public String toString() {
     return name;
   }
-
-  public boolean isSynthetic() {
-    return SYNTHETIC.contains(this);
-  }
-
-  public boolean isSocioPatterns() {
-    return SOCIO_PATTERNS.contains(this);
-  }
 }
