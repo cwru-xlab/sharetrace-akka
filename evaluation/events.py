@@ -5,15 +5,16 @@ import collections
 import dataclasses
 import enum
 import fileinput
+import gzip
 import itertools
 import json
 import os
 import pathlib
+import shutil
 import sys
 import tempfile
-import zipfile
 from collections.abc import Callable, Iterable
-from typing import Any, Iterator, final, ContextManager
+from typing import Any, Iterator, final, ContextManager, AnyStr
 
 import numpy as np
 from scipy import sparse
@@ -52,23 +53,27 @@ class Event(str, enum.Enum):
 _EVENT_WIDTH = f"<U{max(len(e) for e in Event)}"
 _EVENTS = {v: i for i, v in enumerate(Event)}
 
+_READ_MODE = "rb"
+_WRITE_MODE = "wb"
+_ZIP_EXT = ".log.gz"
+_LOG_EXT = ".log"
+
 
 class LogStream(Callable, ContextManager):
     __slots__ = "logdir", "bytes", "_tmp_dir", "_files",
 
-    def __init__(self, logdir: os.PathLike | str):
+    def __init__(self, logdir: os.PathLike | AnyStr):
         self.logdir = pathlib.Path(logdir).absolute()
         self.bytes = 0
         self._tmp_dir: tempfile.TemporaryDirectory | None = None
         self._files: list[os.PathLike] | None = None
 
     def __enter__(self) -> LogStream:
-        zipped, unzipped = _split(
-            self.logdir.iterdir(), lambda f: f.name.endswith(".zip"))
+        zipped, unzipped = self._logfiles()
         self._tmp_dir = tempfile.TemporaryDirectory()
         tmp_path = pathlib.Path(self._tmp_dir.name).absolute()
         _unzip(zipped, tmp_path)
-        self.bytes = _dir_size(self.logdir) + _dir_size(tmp_path)
+        self.bytes = _sizeof(unzipped) + _sizeof(tmp_path.iterdir())
         self._files = [*sorted(tmp_path.iterdir()), *sorted(unzipped)]
         return self
 
@@ -79,27 +84,42 @@ class LogStream(Callable, ContextManager):
         self.bytes = 0
 
     def __call__(self) -> Iterable[str]:
-        with fileinput.input(self._files) as lines:
+        with fileinput.input(self._files, mode=_READ_MODE) as lines:
             yield from lines
 
+    def _logfiles(self) -> tuple[list[pathlib.Path], list[pathlib.Path]]:
+        logs = self.logdir.iterdir()
+        files = [f for f in logs if f.name.endswith((_LOG_EXT, _ZIP_EXT))]
+        unzipped = _endswith_split(files, _LOG_EXT)
+        zipped = _endswith_split(files, _ZIP_EXT)
+        zipped = (path for name, path in zipped.items() if name not in unzipped)
+        return list(zipped), list(unzipped.values())
 
-def _dir_size(directory: pathlib.Path) -> int:
-    return sum(f.stat().st_size for f in directory.iterdir())
+
+def _endswith_split(files: Iterable[pathlib.Path], ext: str) -> dict:
+    return {f.name.split(ext)[0]: f for f in files if f.name.endswith(ext)}
+
+
+def _sizeof(files: Iterable[os.PathLike]) -> int:
+    with fileinput.input(files, mode=_READ_MODE) as lines:
+        return sum(map(sys.getsizeof, lines))
 
 
 def _unzip(zipped: Iterable[os.PathLike], dest: os.PathLike) -> None:
     for filename in zipped:
-        with zipfile.ZipFile(filename) as f:
-            f.extractall(dest)
+        with gzip.open(filename, _READ_MODE) as f_in:
+            logfile = f_in.name.split("/")[-1].split(_ZIP_EXT)[0]
+            with open(os.path.join(dest, logfile), _WRITE_MODE) as f_out:
+                shutil.copyfileobj(f_in, f_out)
 
 
 Predicate = Callable[[Any], bool]
 
 
-def _split(it: Iterable, predicate: Predicate) -> tuple[Iterable, Iterable]:
+def _split(it: Iterable, predicate: Predicate) -> tuple[list, list]:
     it = list(it)
-    true = (e for e in it if predicate(e))
-    false = (e for e in it if not predicate(e))
+    true = [e for e in it if predicate(e)]
+    false = [e for e in it if not predicate(e)]
     return true, false
 
 
@@ -356,12 +376,12 @@ class ReachabilityData(CallbackData):
     """An event callback for computing reachability metrics.
 
     Attributes:
-        adj: The message-reachability adjacency matrix. Entry `ij` is 1 if
-            the initial message of user `i` reached user `j`,
-            and 0 otherwise.
-        msg_idx: A dictionary that maps a message ID to the origin user.
-        msgs: A list of source-destination pairs where the `i`-th entry
-        are the edges along which the initial score of user `i` was passed.
+        adj (ndarray): Message-reachability adjacency matrix. Entry `ij` is
+            1 if the initial message of user `i` reached user `j`, and 0
+            otherwise.
+        msg_idx (dict): Maps a message ID to the origin user.
+        msgs (list): Source-destination pairs where the `i`-th entry
+            are the edges along which the initial score of user `i` was passed.
     """
 
     __slots__ = (
