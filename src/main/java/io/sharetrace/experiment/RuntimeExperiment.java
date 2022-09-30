@@ -48,7 +48,7 @@ public final class RuntimeExperiment extends Experiment<RuntimeExperimentConfig>
     SampledDataset dataset = (SampledDataset) initialState.dataset();
     for (int n : config.numNodes()) {
       dataset = dataset.withNumNodes(n);
-      for (int iNetwork = 0; iNetwork < config.numIterations(); iNetwork++) {
+      for (int iNetwork = 0; iNetwork < config.numNetworks(); iNetwork++) {
         initialState.toBuilder()
             .dataset(dataset.withNewContactNetwork())
             .userParams(ctx -> Defaults.userParams(ctx.dataset()))

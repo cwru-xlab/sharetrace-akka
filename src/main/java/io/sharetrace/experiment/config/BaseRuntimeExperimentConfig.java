@@ -6,4 +6,9 @@ import org.immutables.value.Value;
 abstract class BaseRuntimeExperimentConfig extends ExperimentConfig {
 
   public abstract Iterable<Integer> numNodes();
+
+  @Value.Default
+  public int numNetworks() {
+    return 1;
+  }
 }
