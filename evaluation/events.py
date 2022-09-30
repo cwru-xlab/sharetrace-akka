@@ -14,7 +14,7 @@ import shutil
 import sys
 import tempfile
 from collections.abc import Callable, Iterable
-from typing import Any, Iterator, final, ContextManager, AnyStr
+from typing import Iterator, final, ContextManager, AnyStr
 
 import numpy as np
 from scipy import sparse
@@ -111,16 +111,6 @@ def _unzip(zipped: Iterable[os.PathLike], dest: os.PathLike) -> None:
             logfile = f_in.name.split("/")[-1].split(_ZIP_EXT)[0]
             with open(os.path.join(dest, logfile), _WRITE_MODE) as f_out:
                 shutil.copyfileobj(f_in, f_out)
-
-
-Predicate = Callable[[Any], bool]
-
-
-def _split(it: Iterable, predicate: Predicate) -> tuple[list, list]:
-    it = list(it)
-    true = [e for e in it if predicate(e)]
-    false = [e for e in it if not predicate(e)]
-    return true, false
 
 
 class EventCounter(collections.Counter):
@@ -237,7 +227,7 @@ class UserUpdates:
 
     symptom: np.float32
     exposure: np.float32 | None = None
-    n: np.uint16 = _DEFAULT_N
+    updates: np.uint16 = _DEFAULT_N
 
     def __post_init__(self) -> None:
         if self.exposure is None:
@@ -267,7 +257,7 @@ class UpdatesData(CallbackData):
         if Event.of(record) == Event.UPDATE:
             if (name := np.uint32(record["to"])) in self.updates:
                 user = self.updates[name]
-                user.n += _ONE_16
+                user.updates += _ONE_16
                 user.exposure = np.float32(record["newScore"]["value"])
             else:
                 symptom = np.float32(record["newScore"]["value"])
@@ -278,7 +268,7 @@ class UpdatesData(CallbackData):
         updates = np.zeros(num_users, dtype=np.uint16)
         symptoms, exposures = np.zeros((2, num_users), dtype=np.float32)
         for u, user in self.updates.items():
-            updates[u] = user.n
+            updates[u] = user.updates
             symptoms[u] = user.symptom
             exposures[u] = user.exposure
         self.num_updates = np.sum(updates)
@@ -296,10 +286,10 @@ class ReceivedData(CallbackData):
 
     def __call__(self, record: Record, **kwargs) -> None:
         if Event.of(record) == Event.RECEIVE:
-            self.values.append(record["score"]["value"])
+            self.values.append(np.float32(record["score"]["value"]))
 
     def on_complete(self) -> None:
-        self.values = np.array(self.values, dtype=np.float32)
+        self.values = np.array(self.values)
 
 
 class TimelineData(CallbackData):
@@ -312,20 +302,17 @@ class TimelineData(CallbackData):
     __slots__ = "e2i", "i2e", "timestamps", "_events", "_repeats"
 
     def __init__(self):
-        self.e2i: dict[Event, int] = {}
-        self.i2e: np.ndarray[np.str] | None = None
-        self.timestamps: list[int | None] | np.ndarray[np.uint64] = []
-        self._events: list[int | None] | np.ndarray[np.uint8] = [None]
-        self._repeats: list[int] | np.ndarray[np.uint16] = [0]
+        self.e2i = {}
+        self.i2e: np.ndarray | None = None
+        self.timestamps: list | np.ndarray = []
+        self._events: list | np.ndarray = [None]
+        self._repeats: list | np.ndarray = [0]
 
     def __call__(self, record: Record, **kwargs) -> None:
-        if (event := Event.of(record)) not in self.e2i:
-            # Encode the event as an integer.
-            self.e2i[event] = len(self.e2i)
         self.timestamps.append(np.uint64(record["timestamp"]))
-        # If the previous event was also this type...
+        if (event := Event.of(record)) not in self.e2i:
+            self.e2i[event] = len(self.e2i)
         if (label := self.e2i[event]) == self._events[-1]:
-            # ...increment its count.
             self._repeats[-1] += _ONE_32
         else:
             self._events.append(label)
@@ -335,8 +322,7 @@ class TimelineData(CallbackData):
         t0 = min(times := self.timestamps)
         self.timestamps = np.array([t - t0 for t in times], dtype=np.uint32)
         self._events = np.array(self._events[1:], dtype=np.uint8)
-        self._repeats = np.array(self._repeats[1:], dtype=np.uint16)
-        # Use an array to use numpy indexing to map back to decoded values.
+        self._repeats = np.array(self._repeats[1:], dtype=np.uint32)
         self.i2e = np.array([e.value for e in self.e2i], dtype=_EVENT_WIDTH)
 
     def flatten(self, decoded: bool = False) -> np.ndarray[np.uint8]:
