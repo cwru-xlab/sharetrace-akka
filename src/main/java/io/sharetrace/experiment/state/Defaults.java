@@ -10,8 +10,24 @@ import io.sharetrace.data.factory.RiskScoreFactory;
 import io.sharetrace.data.sampler.RiskScoreSampler;
 import io.sharetrace.data.sampler.Sampler;
 import io.sharetrace.data.sampler.TimeSampler;
-import io.sharetrace.logging.event.*;
-import io.sharetrace.logging.metric.*;
+import io.sharetrace.logging.event.ContactEvent;
+import io.sharetrace.logging.event.ContactsRefreshEvent;
+import io.sharetrace.logging.event.CurrentRefreshEvent;
+import io.sharetrace.logging.event.ReceiveEvent;
+import io.sharetrace.logging.event.SendCachedEvent;
+import io.sharetrace.logging.event.SendCurrentEvent;
+import io.sharetrace.logging.event.TimeoutEvent;
+import io.sharetrace.logging.event.UpdateEvent;
+import io.sharetrace.logging.metric.CreateUsersRuntime;
+import io.sharetrace.logging.metric.GraphCycles;
+import io.sharetrace.logging.metric.GraphEccentricity;
+import io.sharetrace.logging.metric.GraphScores;
+import io.sharetrace.logging.metric.GraphSize;
+import io.sharetrace.logging.metric.GraphTopology;
+import io.sharetrace.logging.metric.MsgPassingRuntime;
+import io.sharetrace.logging.metric.RiskPropRuntime;
+import io.sharetrace.logging.metric.SendContactsRuntime;
+import io.sharetrace.logging.metric.SendScoresRuntime;
 import io.sharetrace.logging.setting.ExperimentSettings;
 import io.sharetrace.message.RiskScoreMsg;
 import io.sharetrace.model.MsgParams;
@@ -19,7 +35,6 @@ import io.sharetrace.model.RiskScore;
 import io.sharetrace.model.UserParams;
 import io.sharetrace.util.CacheParams;
 import io.sharetrace.util.Uid;
-
 import java.nio.file.Path;
 import java.time.Clock;
 import java.time.Duration;
@@ -185,11 +200,12 @@ public final class Defaults {
             SendCurrentEvent.class,
             UpdateEvent.class,
             TimeoutEvent.class,
-            // Metrics
+            // Graph metrics
             GraphCycles.class,
             GraphEccentricity.class,
             GraphScores.class,
             GraphSize.class,
+            // Runtime metrics
             GraphTopology.class,
             CreateUsersRuntime.class,
             SendScoresRuntime.class,
