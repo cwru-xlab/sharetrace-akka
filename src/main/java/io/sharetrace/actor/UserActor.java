@@ -50,7 +50,7 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
   private final UserParams userParams;
   private final Clock clock;
   private final IntervalCache<RiskScoreMsg> cache;
-  private final Map<ActorRef<UserMsg>, ContactActor> contacts;
+  private final Map<ActorRef<?>, ContactActor> contacts;
   private final MsgUtil msgUtil;
   private final RiskScoreMsg defaultMsg;
   private RiskScoreMsg current;
