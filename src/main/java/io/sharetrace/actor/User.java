@@ -22,6 +22,7 @@ import io.sharetrace.model.UserParams;
 import io.sharetrace.util.IntervalCache;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import java.time.Clock;
+import java.time.Duration;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
@@ -129,8 +130,8 @@ public final class User extends AbstractBehavior<UserMsg> {
   }
 
   private void startContactsRefreshTimer() {
-    ContactActor oldest = Collections.min(contacts.values(), ContactActor::compareTo);
-    timers.startSingleTimer(ContactsRefreshMsg.INSTANCE, oldest.remainingTtl());
+    Duration minTtl = Collections.min(contacts.values()).remainingTtl();
+    timers.startSingleTimer(ContactsRefreshMsg.INSTANCE, minTtl);
   }
 
   private void sendToContact(ContactActor contact) {
