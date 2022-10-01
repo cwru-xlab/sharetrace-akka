@@ -97,10 +97,7 @@ public final class Defaults {
   }
 
   public static UserParams userParams(Dataset dataset) {
-    return UserParams.builder()
-        .refreshPeriod(Duration.ofHours(1L))
-        .idleTimeout(idleTimeout(dataset))
-        .build();
+    return UserParams.builder().idleTimeout(idleTimeout(dataset)).build();
   }
 
   public static FileDataset fileDataset(DatasetContext ctx, Path path) {

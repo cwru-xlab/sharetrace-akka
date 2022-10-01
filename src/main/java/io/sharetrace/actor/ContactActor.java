@@ -8,10 +8,11 @@ import io.sharetrace.message.ThresholdMsg;
 import io.sharetrace.message.UserMsg;
 import io.sharetrace.model.RiskScore;
 import io.sharetrace.util.IntervalCache;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.function.BiConsumer;
 
-final class ContactActor {
+final class ContactActor implements Comparable<ContactActor> {
 
   private static final float DEFAULT_THRESHOLD = RiskScore.MIN_VALUE;
   private final ActorRef<UserMsg> ref;
@@ -63,6 +64,11 @@ final class ContactActor {
     return ref;
   }
 
+  @Override
+  public int compareTo(ContactActor contact) {
+    return contactTime.compareTo(contact.contactTime);
+  }
+
   private boolean exceedsThreshold(RiskScoreMsg msg) {
     return msgUtil.isGreaterThan(msg, sendThreshold);
   }
@@ -79,8 +85,12 @@ final class ContactActor {
     float threshold = msgUtil.computeThreshold(msg);
     if (threshold > sendThreshold) {
       sendThreshold = threshold;
-      timers.startSingleTimer(ThresholdMsg.of(ref), msgUtil.computeTtl(msg));
+      timers.startSingleTimer(ThresholdMsg.of(ref), msgUtil.remainingTtl(msg));
     }
+  }
+
+  public Duration remainingTtl() {
+    return msgUtil.remainingTtl(contactTime);
   }
 
   public boolean isAlive() {

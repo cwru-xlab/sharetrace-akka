@@ -19,12 +19,8 @@ abstract class BaseUserParams {
    */
   public abstract Duration idleTimeout();
 
-  /** Returns the duration after which a {@link User} refreshes its exposure score and contacts. */
-  public abstract Duration refreshPeriod();
-
   @Value.Check
   protected void check() {
     Checks.isGreaterThan(idleTimeout(), Duration.ZERO, "idleTimeout");
-    Checks.isGreaterThan(refreshPeriod(), Duration.ZERO, "refreshPeriod");
   }
 }

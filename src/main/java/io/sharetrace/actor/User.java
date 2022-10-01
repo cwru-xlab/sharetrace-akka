@@ -11,7 +11,8 @@ import io.sharetrace.graph.ContactNetwork;
 import io.sharetrace.logging.Loggable;
 import io.sharetrace.logging.Logging;
 import io.sharetrace.message.ContactMsg;
-import io.sharetrace.message.RefreshMsg;
+import io.sharetrace.message.ContactsRefreshMsg;
+import io.sharetrace.message.CurrentRefreshMsg;
 import io.sharetrace.message.RiskScoreMsg;
 import io.sharetrace.message.ThresholdMsg;
 import io.sharetrace.message.TimeoutMsg;
@@ -21,6 +22,7 @@ import io.sharetrace.model.UserParams;
 import io.sharetrace.util.IntervalCache;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import java.time.Clock;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -34,7 +36,8 @@ import org.immutables.builder.Builder;
  * @see RiskScoreMsg
  * @see ContactMsg
  * @see TimeoutMsg
- * @see RefreshMsg
+ * @see ContactsRefreshMsg
+ * @see CurrentRefreshMsg
  * @see UserParams
  * @see MsgParams
  * @see IntervalCache
@@ -70,7 +73,6 @@ public final class User extends AbstractBehavior<UserMsg> {
     this.msgUtil = new MsgUtil(getContext(), clock, msgParams);
     this.defaultMsg = msgUtil.defaultMsg();
     updateWith(defaultMsg);
-    startRefreshTimer();
   }
 
   @Builder.Factory
@@ -96,9 +98,10 @@ public final class User extends AbstractBehavior<UserMsg> {
     return newReceiveBuilder()
         .onMessage(ContactMsg.class, this::onContactMsg)
         .onMessage(RiskScoreMsg.class, this::onRiskScoreMsg)
-        .onMessage(TimeoutMsg.class, this::onTimeoutMsg)
-        .onMessage(RefreshMsg.class, this::onRefreshMsg)
+        .onMessage(CurrentRefreshMsg.class, this::onCurrentRefreshMsg)
+        .onMessage(ContactsRefreshMsg.class, this::onContactsRefreshMsg)
         .onMessage(ThresholdMsg.class, this::onThresholdMsg)
+        .onMessage(TimeoutMsg.class, this::onTimeoutMsg)
         .build();
   }
 
@@ -109,18 +112,25 @@ public final class User extends AbstractBehavior<UserMsg> {
     return previous;
   }
 
-  private void startRefreshTimer() {
-    timers.startTimerWithFixedDelay(RefreshMsg.INSTANCE, userParams.refreshPeriod());
-  }
-
   private Behavior<UserMsg> onContactMsg(ContactMsg msg) {
     if (msgUtil.isAlive(msg)) {
-      ContactActor contact = new ContactActor(msg, timers, msgUtil, cache);
-      contacts.put(contact.ref(), contact);
+      ContactActor contact = addNewContact(msg);
+      startContactsRefreshTimer();
       logger.logContact(contact.ref());
       sendToContact(contact);
     }
     return this;
+  }
+
+  private ContactActor addNewContact(ContactMsg msg) {
+    ContactActor contact = new ContactActor(msg, timers, msgUtil, cache);
+    contacts.put(contact.ref(), contact);
+    return contact;
+  }
+
+  private void startContactsRefreshTimer() {
+    ContactActor oldest = Collections.min(contacts.values(), ContactActor::compareTo);
+    timers.startSingleTimer(ContactsRefreshMsg.INSTANCE, oldest.remainingTtl());
   }
 
   private void sendToContact(ContactActor contact) {
@@ -149,10 +159,19 @@ public final class User extends AbstractBehavior<UserMsg> {
     return this;
   }
 
-  @SuppressWarnings("unused")
-  private Behavior<UserMsg> onRefreshMsg(RefreshMsg msg) {
-    refreshContacts();
-    refreshCurrent();
+  private Behavior<UserMsg> onCurrentRefreshMsg(CurrentRefreshMsg msg) {
+    RiskScoreMsg newCurrent = cache.max(clock.instant()).orElse(defaultMsg);
+    RiskScoreMsg previous = updateWith(newCurrent);
+    logger.logCurrentRefresh(previous, current);
+    return this;
+  }
+
+  private Behavior<UserMsg> onContactsRefreshMsg(ContactsRefreshMsg msg) {
+    int numContacts = contacts.size();
+    contacts.values().removeIf(Predicate.not(ContactActor::isAlive));
+    int numRemaining = contacts.size();
+    logger.logContactsRefresh(numRemaining, numContacts - numRemaining);
+    startContactsRefreshTimer();
     return this;
   }
 
@@ -169,21 +188,6 @@ public final class User extends AbstractBehavior<UserMsg> {
 
   private void resetTimeout() {
     timers.startSingleTimer(TimeoutMsg.INSTANCE, userParams.idleTimeout());
-  }
-
-  private void refreshContacts() {
-    int numContacts = contacts.size();
-    contacts.values().removeIf(Predicate.not(ContactActor::isAlive));
-    int numRemaining = contacts.size();
-    logger.logContactsRefresh(numRemaining, numContacts - numRemaining);
-  }
-
-  private void refreshCurrent() {
-    if (!msgUtil.isAlive(current)) {
-      RiskScoreMsg newCurrent = cache.max(clock.instant()).orElse(defaultMsg);
-      RiskScoreMsg previous = updateWith(newCurrent);
-      logger.logCurrentRefresh(previous, current);
-    }
   }
 
   private void propagate(RiskScoreMsg msg) {
