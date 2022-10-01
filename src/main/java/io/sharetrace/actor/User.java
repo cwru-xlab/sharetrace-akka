@@ -203,16 +203,19 @@ public final class User extends AbstractBehavior<UserMsg> {
   }
 
   private RiskScoreMsg updateAndCache(RiskScoreMsg msg) {
-    RiskScoreMsg propagate;
-    if (msgUtil.isGreaterThan(msg, current)) {
-      RiskScoreMsg previous = updateWith(msg);
-      startCurrentRefreshTimer();
-      logger.logUpdate(previous, current);
-      propagate = transmitted;
-    } else {
-      propagate = msgUtil.transmitted(msg);
-    }
+    RiskScoreMsg propagate = (msgUtil.isGreaterThan(msg, current)) ? ifGreater(msg) : ifLesser(msg);
     cache.put(msg.score().time(), propagate);
     return propagate;
+  }
+
+  private RiskScoreMsg ifGreater(RiskScoreMsg msg) {
+    RiskScoreMsg previous = updateWith(msg);
+    startCurrentRefreshTimer();
+    logger.logUpdate(previous, current);
+    return transmitted;
+  }
+
+  private RiskScoreMsg ifLesser(RiskScoreMsg msg) {
+    return msgUtil.transmitted(msg);
   }
 }
