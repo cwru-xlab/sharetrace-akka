@@ -60,7 +60,7 @@ _LOG_EXT = ".log"
 
 
 class LogStream(Callable, ContextManager):
-    __slots__ = "logdir", "bytes", "_tmp_dir", "_files",
+    __slots__ = ("logdir", "bytes", "_tmp_dir", "_files")
 
     def __init__(self, logdir: os.PathLike | AnyStr):
         self.logdir = pathlib.Path(logdir).absolute()
@@ -189,7 +189,7 @@ class CallbackData(Callable):
 @final
 class EventCallback(CallbackData):
     """A callable that processes event records."""
-    __slots__ = "_states"
+    __slots__ = ("_states",)
 
     def __init__(self, factory: Callable[[], CallbackData]):
         self._states = collections.defaultdict(factory)
@@ -244,7 +244,8 @@ class UpdatesData(CallbackData):
        num_updated (int): Number of users that were updated.
        num_updates (int): Number of updates for all users.
     """
-    __slots__ = "updates", "symptoms", "exposures", "num_updated", "num_updates"
+    __slots__ = (
+        "updates", "symptoms", "exposures", "num_updated", "num_updates")
 
     def __init__(self) -> None:
         self.updates: dict[np.uint32, UserUpdates] | np.ndarray[np.uint16] = {}
@@ -279,7 +280,7 @@ class UpdatesData(CallbackData):
 
 
 class ReceivedData(CallbackData):
-    __slots__ = "values"
+    __slots__ = ("values",)
 
     def __init__(self):
         self.values: list[float] | np.ndarray[np.float32] = []
@@ -299,7 +300,7 @@ class TimelineData(CallbackData):
         e2i: An dictionary that maps an Event to its encoded integer.
         i2e: An array where the i-th entry is the Event value encoded as i.
     """
-    __slots__ = "e2i", "i2e", "timestamps", "_events", "_repeats"
+    __slots__ = ("e2i", "i2e", "timestamps", "_events", "_repeats")
 
     def __init__(self):
         self.e2i = {}
