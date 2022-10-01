@@ -38,44 +38,16 @@ final class UserLogger {
     log(ContactEvent.class, () -> contactEvent(contact));
   }
 
-  public void logSendCached(ActorRef<?> contact, RiskScoreMsg cached) {
-    log(SendCachedEvent.class, () -> sendCachedEvent(contact, cached));
-  }
-
-  public void logSendCurrent(ActorRef<?> contact, RiskScoreMsg current) {
-    log(SendCurrentEvent.class, () -> sendCurrentEvent(contact, current));
-  }
-
-  public void logReceive(RiskScoreMsg received) {
-    log(ReceiveEvent.class, () -> receiveEvent(received));
-  }
-
-  public void logUpdate(RiskScoreMsg previous, RiskScoreMsg current) {
-    log(UpdateEvent.class, () -> updateEvent(previous, current));
-  }
-
-  public void logPropagate(ActorRef<?> contact, RiskScoreMsg propagated) {
-    log(PropagateEvent.class, () -> propagateEvent(contact, propagated));
-  }
-
-  public void logContactsRefresh(int numRemaining, int numExpired) {
-    log(ContactsRefreshEvent.class, () -> contactsRefreshEvent(numRemaining, numExpired));
-  }
-
-  public void logCurrentRefresh(RiskScoreMsg previous, RiskScoreMsg current) {
-    log(CurrentRefreshEvent.class, () -> currentRefreshEvent(previous, current));
-  }
-
-  public void logTimeout() {
-    log(TimeoutEvent.class, this::timeoutEvent);
-  }
-
   private <T extends Loggable> void log(Class<T> type, Supplier<T> supplier) {
     logger.log(LoggableEvent.KEY, TypedSupplier.of(type, supplier));
   }
 
   private ContactEvent contactEvent(ActorRef<?> contact) {
     return ContactEvent.builder().user(userName).addUsers(userName, name(contact)).build();
+  }
+
+  public void logSendCached(ActorRef<?> contact, RiskScoreMsg cached) {
+    log(SendCachedEvent.class, () -> sendCachedEvent(contact, cached));
   }
 
   private SendCachedEvent sendCachedEvent(ActorRef<?> contact, RiskScoreMsg cached) {
@@ -87,6 +59,10 @@ final class UserLogger {
         .build();
   }
 
+  public void logSendCurrent(ActorRef<?> contact, RiskScoreMsg current) {
+    log(SendCurrentEvent.class, () -> sendCurrentEvent(contact, current));
+  }
+
   private SendCurrentEvent sendCurrentEvent(ActorRef<?> contact, RiskScoreMsg current) {
     return SendCurrentEvent.builder()
         .from(name(current.replyTo()))
@@ -96,6 +72,10 @@ final class UserLogger {
         .build();
   }
 
+  public void logReceive(RiskScoreMsg received) {
+    log(ReceiveEvent.class, () -> receiveEvent(received));
+  }
+
   private ReceiveEvent receiveEvent(RiskScoreMsg received) {
     return ReceiveEvent.builder()
         .from(name(received.replyTo()))
@@ -103,6 +83,10 @@ final class UserLogger {
         .score(received.score())
         .id(received.id())
         .build();
+  }
+
+  public void logUpdate(RiskScoreMsg previous, RiskScoreMsg current) {
+    log(UpdateEvent.class, () -> updateEvent(previous, current));
   }
 
   private UpdateEvent updateEvent(RiskScoreMsg previous, RiskScoreMsg current) {
@@ -116,6 +100,10 @@ final class UserLogger {
         .build();
   }
 
+  public void logPropagate(ActorRef<?> contact, RiskScoreMsg propagated) {
+    log(PropagateEvent.class, () -> propagateEvent(contact, propagated));
+  }
+
   private PropagateEvent propagateEvent(ActorRef<?> contact, RiskScoreMsg propagated) {
     return PropagateEvent.builder()
         .from(name(propagated.replyTo()))
@@ -123,6 +111,10 @@ final class UserLogger {
         .score(propagated.score())
         .id(propagated.id())
         .build();
+  }
+
+  public void logContactsRefresh(int numRemaining, int numExpired) {
+    log(ContactsRefreshEvent.class, () -> contactsRefreshEvent(numRemaining, numExpired));
   }
 
   private ContactsRefreshEvent contactsRefreshEvent(int numRemaining, int numExpired) {
@@ -133,6 +125,10 @@ final class UserLogger {
         .build();
   }
 
+  public void logCurrentRefresh(RiskScoreMsg previous, RiskScoreMsg current) {
+    log(CurrentRefreshEvent.class, () -> currentRefreshEvent(previous, current));
+  }
+
   private CurrentRefreshEvent currentRefreshEvent(RiskScoreMsg previous, RiskScoreMsg current) {
     return CurrentRefreshEvent.builder()
         .user(userName)
@@ -141,6 +137,10 @@ final class UserLogger {
         .oldId(previous.id())
         .newId(current.id())
         .build();
+  }
+
+  public void logTimeout() {
+    log(TimeoutEvent.class, this::timeoutEvent);
   }
 
   private TimeoutEvent timeoutEvent() {

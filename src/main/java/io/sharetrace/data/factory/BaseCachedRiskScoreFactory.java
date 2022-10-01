@@ -13,11 +13,11 @@ abstract class BaseCachedRiskScoreFactory implements RiskScoreFactory {
     return cache().computeIfAbsent(user, cached()::riskScore);
   }
 
-  @Value.Parameter
-  protected abstract RiskScoreFactory cached();
-
   @Value.Lazy
   protected Map<Integer, RiskScore> cache() {
     return new Int2ObjectOpenHashMap<>();
   }
+
+  @Value.Parameter
+  protected abstract RiskScoreFactory cached();
 }

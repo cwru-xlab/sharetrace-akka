@@ -24,27 +24,6 @@ import org.jgrapht.graph.DefaultEdge;
 @Value.Immutable
 abstract class BaseFileContactNetwork extends AbstractContactNetwork implements TimeRef {
 
-  private static Set<Integer> key(int user1, int user2) {
-    return IntSet.of(user1, user2);
-  }
-
-  private static Instant newer(Instant time1, Instant time2) {
-    return time1.isAfter(time2) ? time1 : time2;
-  }
-
-  @Value.Lazy
-  protected Map<Set<Integer>, Instant> contactMap() {
-    try (BufferedReader reader = Files.newBufferedReader(path())) {
-      return toContacts(reader.lines()::iterator);
-    } catch (IOException exception) {
-      throw new UncheckedIOException(exception);
-    }
-  }
-
-  protected abstract Path path();
-
-  protected abstract String delimiter();
-
   @Override
   protected GraphGenerator<Integer, DefaultEdge, ?> graphGenerator() {
     return (target, x) -> generate(target);
@@ -63,6 +42,17 @@ abstract class BaseFileContactNetwork extends AbstractContactNetwork implements 
     }
   }
 
+  @Value.Lazy
+  protected Map<Set<Integer>, Instant> contactMap() {
+    try (BufferedReader reader = Files.newBufferedReader(path())) {
+      return toContacts(reader.lines()::iterator);
+    } catch (IOException exception) {
+      throw new UncheckedIOException(exception);
+    }
+  }
+
+  protected abstract Path path();
+
   private Map<Set<Integer>, Instant> toContacts(Iterable<String> lines) {
     Instant lastContactTime = Instant.MIN;
     Indexer<String> indexer = new Indexer<>();
@@ -80,5 +70,15 @@ abstract class BaseFileContactNetwork extends AbstractContactNetwork implements 
     Duration offset = Duration.between(lastContactTime, refTime());
     contacts.replaceAll((x, time) -> time.plus(offset));
     return contacts;
+  }
+
+  protected abstract String delimiter();
+
+  private static Set<Integer> key(int user1, int user2) {
+    return IntSet.of(user1, user2);
+  }
+
+  private static Instant newer(Instant time1, Instant time2) {
+    return time1.isAfter(time2) ? time1 : time2;
   }
 }

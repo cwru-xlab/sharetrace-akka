@@ -31,7 +31,7 @@ import org.immutables.builder.Builder;
 
 /**
  * An actor that corresponds to a vertex in a {@link ContactNetwork}. Collectively, all {@link
- * User}s carry out the execution of {@link RiskPropagation}.
+ * UserActor}s carry out the execution of {@link RiskPropagation}.
  *
  * @see RiskPropagation
  * @see RiskScoreMsg
@@ -43,7 +43,7 @@ import org.immutables.builder.Builder;
  * @see MsgParams
  * @see IntervalCache
  */
-public final class User extends AbstractBehavior<UserMsg> {
+public final class UserActor extends AbstractBehavior<UserMsg> {
 
   private final TimerScheduler<UserMsg> timers;
   private final UserLogger logger;
@@ -56,7 +56,7 @@ public final class User extends AbstractBehavior<UserMsg> {
   private RiskScoreMsg current;
   private RiskScoreMsg transmitted;
 
-  private User(
+  private UserActor(
       ActorContext<UserMsg> ctx,
       TimerScheduler<UserMsg> timers,
       Set<Class<? extends Loggable>> loggable,
@@ -73,7 +73,14 @@ public final class User extends AbstractBehavior<UserMsg> {
     this.contacts = new Object2ObjectOpenHashMap<>();
     this.msgUtil = new MsgUtil(getContext(), clock, msgParams);
     this.defaultMsg = msgUtil.defaultMsg();
-    updateWith(defaultMsg);
+    updateCurrent(defaultMsg);
+  }
+
+  private RiskScoreMsg updateCurrent(RiskScoreMsg msg) {
+    RiskScoreMsg previous = current;
+    current = msg;
+    transmitted = msgUtil.transmitted(current);
+    return previous;
   }
 
   @Builder.Factory
@@ -89,7 +96,8 @@ public final class User extends AbstractBehavior<UserMsg> {
           ctx.setLoggerName(Logging.EVENTS_LOGGER_NAME);
           Behavior<UserMsg> user =
               Behaviors.withTimers(
-                  timers -> new User(ctx, timers, loggable, userParams, msgParams, clock, cache));
+                  timers ->
+                      new UserActor(ctx, timers, loggable, userParams, msgParams, clock, cache));
           return Behaviors.withMdc(UserMsg.class, msg -> mdc, user);
         });
   }
@@ -97,30 +105,61 @@ public final class User extends AbstractBehavior<UserMsg> {
   @Override
   public Receive<UserMsg> createReceive() {
     return newReceiveBuilder()
-        .onMessage(ContactMsg.class, this::onContactMsg)
-        .onMessage(RiskScoreMsg.class, this::onRiskScoreMsg)
-        .onMessage(CurrentRefreshMsg.class, this::onCurrentRefreshMsg)
-        .onMessage(ContactsRefreshMsg.class, this::onContactsRefreshMsg)
-        .onMessage(ThresholdMsg.class, this::onThresholdMsg)
-        .onMessage(TimeoutMsg.class, this::onTimeoutMsg)
+        .onMessage(ContactMsg.class, this::handle)
+        .onMessage(RiskScoreMsg.class, this::handle)
+        .onMessage(CurrentRefreshMsg.class, this::handle)
+        .onMessage(ContactsRefreshMsg.class, this::handle)
+        .onMessage(ThresholdMsg.class, this::handle)
+        .onMessage(TimeoutMsg.class, this::handle)
         .build();
   }
 
-  private RiskScoreMsg updateWith(RiskScoreMsg msg) {
-    RiskScoreMsg previous = current;
-    current = msg;
-    transmitted = msgUtil.transmitted(current);
-    return previous;
-  }
-
-  private Behavior<UserMsg> onContactMsg(ContactMsg msg) {
+  private Behavior<UserMsg> handle(ContactMsg msg) {
     if (msgUtil.isAlive(msg)) {
       ContactActor contact = addNewContact(msg);
       startContactsRefreshTimer();
       logger.logContact(contact.ref());
-      sendToContact(contact);
+      sendCurrentOrCached(contact);
     }
     return this;
+  }
+
+  private Behavior<UserMsg> handle(RiskScoreMsg msg) {
+    logger.logReceive(msg);
+    RiskScoreMsg propagate = updateIfIsAboveCurrent(msg);
+    cache.put(msg.score().time(), propagate);
+    propagate(propagate);
+    resetTimeout();
+    return this;
+  }
+
+  private Behavior<UserMsg> handle(CurrentRefreshMsg msg) {
+    RiskScoreMsg maxCachedOrDefault = cache.max(clock.instant()).orElse(defaultMsg);
+    RiskScoreMsg previous = updateCurrent(maxCachedOrDefault);
+    startCurrentRefreshTimer();
+    logger.logCurrentRefresh(previous, current);
+    return this;
+  }
+
+  private Behavior<UserMsg> handle(ContactsRefreshMsg msg) {
+    int numContacts = contacts.size();
+    contacts.values().removeIf(Predicate.not(ContactActor::isAlive));
+    int numRemaining = contacts.size();
+    int numExpired = numContacts - numRemaining;
+    logger.logContactsRefresh(numRemaining, numExpired);
+    startContactsRefreshTimer();
+    return this;
+  }
+
+  private Behavior<UserMsg> handle(ThresholdMsg msg) {
+    contacts.get(msg.contact()).updateThreshold();
+    return this;
+  }
+
+  @SuppressWarnings("unused")
+  private Behavior<UserMsg> handle(TimeoutMsg msg) {
+    logger.logTimeout();
+    return Behaviors.stopped();
   }
 
   private ContactActor addNewContact(ContactMsg msg) {
@@ -130,16 +169,43 @@ public final class User extends AbstractBehavior<UserMsg> {
   }
 
   private void startContactsRefreshTimer() {
-    Duration minTtl = Collections.min(contacts.values()).untilExpiry();
+    Duration minTtl = Collections.min(contacts.values()).ttl();
     timers.startSingleTimer(ContactsRefreshMsg.INSTANCE, minTtl);
   }
 
-  private void sendToContact(ContactActor contact) {
+  private void sendCurrentOrCached(ContactActor contact) {
     if (contact.shouldReceive(current)) {
       sendCurrent(contact);
     } else {
       sendCached(contact);
     }
+  }
+
+  private RiskScoreMsg updateIfIsAboveCurrent(RiskScoreMsg msg) {
+    RiskScoreMsg propagate;
+    if (msgUtil.isGreaterThan(msg, current)) {
+      RiskScoreMsg previous = updateCurrent(msg);
+      startCurrentRefreshTimer();
+      logger.logUpdate(previous, current);
+      propagate = transmitted;
+    } else {
+      propagate = msgUtil.transmitted(msg);
+    }
+    return propagate;
+  }
+
+  private void propagate(RiskScoreMsg msg) {
+    contacts.values().stream()
+        .filter(contact -> contact.shouldReceive(msg))
+        .forEach(contact -> contact.tell(msg, logger::logPropagate));
+  }
+
+  private void resetTimeout() {
+    timers.startSingleTimer(TimeoutMsg.INSTANCE, userParams.idleTimeout());
+  }
+
+  private void startCurrentRefreshTimer() {
+    timers.startSingleTimer(CurrentRefreshMsg.INSTANCE, msgUtil.computeTtl(current));
   }
 
   private void sendCurrent(ContactActor contact) {
@@ -151,71 +217,5 @@ public final class User extends AbstractBehavior<UserMsg> {
         .max(contact.bufferedContactTime())
         .filter(msgUtil::isAlive)
         .ifPresent(cached -> contact.tell(cached, logger::logSendCached));
-  }
-
-  private Behavior<UserMsg> onRiskScoreMsg(RiskScoreMsg received) {
-    logger.logReceive(received);
-    propagate(updateAndCache(received));
-    resetTimeout();
-    return this;
-  }
-
-  private Behavior<UserMsg> onCurrentRefreshMsg(CurrentRefreshMsg msg) {
-    RiskScoreMsg newCurrent = cache.max(clock.instant()).orElse(defaultMsg);
-    RiskScoreMsg previous = updateWith(newCurrent);
-    startCurrentRefreshTimer();
-    logger.logCurrentRefresh(previous, current);
-    return this;
-  }
-
-  private void startCurrentRefreshTimer() {
-    timers.startSingleTimer(CurrentRefreshMsg.INSTANCE, msgUtil.untilExpiry(current));
-  }
-
-  private Behavior<UserMsg> onContactsRefreshMsg(ContactsRefreshMsg msg) {
-    int numContacts = contacts.size();
-    contacts.values().removeIf(Predicate.not(ContactActor::isAlive));
-    int numRemaining = contacts.size();
-    logger.logContactsRefresh(numRemaining, numContacts - numRemaining);
-    startContactsRefreshTimer();
-    return this;
-  }
-
-  private Behavior<UserMsg> onThresholdMsg(ThresholdMsg msg) {
-    contacts.get(msg.contact()).updateThreshold();
-    return this;
-  }
-
-  @SuppressWarnings("unused")
-  private Behavior<UserMsg> onTimeoutMsg(TimeoutMsg msg) {
-    logger.logTimeout();
-    return Behaviors.stopped();
-  }
-
-  private void resetTimeout() {
-    timers.startSingleTimer(TimeoutMsg.INSTANCE, userParams.idleTimeout());
-  }
-
-  private void propagate(RiskScoreMsg msg) {
-    contacts.values().stream()
-        .filter(contact -> contact.shouldReceive(msg))
-        .forEach(contact -> contact.tell(msg, logger::logPropagate));
-  }
-
-  private RiskScoreMsg updateAndCache(RiskScoreMsg msg) {
-    RiskScoreMsg propagate = (msgUtil.isGreaterThan(msg, current)) ? ifGreater(msg) : ifLesser(msg);
-    cache.put(msg.score().time(), propagate);
-    return propagate;
-  }
-
-  private RiskScoreMsg ifGreater(RiskScoreMsg msg) {
-    RiskScoreMsg previous = updateWith(msg);
-    startCurrentRefreshTimer();
-    logger.logUpdate(previous, current);
-    return transmitted;
-  }
-
-  private RiskScoreMsg ifLesser(RiskScoreMsg msg) {
-    return msgUtil.transmitted(msg);
   }
 }

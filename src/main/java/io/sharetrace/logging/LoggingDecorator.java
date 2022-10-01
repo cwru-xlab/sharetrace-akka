@@ -18,6 +18,15 @@ import net.logstash.logback.decorate.JsonFactoryDecorator;
 
 public final class LoggingDecorator implements JsonFactoryDecorator {
 
+  @Override
+  public JsonFactory decorate(JsonFactory factory) {
+    ObjectMapper codec = (ObjectMapper) factory.getCodec();
+    registerJdk8(codec);
+    registerJavaTime(codec);
+    registerBlackbird(codec);
+    return factory;
+  }
+
   private static void registerJdk8(ObjectMapper mapper) {
     mapper.registerModule(new Jdk8Module());
   }
@@ -31,15 +40,6 @@ public final class LoggingDecorator implements JsonFactoryDecorator {
 
   private static void registerBlackbird(ObjectMapper mapper) {
     mapper.registerModule(new BlackbirdModule());
-  }
-
-  @Override
-  public JsonFactory decorate(JsonFactory factory) {
-    ObjectMapper codec = (ObjectMapper) factory.getCodec();
-    registerJdk8(codec);
-    registerJavaTime(codec);
-    registerBlackbird(codec);
-    return factory;
   }
 
   private static final class SecondsInstantSerializer extends InstantSerializer {

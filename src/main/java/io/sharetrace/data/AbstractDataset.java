@@ -15,6 +15,8 @@ abstract class AbstractDataset implements Dataset {
     return scoreFactory().riskScore(user);
   }
 
+  protected abstract RiskScoreFactory scoreFactory();
+
   @Override
   public Set<Integer> users() {
     return contactNetwork().users();
@@ -29,8 +31,6 @@ abstract class AbstractDataset implements Dataset {
   public void logMetrics() {
     contactNetwork().logMetrics();
   }
-
-  protected abstract RiskScoreFactory scoreFactory();
 
   protected abstract ContactNetwork contactNetwork();
 }

@@ -60,10 +60,6 @@ public final class IntervalCache<T> {
     lastRefresh = getLong(Instant.MIN);
   }
 
-  public static <T> IntervalCache<T> create(CacheParams<T> params) {
-    return new IntervalCache<>(params);
-  }
-
   private static long getLong(TemporalAmount temporalAmount) {
     return temporalAmount.get(ChronoUnit.SECONDS);
   }
@@ -72,9 +68,8 @@ public final class IntervalCache<T> {
     return temporal.getLong(ChronoField.INSTANT_SECONDS);
   }
 
-  private static Predicate<Entry<Long, ?>> isNotAfter(Temporal temporal) {
-    long t = getLong(temporal);
-    return entry -> entry.getKey() <= t;
+  public static <T> IntervalCache<T> create(CacheParams<T> params) {
+    return new IntervalCache<>(params);
   }
 
   /**
@@ -88,6 +83,28 @@ public final class IntervalCache<T> {
     refresh();
     long key = floorKey(getLong(temporal));
     return Optional.ofNullable(cache.get(key));
+  }
+
+  private void refresh() {
+    if (getTime() - lastRefresh > refreshPeriod) {
+      rangeStart = getTime() - lookBack;
+      long rangeEnd = getTime() + lookAhead;
+      range = Range.closedOpen(rangeStart, rangeEnd);
+      cache.entrySet().removeIf(isExpired());
+      lastRefresh = getTime();
+    }
+  }
+
+  private long floorKey(long temporal) {
+    return rangeStart + interval * Math.floorDiv(temporal - rangeStart, interval);
+  }
+
+  private long getTime() {
+    return getLong(clock.instant());
+  }
+
+  private Predicate<Entry<Long, ?>> isExpired() {
+    return entry -> entry.getKey() < rangeStart;
   }
 
   /**
@@ -106,6 +123,10 @@ public final class IntervalCache<T> {
     cache.put(key, newValue);
   }
 
+  private long checkedFloorKey(Temporal temporal) {
+    return floorKey(Checks.inRange(getLong(temporal), range, TEMPORAL));
+  }
+
   /**
    * Returns an {@link Optional} containing the maximum value, according to the specified
    * comparator, whose time interval contains specified timestamp. If no values have been cached in
@@ -121,29 +142,8 @@ public final class IntervalCache<T> {
         .max(comparator);
   }
 
-  private void refresh() {
-    if (getTime() - lastRefresh > refreshPeriod) {
-      rangeStart = getTime() - lookBack;
-      long rangeEnd = getTime() + lookAhead;
-      range = Range.closedOpen(rangeStart, rangeEnd);
-      cache.entrySet().removeIf(isExpired());
-      lastRefresh = getTime();
-    }
-  }
-
-  private Predicate<Entry<Long, ?>> isExpired() {
-    return entry -> entry.getKey() < rangeStart;
-  }
-
-  private long floorKey(long temporal) {
-    return rangeStart + interval * Math.floorDiv(temporal - rangeStart, interval);
-  }
-
-  private long checkedFloorKey(Temporal temporal) {
-    return floorKey(Checks.inRange(getLong(temporal), range, TEMPORAL));
-  }
-
-  private long getTime() {
-    return getLong(clock.instant());
+  private static Predicate<Entry<Long, ?>> isNotAfter(Temporal temporal) {
+    long t = getLong(temporal);
+    return entry -> entry.getKey() <= t;
   }
 }

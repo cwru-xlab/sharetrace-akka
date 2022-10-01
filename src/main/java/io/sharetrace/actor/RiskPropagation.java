@@ -50,17 +50,17 @@ import org.slf4j.MDC;
  * main steps of the algorithm are as follows:
  *
  * <ol>
- *   <li>For each vertex in the {@link ContactNetwork}, create a {@link User} actor.
- *   <li>Send each {@link User} their symptom score in a {@link RiskScoreMsg}.
+ *   <li>For each vertex in the {@link ContactNetwork}, create a {@link UserActor} actor.
+ *   <li>Send each {@link UserActor} their symptom score in a {@link RiskScoreMsg}.
  *   <li>For each {@link Contact} in the {@link ContactNetwork}, send a {@link ContactMsg} to each
- *       {@link User} that contains the {@link ActorRef} of the other {@link User}.
- *   <li>Terminate once all {@link User}s have stopped passing messages.
+ *       {@link UserActor} that contains the {@link ActorRef} of the other {@link UserActor}.
+ *   <li>Terminate once all {@link UserActor}s have stopped passing messages.
  * </ol>
  *
  * In practice, this implementation is distributed or decentralized. The usage of the {@link
  * ContactNetwork} is only for proof-of-concept and experimentation purposes.
  *
- * @see User
+ * @see UserActor
  * @see UserParams
  * @see MsgParams
  * @see CacheParams
@@ -259,6 +259,10 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
 
     private final Map<Class<?>, Long> runtimes = new Object2LongOpenHashMap<>();
 
+    public void time(Runnable task, Class<?> metric) {
+      time(Executors.callable(task), metric);
+    }
+
     public <R> R time(Callable<R> task, Class<?> metric) {
       long start, stop;
       R result;
@@ -271,10 +275,6 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
       }
       runtimes.put(metric, stop - start);
       return result;
-    }
-
-    public void time(Runnable task, Class<?> metric) {
-      time(Executors.callable(task), metric);
     }
 
     public long nanos(Class<?> metric) {

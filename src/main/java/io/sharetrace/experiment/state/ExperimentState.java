@@ -64,8 +64,8 @@ public final class ExperimentState implements Runnable {
     return Builder.withDefaults(ctx);
   }
 
-  public Builder toBuilder() {
-    return Builder.from(this);
+  public void run(int numIterations) {
+    IntStream.range(0, numIterations).forEach(x -> toBuilder().build().run());
   }
 
   @Override
@@ -74,33 +74,14 @@ public final class ExperimentState implements Runnable {
     newRiskPropagation().run();
   }
 
-  public void run(int numIterations) {
-    IntStream.range(0, numIterations).forEach(x -> toBuilder().build().run());
-  }
-
-  public MsgParams msgParams() {
-    return msgParams;
-  }
-
-  public Dataset dataset() {
-    return dataset;
+  public Builder toBuilder() {
+    return Builder.from(this);
   }
 
   private void logMetricsAndSettings() {
     mdc.forEach(MDC::put);
     dataset.logMetrics();
     logger.log(LoggableSetting.KEY, TypedSupplier.of(ExperimentSettings.class, this::settings));
-  }
-
-  private ExperimentSettings settings() {
-    return ExperimentSettings.builder()
-        .graphType(graphType.toString())
-        .sid(id)
-        .seed(ctx.seed())
-        .userParams(userParams)
-        .msgParams(msgParams)
-        .cacheParams(cacheParams)
-        .build();
   }
 
   private Runnable newRiskPropagation() {
@@ -116,8 +97,27 @@ public final class ExperimentState implements Runnable {
         .build();
   }
 
+  private ExperimentSettings settings() {
+    return ExperimentSettings.builder()
+        .graphType(graphType.toString())
+        .sid(id)
+        .seed(ctx.seed())
+        .userParams(userParams)
+        .msgParams(msgParams)
+        .cacheParams(cacheParams)
+        .build();
+  }
+
   private IntervalCache<RiskScoreMsg> newCache() {
     return IntervalCache.create(cacheParams);
+  }
+
+  public MsgParams msgParams() {
+    return msgParams;
+  }
+
+  public Dataset dataset() {
+    return dataset;
   }
 
   private enum Setter {
@@ -169,6 +169,14 @@ public final class ExperimentState implements Runnable {
       mdc = new Object2ObjectOpenHashMap<>();
     }
 
+    private static <B> Map<Setter, Function<? super B, B>> newSetters() {
+      Map<Setter, Function<? super B, B>> setters = new EnumMap<>(Setter.class);
+      for (Setter setter : Setter.values()) {
+        setters.put(setter, Function.identity());
+      }
+      return setters;
+    }
+
     protected static Builder from(ExperimentState state) {
       return new Builder(state.ctx)
           .graphType(state.graphType)
@@ -183,6 +191,80 @@ public final class ExperimentState implements Runnable {
           .userParams(state.userParams);
     }
 
+    public Builder userParams(UserParams params) {
+      userParams = params;
+      setters.remove(Setter.USER_PARAMS);
+      return this;
+    }
+
+    public Builder dataset(Dataset dataset) {
+      this.dataset = dataset;
+      setters.remove(Setter.DATASET);
+      return this;
+    }
+
+    public Builder contactTimesFactory(DistributionFactory factory) {
+      contactTimesFactory = factory;
+      setters.remove(Setter.CONTACT_TIMES);
+      return this;
+    }
+
+    public Builder scoreTimesFactory(DistributionFactory factory) {
+      scoreTimesFactory = factory;
+      setters.remove(Setter.SCORE_TIMES);
+      return this;
+    }
+
+    public Builder scoreValuesFactory(DistributionFactory factory) {
+      scoreValuesFactory = factory;
+      setters.remove(Setter.SCORE_VALUES);
+      return this;
+    }
+
+    public Builder cacheParams(CacheParams<RiskScoreMsg> params) {
+      cacheParams = params;
+      setters.remove(Setter.CACHE_PARAMS);
+      return this;
+    }
+
+    public Builder msgParams(MsgParams params) {
+      msgParams = params;
+      setters.remove(Setter.MSG_PARAMS);
+      return this;
+    }
+
+    public Builder mdc(Function<MdcContext, Map<String, String>> factory) {
+      setters.put(Setter.MDC, factory.andThen(this::mdc));
+      return this;
+    }
+
+    public Builder id(Function<IdContext, String> factory) {
+      setters.put(Setter.ID, factory.andThen(this::id));
+      return this;
+    }
+
+    public Builder graphType(GraphType graphType) {
+      this.graphType = graphType;
+      setters.remove(Setter.GRAPH_TYPE);
+      return this;
+    }
+
+    private static String newId() {
+      return Uid.ofIntString();
+    }
+
+    public Builder mdc(Map<String, String> mdc) {
+      this.mdc.putAll(mdc);
+      setters.remove(Setter.MDC);
+      return this;
+    }
+
+    public Builder id(String id) {
+      this.id = id;
+      setters.remove(Setter.ID);
+      return this;
+    }
+
     protected static Builder withDefaults(ExperimentContext context) {
       return new Builder(context)
           .id(ctx -> newId())
@@ -195,104 +277,8 @@ public final class ExperimentState implements Runnable {
           .userParams(ctx -> Defaults.userParams(ctx.dataset()));
     }
 
-    private static <B> Map<Setter, Function<? super B, B>> newSetters() {
-      Map<Setter, Function<? super B, B>> setters = new EnumMap<>(Setter.class);
-      for (Setter setter : Setter.values()) {
-        setters.put(setter, Function.identity());
-      }
-      return setters;
-    }
-
-    private static String newId() {
-      return Uid.ofIntString();
-    }
-
-    private static Function<DistributionFactoryContext, DistributionFactory> defaultFactory() {
-      return ctx -> seed -> new UniformRealDistribution(new Well512a(seed), 0d, 1d);
-    }
-
-    public Builder graphType(GraphType graphType) {
-      this.graphType = graphType;
-      setters.remove(Setter.GRAPH_TYPE);
-      return this;
-    }
-
-    public Builder graphType(Function<GraphTypeContext, GraphType> factory) {
-      setters.put(Setter.GRAPH_TYPE, factory.andThen(this::graphType));
-      return this;
-    }
-
-    public Builder id(String id) {
-      this.id = id;
-      setters.remove(Setter.ID);
-      return this;
-    }
-
-    public Builder id(Function<IdContext, String> factory) {
-      setters.put(Setter.ID, factory.andThen(this::id));
-      return this;
-    }
-
-    public Builder mdc(Map<String, String> mdc) {
-      this.mdc.putAll(mdc);
-      setters.remove(Setter.MDC);
-      return this;
-    }
-
-    public Builder mdc(Function<MdcContext, Map<String, String>> factory) {
-      setters.put(Setter.MDC, factory.andThen(this::mdc));
-      return this;
-    }
-
-    public Builder msgParams(MsgParams params) {
-      msgParams = params;
-      setters.remove(Setter.MSG_PARAMS);
-      return this;
-    }
-
-    public Builder msgParams(Function<MsgParamsContext, MsgParams> factory) {
-      setters.put(Setter.MSG_PARAMS, factory.andThen(this::msgParams));
-      return this;
-    }
-
-    public Builder cacheParams(CacheParams<RiskScoreMsg> params) {
-      cacheParams = params;
-      setters.remove(Setter.CACHE_PARAMS);
-      return this;
-    }
-
-    public Builder cacheParams(Function<CacheParamsContext, CacheParams<RiskScoreMsg>> factory) {
-      setters.put(Setter.CACHE_PARAMS, factory.andThen(this::cacheParams));
-      return this;
-    }
-
-    public Builder scoreValuesFactory(DistributionFactory factory) {
-      scoreValuesFactory = factory;
-      setters.remove(Setter.SCORE_VALUES);
-      return this;
-    }
-
-    public Builder scoreValuesFactory(
-        Function<DistributionFactoryContext, DistributionFactory> factory) {
-      setters.put(Setter.SCORE_VALUES, factory.andThen(this::scoreValuesFactory));
-      return this;
-    }
-
-    public Builder scoreTimesFactory(DistributionFactory factory) {
-      scoreTimesFactory = factory;
-      setters.remove(Setter.SCORE_TIMES);
-      return this;
-    }
-
-    public Builder scoreTimesFactory(
-        Function<DistributionFactoryContext, DistributionFactory> factory) {
-      setters.put(Setter.SCORE_TIMES, factory.andThen(this::scoreTimesFactory));
-      return this;
-    }
-
-    public Builder contactTimesFactory(DistributionFactory factory) {
-      contactTimesFactory = factory;
-      setters.remove(Setter.CONTACT_TIMES);
+    public Builder userParams(Function<UserParamsContext, UserParams> factory) {
+      setters.put(Setter.USER_PARAMS, factory.andThen(this::userParams));
       return this;
     }
 
@@ -302,20 +288,34 @@ public final class ExperimentState implements Runnable {
       return this;
     }
 
-    public Builder userParams(UserParams params) {
-      userParams = params;
-      setters.remove(Setter.USER_PARAMS);
+    public Builder scoreValuesFactory(
+        Function<DistributionFactoryContext, DistributionFactory> factory) {
+      setters.put(Setter.SCORE_VALUES, factory.andThen(this::scoreValuesFactory));
       return this;
     }
 
-    public Builder userParams(Function<UserParamsContext, UserParams> factory) {
-      setters.put(Setter.USER_PARAMS, factory.andThen(this::userParams));
+    public Builder scoreTimesFactory(
+        Function<DistributionFactoryContext, DistributionFactory> factory) {
+      setters.put(Setter.SCORE_TIMES, factory.andThen(this::scoreTimesFactory));
       return this;
     }
 
-    public Builder dataset(Dataset dataset) {
-      this.dataset = dataset;
-      setters.remove(Setter.DATASET);
+    public Builder cacheParams(Function<CacheParamsContext, CacheParams<RiskScoreMsg>> factory) {
+      setters.put(Setter.CACHE_PARAMS, factory.andThen(this::cacheParams));
+      return this;
+    }
+
+    public Builder msgParams(Function<MsgParamsContext, MsgParams> factory) {
+      setters.put(Setter.MSG_PARAMS, factory.andThen(this::msgParams));
+      return this;
+    }
+
+    private static Function<DistributionFactoryContext, DistributionFactory> defaultFactory() {
+      return ctx -> seed -> new UniformRealDistribution(new Well512a(seed), 0d, 1d);
+    }
+
+    public Builder graphType(Function<GraphTypeContext, GraphType> factory) {
+      setters.put(Setter.GRAPH_TYPE, factory.andThen(this::graphType));
       return this;
     }
 
@@ -329,6 +329,20 @@ public final class ExperimentState implements Runnable {
       setters.values().forEach(setter -> setter.apply(this));
       ensureSet();
       return new ExperimentState(this);
+    }
+
+    private Builder setDistributions() {
+      scoreValues = scoreValuesFactory.distribution(ctx.seed());
+      scoreTimes = scoreTimesFactory.distribution(ctx.seed());
+      contactTimes = contactTimesFactory.distribution(ctx.seed());
+      setters.remove(Setter.DISTRIBUTIONS);
+      return this;
+    }
+
+    private void ensureSet() {
+      if (!setters.isEmpty()) {
+        throw new IllegalStateException("Not all attributes have been set: " + setters.keySet());
+      }
     }
 
     @Override
@@ -394,20 +408,6 @@ public final class ExperimentState implements Runnable {
     @Override
     public Dataset dataset() {
       return dataset;
-    }
-
-    private void ensureSet() {
-      if (!setters.isEmpty()) {
-        throw new IllegalStateException("Not all attributes have been set: " + setters.keySet());
-      }
-    }
-
-    private Builder setDistributions() {
-      scoreValues = scoreValuesFactory.distribution(ctx.seed());
-      scoreTimes = scoreTimesFactory.distribution(ctx.seed());
-      contactTimes = contactTimesFactory.distribution(ctx.seed());
-      setters.remove(Setter.DISTRIBUTIONS);
-      return this;
     }
   }
 }

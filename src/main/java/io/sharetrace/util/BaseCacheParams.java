@@ -11,14 +11,6 @@ import org.immutables.value.Value;
 @Value.Immutable(copy = true)
 abstract class BaseCacheParams<T> {
 
-  public abstract int numIntervals();
-
-  public abstract int numLookAhead();
-
-  public abstract Duration interval();
-
-  public abstract Duration refreshPeriod();
-
   @JsonIgnore
   public abstract BinaryOperator<T> mergeStrategy();
 
@@ -35,4 +27,12 @@ abstract class BaseCacheParams<T> {
     Checks.inClosedOpen(numLookAhead(), 0, numIntervals(), "numLookAhead");
     Checks.isAtLeast(refreshPeriod(), Duration.ZERO, "refreshPeriod");
   }
+
+  public abstract Duration interval();
+
+  public abstract int numIntervals();
+
+  public abstract int numLookAhead();
+
+  public abstract Duration refreshPeriod();
 }

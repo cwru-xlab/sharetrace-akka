@@ -2,7 +2,7 @@ package io.sharetrace.model;
 
 import com.google.common.collect.ComparisonChain;
 import io.sharetrace.actor.RiskPropagation;
-import io.sharetrace.actor.User;
+import io.sharetrace.actor.UserActor;
 import io.sharetrace.message.RiskScoreMsg;
 import io.sharetrace.util.Checks;
 import java.time.Instant;
@@ -14,7 +14,7 @@ import org.immutables.value.Value;
  * that a user had with others is called an <i>exposure score</i>.
  *
  * @see RiskScoreMsg
- * @see User
+ * @see UserActor
  * @see RiskPropagation
  */
 @SuppressWarnings({"DefaultAnnotationParam", "StaticInitializerReferencesSubClass"})

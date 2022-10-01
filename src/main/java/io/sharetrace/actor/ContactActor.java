@@ -38,7 +38,19 @@ final class ContactActor implements Comparable<ContactActor> {
   }
 
   public boolean shouldReceive(RiskScoreMsg msg) {
-    return exceedsThreshold(msg) && isRelevant(msg) && msgUtil.isAlive(msg) && isNotSender(msg);
+    return isAboveThreshold(msg) && isRelevant(msg) && msgUtil.isAlive(msg) && isNotSender(msg);
+  }
+
+  private boolean isAboveThreshold(RiskScoreMsg msg) {
+    return msgUtil.isGreaterThan(msg, sendThreshold);
+  }
+
+  private boolean isRelevant(RiskScoreMsg msg) {
+    return msgUtil.isNotAfter(msg, bufferedContactTime);
+  }
+
+  private boolean isNotSender(RiskScoreMsg msg) {
+    return !ref.equals(msg.replyTo());
   }
 
   public Instant bufferedContactTime() {
@@ -49,6 +61,14 @@ final class ContactActor implements Comparable<ContactActor> {
     ref.tell(msg);
     logEvent.accept(ref, msg);
     updateThreshold(msg);
+  }
+
+  private void updateThreshold(RiskScoreMsg msg) {
+    float threshold = msgUtil.computeThreshold(msg);
+    if (threshold > sendThreshold) {
+      sendThreshold = threshold;
+      timers.startSingleTimer(ThresholdMsg.of(ref), msgUtil.computeTtl(msg));
+    }
   }
 
   public void updateThreshold() {
@@ -69,28 +89,8 @@ final class ContactActor implements Comparable<ContactActor> {
     return contactTime.compareTo(contact.contactTime);
   }
 
-  private boolean exceedsThreshold(RiskScoreMsg msg) {
-    return msgUtil.isGreaterThan(msg, sendThreshold);
-  }
-
-  private boolean isRelevant(RiskScoreMsg msg) {
-    return msgUtil.isNotAfter(msg, bufferedContactTime);
-  }
-
-  private boolean isNotSender(RiskScoreMsg msg) {
-    return !ref.equals(msg.replyTo());
-  }
-
-  private void updateThreshold(RiskScoreMsg msg) {
-    float threshold = msgUtil.computeThreshold(msg);
-    if (threshold > sendThreshold) {
-      sendThreshold = threshold;
-      timers.startSingleTimer(ThresholdMsg.of(ref), msgUtil.untilExpiry(msg));
-    }
-  }
-
-  public Duration untilExpiry() {
-    return msgUtil.untilExpiry(contactTime);
+  public Duration ttl() {
+    return msgUtil.computeTtl(contactTime);
   }
 
   public boolean isAlive() {

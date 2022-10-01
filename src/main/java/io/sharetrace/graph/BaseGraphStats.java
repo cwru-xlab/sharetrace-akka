@@ -24,19 +24,35 @@ import org.jgrapht.alg.shortestpath.GraphMeasurer;
 @Value.Immutable
 abstract class BaseGraphStats<V, E> {
 
-  private static List<Float> getScores(VertexScoringAlgorithm<?, ? extends Number> algorithm) {
-    Collection<? extends Number> scores = algorithm.getScores().values();
-    return scores.stream()
-        .map(Number::floatValue)
-        .collect(() -> new FloatArrayList(scores.size()), List::add, List::addAll);
-  }
-
   public GraphSize graphSize() {
     return GraphSize.builder().numNodes(numNodes()).numEdges(numEdges()).build();
   }
 
+  @Value.Lazy
+  protected int numNodes() {
+    return graph().vertexSet().size();
+  }
+
+  @Value.Lazy
+  protected int numEdges() {
+    return graph().edgeSet().size();
+  }
+
+  @Value.Parameter
+  protected abstract Graph<V, E> graph();
+
   public GraphCycles graphCycles() {
     return GraphCycles.builder().numTriangles(numTriangles()).girth(girth()).build();
+  }
+
+  @Value.Lazy
+  protected long numTriangles() {
+    return GraphMetrics.getNumberOfTriangles(graph());
+  }
+
+  @Value.Lazy
+  protected int girth() {
+    return GraphMetrics.getGirth(graph());
   }
 
   public GraphEccentricity graphEccentricity() {
@@ -60,23 +76,45 @@ abstract class BaseGraphStats<V, E> {
   }
 
   @Value.Lazy
-  protected int numNodes() {
-    return graph().vertexSet().size();
+  protected int degeneracy() {
+    return new Coreness<>(graph()).getDegeneracy();
   }
 
   @Value.Lazy
-  protected int numEdges() {
-    return graph().edgeSet().size();
+  protected float globalClusteringCoefficient() {
+    return (float) new ClusteringCoefficient<>(graph()).getGlobalClusteringCoefficient();
   }
 
   @Value.Lazy
-  protected long numTriangles() {
-    return GraphMetrics.getNumberOfTriangles(graph());
+  protected List<Float> localClusteringCoefficients() {
+    return getScores(new ClusteringCoefficient<>(graph()));
   }
 
   @Value.Lazy
-  protected int girth() {
-    return GraphMetrics.getGirth(graph());
+  protected List<Float> harmonicCentralities() {
+    return getScores(new HarmonicCentrality<>(graph(), shortestPath()));
+  }
+
+  @Value.Lazy
+  protected List<Float> katzCentralities() {
+    return getScores(new KatzCentrality<>(graph()));
+  }
+
+  @Value.Lazy
+  protected List<Float> eigenvectorCentralities() {
+    return getScores(new EigenvectorCentrality<>(graph()));
+  }
+
+  private static List<Float> getScores(VertexScoringAlgorithm<?, ? extends Number> algorithm) {
+    Collection<? extends Number> scores = algorithm.getScores().values();
+    return scores.stream()
+        .map(Number::floatValue)
+        .collect(() -> new FloatArrayList(scores.size()), List::add, List::addAll);
+  }
+
+  @Value.Lazy
+  protected ShortestPathAlgorithm<V, E> shortestPath() {
+    return new FloydWarshallShortestPaths<>(graph());
   }
 
   @Value.Lazy
@@ -103,44 +141,6 @@ abstract class BaseGraphStats<V, E> {
   protected GraphMeasurer<V, E> graphMeasurer() {
     return new GraphMeasurer<>(graph(), shortestPath());
   }
-
-  @Value.Lazy
-  protected int degeneracy() {
-    return new Coreness<>(graph()).getDegeneracy();
-  }
-
-  @Value.Lazy
-  protected float globalClusteringCoefficient() {
-    return (float) new ClusteringCoefficient<>(graph()).getGlobalClusteringCoefficient();
-  }
-
-  @Value.Lazy
-  protected List<Float> localClusteringCoefficients() {
-    return getScores(new ClusteringCoefficient<>(graph()));
-  }
-
-  @Value.Lazy
-  protected List<Float> harmonicCentralities() {
-    return getScores(new HarmonicCentrality<>(graph(), shortestPath()));
-  }
-
-  @Value.Lazy
-  protected ShortestPathAlgorithm<V, E> shortestPath() {
-    return new FloydWarshallShortestPaths<>(graph());
-  }
-
-  @Value.Lazy
-  protected List<Float> katzCentralities() {
-    return getScores(new KatzCentrality<>(graph()));
-  }
-
-  @Value.Lazy
-  protected List<Float> eigenvectorCentralities() {
-    return getScores(new EigenvectorCentrality<>(graph()));
-  }
-
-  @Value.Parameter
-  protected abstract Graph<V, E> graph();
 
   private static final class HarmonicCentrality<V, E> extends ClosenessCentrality<V, E> {
 

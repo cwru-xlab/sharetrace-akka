@@ -65,10 +65,6 @@ public final class Defaults {
     return CONTEXT;
   }
 
-  public static RiskScoreFactory scoreFactory(DatasetContext ctx) {
-    return RiskScoreFactory.from(scoreSampler(ctx)::sample);
-  }
-
   public static Sampler<RiskScore> scoreSampler(DatasetContext ctx) {
     return RiskScoreSampler.builder()
         .values(ctx.scoreValues())
@@ -84,10 +80,6 @@ public final class Defaults {
         .build();
   }
 
-  public static ContactTimeFactory contactTimeFactory(DatasetContext ctx) {
-    return ContactTimeFactory.from(contactTimeSampler(ctx)::sample);
-  }
-
   public static Sampler<Instant> contactTimeSampler(DatasetContext ctx) {
     return TimeSampler.builder()
         .lookBacks(ctx.contactTimes())
@@ -100,6 +92,13 @@ public final class Defaults {
     return UserParams.builder().idleTimeout(idleTimeout(dataset)).build();
   }
 
+  public static Duration idleTimeout(Dataset dataset) {
+    double numContacts = dataset.contacts().size();
+    double targetBase = Math.max(MIN_BASE, MAX_BASE - DECAY_RATE * numContacts);
+    long timeout = (long) Math.ceil(Math.log(numContacts) / targetBase);
+    return Duration.ofSeconds(timeout);
+  }
+
   public static FileDataset fileDataset(DatasetContext ctx, Path path) {
     return FileDataset.builder()
         .delimiter(WHITESPACE_DELIMITER)
@@ -108,6 +107,10 @@ public final class Defaults {
         .refTime(ctx.refTime())
         .scoreFactory(scoreFactory(ctx))
         .build();
+  }
+
+  public static RiskScoreFactory scoreFactory(DatasetContext ctx) {
+    return RiskScoreFactory.from(scoreSampler(ctx)::sample);
   }
 
   public static SampledDataset sampledDataset(DatasetContext ctx, int numNodes) {
@@ -120,11 +123,8 @@ public final class Defaults {
         .build();
   }
 
-  public static Duration idleTimeout(Dataset dataset) {
-    double numContacts = dataset.contacts().size();
-    double targetBase = Math.max(MIN_BASE, MAX_BASE - DECAY_RATE * numContacts);
-    long timeout = (long) Math.ceil(Math.log(numContacts) / targetBase);
-    return Duration.ofSeconds(timeout);
+  public static ContactTimeFactory contactTimeFactory(DatasetContext ctx) {
+    return ContactTimeFactory.from(contactTimeSampler(ctx)::sample);
   }
 
   public static GraphGeneratorFactory graphGeneratorFactory(DatasetContext ctx) {
@@ -137,6 +137,18 @@ public final class Defaults {
             .numNewEdges(2)
             .rewiringProbability(0.3)
             .build();
+  }
+
+  private static CacheParams<RiskScoreMsg> newCacheParams() {
+    return CacheParams.<RiskScoreMsg>builder()
+        .interval(Duration.ofDays(1L))
+        .numIntervals((int) (2 * TTL.toDays()))
+        .numLookAhead(1)
+        .refreshPeriod(Duration.ofHours(1L))
+        .mergeStrategy(Defaults::cacheMerge)
+        .clock(Clock.systemUTC())
+        .comparator(RiskScoreMsg::compareTo)
+        .build();
   }
 
   public static RiskScoreMsg cacheMerge(RiskScoreMsg oldMsg, RiskScoreMsg newMsg) {
@@ -157,18 +169,6 @@ public final class Defaults {
 
   private static boolean isApproxEqual(RiskScoreMsg msg1, RiskScoreMsg msg2) {
     return Math.abs(msg1.score().value() - msg2.score().value()) < MSG_PARAMS.tolerance();
-  }
-
-  private static CacheParams<RiskScoreMsg> newCacheParams() {
-    return CacheParams.<RiskScoreMsg>builder()
-        .interval(Duration.ofDays(1L))
-        .numIntervals((int) (2 * TTL.toDays()))
-        .numLookAhead(1)
-        .refreshPeriod(Duration.ofHours(1L))
-        .mergeStrategy(Defaults::cacheMerge)
-        .clock(Clock.systemUTC())
-        .comparator(RiskScoreMsg::compareTo)
-        .build();
   }
 
   private static MsgParams newMsgParams() {

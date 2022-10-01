@@ -66,20 +66,20 @@ abstract class AbstractContactNetwork implements ContactNetwork, LoggableRef {
     }
   }
 
-  protected abstract GraphGenerator<Integer, DefaultEdge, ?> graphGenerator();
-
-  protected abstract ContactTimeFactory contactTimeFactory();
-
-  private Logger logger() {
-    return (logger == null) ? (logger = Logging.metricsLogger(loggable())) : logger;
-  }
-
   private Graph<Integer, DefaultEdge> graph() {
     return (graph == null) ? (graph = newGraph()) : graph;
   }
 
   private Graph<Integer, DefaultEdge> newGraph() {
     return GraphFactory.newUndirectedGraph(graphGenerator());
+  }
+
+  protected abstract GraphGenerator<Integer, DefaultEdge, ?> graphGenerator();
+
+  protected abstract ContactTimeFactory contactTimeFactory();
+
+  private Logger logger() {
+    return (logger == null) ? (logger = Logging.metricsLogger(loggable())) : logger;
   }
 
   private Contact contactFrom(DefaultEdge edge) {

@@ -15,13 +15,13 @@ public final class Logging {
 
   private Logging() {}
 
+  public static Logger metricsLogger(Set<Class<? extends Loggable>> loggable) {
+    return logger(loggable, () -> LoggerFactory.getLogger(METRICS_LOGGER_NAME));
+  }
+
   public static Logger logger(
       Set<Class<? extends Loggable>> loggable, Supplier<org.slf4j.Logger> logger) {
     return DefaultLogger.of(loggable, logger);
-  }
-
-  public static Logger metricsLogger(Set<Class<? extends Loggable>> loggable) {
-    return logger(loggable, () -> LoggerFactory.getLogger(METRICS_LOGGER_NAME));
   }
 
   public static Logger settingsLogger(Set<Class<? extends Loggable>> loggable) {

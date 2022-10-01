@@ -31,10 +31,6 @@ public final class ParamsExperiment extends Experiment<ParamsExperimentConfig> {
     return ctx.withLoggable(loggable);
   }
 
-  private static Dataset cacheScores(Dataset dataset) {
-    return dataset.withScoreFactory(CachedRiskScoreFactory.of(dataset));
-  }
-
   /**
    * Evaluates the effects of the transmission rate and the send coefficient on the accuracy and
    * efficiency of {@link RiskPropagation}. Risk scores are cached across parameter values for a
@@ -56,6 +52,10 @@ public final class ParamsExperiment extends Experiment<ParamsExperimentConfig> {
         }
       }
     }
+  }
+
+  private static Dataset cacheScores(Dataset dataset) {
+    return dataset.withScoreFactory(CachedRiskScoreFactory.of(dataset));
   }
 
   @Override

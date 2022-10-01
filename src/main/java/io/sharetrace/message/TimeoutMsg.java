@@ -1,11 +1,11 @@
 package io.sharetrace.message;
 
-import io.sharetrace.actor.User;
+import io.sharetrace.actor.UserActor;
 
 /**
- * A message that terminates a {@link User} after a period of idleness.
+ * A message that terminates a {@link UserActor} after a period of idleness.
  *
- * @see User
+ * @see UserActor
  */
 public enum TimeoutMsg implements UserMsg {
   INSTANCE

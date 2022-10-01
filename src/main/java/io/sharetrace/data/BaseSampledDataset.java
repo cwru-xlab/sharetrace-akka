@@ -23,6 +23,12 @@ abstract class BaseSampledDataset extends AbstractDataset {
         .build();
   }
 
+  protected abstract GraphGeneratorFactory graphGeneratorFactory();
+
+  protected abstract int numNodes();
+
+  protected abstract ContactTimeFactory contactTimeFactory();
+
   @Override
   @Value.Default // Allows the contact network to be passed on to a copied instance.
   protected ContactNetwork contactNetwork() {
@@ -37,10 +43,4 @@ abstract class BaseSampledDataset extends AbstractDataset {
   protected GraphGenerator<Integer, DefaultEdge, ?> graphGenerator() {
     return graphGeneratorFactory().graphGenerator(numNodes());
   }
-
-  protected abstract GraphGeneratorFactory graphGeneratorFactory();
-
-  protected abstract int numNodes();
-
-  protected abstract ContactTimeFactory contactTimeFactory();
 }

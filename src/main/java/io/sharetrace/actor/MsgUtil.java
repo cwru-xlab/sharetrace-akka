@@ -53,16 +53,28 @@ final class MsgUtil {
     return msg.score().value() > value;
   }
 
-  public Duration untilExpiry(RiskScoreMsg msg) {
-    return untilExpiry(msg.score().time(), params.scoreTtl());
+  public Duration computeTtl(RiskScoreMsg msg) {
+    return computeTtl(msg.score().time(), params.scoreTtl());
   }
 
-  public Duration untilExpiry(Temporal contactTime) {
-    return untilExpiry(contactTime, params.contactTtl());
+  private Duration computeTtl(Temporal temporal, Duration ttl) {
+    return ttl.minus(since(temporal));
+  }
+
+  private Duration since(Temporal temporal) {
+    return Duration.between(temporal, clock.instant());
+  }
+
+  public Duration computeTtl(Temporal contactTime) {
+    return computeTtl(contactTime, params.contactTtl());
   }
 
   public boolean isAlive(RiskScoreMsg msg) {
     return isAlive(msg.score().time(), params.scoreTtl());
+  }
+
+  private boolean isAlive(Temporal temporal, Duration ttl) {
+    return since(temporal).compareTo(ttl) < 0;
   }
 
   public boolean isAlive(ContactMsg msg) {
@@ -71,17 +83,5 @@ final class MsgUtil {
 
   public boolean isAlive(Temporal contactTime) {
     return isAlive(contactTime, params.contactTtl());
-  }
-
-  private Duration untilExpiry(Temporal temporal, Duration ttl) {
-    return ttl.minus(since(temporal));
-  }
-
-  private boolean isAlive(Temporal temporal, Duration ttl) {
-    return since(temporal).compareTo(ttl) < 0;
-  }
-
-  private Duration since(Temporal temporal) {
-    return Duration.between(temporal, clock.instant());
   }
 }

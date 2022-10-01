@@ -31,11 +31,6 @@ public final class NoiseExperiment extends Experiment<NoiseExperimentConfig> {
         .withLoggable(UpdateEvent.class, GraphSize.class, ExperimentSettings.class);
   }
 
-  private static RiskScoreFactory newNoisyFactory(
-      RiskScoreFactory factory, RealDistribution noise) {
-    return NoisyRiskScoreFactory.of(noise, CachedRiskScoreFactory.of(factory));
-  }
-
   /**
    * Evaluates the accuracy of {@link RiskPropagation} when noise is added to the user symptom
    * scores. For a given noise distribution, each {@link ContactNetwork} is 1 or more times. The
@@ -58,6 +53,11 @@ public final class NoiseExperiment extends Experiment<NoiseExperimentConfig> {
             .run(config.numIterations());
       }
     }
+  }
+
+  private static RiskScoreFactory newNoisyFactory(
+      RiskScoreFactory factory, RealDistribution noise) {
+    return NoisyRiskScoreFactory.of(CachedRiskScoreFactory.of(factory), noise);
   }
 
   @Override

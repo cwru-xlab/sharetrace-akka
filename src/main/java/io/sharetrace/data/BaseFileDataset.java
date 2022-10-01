@@ -21,6 +21,10 @@ abstract class BaseFileDataset extends AbstractDataset implements TimeRef {
         .build();
   }
 
+  protected abstract Path path();
+
+  protected abstract String delimiter();
+
   @Override
   @Value.Default // Allows the contact network to be passed on to a copied instance.
   protected ContactNetwork contactNetwork() {
@@ -31,8 +35,4 @@ abstract class BaseFileDataset extends AbstractDataset implements TimeRef {
         .refTime(refTime())
         .build();
   }
-
-  protected abstract String delimiter();
-
-  protected abstract Path path();
 }

@@ -36,25 +36,6 @@ public final class VertexIndependentPaths {
     this.directed = GraphFactory.toDirected(graph);
   }
 
-  private static <V, E> KShortestPathAlgorithm<V, E> newKShortestPaths(Graph<V, E> graph) {
-    // Suurballe provides a simpler implementation since it ensures no loops.
-    return new SuurballeKDisjointShortestPaths<>(graph);
-  }
-
-  private static <V> List<V> withoutEndpoints(GraphPath<V, ?> path) {
-    List<V> vertices = path.getVertexList();
-    return (vertices.size() < 3) ? List.of() : vertices.subList(1, vertices.size() - 1);
-  }
-
-  private static <V, E> ShortestPathAlgorithm<V, E> newShortestPaths(Graph<V, E> graph) {
-    // Fibonacci heap provides O(1) insert vs. pairing heap O(log n).
-    return new BidirectionalDijkstraShortestPath<>(graph, FibonacciHeap::new);
-  }
-
-  private static Supplier<List<Integer>> newCounts(int size) {
-    return () -> new IntArrayList(size);
-  }
-
   public int getPathCount(int source, int target) {
     return getPathCount(source, target, Integer.MAX_VALUE);
   }
@@ -62,39 +43,6 @@ public final class VertexIndependentPaths {
   public int getPathCount(int source, int target, int maxFind) {
     int stopAt = Math.min(maxFind, maxPossiblePaths(source, target));
     return (stopAt > 0) ? nontrivialPathCount(source, target, stopAt) : 0;
-  }
-
-  public List<Integer> getPathCounts(int source) {
-    return getPathCounts(source, Integer.MAX_VALUE);
-  }
-
-  public List<Integer> getPathCounts(int source, int maxFind) {
-    return getPathCounts(source, maxFind, true);
-  }
-
-  public List<Integer> getPathCounts(int source, int maxFind, boolean allowParallel) {
-    return vertices(allowParallel)
-        .filter(target -> source != target)
-        .map(target -> getPathCount(source, target, maxFind))
-        .collect(newCounts(numVertices - 1), List::add, List::addAll);
-  }
-
-  public List<Integer> getPathCounts(int source, boolean allowParallel) {
-    return getPathCounts(source, Integer.MAX_VALUE, allowParallel);
-  }
-
-  public List<Integer> getAllPathCounts(int maxFind) {
-    return getAllPathCounts(maxFind, true);
-  }
-
-  public List<Integer> getAllPathCounts(int maxFind, boolean allowParallel) {
-    return vertices(allowParallel)
-        .flatMap(source -> uniqueSourceCounts(source, maxFind))
-        .collect(newCounts(numPairs), List::add, List::addAll);
-  }
-
-  public List<Integer> getAllPathCounts(boolean allowParallel) {
-    return getAllPathCounts(Integer.MAX_VALUE, allowParallel);
   }
 
   private int maxPossiblePaths(int source, int target) {
@@ -150,10 +98,58 @@ public final class VertexIndependentPaths {
     return numFound;
   }
 
+  private static <V, E> KShortestPathAlgorithm<V, E> newKShortestPaths(Graph<V, E> graph) {
+    // Suurballe provides a simpler implementation since it ensures no loops.
+    return new SuurballeKDisjointShortestPaths<>(graph);
+  }
+
+  private static <V> List<V> withoutEndpoints(GraphPath<V, ?> path) {
+    List<V> vertices = path.getVertexList();
+    return (vertices.size() < 3) ? List.of() : vertices.subList(1, vertices.size() - 1);
+  }
+
+  private static <V, E> ShortestPathAlgorithm<V, E> newShortestPaths(Graph<V, E> graph) {
+    // Fibonacci heap provides O(1) insert vs. pairing heap O(log n).
+    return new BidirectionalDijkstraShortestPath<>(graph, FibonacciHeap::new);
+  }
+
+  public List<Integer> getPathCounts(int source) {
+    return getPathCounts(source, Integer.MAX_VALUE);
+  }
+
+  public List<Integer> getPathCounts(int source, int maxFind) {
+    return getPathCounts(source, maxFind, true);
+  }
+
+  public List<Integer> getPathCounts(int source, int maxFind, boolean allowParallel) {
+    return vertices(allowParallel)
+        .filter(target -> source != target)
+        .map(target -> getPathCount(source, target, maxFind))
+        .collect(newCounts(numVertices - 1), List::add, List::addAll);
+  }
+
   private IntStream vertices(boolean allowParallel) {
     return numVertices > MIN_PARALLEL_VERTICES && allowParallel
         ? graph.vertexSet().parallelStream().mapToInt(Number::intValue)
         : graph.vertexSet().stream().mapToInt(Number::intValue);
+  }
+
+  private static Supplier<List<Integer>> newCounts(int size) {
+    return () -> new IntArrayList(size);
+  }
+
+  public List<Integer> getPathCounts(int source, boolean allowParallel) {
+    return getPathCounts(source, Integer.MAX_VALUE, allowParallel);
+  }
+
+  public List<Integer> getAllPathCounts(int maxFind) {
+    return getAllPathCounts(maxFind, true);
+  }
+
+  public List<Integer> getAllPathCounts(int maxFind, boolean allowParallel) {
+    return vertices(allowParallel)
+        .flatMap(source -> uniqueSourceCounts(source, maxFind))
+        .collect(newCounts(numPairs), List::add, List::addAll);
   }
 
   private IntStream uniqueSourceCounts(int source, int maxFind) {
@@ -164,5 +160,9 @@ public final class VertexIndependentPaths {
 
   public List<Integer> getAllPathCounts() {
     return getAllPathCounts(true);
+  }
+
+  public List<Integer> getAllPathCounts(boolean allowParallel) {
+    return getAllPathCounts(Integer.MAX_VALUE, allowParallel);
   }
 }

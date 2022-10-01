@@ -18,6 +18,31 @@ public final class GraphFactory {
     return graph.getType().isDirected() ? copyDirected(graph) : copyUndirected(graph);
   }
 
+  public static Graph<Integer, DefaultEdge> copyDirected(Graph<Integer, DefaultEdge> directed) {
+    Graph<Integer, DefaultEdge> copy = newDirectedGraph();
+    Graphs.addGraph(copy, GraphTests.requireDirected(directed));
+    return copy;
+  }
+
+  public static Graph<Integer, DefaultEdge> copyUndirected(Graph<Integer, DefaultEdge> undirected) {
+    Graph<Integer, DefaultEdge> copy = newUndirectedGraph();
+    Graphs.addGraph(copy, GraphTests.requireUndirected(undirected));
+    return copy;
+  }
+
+  public static Graph<Integer, DefaultEdge> newDirectedGraph() {
+    return newGraph(DefaultGraphType.directedSimple());
+  }
+
+  public static Graph<Integer, DefaultEdge> newUndirectedGraph() {
+    return newGraph(DefaultGraphType.simple());
+  }
+
+  private static Graph<Integer, DefaultEdge> newGraph(GraphType graphType) {
+    return new FastutilMapIntVertexGraph<>(
+        SupplierUtil.createIntegerSupplier(), DefaultEdge::new, graphType, false);
+  }
+
   public static Graph<Integer, DefaultEdge> toDirected(Graph<Integer, DefaultEdge> graph) {
     Graph<Integer, DefaultEdge> directed;
     if (graph.getType().isDirected()) {
@@ -37,35 +62,10 @@ public final class GraphFactory {
     return directed;
   }
 
-  public static Graph<Integer, DefaultEdge> newDirectedGraph() {
-    return newGraph(DefaultGraphType.directedSimple());
-  }
-
   public static Graph<Integer, DefaultEdge> newUndirectedGraph(
       GraphGenerator<Integer, DefaultEdge, ?> generator) {
     Graph<Integer, DefaultEdge> graph = newUndirectedGraph();
     generator.generateGraph(graph);
     return graph;
-  }
-
-  public static Graph<Integer, DefaultEdge> copyDirected(Graph<Integer, DefaultEdge> directed) {
-    Graph<Integer, DefaultEdge> copy = newDirectedGraph();
-    Graphs.addGraph(copy, GraphTests.requireDirected(directed));
-    return copy;
-  }
-
-  public static Graph<Integer, DefaultEdge> copyUndirected(Graph<Integer, DefaultEdge> undirected) {
-    Graph<Integer, DefaultEdge> copy = newUndirectedGraph();
-    Graphs.addGraph(copy, GraphTests.requireUndirected(undirected));
-    return copy;
-  }
-
-  public static Graph<Integer, DefaultEdge> newUndirectedGraph() {
-    return newGraph(DefaultGraphType.simple());
-  }
-
-  private static Graph<Integer, DefaultEdge> newGraph(GraphType graphType) {
-    return new FastutilMapIntVertexGraph<>(
-        SupplierUtil.createIntegerSupplier(), DefaultEdge::new, graphType, false);
   }
 }

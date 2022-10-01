@@ -11,8 +11,6 @@ public abstract class Experiment<Config> {
 
   protected Experiment() {}
 
-  public abstract void run(ExperimentState initialState, Config config);
-
   public void runWithDefaults(Config config) {
     runWithDefaults(UnaryOperator.identity(), config);
   }
@@ -20,6 +18,8 @@ public abstract class Experiment<Config> {
   public void runWithDefaults(UnaryOperator<ExperimentState> overrideDefaults, Config config) {
     run(overrideDefaults.apply(newDefaultState(config)), config);
   }
+
+  public abstract void run(ExperimentState initialState, Config config);
 
   public abstract ExperimentState newDefaultState(Config config);
 

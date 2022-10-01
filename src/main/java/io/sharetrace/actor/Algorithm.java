@@ -24,17 +24,17 @@ public final class Algorithm implements Runnable {
     return new Algorithm(behavior, name);
   }
 
+  @Override
+  public void run() {
+    waitUntilDone(ActorSystem.create(Behaviors.setup(this::newInstance), name));
+  }
+
   private static void waitUntilDone(ActorSystem<Void> running) {
     try {
       running.getWhenTerminated().toCompletableFuture().get();
     } catch (InterruptedException | ExecutionException exception) {
       throw new RuntimeException(exception);
     }
-  }
-
-  @Override
-  public void run() {
-    waitUntilDone(ActorSystem.create(Behaviors.setup(this::newInstance), name));
   }
 
   private Behavior<Void> newInstance(ActorContext<Void> ctx) {

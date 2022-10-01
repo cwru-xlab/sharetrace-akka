@@ -66,12 +66,12 @@ final class GraphGenerators {
     return optional.orElseThrow(() -> missingParam(name, graphType));
   }
 
+  private static RuntimeException generatorCreationFailed(GraphType graphType) {
+    return new IllegalArgumentException("Failed to create graph generator for " + graphType);
+  }
+
   private static RuntimeException missingParam(String name, GraphType graphType) {
     return new IllegalArgumentException(
         "Missing parameter '" + name + "' for " + graphType + " graph");
-  }
-
-  private static RuntimeException generatorCreationFailed(GraphType graphType) {
-    return new IllegalArgumentException("Failed to create graph generator for " + graphType);
   }
 }
