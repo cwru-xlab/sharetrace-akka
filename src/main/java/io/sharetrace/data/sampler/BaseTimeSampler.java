@@ -18,9 +18,6 @@ abstract class BaseTimeSampler extends BaseSampler<Instant> implements TimeRef {
     return refTime().minusSeconds(Math.round(scale * maxLookBack));
   }
 
-  @Override
-  public abstract Instant refTime();
-
   protected abstract RealDistribution lookBacks();
 
   protected abstract Duration maxLookBack();
