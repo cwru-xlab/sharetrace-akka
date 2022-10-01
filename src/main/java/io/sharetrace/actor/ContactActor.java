@@ -85,12 +85,12 @@ final class ContactActor implements Comparable<ContactActor> {
     float threshold = msgUtil.computeThreshold(msg);
     if (threshold > sendThreshold) {
       sendThreshold = threshold;
-      timers.startSingleTimer(ThresholdMsg.of(ref), msgUtil.remainingTtl(msg));
+      timers.startSingleTimer(ThresholdMsg.of(ref), msgUtil.untilExpiry(msg));
     }
   }
 
-  public Duration remainingTtl() {
-    return msgUtil.remainingTtl(contactTime);
+  public Duration untilExpiry() {
+    return msgUtil.untilExpiry(contactTime);
   }
 
   public boolean isAlive() {

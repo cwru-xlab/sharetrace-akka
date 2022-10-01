@@ -109,7 +109,7 @@ public final class User extends AbstractBehavior<UserMsg> {
   private RiskScoreMsg updateWith(RiskScoreMsg msg) {
     RiskScoreMsg previous = current;
     current = msg;
-    transmitted = msgUtil.transmitted(msg);
+    transmitted = msgUtil.transmitted(current);
     return previous;
   }
 
@@ -130,7 +130,7 @@ public final class User extends AbstractBehavior<UserMsg> {
   }
 
   private void startContactsRefreshTimer() {
-    Duration minTtl = Collections.min(contacts.values()).remainingTtl();
+    Duration minTtl = Collections.min(contacts.values()).untilExpiry();
     timers.startSingleTimer(ContactsRefreshMsg.INSTANCE, minTtl);
   }
 
@@ -163,8 +163,13 @@ public final class User extends AbstractBehavior<UserMsg> {
   private Behavior<UserMsg> onCurrentRefreshMsg(CurrentRefreshMsg msg) {
     RiskScoreMsg newCurrent = cache.max(clock.instant()).orElse(defaultMsg);
     RiskScoreMsg previous = updateWith(newCurrent);
+    startCurrentRefreshTimer();
     logger.logCurrentRefresh(previous, current);
     return this;
+  }
+
+  private void startCurrentRefreshTimer() {
+    timers.startSingleTimer(CurrentRefreshMsg.INSTANCE, msgUtil.untilExpiry(current));
   }
 
   private Behavior<UserMsg> onContactsRefreshMsg(ContactsRefreshMsg msg) {
@@ -201,6 +206,7 @@ public final class User extends AbstractBehavior<UserMsg> {
     RiskScoreMsg propagate;
     if (msgUtil.isGreaterThan(msg, current)) {
       RiskScoreMsg previous = updateWith(msg);
+      startCurrentRefreshTimer();
       logger.logUpdate(previous, current);
       propagate = transmitted;
     } else {
