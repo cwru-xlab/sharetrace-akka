@@ -67,17 +67,28 @@ final class ContactActor implements Comparable<ContactActor> {
     float threshold = msgUtil.computeThreshold(msg);
     if (threshold > sendThreshold) {
       sendThreshold = threshold;
-      timers.startSingleTimer(ThresholdMsg.of(ref), msgUtil.computeTtl(msg));
+      startThresholdTimer(msg);
     }
   }
 
+  private void startThresholdTimer(RiskScoreMsg msg) {
+    timers.startSingleTimer(ThresholdMsg.of(ref), msgUtil.computeTtl(msg));
+  }
+
   public void updateThreshold() {
-    sendThreshold =
-        cache
-            .max(bufferedContactTime)
-            .filter(msgUtil::isAlive)
-            .map(msgUtil::computeThreshold)
-            .orElse(DEFAULT_THRESHOLD);
+    cache
+        .max(bufferedContactTime)
+        .filter(msgUtil::isAlive)
+        .ifPresentOrElse(this::setThreshold, this::setThresholdAsDefault);
+  }
+
+  private void setThreshold(RiskScoreMsg msg) {
+    sendThreshold = msgUtil.computeThreshold(msg);
+    startThresholdTimer(msg);
+  }
+
+  private void setThresholdAsDefault() {
+    sendThreshold = DEFAULT_THRESHOLD;
   }
 
   public ActorRef<UserMsg> ref() {
