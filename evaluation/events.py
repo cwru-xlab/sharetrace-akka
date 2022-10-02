@@ -2,19 +2,18 @@ from __future__ import annotations
 
 import abc
 import collections
-import dataclasses
-import enum
 import fileinput
 import gzip
 import itertools
 import json
-import os
-import pathlib
 import shutil
 import sys
-import tempfile
 from collections.abc import Callable, Iterable
-from typing import Iterator, final, ContextManager, AnyStr
+from enum import Enum
+from os import PathLike
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from typing import Iterator, final, ContextManager, AnyStr, NamedTuple
 
 import numpy as np
 from scipy import sparse
@@ -24,10 +23,11 @@ from hints import Record
 
 _ONE_8 = np.uint8(1)
 _ONE_16 = np.uint16(1)
-_ONE_32 = np.uint32(1)
+_ONE_64 = np.uint64(1)
+_ZERO_16 = np.uint16(0)
 
 
-class Event(str, enum.Enum):
+class Event(str, Enum):
     """Types of events logged by user actors."""
     CONTACT = "ContactEvent"
     CONTACTS_REFRESH = "ContactsRefreshEvent"
@@ -39,11 +39,20 @@ class Event(str, enum.Enum):
     UPDATE = "UpdateEvent"
     TIMEOUT = "TimeoutEvent"
 
+    def __new__(cls, name: str) -> Event:
+        ordinal = len(cls.__members__)
+        event = str.__new__(cls, name)
+        event.ordinal = ordinal
+        return event
+
     def __repr__(self) -> str:
         return self.value
 
+    def __str__(self) -> str:
+        return self.value
+
     def __int__(self) -> int:
-        return _EVENTS[self.value]
+        return self.ordinal
 
     @classmethod
     def of(cls, record: Record) -> Event:
@@ -51,7 +60,6 @@ class Event(str, enum.Enum):
 
 
 _EVENT_WIDTH = f"<U{max(len(e) for e in Event)}"
-_EVENTS = {v: i for i, v in enumerate(Event)}
 
 _READ_MODE = "rb"
 _WRITE_MODE = "wb"
@@ -62,16 +70,16 @@ _LOG_EXT = ".log"
 class LogStream(Callable, ContextManager):
     __slots__ = ("logdir", "bytes", "_tmp_dir", "_files")
 
-    def __init__(self, logdir: os.PathLike | AnyStr):
-        self.logdir = pathlib.Path(logdir).absolute()
+    def __init__(self, logdir: PathLike | AnyStr):
+        self.logdir = Path(logdir).absolute()
         self.bytes = 0
-        self._tmp_dir: tempfile.TemporaryDirectory | None = None
-        self._files: list[os.PathLike] | None = None
+        self._tmp_dir: TemporaryDirectory | None = None
+        self._files: list[PathLike] | None = None
 
     def __enter__(self) -> LogStream:
         zipped, unzipped = self._logfiles()
-        self._tmp_dir = tempfile.TemporaryDirectory()
-        tmp_path = pathlib.Path(self._tmp_dir.name).absolute()
+        self._tmp_dir = TemporaryDirectory()
+        tmp_path = Path(self._tmp_dir.name).absolute()
         _unzip(zipped, tmp_path)
         self.bytes = _sizeof(unzipped) + _sizeof(tmp_path.iterdir())
         self._files = [*sorted(tmp_path.iterdir()), *sorted(unzipped)]
@@ -87,7 +95,7 @@ class LogStream(Callable, ContextManager):
         with fileinput.input(self._files, mode=_READ_MODE) as lines:
             yield from lines
 
-    def _logfiles(self) -> tuple[list[pathlib.Path], list[pathlib.Path]]:
+    def _logfiles(self) -> tuple[list[Path], list[Path]]:
         logs = self.logdir.iterdir()
         files = [f for f in logs if f.name.endswith((_LOG_EXT, _ZIP_EXT))]
         unzipped = _endswith_split(files, _LOG_EXT)
@@ -96,32 +104,31 @@ class LogStream(Callable, ContextManager):
         return list(zipped), list(unzipped.values())
 
 
-def _endswith_split(files: Iterable[pathlib.Path], ext: str) -> dict:
+def _endswith_split(files: Iterable[Path], ext: str) -> dict:
     return {f.name.split(ext)[0]: f for f in files if f.name.endswith(ext)}
 
 
-def _sizeof(files: Iterable[os.PathLike]) -> int:
+def _sizeof(files: Iterable[PathLike]) -> int:
     with fileinput.input(files, mode=_READ_MODE) as lines:
         return sum(map(sys.getsizeof, lines))
 
 
-def _unzip(zipped: Iterable[os.PathLike], dest: os.PathLike) -> None:
+def _unzip(zipped: Iterable[Path], dst: Path) -> None:
     for filename in zipped:
         with gzip.open(filename, _READ_MODE) as f_in:
             logfile = f_in.name.split("/")[-1].split(_ZIP_EXT)[0]
-            with open(os.path.join(dest, logfile), _WRITE_MODE) as f_out:
+            with dst.joinpath(logfile).open(_WRITE_MODE) as f_out:
                 shutil.copyfileobj(f_in, f_out)
 
 
 class EventCounter(collections.Counter):
     """Counts the number of occurrences of each event type."""
 
-    def __setitem__(self, key, value) -> None:
-        if key in _EVENTS:
+    def __setitem__(self, key: Event, value: int) -> None:
+        if isinstance(key, Event):
             super().__setitem__(key, value)
         else:
-            raise ValueError(
-                f"'key' must be an {Event.__name__} instance")
+            raise TypeError(f"'key' must be an {Event.__name__} instance")
 
     @property
     def num_sent_to_contacts(self) -> int:
@@ -221,17 +228,10 @@ class EventCounterData(EventCounter, CallbackData):
         self.update((Event.of(record),))
 
 
-@dataclasses.dataclass(slots=True)
-class UserUpdates:
-    _DEFAULT_N = np.uint16(0)
-
+class UserUpdates(NamedTuple):
     symptom: np.float32
-    exposure: np.float32 | None = None
-    updates: np.uint16 = _DEFAULT_N
-
-    def __post_init__(self) -> None:
-        if self.exposure is None:
-            self.exposure = self.symptom
+    exposure: np.float32
+    updates: np.uint16 = _ZERO_16
 
 
 class UpdatesData(CallbackData):
@@ -248,42 +248,39 @@ class UpdatesData(CallbackData):
         "updates", "symptoms", "exposures", "num_updated", "num_updates")
 
     def __init__(self) -> None:
-        self.updates: dict[np.uint32, UserUpdates] | np.ndarray[np.uint16] = {}
-        self.symptoms: np.ndarray[np.float32] | None = None
-        self.exposures: np.ndarray[np.float32] | None = None
+        self.updates: dict | np.ndarray = {}
+        self.symptoms: np.ndarray | None = None
+        self.exposures: np.ndarray | None = None
         self.num_updated = 0
         self.num_updates = 0
 
     def __call__(self, record: Record, **kwargs) -> None:
         if Event.of(record) == Event.UPDATE:
+            score = np.float32(record["newScore"]["value"])
             if (name := np.uint32(record["to"])) in self.updates:
                 user = self.updates[name]
                 user.updates += _ONE_16
-                user.exposure = np.float32(record["newScore"]["value"])
+                user.exposure = score
             else:
-                symptom = np.float32(record["newScore"]["value"])
-                self.updates[name] = UserUpdates(symptom=symptom)
+                self.updates[name] = UserUpdates(symptom=score, exposure=score)
 
     def on_complete(self) -> None:
         num_users = len(self.updates)
         updates = np.zeros(num_users, dtype=np.uint16)
-        symptoms, exposures = np.zeros((2, num_users), dtype=np.float32)
+        self.symptoms = np.zeros(num_users, dtype=np.float32)
+        self.exposures = np.zeros(num_users, dtype=np.float32)
         for u, user in self.updates.items():
-            updates[u] = user.updates
-            symptoms[u] = user.symptom
-            exposures[u] = user.exposure
+            self.symptoms[u], self.exposures[u], updates[u] = user
+        self.updates = updates
         self.num_updates = np.sum(updates)
         self.num_updated = np.count_nonzero(updates)
-        self.updates = updates
-        self.symptoms = symptoms
-        self.exposures = exposures
 
 
 class ReceivedData(CallbackData):
     __slots__ = ("values",)
 
     def __init__(self):
-        self.values: list[float] | np.ndarray[np.float32] = []
+        self.values: list | np.ndarray = []
 
     def __call__(self, record: Record, **kwargs) -> None:
         if Event.of(record) == Event.RECEIVE:
@@ -314,19 +311,19 @@ class TimelineData(CallbackData):
         if (event := Event.of(record)) not in self.e2i:
             self.e2i[event] = len(self.e2i)
         if (label := self.e2i[event]) == self._events[-1]:
-            self._repeats[-1] += _ONE_32
+            self._repeats[-1] += _ONE_64
         else:
             self._events.append(label)
-            self._repeats.append(_ONE_32)
+            self._repeats.append(_ONE_64)
 
     def on_complete(self) -> None:
-        t0 = min(times := self.timestamps)
+        t0 = np.min(times := self.timestamps)
         self.timestamps = np.array([t - t0 for t in times], dtype=np.uint32)
         self._events = np.array(self._events[1:], dtype=np.uint8)
-        self._repeats = np.array(self._repeats[1:], dtype=np.uint32)
+        self._repeats = np.array(self._repeats[1:], dtype=np.uint64)
         self.i2e = np.array([e.value for e in self.e2i], dtype=_EVENT_WIDTH)
 
-    def flatten(self, decoded: bool = False) -> np.ndarray[np.uint8]:
+    def flatten(self, decoded: bool = False) -> np.ndarray:
         """Returns a 1-D array of events.
 
         Args:
@@ -350,7 +347,7 @@ class TimelineData(CallbackData):
         if decoded:
             encoded = np.array(
                 list(zip(events, repeats)),
-                dtype=[("event", _EVENT_WIDTH), ("count", np.uint16)])
+                dtype=[("event", _EVENT_WIDTH), ("count", np.uint64)])
         else:
             encoded = np.column_stack((events, repeats))
         return encoded
@@ -382,24 +379,23 @@ class ReachabilityData(CallbackData):
 
     def __init__(self) -> None:
         self.adj: sparse.csr_matrix | None = None
-        self.msg_idx: dict[str, np.uint32] = {}
-        self.msgs: dict[str, list] | list = collections.defaultdict(list)
-        self._msg_reach: np.ndarray[np.uint8] | None = None
+        self.msg_idx: dict = {}
+        self.msgs: dict | list = collections.defaultdict(list)
+        self._msg_reach: np.ndarray | None = None
         self._reach_ratio: float | None = None
-        self._influence: np.ndarray[int] | None = None
-        self._source_size: np.ndarray[int] | None = None
+        self._influence: np.ndarray | None = None
+        self._source_size: np.ndarray | None = None
 
-    # TODO How can we account for users that cannot send their message?
     def __call__(self, record: Record, **kwargs) -> None:
         if Event.of(record) == Event.RECEIVE:
-            source = np.uint32(record["from"])
-            dest = np.uint32(record["to"])
+            src = np.uint32(record["from"])
+            dst = np.uint32(record["to"])
             uid = record["id"]
-            if source == dest:
-                self.msg_idx[uid] = source
+            if src == dst:
+                self.msg_idx[uid] = src
             else:
                 origin = self.msg_idx[uid]
-                edge = np.array([source, dest])
+                edge = np.array([src, dst])
                 self.msgs[origin].append(edge)
 
     def on_complete(self) -> None:
@@ -428,16 +424,16 @@ class ReachabilityData(CallbackData):
 
     def _to_numpy(self) -> None:
         # Assumes users are 0-based enumerated.
-        self.msgs = [np.array(self.msgs[v]) for v in range(len(self.msgs))]
+        self.msgs = [np.array(self.msgs[v]) for v in range(max(self.msgs))]
 
     def _sparsify(self) -> None:
         row, col, data = [], [], []
         for user, edges in enumerate(self.msgs):
             # Keep user as a destination to show loops in the network.
-            destinations = {dest for _, dest in edges}
-            row.extend(itertools.repeat(user, len(destinations)))
-            col.extend(destinations)
-            data.extend(itertools.repeat(_ONE_8, len(destinations)))
+            dsts = {dst for _, dst in edges}
+            row.extend(itertools.repeat(user, len(dsts)))
+            col.extend(dsts)
+            data.extend(itertools.repeat(_ONE_8, len(dsts)))
         # adj[i][j] = 1: user `j` is reachable from user `i`
         self.adj = sparse.csr_matrix((data, (row, col)))
 
@@ -492,4 +488,4 @@ def analyze(logdir: str, *callbacks: EventCallback) -> None:
                 t.update(sys.getsizeof(event))
             for callback in callbacks:
                 callback.on_complete()
-                t.update(1)
+                t.update()
