@@ -126,7 +126,7 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
 
   private Behavior<UserMsg> handle(RiskScoreMsg msg) {
     logger.logReceive(msg);
-    RiskScoreMsg propagate = updateIfIsAboveCurrent(msg);
+    RiskScoreMsg propagate = updateIfAboveCurrent(msg);
     cache.put(msg.score().time(), propagate);
     propagate(propagate);
     resetTimeout();
@@ -181,7 +181,7 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
     }
   }
 
-  private RiskScoreMsg updateIfIsAboveCurrent(RiskScoreMsg msg) {
+  private RiskScoreMsg updateIfAboveCurrent(RiskScoreMsg msg) {
     RiskScoreMsg propagate;
     if (msgUtil.isGreaterThan(msg, current)) {
       RiskScoreMsg previous = updateCurrent(msg);
