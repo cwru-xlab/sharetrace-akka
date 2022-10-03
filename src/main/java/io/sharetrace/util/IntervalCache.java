@@ -73,6 +73,11 @@ public final class IntervalCache<T> {
     return new IntervalCache<>(params);
   }
 
+  private static Predicate<Entry<Long, ?>> isNotAfter(Temporal temporal) {
+    long t = getLong(temporal);
+    return entry -> entry.getKey() <= t;
+  }
+
   /**
    * Returns an {@link Optional} containing the cached value associated with the time interval that
    * contains the specified timestamp. If no value has been cached in the time interval or the
@@ -98,7 +103,10 @@ public final class IntervalCache<T> {
   }
 
   private long floorKey(long temporal) {
-    return rangeStart + interval * Math.floorDiv(temporal - rangeStart, interval);
+    long sinceStart = Math.subtractExact(temporal, rangeStart);
+    long multiplier = Math.floorDiv(sinceStart, interval);
+    long offset = Math.multiplyExact(interval, multiplier);
+    return Math.addExact(rangeStart, offset);
   }
 
   private long getTime() {
@@ -142,10 +150,5 @@ public final class IntervalCache<T> {
         .filter(isNotAfter(temporal))
         .map(Entry::getValue)
         .max(comparator);
-  }
-
-  private static Predicate<Entry<Long, ?>> isNotAfter(Temporal temporal) {
-    long t = getLong(temporal);
-    return entry -> entry.getKey() <= t;
   }
 }
