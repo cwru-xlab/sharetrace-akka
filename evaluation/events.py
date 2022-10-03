@@ -244,9 +244,9 @@ class UpdatesData(CallbackData):
     """An event callback for tracking user updates.
 
     Attributes:
-       updates (ndarray): i-th entry is the number of updates of user i.
-       symptoms (ndarray): i-th entry is the symptom score of user i.
-       exposures (ndarray): i-th entry is the exposure score of user i.
+       updates (ndarray): `i`-th entry is the number of updates of user `i`.
+       symptoms (ndarray): `i`-th entry is the symptom score of user `i`.
+       exposures (ndarray): `i`-th entry is the exposure score of user `i`.
        num_updated (int): Number of users that were updated.
        num_updates (int): Number of updates for all users.
     """
@@ -301,8 +301,8 @@ class TimelineData(CallbackData):
     """An event callback for recording the order of events.
 
     Attributes:
-        e2i: An dictionary that maps an Event to its encoded integer.
-        i2e: An array where the i-th entry is the Event value encoded as i.
+        e2i (dict): Maps an Event to its encoded integer.
+        i2e (ndarray): `i`-th entry is the Event value encoded as `i`.
     """
     __slots__ = ("e2i", "i2e", "timestamps", "_events", "_repeats")
 
