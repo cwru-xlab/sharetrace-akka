@@ -48,7 +48,6 @@ public final class NoiseExperiment extends Experiment<NoiseExperimentConfig> {
         noisyFactory = newNoisyFactory(dataset, noise);
         initialState.toBuilder()
             .dataset(dataset.withScoreFactory(noisyFactory))
-            .userParams(ctx -> Defaults.userParams(ctx.dataset()))
             .build()
             .run(config.numIterations());
       }

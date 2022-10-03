@@ -2,7 +2,6 @@ package io.sharetrace.actor;
 
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
-import akka.actor.typed.Terminated;
 import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
@@ -22,10 +21,11 @@ import io.sharetrace.logging.metric.SendContactsRuntime;
 import io.sharetrace.logging.metric.SendScoresRuntime;
 import io.sharetrace.message.AlgorithmMsg;
 import io.sharetrace.message.ContactMsg;
+import io.sharetrace.message.ResumedMsg;
 import io.sharetrace.message.RiskScoreMsg;
 import io.sharetrace.message.RunMsg;
+import io.sharetrace.message.TimedOutMsg;
 import io.sharetrace.message.UserMsg;
-import io.sharetrace.model.MsgParams;
 import io.sharetrace.model.RiskScore;
 import io.sharetrace.model.UserParams;
 import io.sharetrace.util.CacheParams;
@@ -33,6 +33,7 @@ import io.sharetrace.util.TypedSupplier;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import java.time.Clock;
+import java.util.BitSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -62,7 +63,6 @@ import org.slf4j.MDC;
  *
  * @see UserActor
  * @see UserParams
- * @see MsgParams
  * @see CacheParams
  * @see ContactNetwork
  * @see Contact
@@ -75,14 +75,13 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
   private final Set<Class<? extends Loggable>> loggable;
   private final Map<String, String> mdc;
   private final UserParams userParams;
-  private final MsgParams msgParams;
   private final ContactNetwork contactNetwork;
   private final int numUsers;
   private final Clock clock;
   private final RiskScoreFactory scoreFactory;
   private final CacheFactory<RiskScoreMsg> cacheFactory;
   private final Timer timer;
-  private int numStopped;
+  private final BitSet stopped;
 
   private RiskPropagation(
       ActorContext<AlgorithmMsg> ctx,
@@ -90,7 +89,6 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
       Map<String, String> mdc,
       ContactNetwork contactNetwork,
       UserParams userParams,
-      MsgParams msgParams,
       Clock clock,
       CacheFactory<RiskScoreMsg> cacheFactory,
       RiskScoreFactory scoreFactory) {
@@ -101,12 +99,11 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
     this.contactNetwork = contactNetwork;
     this.numUsers = contactNetwork.users().size();
     this.userParams = userParams;
-    this.msgParams = msgParams;
     this.clock = clock;
     this.cacheFactory = cacheFactory;
     this.scoreFactory = scoreFactory;
     this.timer = new Timer();
-    this.numStopped = 0;
+    this.stopped = new BitSet(numUsers);
   }
 
   @Builder.Factory
@@ -115,7 +112,6 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
       Set<Class<? extends Loggable>> loggable,
       Map<String, String> mdc,
       UserParams userParams,
-      MsgParams msgParams,
       Clock clock,
       CacheFactory<RiskScoreMsg> cacheFactory,
       RiskScoreFactory scoreFactory) {
@@ -129,7 +125,6 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
                   mdc,
                   contactNetwork,
                   userParams,
-                  msgParams,
                   clock,
                   cacheFactory,
                   scoreFactory);
@@ -145,7 +140,8 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
   public Receive<AlgorithmMsg> createReceive() {
     return newReceiveBuilder()
         .onMessage(RunMsg.class, this::handle)
-        .onSignal(Terminated.class, this::handle)
+        .onMessage(TimedOutMsg.class, this::handle)
+        .onMessage(ResumedMsg.class, this::handle)
         .build();
   }
 
@@ -179,10 +175,10 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
 
   private Behavior<UserMsg> newUser() {
     return UserBuilder.create()
+        .riskProp(getContext().getSelf())
         .putAllMdc(mdc)
         .addAllLoggable(loggable)
         .userParams(userParams)
-        .msgParams(msgParams)
         .clock(clock)
         .cache(cacheFactory.newCache())
         .build();
@@ -210,15 +206,21 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
     }
   }
 
-  private Behavior<AlgorithmMsg> handle(Terminated msg) {
+  private Behavior<AlgorithmMsg> handle(TimedOutMsg msg) {
     Behavior<AlgorithmMsg> behavior = this;
-    if (++numStopped == numUsers) {
+    stopped.set(msg.user());
+    if (stopped.cardinality() == numUsers) {
       timer.stop();
       mdc.forEach(MDC::put);
       logMetrics();
       behavior = Behaviors.stopped();
     }
     return behavior;
+  }
+
+  private Behavior<AlgorithmMsg> handle(ResumedMsg msg) {
+    stopped.clear(msg.user());
+    return this;
   }
 
   private void logMetrics() {

@@ -15,6 +15,12 @@ class SettingsModel(BaseModel):
 
 
 class UserParams(SettingsModel):
+    trans_rate: float = Field(alias="transRate")
+    send_coeff: float = Field(alias="sendCoeff")
+    time_buffer: int = Field(alias="timeBuffer")
+    score_ttl: int = Field(alias="scoreTtl")
+    contact_ttl: int = Field(alias="contactTtl")
+    tolerance: float = Field(alias="tolerance")
     timeout: int = Field(alias="idleTimeout")
 
 
@@ -25,15 +31,6 @@ class CacheParams(SettingsModel):
     refresh_period: int = Field(alias="refreshPeriod")
 
 
-class MsgParams(SettingsModel):
-    trans_rate: float = Field(alias="transRate")
-    send_coeff: float = Field(alias="sendCoeff")
-    time_buffer: int = Field(alias="timeBuffer")
-    score_ttl: int = Field(alias="scoreTtl")
-    contact_ttl: int = Field(alias="contactTtl")
-    tolerance: float = Field(alias="tolerance")
-
-
 class MiscParams(SettingsModel):
     seed: int = Field(alias="seed")
     graph_type: str = Field(alias="graphType")
@@ -42,7 +39,6 @@ class MiscParams(SettingsModel):
 class Settings(BaseModel):
     user: UserParams
     cache: CacheParams
-    msg: MsgParams
     misc: MiscParams
 
     @classmethod
@@ -50,7 +46,6 @@ class Settings(BaseModel):
         return Settings(
             user=UserParams(**record.pop("userParams")),
             cache=CacheParams(**record.pop("cacheParams")),
-            msg=MsgParams(**record.pop("msgParams")),
             misc=MiscParams(**record))
 
 

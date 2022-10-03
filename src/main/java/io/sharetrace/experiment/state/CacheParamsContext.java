@@ -1,8 +1,8 @@
 package io.sharetrace.experiment.state;
 
-import io.sharetrace.model.MsgParams;
+import java.util.Map;
 
-public interface CacheParamsContext extends MsgParamsContext {
+public interface CacheParamsContext extends MdcContext {
 
-  MsgParams msgParams();
+  Map<String, String> mdc();
 }

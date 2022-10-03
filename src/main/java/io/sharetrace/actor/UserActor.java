@@ -10,14 +10,15 @@ import akka.actor.typed.javadsl.TimerScheduler;
 import io.sharetrace.graph.ContactNetwork;
 import io.sharetrace.logging.Loggable;
 import io.sharetrace.logging.Logging;
+import io.sharetrace.message.AlgorithmMsg;
 import io.sharetrace.message.ContactMsg;
 import io.sharetrace.message.ContactsRefreshMsg;
 import io.sharetrace.message.CurrentRefreshMsg;
+import io.sharetrace.message.ResumedMsg;
 import io.sharetrace.message.RiskScoreMsg;
 import io.sharetrace.message.ThresholdMsg;
-import io.sharetrace.message.TimeoutMsg;
+import io.sharetrace.message.TimedOutMsg;
 import io.sharetrace.message.UserMsg;
-import io.sharetrace.model.MsgParams;
 import io.sharetrace.model.UserParams;
 import io.sharetrace.util.IntervalCache;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
@@ -36,15 +37,16 @@ import org.immutables.builder.Builder;
  * @see RiskPropagation
  * @see RiskScoreMsg
  * @see ContactMsg
- * @see TimeoutMsg
+ * @see TimedOutMsg
  * @see ContactsRefreshMsg
  * @see CurrentRefreshMsg
  * @see UserParams
- * @see MsgParams
  * @see IntervalCache
  */
 public final class UserActor extends AbstractBehavior<UserMsg> {
 
+  private final int name;
+  private final ActorRef<AlgorithmMsg> riskProp;
   private final TimerScheduler<UserMsg> timers;
   private final UserLogger logger;
   private final UserParams userParams;
@@ -53,26 +55,30 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
   private final Map<ActorRef<?>, ContactActor> contacts;
   private final MsgUtil msgUtil;
   private final RiskScoreMsg defaultMsg;
+  private boolean timedOut;
   private RiskScoreMsg current;
   private RiskScoreMsg transmitted;
 
   private UserActor(
       ActorContext<UserMsg> ctx,
+      ActorRef<AlgorithmMsg> riskProp,
       TimerScheduler<UserMsg> timers,
       Set<Class<? extends Loggable>> loggable,
       UserParams userParams,
-      MsgParams msgParams,
       Clock clock,
       IntervalCache<RiskScoreMsg> cache) {
     super(ctx);
+    this.name = Integer.parseInt(getContext().getSelf().path().name());
+    this.riskProp = riskProp;
     this.timers = timers;
     this.logger = new UserLogger(loggable, getContext());
     this.userParams = userParams;
     this.clock = clock;
     this.cache = cache;
     this.contacts = new Object2ObjectOpenHashMap<>();
-    this.msgUtil = new MsgUtil(getContext(), clock, msgParams);
+    this.msgUtil = new MsgUtil(getContext(), clock, userParams);
     this.defaultMsg = msgUtil.defaultMsg();
+    this.timedOut = false;
     updateCurrent(defaultMsg);
   }
 
@@ -85,10 +91,10 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
 
   @Builder.Factory
   static Behavior<UserMsg> user(
+      ActorRef<AlgorithmMsg> riskProp,
       Map<String, String> mdc,
       Set<Class<? extends Loggable>> loggable,
       UserParams userParams,
-      MsgParams msgParams,
       Clock clock,
       IntervalCache<RiskScoreMsg> cache) {
     return Behaviors.setup(
@@ -97,7 +103,7 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
           Behavior<UserMsg> user =
               Behaviors.withTimers(
                   timers ->
-                      new UserActor(ctx, timers, loggable, userParams, msgParams, clock, cache));
+                      new UserActor(ctx, riskProp, timers, loggable, userParams, clock, cache));
           return Behaviors.withMdc(UserMsg.class, msg -> mdc, user);
         });
   }
@@ -110,7 +116,7 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
         .onMessage(CurrentRefreshMsg.class, this::handle)
         .onMessage(ContactsRefreshMsg.class, this::handle)
         .onMessage(ThresholdMsg.class, this::handle)
-        .onMessage(TimeoutMsg.class, this::handle)
+        .onMessage(TimedOutMsg.class, this::handle)
         .build();
   }
 
@@ -125,6 +131,7 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
   }
 
   private Behavior<UserMsg> handle(RiskScoreMsg msg) {
+    resumeIfTimedOut();
     logger.logReceive(msg);
     RiskScoreMsg propagate = updateIfAboveCurrent(msg);
     cache.put(msg.score().time(), propagate);
@@ -156,10 +163,11 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
     return this;
   }
 
-  @SuppressWarnings("unused")
-  private Behavior<UserMsg> handle(TimeoutMsg msg) {
+  private Behavior<UserMsg> handle(TimedOutMsg msg) {
+    timedOut = true;
     logger.logTimeout();
-    return Behaviors.stopped();
+    riskProp.tell(msg);
+    return this;
   }
 
   private ContactActor addNewContact(ContactMsg msg) {
@@ -178,6 +186,14 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
       sendCurrent(contact);
     } else {
       sendCached(contact);
+    }
+  }
+
+  private void resumeIfTimedOut() {
+    if (timedOut) {
+      timedOut = false;
+      logger.logResume();
+      riskProp.tell(ResumedMsg.of(name));
     }
   }
 
@@ -201,7 +217,7 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
   }
 
   private void resetTimeout() {
-    timers.startSingleTimer(TimeoutMsg.INSTANCE, userParams.idleTimeout());
+    timers.startSingleTimer(TimedOutMsg.of(name), userParams.idleTimeout());
   }
 
   private void startCurrentRefreshTimer() {

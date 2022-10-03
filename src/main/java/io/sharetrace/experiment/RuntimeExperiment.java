@@ -51,7 +51,6 @@ public final class RuntimeExperiment extends Experiment<RuntimeExperimentConfig>
       for (int iNetwork = 0; iNetwork < config.numNetworks(); iNetwork++) {
         initialState.toBuilder()
             .dataset(dataset.withNewContactNetwork())
-            .userParams(ctx -> Defaults.userParams(ctx.dataset()))
             .build()
             .run(config.numIterations());
       }

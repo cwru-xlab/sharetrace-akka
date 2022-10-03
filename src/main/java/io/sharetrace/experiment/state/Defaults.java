@@ -1,6 +1,5 @@
 package io.sharetrace.experiment.state;
 
-import io.sharetrace.data.Dataset;
 import io.sharetrace.data.FileDataset;
 import io.sharetrace.data.SampledDataset;
 import io.sharetrace.data.factory.ContactTimeFactory;
@@ -14,6 +13,7 @@ import io.sharetrace.logging.event.ContactEvent;
 import io.sharetrace.logging.event.ContactsRefreshEvent;
 import io.sharetrace.logging.event.CurrentRefreshEvent;
 import io.sharetrace.logging.event.ReceiveEvent;
+import io.sharetrace.logging.event.ResumeEvent;
 import io.sharetrace.logging.event.SendCachedEvent;
 import io.sharetrace.logging.event.SendCurrentEvent;
 import io.sharetrace.logging.event.TimeoutEvent;
@@ -30,7 +30,6 @@ import io.sharetrace.logging.metric.SendContactsRuntime;
 import io.sharetrace.logging.metric.SendScoresRuntime;
 import io.sharetrace.logging.setting.ExperimentSettings;
 import io.sharetrace.message.RiskScoreMsg;
-import io.sharetrace.model.MsgParams;
 import io.sharetrace.model.RiskScore;
 import io.sharetrace.model.UserParams;
 import io.sharetrace.util.CacheParams;
@@ -44,18 +43,11 @@ public final class Defaults {
 
   private static final String WHITESPACE_DELIMITER = "\\s+";
   private static final Duration TTL = Duration.ofDays(14L);
-  private static final double MIN_BASE = Math.log(1.1);
-  private static final double MAX_BASE = Math.log(10d);
-  private static final double DECAY_RATE = 1.75E-7;
-  private static final MsgParams MSG_PARAMS = newMsgParams();
+  private static final UserParams USER_PARAMS = newUserParams();
   private static final CacheParams<RiskScoreMsg> CACHE_PARAMS = newCacheParams();
   private static final ExperimentContext CONTEXT = newContext();
 
   private Defaults() {}
-
-  public static MsgParams msgParams() {
-    return MSG_PARAMS;
-  }
 
   public static CacheParams<RiskScoreMsg> cacheParams() {
     return CACHE_PARAMS;
@@ -75,7 +67,7 @@ public final class Defaults {
   public static Sampler<Instant> scoreTimeSampler(DatasetContext ctx) {
     return TimeSampler.builder()
         .lookBacks(ctx.scoreTimes())
-        .maxLookBack(ctx.msgParams().scoreTtl())
+        .maxLookBack(ctx.userParams().scoreTtl())
         .refTime(ctx.refTime())
         .build();
   }
@@ -83,20 +75,13 @@ public final class Defaults {
   public static Sampler<Instant> contactTimeSampler(DatasetContext ctx) {
     return TimeSampler.builder()
         .lookBacks(ctx.contactTimes())
-        .maxLookBack(ctx.msgParams().contactTtl())
+        .maxLookBack(ctx.userParams().contactTtl())
         .refTime(ctx.refTime())
         .build();
   }
 
-  public static UserParams userParams(Dataset dataset) {
-    return UserParams.builder().idleTimeout(idleTimeout(dataset)).build();
-  }
-
-  public static Duration idleTimeout(Dataset dataset) {
-    double numContacts = dataset.contacts().size();
-    double targetBase = Math.max(MIN_BASE, MAX_BASE - DECAY_RATE * numContacts);
-    long timeout = (long) Math.ceil(Math.log(numContacts) / targetBase);
-    return Duration.ofSeconds(timeout);
+  public static UserParams userParams() {
+    return USER_PARAMS;
   }
 
   public static FileDataset fileDataset(DatasetContext ctx, Path path) {
@@ -139,6 +124,18 @@ public final class Defaults {
             .build();
   }
 
+  private static UserParams newUserParams() {
+    return UserParams.builder()
+        .transRate(0.8f)
+        .sendCoeff(1f)
+        .scoreTtl(TTL)
+        .contactTtl(TTL)
+        .tolerance(0.01f)
+        .timeBuffer(Duration.ofDays(2L))
+        .idleTimeout(Duration.ofSeconds(3L))
+        .build();
+  }
+
   private static CacheParams<RiskScoreMsg> newCacheParams() {
     return CacheParams.<RiskScoreMsg>builder()
         .interval(Duration.ofDays(1L))
@@ -168,18 +165,7 @@ public final class Defaults {
   }
 
   private static boolean isApproxEqual(RiskScoreMsg msg1, RiskScoreMsg msg2) {
-    return Math.abs(msg1.score().value() - msg2.score().value()) < MSG_PARAMS.tolerance();
-  }
-
-  private static MsgParams newMsgParams() {
-    return MsgParams.builder()
-        .transRate(0.8f)
-        .sendCoeff(1f)
-        .scoreTtl(TTL)
-        .contactTtl(TTL)
-        .tolerance(0.01f)
-        .timeBuffer(Duration.ofDays(2L))
-        .build();
+    return Math.abs(msg1.score().value() - msg2.score().value()) < USER_PARAMS.tolerance();
   }
 
   private static ExperimentContext newContext() {
@@ -197,6 +183,7 @@ public final class Defaults {
             SendCurrentEvent.class,
             UpdateEvent.class,
             TimeoutEvent.class,
+            ResumeEvent.class,
             // Graph metrics
             GraphCycles.class,
             GraphEccentricity.class,

@@ -44,9 +44,8 @@ public final class ParamsExperiment extends Experiment<ParamsExperimentConfig> {
       for (float tr : config.transRates()) {
         for (float sc : config.sendCoeffs()) {
           initialState.toBuilder()
-              .msgParams(initialState.msgParams().withTransRate(tr).withSendCoeff(sc))
+              .userParams(initialState.userParams().withTransRate(tr).withSendCoeff(sc))
               .dataset(dataset)
-              .userParams(ctx -> Defaults.userParams(ctx.dataset()))
               .build()
               .run();
         }

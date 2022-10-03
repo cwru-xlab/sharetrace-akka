@@ -1,12 +1,8 @@
 package io.sharetrace.experiment.state;
 
-import org.apache.commons.math3.distribution.RealDistribution;
+import io.sharetrace.model.UserParams;
 
-public interface DatasetContext extends DistributionFactoryContext {
+public interface DatasetContext extends UserParamsContext {
 
-  RealDistribution scoreValues();
-
-  RealDistribution scoreTimes();
-
-  RealDistribution contactTimes();
+  UserParams userParams();
 }

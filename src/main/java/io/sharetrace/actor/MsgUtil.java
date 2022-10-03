@@ -4,8 +4,8 @@ import akka.actor.typed.javadsl.ActorContext;
 import io.sharetrace.message.ContactMsg;
 import io.sharetrace.message.RiskScoreMsg;
 import io.sharetrace.message.UserMsg;
-import io.sharetrace.model.MsgParams;
 import io.sharetrace.model.RiskScore;
+import io.sharetrace.model.UserParams;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -15,9 +15,9 @@ final class MsgUtil {
 
   private final ActorContext<UserMsg> ctx;
   private final Clock clock;
-  private final MsgParams params;
+  private final UserParams params;
 
-  public MsgUtil(ActorContext<UserMsg> ctx, Clock clock, MsgParams params) {
+  public MsgUtil(ActorContext<UserMsg> ctx, Clock clock, UserParams params) {
     this.ctx = ctx;
     this.clock = clock;
     this.params = params;

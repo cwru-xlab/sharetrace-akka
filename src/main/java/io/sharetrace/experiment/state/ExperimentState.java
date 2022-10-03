@@ -10,7 +10,6 @@ import io.sharetrace.logging.Logging;
 import io.sharetrace.logging.setting.ExperimentSettings;
 import io.sharetrace.logging.setting.LoggableSetting;
 import io.sharetrace.message.RiskScoreMsg;
-import io.sharetrace.model.MsgParams;
 import io.sharetrace.model.UserParams;
 import io.sharetrace.util.CacheParams;
 import io.sharetrace.util.IntervalCache;
@@ -37,7 +36,6 @@ public final class ExperimentState implements Runnable {
   private final GraphType graphType;
   private final String id;
   private final Map<String, String> mdc;
-  private final MsgParams msgParams;
   private final CacheParams<RiskScoreMsg> cacheParams;
   private final DistributionFactory scoreValuesFactory;
   private final DistributionFactory scoreTimesFactory;
@@ -51,13 +49,12 @@ public final class ExperimentState implements Runnable {
     graphType = builder.graphType;
     id = builder.id;
     mdc = builder.mdc;
+    cacheParams = builder.cacheParams;
     scoreValuesFactory = builder.scoreValuesFactory;
     scoreTimesFactory = builder.scoreTimesFactory;
     contactTimesFactory = builder.contactTimesFactory;
-    dataset = builder.dataset;
     userParams = builder.userParams;
-    msgParams = builder.msgParams;
-    cacheParams = builder.cacheParams;
+    dataset = builder.dataset;
   }
 
   public static Builder builder(ExperimentContext ctx) {
@@ -90,7 +87,6 @@ public final class ExperimentState implements Runnable {
         .putAllMdc(mdc)
         .contactNetwork(dataset)
         .userParams(userParams)
-        .msgParams(msgParams)
         .clock(ctx.clock())
         .scoreFactory(dataset)
         .cacheFactory(this::newCache)
@@ -103,7 +99,6 @@ public final class ExperimentState implements Runnable {
         .sid(id)
         .seed(ctx.seed())
         .userParams(userParams)
-        .msgParams(msgParams)
         .cacheParams(cacheParams)
         .build();
   }
@@ -112,8 +107,8 @@ public final class ExperimentState implements Runnable {
     return IntervalCache.create(cacheParams);
   }
 
-  public MsgParams msgParams() {
-    return msgParams;
+  public UserParams userParams() {
+    return userParams;
   }
 
   public Dataset dataset() {
@@ -125,25 +120,23 @@ public final class ExperimentState implements Runnable {
     GRAPH_TYPE,
     ID,
     MDC,
-    MSG_PARAMS,
     CACHE_PARAMS,
     SCORE_VALUES,
     SCORE_TIMES,
     CONTACT_TIMES,
     DISTRIBUTIONS,
-    DATASET,
-    USER_PARAMS
+    USER_PARAMS,
+    DATASET
   }
 
   public static class Builder
       implements GraphTypeContext,
           IdContext,
           MdcContext,
-          MsgParamsContext,
           CacheParamsContext,
           DistributionFactoryContext,
-          DatasetContext,
-          UserParamsContext {
+          UserParamsContext,
+          DatasetContext {
 
     private final ExperimentContext ctx;
     private final Logger logger;
@@ -151,7 +144,6 @@ public final class ExperimentState implements Runnable {
     private final Map<String, String> mdc;
     private GraphType graphType;
     private String id;
-    private MsgParams msgParams;
     private CacheParams<RiskScoreMsg> cacheParams;
     private DistributionFactory scoreValuesFactory;
     private DistributionFactory scoreTimesFactory;
@@ -159,8 +151,8 @@ public final class ExperimentState implements Runnable {
     private RealDistribution scoreValues;
     private RealDistribution scoreTimes;
     private RealDistribution contactTimes;
-    private Dataset dataset;
     private UserParams userParams;
+    private Dataset dataset;
 
     private Builder(ExperimentContext context) {
       ctx = context;
@@ -182,24 +174,23 @@ public final class ExperimentState implements Runnable {
           .graphType(state.graphType)
           .id(ctx -> newId())
           .mdc(ctx -> Logging.mdc(ctx.id()))
-          .msgParams(state.msgParams)
           .cacheParams(state.cacheParams)
           .scoreValuesFactory(state.scoreValuesFactory)
           .scoreTimesFactory(state.scoreTimesFactory)
           .contactTimesFactory(state.contactTimesFactory)
-          .dataset(state.dataset)
-          .userParams(state.userParams);
-    }
-
-    public Builder userParams(UserParams params) {
-      userParams = params;
-      setters.remove(Setter.USER_PARAMS);
-      return this;
+          .userParams(state.userParams)
+          .dataset(state.dataset);
     }
 
     public Builder dataset(Dataset dataset) {
       this.dataset = dataset;
       setters.remove(Setter.DATASET);
+      return this;
+    }
+
+    public Builder userParams(UserParams params) {
+      userParams = params;
+      setters.remove(Setter.USER_PARAMS);
       return this;
     }
 
@@ -224,12 +215,6 @@ public final class ExperimentState implements Runnable {
     public Builder cacheParams(CacheParams<RiskScoreMsg> params) {
       cacheParams = params;
       setters.remove(Setter.CACHE_PARAMS);
-      return this;
-    }
-
-    public Builder msgParams(MsgParams params) {
-      msgParams = params;
-      setters.remove(Setter.MSG_PARAMS);
       return this;
     }
 
@@ -269,12 +254,11 @@ public final class ExperimentState implements Runnable {
       return new Builder(context)
           .id(ctx -> newId())
           .mdc(ctx -> Logging.mdc(ctx.id()))
-          .msgParams(ctx -> Defaults.msgParams())
           .cacheParams(ctx -> Defaults.cacheParams())
           .scoreTimesFactory(defaultFactory())
           .scoreValuesFactory(defaultFactory())
           .contactTimesFactory(defaultFactory())
-          .userParams(ctx -> Defaults.userParams(ctx.dataset()));
+          .userParams(ctx -> Defaults.userParams());
     }
 
     public Builder userParams(Function<UserParamsContext, UserParams> factory) {
@@ -302,11 +286,6 @@ public final class ExperimentState implements Runnable {
 
     public Builder cacheParams(Function<CacheParamsContext, CacheParams<RiskScoreMsg>> factory) {
       setters.put(Setter.CACHE_PARAMS, factory.andThen(this::cacheParams));
-      return this;
-    }
-
-    public Builder msgParams(Function<MsgParamsContext, MsgParams> factory) {
-      setters.put(Setter.MSG_PARAMS, factory.andThen(this::msgParams));
       return this;
     }
 
@@ -346,6 +325,11 @@ public final class ExperimentState implements Runnable {
     }
 
     @Override
+    public UserParams userParams() {
+      return userParams;
+    }
+
+    @Override
     public Instant refTime() {
       return ctx.refTime();
     }
@@ -381,11 +365,6 @@ public final class ExperimentState implements Runnable {
     }
 
     @Override
-    public MsgParams msgParams() {
-      return msgParams;
-    }
-
-    @Override
     public CacheParams<RiskScoreMsg> cacheParams() {
       return cacheParams;
     }
@@ -403,11 +382,6 @@ public final class ExperimentState implements Runnable {
     @Override
     public RealDistribution contactTimes() {
       return contactTimes;
-    }
-
-    @Override
-    public Dataset dataset() {
-      return dataset;
     }
   }
 }

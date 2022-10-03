@@ -11,6 +11,7 @@ import io.sharetrace.logging.event.CurrentRefreshEvent;
 import io.sharetrace.logging.event.LoggableEvent;
 import io.sharetrace.logging.event.PropagateEvent;
 import io.sharetrace.logging.event.ReceiveEvent;
+import io.sharetrace.logging.event.ResumeEvent;
 import io.sharetrace.logging.event.SendCachedEvent;
 import io.sharetrace.logging.event.SendCurrentEvent;
 import io.sharetrace.logging.event.TimeoutEvent;
@@ -145,5 +146,13 @@ final class UserLogger {
 
   private TimeoutEvent timeoutEvent() {
     return TimeoutEvent.builder().user(userName).build();
+  }
+
+  public void logResume() {
+    log(ResumeEvent.class, this::resumeEvent);
+  }
+
+  private ResumeEvent resumeEvent() {
+    return ResumeEvent.builder().user(userName).build();
   }
 }
