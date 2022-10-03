@@ -14,7 +14,6 @@ import java.util.function.BiConsumer;
 
 final class ContactActor implements Comparable<ContactActor> {
 
-  private static final float DEFAULT_THRESHOLD = RiskScore.MIN_VALUE;
   private final ActorRef<UserMsg> ref;
   private final Instant contactTime;
   private final Instant bufferedContactTime;
@@ -34,7 +33,11 @@ final class ContactActor implements Comparable<ContactActor> {
     this.cache = cache;
     this.msgUtil = msgUtil;
     this.timers = timers;
-    this.sendThreshold = DEFAULT_THRESHOLD;
+    setThresholdAsDefault();
+  }
+
+  private void setThresholdAsDefault() {
+    sendThreshold = RiskScore.MIN_VALUE;
   }
 
   public boolean shouldReceive(RiskScoreMsg msg) {
@@ -85,10 +88,6 @@ final class ContactActor implements Comparable<ContactActor> {
   private void setThreshold(RiskScoreMsg msg) {
     sendThreshold = msgUtil.computeThreshold(msg);
     startThresholdTimer(msg);
-  }
-
-  private void setThresholdAsDefault() {
-    sendThreshold = DEFAULT_THRESHOLD;
   }
 
   public ActorRef<UserMsg> ref() {
