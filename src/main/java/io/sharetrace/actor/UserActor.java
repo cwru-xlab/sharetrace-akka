@@ -45,7 +45,7 @@ import org.immutables.builder.Builder;
  */
 public final class UserActor extends AbstractBehavior<UserMsg> {
 
-  private final int name;
+  private final int timeoutId;
   private final ActorRef<AlgorithmMsg> riskProp;
   private final TimerScheduler<UserMsg> timers;
   private final UserLogger logger;
@@ -62,13 +62,14 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
   private UserActor(
       ActorContext<UserMsg> ctx,
       ActorRef<AlgorithmMsg> riskProp,
+      int timeoutId,
       TimerScheduler<UserMsg> timers,
       Set<Class<? extends Loggable>> loggable,
       UserParams userParams,
       Clock clock,
       IntervalCache<RiskScoreMsg> cache) {
     super(ctx);
-    this.name = Integer.parseInt(getContext().getSelf().path().name());
+    this.timeoutId = timeoutId;
     this.riskProp = riskProp;
     this.timers = timers;
     this.logger = new UserLogger(loggable, getContext());
@@ -92,6 +93,7 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
   @Builder.Factory
   static Behavior<UserMsg> user(
       ActorRef<AlgorithmMsg> riskProp,
+      int timeoutId,
       Map<String, String> mdc,
       Set<Class<? extends Loggable>> loggable,
       UserParams userParams,
@@ -103,7 +105,8 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
           Behavior<UserMsg> user =
               Behaviors.withTimers(
                   timers ->
-                      new UserActor(ctx, riskProp, timers, loggable, userParams, clock, cache));
+                      new UserActor(
+                          ctx, riskProp, timeoutId, timers, loggable, userParams, clock, cache));
           return Behaviors.withMdc(UserMsg.class, msg -> mdc, user);
         });
   }
@@ -193,7 +196,7 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
     if (timedOut) {
       timedOut = false;
       logger.logResume();
-      riskProp.tell(ResumedMsg.of(name));
+      riskProp.tell(ResumedMsg.of(timeoutId));
     }
   }
 
@@ -217,7 +220,7 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
   }
 
   private void resetTimeout() {
-    timers.startSingleTimer(TimedOutMsg.of(name), userParams.idleTimeout());
+    timers.startSingleTimer(TimedOutMsg.of(timeoutId), userParams.idleTimeout());
   }
 
   private void startCurrentRefreshTimer() {
