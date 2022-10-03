@@ -42,12 +42,17 @@ import java.time.Instant;
 public final class Defaults {
 
   private static final String WHITESPACE_DELIMITER = "\\s+";
+  private static final Clock CLOCK = Clock.systemUTC();
   private static final Duration TTL = Duration.ofDays(14L);
   private static final UserParams USER_PARAMS = newUserParams();
   private static final CacheParams<RiskScoreMsg> CACHE_PARAMS = newCacheParams();
   private static final ExperimentContext CONTEXT = newContext();
 
   private Defaults() {}
+
+  public static Clock clock() {
+    return CLOCK;
+  }
 
   public static CacheParams<RiskScoreMsg> cacheParams() {
     return CACHE_PARAMS;
@@ -132,7 +137,7 @@ public final class Defaults {
         .contactTtl(TTL)
         .tolerance(0.01f)
         .timeBuffer(Duration.ofDays(2L))
-        .idleTimeout(Duration.ofSeconds(3L))
+        .idleTimeout(Duration.ofSeconds(7L))
         .build();
   }
 
@@ -143,7 +148,7 @@ public final class Defaults {
         .numLookAhead(1)
         .refreshPeriod(Duration.ofHours(1L))
         .mergeStrategy(Defaults::cacheMerge)
-        .clock(Clock.systemUTC())
+        .clock(CLOCK)
         .comparator(RiskScoreMsg::compareTo)
         .build();
   }
@@ -170,8 +175,8 @@ public final class Defaults {
 
   private static ExperimentContext newContext() {
     return ExperimentContext.builder()
-        .clock(Clock.systemUTC())
-        .refTime(Instant.now())
+        .clock(CLOCK)
+        .refTime(CLOCK.instant())
         .seed(Uid.ofInt())
         .addLoggable(
             // Events
