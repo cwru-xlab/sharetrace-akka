@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import abc
 import collections
+import dataclasses
 import fileinput
 import gzip
 import itertools
@@ -13,7 +14,7 @@ from enum import Enum
 from os import PathLike
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Iterator, final, ContextManager, AnyStr, NamedTuple
+from typing import Iterator, final, ContextManager, AnyStr
 
 import numpy as np
 from scipy import sparse
@@ -23,7 +24,7 @@ from hints import Record
 
 _ONE_8 = np.uint8(1)
 _ONE_16 = np.uint16(1)
-_ONE_64 = np.uint64(1)
+_ONE_64 = np.int64(1)
 _ZERO_16 = np.uint16(0)
 
 
@@ -228,10 +229,15 @@ class EventCounterData(EventCounter, CallbackData):
         self.update((Event.of(record),))
 
 
-class UserUpdates(NamedTuple):
+@dataclasses.dataclass(slots=True)
+class UserUpdates:
     symptom: np.float32
-    exposure: np.float32
+    exposure: np.float32 | None = None
     updates: np.uint16 = _ZERO_16
+
+    def __post_init__(self):
+        if self.exposure is None:
+            self.exposure = self.symptom
 
 
 class UpdatesData(CallbackData):
@@ -262,7 +268,7 @@ class UpdatesData(CallbackData):
                 user.updates += _ONE_16
                 user.exposure = score
             else:
-                self.updates[name] = UserUpdates(symptom=score, exposure=score)
+                self.updates[name] = UserUpdates(symptom=score)
 
     def on_complete(self) -> None:
         num_users = len(self.updates)
@@ -270,6 +276,7 @@ class UpdatesData(CallbackData):
         self.symptoms = np.zeros(num_users, dtype=np.float32)
         self.exposures = np.zeros(num_users, dtype=np.float32)
         for u, user in self.updates.items():
+            user = dataclasses.astuple(user)
             self.symptoms[u], self.exposures[u], updates[u] = user
         self.updates = updates
         self.num_updates = np.sum(updates)
@@ -320,7 +327,7 @@ class TimelineData(CallbackData):
         t0 = np.min(times := self.timestamps)
         self.timestamps = np.array([t - t0 for t in times], dtype=np.uint32)
         self._events = np.array(self._events[1:], dtype=np.uint8)
-        self._repeats = np.array(self._repeats[1:], dtype=np.uint64)
+        self._repeats = np.array(self._repeats[1:], dtype=np.int64)
         self.i2e = np.array([e.value for e in self.e2i], dtype=_EVENT_WIDTH)
 
     def flatten(self, decoded: bool = False) -> np.ndarray:
@@ -406,25 +413,38 @@ class ReachabilityData(CallbackData):
         self._compute_reach_ratio()
         self._compute_msg_reaches()
 
-    def influence(self, user: int | None = None) -> int | np.ndarray[int]:
-        """Returns the cardinality of the influence set for a given user."""
+    def influence(self, user: int | None = None) -> int | np.ndarray:
+        """Returns the cardinality of the user's influence set.
+
+        A user's influence set is the set of users that received the
+        user's symptom score. In other words, the influence set is the set of
+        users that are message-reachable per the user's symptom score.
+        """
         return self._influence if user is None else self._influence[user]
 
-    def source_size(self, user: int | None = None) -> int | np.ndarray[int]:
-        """Returns the cardinality of the source set for a given user."""
+    def source_size(self, user: int | None = None) -> int | np.ndarray:
+        """Returns the cardinality of the user's source set.
+
+        A user's source set is the set of users whose symptom score was
+        received by the user. In other words, the source set is the set of
+        users whose symptom scores are message-reachable to the user.
+        """
         return self._source_size if user is None else self._source_size[user]
 
     def reach_ratio(self) -> float:
-        """Returns the reachability ratio."""
+        """Returns the reachability ratio.
+
+        The reachability ratio is the average size of a user's influence set.
+        """
         return self._reach_ratio
 
     def msg_reach(self, user: int | None = None) -> int | np.ndarray:
-        """Returns the message reachability for a given user's initial score."""
+        """Returns the message reachability for a user's symptom score."""
         return self._msg_reach if user is None else self._msg_reach[user]
 
     def _to_numpy(self) -> None:
         # Assumes users are 0-based enumerated.
-        self.msgs = [np.array(self.msgs[v]) for v in range(max(self.msgs))]
+        self.msgs = [np.array(self.msgs[v]) for v in range(max(self.msgs) + 1)]
 
     def _sparsify(self) -> None:
         row, col, data = [], [], []
@@ -434,7 +454,7 @@ class ReachabilityData(CallbackData):
             row.extend(itertools.repeat(user, len(dsts)))
             col.extend(dsts)
             data.extend(itertools.repeat(_ONE_8, len(dsts)))
-        # adj[i][j] = 1: user `j` is reachable from user `i`
+        # adj[i][j] = 1: user `j` is message-reachable from user `i`
         self.adj = sparse.csr_matrix((data, (row, col)))
 
     def _compute_msg_reaches(self) -> None:

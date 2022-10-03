@@ -16,7 +16,6 @@ class SettingsModel(BaseModel):
 
 class UserParams(SettingsModel):
     timeout: int = Field(alias="idleTimeout")
-    refresh_period: int = Field(alias="refreshPeriod")
 
 
 class CacheParams(SettingsModel):
