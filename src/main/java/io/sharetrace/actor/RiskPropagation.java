@@ -165,12 +165,10 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
   private Map<Integer, ActorRef<UserMsg>> newUsers() {
     Map<Integer, ActorRef<UserMsg>> users = new Int2ObjectOpenHashMap<>(numUsers);
     ActorRef<UserMsg> user;
-    int timeoutId = 0;
     for (int name : contactNetwork.users()) {
-      user = getContext().spawn(newUser(timeoutId), String.valueOf(name));
+      user = getContext().spawn(newUser(name), String.valueOf(name));
       getContext().watch(user);
       users.put(name, user);
-      timeoutId++;
     }
     return users;
   }
