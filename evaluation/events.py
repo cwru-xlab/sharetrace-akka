@@ -498,7 +498,7 @@ def index_edges(edges: Edges) -> Index:
     return {v: i for i, v in enumerate(set(itertools.chain(*edges)))}
 
 
-def analyze(logdir: str, *callbacks: EventCallback) -> None:
+def analyze(logdir: PathLike | AnyStr, *callbacks: EventCallback) -> None:
     """Analyze the event logs in the logging directory."""
     with LogStream(logdir) as stream:
         size = (stream.bytes + 1) * len(callbacks)
