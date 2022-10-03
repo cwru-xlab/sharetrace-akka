@@ -55,8 +55,8 @@ public final class IntervalCache<T> {
     comparator = params.comparator();
     clock = params.clock();
     interval = getLong(params.interval());
-    lookBack = interval * (params.numIntervals() - params.numLookAhead());
-    lookAhead = interval * params.numLookAhead();
+    lookBack = Math.multiplyExact(interval, params.numIntervals() - params.numLookAhead());
+    lookAhead = Math.multiplyExact(interval, params.numLookAhead());
     refreshPeriod = getLong(params.refreshPeriod());
     lastRefresh = getLong(Instant.MIN);
   }
@@ -93,9 +93,9 @@ public final class IntervalCache<T> {
 
   private void refresh() {
     long now = getTime();
-    if (now - lastRefresh > refreshPeriod) {
-      rangeStart = now - lookBack;
-      long rangeEnd = now + lookAhead;
+    if (Math.subtractExact(now, lastRefresh) > refreshPeriod) {
+      rangeStart = Math.subtractExact(now, lookBack);
+      long rangeEnd = Math.addExact(now, lookAhead);
       range = Range.closedOpen(rangeStart, rangeEnd);
       cache.entrySet().removeIf(isExpired());
       lastRefresh = getTime();
