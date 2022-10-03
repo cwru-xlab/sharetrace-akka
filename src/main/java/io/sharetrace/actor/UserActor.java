@@ -137,7 +137,7 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
     resumeIfTimedOut();
     logger.logReceive(msg);
     RiskScoreMsg propagate = updateIfAboveCurrent(msg);
-    cache.put(msg.score().time(), propagate);
+    cache.put(propagate.score().time(), propagate);
     propagate(propagate);
     resetTimeout();
     return this;
