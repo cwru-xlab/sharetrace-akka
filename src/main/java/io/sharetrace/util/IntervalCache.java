@@ -2,6 +2,7 @@ package io.sharetrace.util;
 
 import com.google.common.collect.Range;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
+
 import java.time.Clock;
 import java.time.Instant;
 import java.time.temporal.ChronoField;
@@ -86,9 +87,10 @@ public final class IntervalCache<T> {
   }
 
   private void refresh() {
-    if (getTime() - lastRefresh > refreshPeriod) {
-      rangeStart = getTime() - lookBack;
-      long rangeEnd = getTime() + lookAhead;
+    long now = getTime();
+    if (now - lastRefresh > refreshPeriod) {
+      rangeStart = now - lookBack;
+      long rangeEnd = now + lookAhead;
       range = Range.closedOpen(rangeStart, rangeEnd);
       cache.entrySet().removeIf(isExpired());
       lastRefresh = getTime();
