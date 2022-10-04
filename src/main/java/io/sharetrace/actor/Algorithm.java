@@ -3,6 +3,8 @@ package io.sharetrace.actor;
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.ActorSystem;
 import akka.actor.typed.Behavior;
+import akka.actor.typed.DispatcherSelector;
+import akka.actor.typed.Props;
 import akka.actor.typed.Terminated;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
@@ -12,10 +14,12 @@ import java.util.concurrent.ExecutionException;
 
 public final class Algorithm implements Runnable {
 
+  private final Props props;
   private final Behavior<AlgorithmMsg> behavior;
   private final String name;
 
   private Algorithm(Behavior<AlgorithmMsg> behavior, String name) {
+    this.props = DispatcherSelector.fromConfig("algorithm-dispatcher");
     this.behavior = behavior;
     this.name = name;
   }
@@ -38,7 +42,7 @@ public final class Algorithm implements Runnable {
   }
 
   private Behavior<Void> newInstance(ActorContext<Void> ctx) {
-    ActorRef<AlgorithmMsg> instance = ctx.spawn(behavior, name);
+    ActorRef<AlgorithmMsg> instance = ctx.spawn(behavior, name, props);
     ctx.watch(instance);
     instance.tell(RunMsg.INSTANCE);
     return Behaviors.receive(Void.class)

@@ -137,7 +137,7 @@ public final class Defaults {
         .contactTtl(TTL)
         .tolerance(0.01f)
         .timeBuffer(Duration.ofDays(2L))
-        .idleTimeout(Duration.ofSeconds(7L))
+        .idleTimeout(Duration.ofSeconds(5L))
         .build();
   }
 

@@ -2,6 +2,8 @@ package io.sharetrace.actor;
 
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
+import akka.actor.typed.DispatcherSelector;
+import akka.actor.typed.Props;
 import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
@@ -21,7 +23,6 @@ import io.sharetrace.logging.metric.SendContactsRuntime;
 import io.sharetrace.logging.metric.SendScoresRuntime;
 import io.sharetrace.message.AlgorithmMsg;
 import io.sharetrace.message.ContactMsg;
-import io.sharetrace.message.ResumedMsg;
 import io.sharetrace.message.RiskScoreMsg;
 import io.sharetrace.message.RunMsg;
 import io.sharetrace.message.TimedOutMsg;
@@ -72,6 +73,7 @@ import org.slf4j.MDC;
 public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
 
   private final Logger logger;
+  private final Props userProps;
   private final Set<Class<? extends Loggable>> loggable;
   private final Map<String, String> mdc;
   private final UserParams userParams;
@@ -95,6 +97,7 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
     super(ctx);
     this.loggable = loggable;
     this.logger = Logging.logger(loggable, getContext()::getLog);
+    this.userProps = DispatcherSelector.fromConfig("user-dispatcher");
     this.mdc = mdc;
     this.contactNetwork = contactNetwork;
     this.numUsers = contactNetwork.users().size();
@@ -141,7 +144,6 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
     return newReceiveBuilder()
         .onMessage(RunMsg.class, this::handle)
         .onMessage(TimedOutMsg.class, this::handle)
-        .onMessage(ResumedMsg.class, this::handle)
         .build();
   }
 
@@ -166,7 +168,7 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
     Map<Integer, ActorRef<UserMsg>> users = new Int2ObjectOpenHashMap<>(numUsers);
     ActorRef<UserMsg> user;
     for (int name : contactNetwork.users()) {
-      user = getContext().spawn(newUser(name), String.valueOf(name));
+      user = getContext().spawn(newUser(name), String.valueOf(name), userProps);
       getContext().watch(user);
       users.put(name, user);
     }
@@ -217,11 +219,6 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
       behavior = Behaviors.stopped();
     }
     return behavior;
-  }
-
-  private Behavior<AlgorithmMsg> handle(ResumedMsg msg) {
-    stopped.clear(msg.user());
-    return this;
   }
 
   private void logMetrics() {
