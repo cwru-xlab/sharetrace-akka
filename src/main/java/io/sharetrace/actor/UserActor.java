@@ -207,15 +207,15 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
         .forEach(contact -> contact.tell(msg, logger::logPropagate));
   }
 
+  private void resetTimeout() {
+    timers.startSingleTimer(timedOutMsg, userParams.idleTimeout());
+  }
+
   private RiskScoreMsg updateCurrent(RiskScoreMsg msg) {
     RiskScoreMsg previous = current;
     current = msg;
     transmitted = msgUtil.transmitted(current);
     return previous;
-  }
-
-  private void resetTimeout() {
-    timers.startSingleTimer(timedOutMsg, userParams.idleTimeout());
   }
 
   private void startCurrentRefreshTimer() {
