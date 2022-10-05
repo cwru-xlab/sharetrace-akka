@@ -161,7 +161,7 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
     ContactActor contact = contacts.get(msg.contact());
     boolean hasNotExpired = Objects.nonNull(contact);
     if (hasNotExpired) {
-      contacts.get(msg.contact()).updateThreshold();
+      contact.updateThreshold();
     }
     return this;
   }
@@ -181,7 +181,7 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
     /* While there is always at least one contact when adding a new contact, there may be a delay
     between when this timer expires and when the user actor processes the message. While this
     timer is based on the minimum TTL of all contacts, the delay to refresh contacts may be
-    sufficient that all contacts expire. This is problematic because Collections.min() throws an
+    such that all contacts expire. This is problematic because Collections.min() throws an
     exception on empty collections. */
     if (!contacts.isEmpty()) {
       Duration minTtl = Collections.min(contacts.values()).ttl();
