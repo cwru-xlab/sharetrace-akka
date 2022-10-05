@@ -72,8 +72,11 @@ import org.slf4j.MDC;
  */
 public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
 
+  private static final String NAME = RiskPropagation.class.getSimpleName();
+  private static final Props PROPS = DispatcherSelector.fromConfig("algorithm-dispatcher");
+  private static final Props USER_PROPS = DispatcherSelector.fromConfig("user-dispatcher");
+
   private final Logger logger;
-  private final Props userProps;
   private final Set<Class<? extends Loggable>> loggable;
   private final Map<String, String> mdc;
   private final UserParams userParams;
@@ -97,7 +100,6 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
     super(ctx);
     this.loggable = loggable;
     this.logger = Logging.logger(loggable, getContext()::getLog);
-    this.userProps = DispatcherSelector.fromConfig("user-dispatcher");
     this.mdc = mdc;
     this.contactNetwork = contactNetwork;
     this.numUsers = contactNetwork.users().size();
@@ -110,7 +112,7 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
   }
 
   @Builder.Factory
-  static Runnable riskPropagation(
+  static Algorithm riskPropagation(
       ContactNetwork contactNetwork,
       Set<Class<? extends Loggable>> loggable,
       Map<String, String> mdc,
@@ -132,7 +134,7 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
                   cacheFactory,
                   scoreFactory);
             });
-    return Algorithm.of(behavior, RiskPropagation.class.getSimpleName());
+    return Algorithm.of(behavior, NAME, PROPS);
   }
 
   private static long milli(long nanos) {
@@ -169,7 +171,7 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
     ActorRef<UserMsg> user;
     for (int name : contactNetwork.users()) {
       // Timeout IDs must be 0-based contiguous to use with 'stopped' BitSet.
-      user = getContext().spawn(newUser(name), String.valueOf(name), userProps);
+      user = getContext().spawn(newUser(name), String.valueOf(name), USER_PROPS);
       getContext().watch(user);
       users.put(name, user);
     }

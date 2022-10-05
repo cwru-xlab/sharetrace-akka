@@ -3,7 +3,6 @@ package io.sharetrace.actor;
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.ActorSystem;
 import akka.actor.typed.Behavior;
-import akka.actor.typed.DispatcherSelector;
 import akka.actor.typed.Props;
 import akka.actor.typed.Terminated;
 import akka.actor.typed.javadsl.ActorContext;
@@ -14,18 +13,18 @@ import java.util.concurrent.ExecutionException;
 
 public final class Algorithm implements Runnable {
 
-  private final Props props;
   private final Behavior<AlgorithmMsg> behavior;
   private final String name;
+  private final Props props;
 
-  private Algorithm(Behavior<AlgorithmMsg> behavior, String name) {
-    this.props = DispatcherSelector.fromConfig("algorithm-dispatcher");
+  private Algorithm(Behavior<AlgorithmMsg> behavior, String name, Props props) {
     this.behavior = behavior;
     this.name = name;
+    this.props = props;
   }
 
-  public static Runnable of(Behavior<AlgorithmMsg> behavior, String name) {
-    return new Algorithm(behavior, name);
+  public static Algorithm of(Behavior<AlgorithmMsg> behavior, String name, Props props) {
+    return new Algorithm(behavior, name, props);
   }
 
   @Override
