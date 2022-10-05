@@ -19,6 +19,7 @@ import org.immutables.value.Value;
 abstract class BaseContactMsg implements UserMsg {
 
   /** Returns the actor reference of the contacted user. */
+  @Value.Parameter
   public abstract ActorRef<UserMsg> contact();
 
   @Value.Check
@@ -27,5 +28,6 @@ abstract class BaseContactMsg implements UserMsg {
   }
 
   /** Returns the time at which the two users came in contact. */
+  @Value.Parameter
   public abstract Instant contactTime();
 }

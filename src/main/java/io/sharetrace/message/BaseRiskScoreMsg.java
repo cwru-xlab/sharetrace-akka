@@ -16,15 +16,21 @@ import org.immutables.value.Value;
 @Value.Immutable
 abstract class BaseRiskScoreMsg implements UserMsg, Comparable<RiskScoreMsg> {
 
+  public static RiskScoreMsg of(RiskScore score, ActorRef<UserMsg> replyTo, String id) {
+    return RiskScoreMsg.builder().score(score).replyTo(replyTo).id(id).build();
+  }
+
   @Override
   public int compareTo(RiskScoreMsg msg) {
     return score().compareTo(msg.score());
   }
 
   /** Returns the risk score contained in this message. */
+  @Value.Parameter
   public abstract RiskScore score();
 
   /** Returns the actor reference associated with the {@link UserActor} that sent this message. */
+  @Value.Parameter
   public abstract ActorRef<UserMsg> replyTo();
 
   /** Returns a unique identifier to track this message during {@link RiskPropagation}. */

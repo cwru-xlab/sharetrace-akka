@@ -168,6 +168,7 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
     Map<Integer, ActorRef<UserMsg>> users = new Int2ObjectOpenHashMap<>(numUsers);
     ActorRef<UserMsg> user;
     for (int name : contactNetwork.users()) {
+      // Timeout IDs must be 0-based contiguous to use with 'stopped' BitSet.
       user = getContext().spawn(newUser(name), String.valueOf(name), userProps);
       getContext().watch(user);
       users.put(name, user);
@@ -191,26 +192,29 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
     int name;
     ActorRef<UserMsg> user;
     RiskScore symptomScore;
+    // Assumes at-least-once message delivery to the user actors.
     for (Entry<Integer, ActorRef<UserMsg>> entry : users.entrySet()) {
       name = entry.getKey();
       user = entry.getValue();
       symptomScore = scoreFactory.riskScore(name);
-      user.tell(RiskScoreMsg.builder().score(symptomScore).replyTo(user).build());
+      user.tell(RiskScoreMsg.of(symptomScore, user));
     }
   }
 
   private void sendContacts(Map<Integer, ActorRef<UserMsg>> users) {
     ActorRef<UserMsg> user1, user2;
+    // Assumes at-least-once message delivery to the user actors.
     for (Contact contact : contactNetwork.contacts()) {
       user1 = users.get(contact.user1());
       user2 = users.get(contact.user2());
-      user1.tell(ContactMsg.builder().contact(user2).contactTime(contact.time()).build());
-      user2.tell(ContactMsg.builder().contact(user1).contactTime(contact.time()).build());
+      user1.tell(ContactMsg.of(user2, contact.time()));
+      user2.tell(ContactMsg.of(user1, contact.time()));
     }
   }
 
   private Behavior<AlgorithmMsg> handle(TimedOutMsg msg) {
     Behavior<AlgorithmMsg> behavior = this;
+    // Assumes at-least-once message delivery from the user actors.
     stopped.set(msg.user());
     if (stopped.cardinality() == numUsers) {
       timer.stop();

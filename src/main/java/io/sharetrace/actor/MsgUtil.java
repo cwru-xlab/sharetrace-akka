@@ -38,11 +38,11 @@ final class MsgUtil {
   public RiskScoreMsg transmitted(RiskScoreMsg msg) {
     RiskScore original = msg.score();
     RiskScore transmitted = original.withValue(original.value() * params.transRate());
-    return RiskScoreMsg.builder().score(transmitted).replyTo(ctx.getSelf()).id(msg.id()).build();
+    return RiskScoreMsg.of(transmitted, ctx.getSelf(), msg.id());
   }
 
   public RiskScoreMsg defaultMsg() {
-    return RiskScoreMsg.builder().score(RiskScore.MIN).replyTo(ctx.getSelf()).build();
+    return RiskScoreMsg.of(RiskScore.MIN, ctx.getSelf());
   }
 
   public boolean isGreaterThan(RiskScoreMsg msg1, RiskScoreMsg msg2) {

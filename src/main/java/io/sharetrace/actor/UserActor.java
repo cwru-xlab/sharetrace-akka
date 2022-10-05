@@ -137,6 +137,7 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
     RiskScoreMsg cachedOrDefault = cache.max(clock.instant()).orElse(defaultCurrent);
     RiskScoreMsg previous = updateCurrent(cachedOrDefault);
     logger.logCurrentRefresh(previous, current);
+    // Only refresh for non-trivial/non-default current values.
     if (current != defaultCurrent) {
       startCurrentRefreshTimer();
     }
@@ -154,6 +155,9 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
   }
 
   private Behavior<UserMsg> handle(ThresholdMsg msg) {
+    /* There may be a delay between when the contact actor sets the timer and when this actor
+    processes the message. It is possible that this actor refreshes its contacts, removing the
+    contact that set the threshold timer. So we need to check that the contact still exists. */
     ContactActor contact = contacts.get(msg.contact());
     boolean hasNotExpired = Objects.nonNull(contact);
     if (hasNotExpired) {
@@ -174,6 +178,11 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
   }
 
   private void startContactsRefreshTimer() {
+    /* While there is always at least one contact when adding a new contact, there may be a delay
+    between when this timer expires and when the user actor processes the message. While this
+    timer is based on the minimum TTL of all contacts, the delay to refresh contacts may be
+    sufficient that all contacts expire. This is problematic because Collections.min() throws an
+    exception on empty collections. */
     if (!contacts.isEmpty()) {
       Duration minTtl = Collections.min(contacts.values()).ttl();
       timers.startSingleTimer(ContactsRefreshMsg.INSTANCE, minTtl);
@@ -192,8 +201,8 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
     RiskScoreMsg transmit;
     if (msgUtil.isGreaterThan(msg, current)) {
       RiskScoreMsg previous = updateCurrent(msg);
-      startCurrentRefreshTimer();
       logger.logUpdate(previous, current);
+      startCurrentRefreshTimer();
       transmit = transmitted;
     } else {
       transmit = msgUtil.transmitted(msg);

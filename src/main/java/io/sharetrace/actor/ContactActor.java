@@ -17,6 +17,7 @@ final class ContactActor implements Comparable<ContactActor> {
   private final ActorRef<UserMsg> ref;
   private final Instant contactTime;
   private final Instant bufferedContactTime;
+  private final ThresholdMsg thresholdMsg;
   private final IntervalCache<RiskScoreMsg> cache;
   private final MsgUtil msgUtil;
   private final TimerScheduler<UserMsg> timers;
@@ -30,6 +31,7 @@ final class ContactActor implements Comparable<ContactActor> {
     this.ref = msg.contact();
     this.contactTime = msg.contactTime();
     this.bufferedContactTime = msgUtil.buffered(contactTime);
+    this.thresholdMsg = ThresholdMsg.of(ref);
     this.cache = cache;
     this.msgUtil = msgUtil;
     this.timers = timers;
@@ -41,6 +43,7 @@ final class ContactActor implements Comparable<ContactActor> {
   }
 
   public boolean shouldReceive(RiskScoreMsg msg) {
+    // Evaluated in ascending order of likelihood that they are true to possibly short circuit.
     return isAboveThreshold(msg) && isRelevant(msg) && msgUtil.isAlive(msg) && isNotSender(msg);
   }
 
@@ -75,7 +78,7 @@ final class ContactActor implements Comparable<ContactActor> {
   }
 
   private void startThresholdTimer(RiskScoreMsg msg) {
-    timers.startSingleTimer(ThresholdMsg.of(ref), msgUtil.computeTtl(msg));
+    timers.startSingleTimer(thresholdMsg, msgUtil.computeTtl(msg));
   }
 
   public void updateThreshold() {
