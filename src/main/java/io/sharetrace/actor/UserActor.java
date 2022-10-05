@@ -23,7 +23,6 @@ import io.sharetrace.util.IntervalCache;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import java.time.Clock;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.function.Predicate;
 import org.immutables.builder.Builder;
@@ -156,7 +155,7 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
     processes the message. It is possible that this actor refreshes its contacts, removing the
     contact that set the threshold timer. So we need to check that the contact still exists. */
     ContactActor contact = contacts.get(msg.contact());
-    boolean hasNotExpired = Objects.nonNull(contact);
+    boolean hasNotExpired = contact != null;
     if (hasNotExpired) {
       contact.updateThreshold();
     }
