@@ -3,16 +3,15 @@ package io.sharetrace.graph;
 import org.jgrapht.Graph;
 import org.jgrapht.GraphTests;
 import org.jgrapht.GraphType;
-import org.jgrapht.Graphs;
 import org.jgrapht.generate.GraphGenerator;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.DefaultGraphType;
 import org.jgrapht.opt.graph.fastutil.FastutilMapIntVertexGraph;
 import org.jgrapht.util.SupplierUtil;
 
-public final class GraphFactory {
+public final class Graphs {
 
-  private GraphFactory() {}
+  private Graphs() {}
 
   public static Graph<Integer, DefaultEdge> copyGraph(Graph<Integer, DefaultEdge> graph) {
     return graph.getType().isDirected() ? copyDirected(graph) : copyUndirected(graph);
@@ -20,13 +19,13 @@ public final class GraphFactory {
 
   public static Graph<Integer, DefaultEdge> copyDirected(Graph<Integer, DefaultEdge> directed) {
     Graph<Integer, DefaultEdge> copy = newDirectedGraph();
-    Graphs.addGraph(copy, GraphTests.requireDirected(directed));
+    org.jgrapht.Graphs.addGraph(copy, GraphTests.requireDirected(directed));
     return copy;
   }
 
   public static Graph<Integer, DefaultEdge> copyUndirected(Graph<Integer, DefaultEdge> undirected) {
     Graph<Integer, DefaultEdge> copy = newUndirectedGraph();
-    Graphs.addGraph(copy, GraphTests.requireUndirected(undirected));
+    org.jgrapht.Graphs.addGraph(copy, GraphTests.requireUndirected(undirected));
     return copy;
   }
 

@@ -64,7 +64,7 @@ abstract class AbstractContactNetwork implements ContactNetwork, LoggableRef {
   }
 
   private Graph<Integer, DefaultEdge> newGraph() {
-    return GraphFactory.newUndirectedGraph(graphGenerator());
+    return Graphs.newUndirectedGraph(graphGenerator());
   }
 
   protected abstract GraphGenerator<Integer, DefaultEdge, ?> graphGenerator();
