@@ -22,8 +22,6 @@ import io.sharetrace.model.UserParams;
 import io.sharetrace.util.IntervalCache;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import java.time.Clock;
-import java.time.Duration;
-import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -178,15 +176,13 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
   }
 
   private void startContactsRefreshTimer() {
-    /* While there is always at least one contact when adding a new contact, there may be a delay
-    between when this timer expires and when the user actor processes the message. While this
-    timer is based on the minimum TTL of all contacts, the delay to refresh contacts may be
-    such that all contacts expire. This is problematic because Collections.min() throws an
-    exception on empty collections. */
-    if (!contacts.isEmpty()) {
-      Duration minTtl = Collections.min(contacts.values()).ttl();
-      timers.startSingleTimer(ContactsRefreshMsg.INSTANCE, minTtl);
-    }
+    /* There may be a delay between when this timer expires and when the user actor processes the
+    message. While this timer is based on the minimum contact TTL, the delay to refresh contacts
+    may be such that all contacts expire. Thus, a new refresh timer may not always be started. */
+    contacts.values().stream()
+        .min(ContactActor::compareTo)
+        .map(ContactActor::ttl)
+        .ifPresent(minTtl -> timers.startSingleTimer(ContactsRefreshMsg.INSTANCE, minTtl));
   }
 
   private void sendCurrentOrCached(ContactActor contact) {
