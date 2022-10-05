@@ -18,15 +18,16 @@ public final class Graphs {
   }
 
   public static Graph<Integer, DefaultEdge> copyDirected(Graph<Integer, DefaultEdge> directed) {
-    Graph<Integer, DefaultEdge> copy = newDirectedGraph();
-    org.jgrapht.Graphs.addGraph(copy, GraphTests.requireDirected(directed));
-    return copy;
+    return copyGraph(GraphTests.requireDirected(directed), newDirectedGraph());
+  }
+
+  private static <V, E> Graph<V, E> copyGraph(Graph<V, E> src, Graph<V, E> dst) {
+    org.jgrapht.Graphs.addGraph(dst, src);
+    return dst;
   }
 
   public static Graph<Integer, DefaultEdge> copyUndirected(Graph<Integer, DefaultEdge> undirected) {
-    Graph<Integer, DefaultEdge> copy = newUndirectedGraph();
-    org.jgrapht.Graphs.addGraph(copy, GraphTests.requireUndirected(undirected));
-    return copy;
+    return copyGraph(GraphTests.requireUndirected(undirected), newUndirectedGraph());
   }
 
   public static Graph<Integer, DefaultEdge> newDirectedGraph() {
