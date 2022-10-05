@@ -135,7 +135,6 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
     RiskScoreMsg cachedOrDefault = cache.max(clock.instant()).orElse(defaultCurrent);
     RiskScoreMsg previous = updateCurrent(cachedOrDefault);
     logger.logCurrentRefresh(previous, current);
-    // Only refresh for non-trivial/non-default current values.
     if (current != defaultCurrent) {
       startCurrentRefreshTimer();
     }
@@ -218,8 +217,7 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
 
   private RiskScoreMsg updateCurrent(RiskScoreMsg msg) {
     RiskScoreMsg previous = current;
-    current = msg;
-    transmitted = msgUtil.transmitted(current);
+    transmitted = msgUtil.transmitted(current = msg);
     return previous;
   }
 
