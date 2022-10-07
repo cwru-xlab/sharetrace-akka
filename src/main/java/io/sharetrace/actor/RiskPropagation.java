@@ -32,17 +32,12 @@ import io.sharetrace.model.UserParams;
 import io.sharetrace.util.CacheParams;
 import io.sharetrace.util.TypedSupplier;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import java.time.Clock;
 import java.util.BitSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
-import org.apache.commons.lang3.time.StopWatch;
 import org.immutables.builder.Builder;
 import org.slf4j.MDC;
 
@@ -85,7 +80,7 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
   private final Clock clock;
   private final RiskScoreFactory scoreFactory;
   private final CacheFactory<RiskScoreMsg> cacheFactory;
-  private final Timer timer;
+  private final Timer<Class<? extends LoggableMetric>> timer;
   private final BitSet stopped;
 
   private RiskPropagation(
@@ -107,7 +102,7 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
     this.clock = clock;
     this.cacheFactory = cacheFactory;
     this.scoreFactory = scoreFactory;
-    this.timer = new Timer();
+    this.timer = new Timer<>();
     this.stopped = new BitSet(numUsers);
   }
 
@@ -137,20 +132,12 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
     return Algorithm.of(behavior, NAME, PROPS);
   }
 
-  private static long milli(long nanos) {
-    return TimeUnit.MILLISECONDS.convert(nanos, TimeUnit.NANOSECONDS);
-  }
-
   @Override
   public Receive<AlgorithmMsg> createReceive() {
     return newReceiveBuilder()
         .onMessage(RunMsg.class, this::handle)
         .onMessage(TimedOutMsg.class, this::handle)
         .build();
-  }
-
-  private long milli(Class<?> metric) {
-    return milli(timer.nanos(metric));
   }
 
   private Behavior<AlgorithmMsg> handle(RunMsg msg) {
@@ -166,6 +153,19 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
     return behavior;
   }
 
+  private Behavior<AlgorithmMsg> handle(TimedOutMsg msg) {
+    Behavior<AlgorithmMsg> behavior = this;
+    // Assumes at-least-once message delivery from the user actors.
+    stopped.set(msg.user());
+    if (stopped.cardinality() == numUsers) {
+      timer.stop();
+      mdc.forEach(MDC::put);
+      logMetrics();
+      behavior = Behaviors.stopped();
+    }
+    return behavior;
+  }
+
   private Map<Integer, ActorRef<UserMsg>> newUsers() {
     Map<Integer, ActorRef<UserMsg>> users = new Int2ObjectOpenHashMap<>(numUsers);
     ActorRef<UserMsg> user;
@@ -176,18 +176,6 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
       users.put(name, user);
     }
     return users;
-  }
-
-  private Behavior<UserMsg> newUser(int timeoutId) {
-    return UserBuilder.create()
-        .riskProp(getContext().getSelf())
-        .timeoutId(timeoutId)
-        .putAllMdc(mdc)
-        .addAllLoggable(loggable)
-        .userParams(userParams)
-        .clock(clock)
-        .cache(cacheFactory.newCache())
-        .build();
   }
 
   private void sendSymptomScores(Map<Integer, ActorRef<UserMsg>> users) {
@@ -214,19 +202,6 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
     }
   }
 
-  private Behavior<AlgorithmMsg> handle(TimedOutMsg msg) {
-    Behavior<AlgorithmMsg> behavior = this;
-    // Assumes at-least-once message delivery from the user actors.
-    stopped.set(msg.user());
-    if (stopped.cardinality() == numUsers) {
-      timer.stop();
-      mdc.forEach(MDC::put);
-      logMetrics();
-      behavior = Behaviors.stopped();
-    }
-    return behavior;
-  }
-
   private void logMetrics() {
     logMetric(CreateUsersRuntime.class, this::createRuntime);
     logMetric(SendScoresRuntime.class, this::scoresRuntime);
@@ -235,56 +210,41 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
     logMetric(MsgPassingRuntime.class, this::msgPassingRuntime);
   }
 
+  private Behavior<UserMsg> newUser(int timeoutId) {
+    return UserBuilder.create()
+        .riskProp(getContext().getSelf())
+        .timeoutId(timeoutId)
+        .putAllMdc(mdc)
+        .addAllLoggable(loggable)
+        .userParams(userParams)
+        .clock(clock)
+        .cache(cacheFactory.newCache())
+        .build();
+  }
+
   private <T extends Loggable> void logMetric(Class<T> type, Supplier<T> supplier) {
     logger.log(LoggableMetric.KEY, TypedSupplier.of(type, supplier));
   }
 
   private CreateUsersRuntime createRuntime() {
-    return CreateUsersRuntime.of(milli(CreateUsersRuntime.class));
+    return CreateUsersRuntime.of(timer.milli(CreateUsersRuntime.class));
   }
 
   private SendScoresRuntime scoresRuntime() {
-    return SendScoresRuntime.of(milli(SendScoresRuntime.class));
+    return SendScoresRuntime.of(timer.milli(SendScoresRuntime.class));
   }
 
   private SendContactsRuntime contactsRuntime() {
-    return SendContactsRuntime.of(milli(SendContactsRuntime.class));
+    return SendContactsRuntime.of(timer.milli(SendContactsRuntime.class));
   }
 
   private RiskPropRuntime riskPropRuntime() {
-    return RiskPropRuntime.of(milli(RiskPropRuntime.class));
+    return RiskPropRuntime.of(timer.milli(RiskPropRuntime.class));
   }
 
   private MsgPassingRuntime msgPassingRuntime() {
     long total = timer.nanos(RiskPropRuntime.class);
     long exclude = timer.nanos(SendScoresRuntime.class) + timer.nanos(CreateUsersRuntime.class);
-    return MsgPassingRuntime.of(milli(total - exclude));
-  }
-
-  private static final class Timer extends StopWatch {
-
-    private final Map<Class<?>, Long> runtimes = new Object2LongOpenHashMap<>();
-
-    public void time(Runnable task, Class<?> metric) {
-      time(Executors.callable(task), metric);
-    }
-
-    public <R> R time(Callable<R> task, Class<?> metric) {
-      long start, stop;
-      R result;
-      try {
-        start = getNanoTime();
-        result = task.call();
-        stop = getNanoTime();
-      } catch (Exception exception) {
-        throw new RuntimeException(exception);
-      }
-      runtimes.put(metric, stop - start);
-      return result;
-    }
-
-    public long nanos(Class<?> metric) {
-      return runtimes.computeIfAbsent(metric, x -> getNanoTime());
-    }
+    return MsgPassingRuntime.of(Timer.milli(total - exclude));
   }
 }
