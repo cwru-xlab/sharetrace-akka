@@ -4,8 +4,8 @@ import akka.actor.typed.ActorRef;
 import org.immutables.value.Value;
 
 @Value.Immutable
-abstract class BaseThresholdMsg implements UserMsg {
+interface BaseThresholdMsg extends UserMsg {
 
   @Value.Parameter
-  public abstract ActorRef<UserMsg> contact();
+  ActorRef<UserMsg> contact();
 }
