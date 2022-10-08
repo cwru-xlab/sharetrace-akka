@@ -29,10 +29,6 @@ abstract class AbstractContactNetwork implements ContactNetwork, LoggableRef {
 
   protected AbstractContactNetwork() {}
 
-  private static TypedSupplier<GraphTopology> graphTopology(String filename) {
-    return TypedSupplier.of(GraphTopology.class, () -> GraphTopology.of(filename));
-  }
-
   @Override
   public Set<Integer> users() {
     return Collections.unmodifiableSet(graph().vertexSet());
@@ -59,6 +55,19 @@ abstract class AbstractContactNetwork implements ContactNetwork, LoggableRef {
     }
   }
 
+  private static TypedSupplier<GraphTopology> graphTopology(String filename) {
+    return TypedSupplier.of(GraphTopology.class, () -> GraphTopology.of(filename));
+  }
+
+  private Logger logger() {
+    // Lazily assign to make Immutables subclassing work properly; subclass must be instantiated.
+    return (logger == null) ? (logger = Logging.metricsLogger(loggable())) : logger;
+  }
+
+  private void exportGraph(String filename) {
+    Exporter.export(graph, filename);
+  }
+
   private Graph<Integer, DefaultEdge> graph() {
     // Lazily assign to make Immutables subclassing work properly; subclass must be instantiated.
     return (graph == null) ? (graph = newGraph()) : graph;
@@ -72,19 +81,10 @@ abstract class AbstractContactNetwork implements ContactNetwork, LoggableRef {
 
   protected abstract ContactTimeFactory contactTimeFactory();
 
-  private Logger logger() {
-    // Lazily assign to make Immutables subclassing work properly; subclass must be instantiated.
-    return (logger == null) ? (logger = Logging.metricsLogger(loggable())) : logger;
-  }
-
   private Contact contactFrom(DefaultEdge edge) {
     int user1 = graph().getEdgeSource(edge);
     int user2 = graph().getEdgeTarget(edge);
     Instant contactTime = contactTimeFactory().contactTime(user1, user2);
     return Contact.builder().user1(user1).user2(user2).time(contactTime).build();
-  }
-
-  private void exportGraph(String filename) {
-    new Exporter<Integer, DefaultEdge>(filename).export(graph());
   }
 }

@@ -37,6 +37,10 @@ final class Exporter<V, E> {
     return path;
   }
 
+  public static <V, E> void export(Graph<V, E> graph, String filename) {
+    new Exporter<V, E>(filename).export(graph);
+  }
+
   public void export(Graph<V, E> graph) {
     exporter.exportGraph(graph, file);
   }
