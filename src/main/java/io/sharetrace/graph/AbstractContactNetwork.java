@@ -17,6 +17,7 @@ import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.Set;
+import org.immutables.value.Value;
 import org.jgrapht.Graph;
 import org.jgrapht.generate.GraphGenerator;
 import org.jgrapht.graph.DefaultEdge;
@@ -28,6 +29,15 @@ abstract class AbstractContactNetwork implements ContactNetwork, LoggableRef {
   private Logger logger;
 
   protected AbstractContactNetwork() {}
+
+  private Contact contactFrom(DefaultEdge edge) {
+    int user1 = graph().getEdgeSource(edge);
+    int user2 = graph().getEdgeTarget(edge);
+    Instant contactTime = contactTimeFactory().contactTime(user1, user2);
+    return Contact.builder().user1(user1).user2(user2).time(contactTime).build();
+  }
+
+  protected abstract ContactTimeFactory contactTimeFactory();
 
   @Override
   public Set<Integer> users() {
@@ -49,9 +59,8 @@ abstract class AbstractContactNetwork implements ContactNetwork, LoggableRef {
     logger().log(key, TypedSupplier.of(GraphCycles.class, stats::graphCycles));
     logger().log(key, TypedSupplier.of(GraphEccentricity.class, stats::graphEccentricity));
     logger().log(key, TypedSupplier.of(GraphScores.class, stats::graphScores));
-    String filename = Uid.ofLongString();
-    if (logger().log(key, graphTopology(filename))) {
-      exportGraph(filename);
+    if (logger().log(key, graphTopology())) {
+      exportGraph();
     }
   }
 
@@ -60,12 +69,12 @@ abstract class AbstractContactNetwork implements ContactNetwork, LoggableRef {
     return (logger == null) ? (logger = Logging.metricsLogger(loggable())) : logger;
   }
 
-  private static TypedSupplier<GraphTopology> graphTopology(String filename) {
-    return TypedSupplier.of(GraphTopology.class, () -> GraphTopology.of(filename));
+  private TypedSupplier<GraphTopology> graphTopology() {
+    return TypedSupplier.of(GraphTopology.class, () -> GraphTopology.of(networkId()));
   }
 
-  private void exportGraph(String filename) {
-    Exporter.export(graph, filename);
+  private void exportGraph() {
+    Exporter.export(graph, networkId());
   }
 
   private Graph<Integer, DefaultEdge> graph() {
@@ -79,12 +88,8 @@ abstract class AbstractContactNetwork implements ContactNetwork, LoggableRef {
 
   protected abstract GraphGenerator<Integer, DefaultEdge, ?> graphGenerator();
 
-  protected abstract ContactTimeFactory contactTimeFactory();
-
-  private Contact contactFrom(DefaultEdge edge) {
-    int user1 = graph().getEdgeSource(edge);
-    int user2 = graph().getEdgeTarget(edge);
-    Instant contactTime = contactTimeFactory().contactTime(user1, user2);
-    return Contact.builder().user1(user1).user2(user2).time(contactTime).build();
+  @Value.Derived
+  public String networkId() {
+    return Uid.ofIntString();
   }
 }

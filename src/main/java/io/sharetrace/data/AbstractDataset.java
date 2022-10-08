@@ -5,7 +5,9 @@ import io.sharetrace.data.factory.RiskScoreFactory;
 import io.sharetrace.graph.Contact;
 import io.sharetrace.graph.ContactNetwork;
 import io.sharetrace.model.RiskScore;
+import io.sharetrace.util.Uid;
 import java.util.Set;
+import org.immutables.value.Value;
 
 @JsonIgnoreType
 abstract class AbstractDataset implements Dataset {
@@ -16,6 +18,16 @@ abstract class AbstractDataset implements Dataset {
   }
 
   protected abstract RiskScoreFactory scoreFactory();
+
+  @Value.Derived
+  public String datasetId() {
+    return Uid.ofIntString();
+  }
+
+  @Override
+  public String networkId() {
+    return contactNetwork().networkId();
+  }
 
   @Override
   public Set<Integer> users() {

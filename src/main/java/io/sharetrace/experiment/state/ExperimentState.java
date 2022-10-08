@@ -96,7 +96,9 @@ public final class ExperimentState implements Runnable {
   private ExperimentSettings settings() {
     return ExperimentSettings.builder()
         .graphType(graphType.toString())
-        .sid(id)
+        .networkId(dataset.networkId())
+        .datasetId(dataset.datasetId())
+        .stateId(id)
         .seed(ctx.seed())
         .userParams(userParams)
         .cacheParams(cacheParams)

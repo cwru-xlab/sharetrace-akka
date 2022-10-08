@@ -9,4 +9,6 @@ public interface Dataset extends RiskScoreFactory, ContactNetwork, LoggableRef {
   Dataset withScoreFactory(RiskScoreFactory scoreFactory);
 
   Dataset withNewContactNetwork();
+
+  String datasetId();
 }

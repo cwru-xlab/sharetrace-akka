@@ -14,7 +14,11 @@ interface BaseExperimentSettings extends LoggableSetting {
 
   long seed();
 
-  String sid();
+  String stateId();
+
+  String networkId();
 
   String graphType();
+
+  String datasetId();
 }

@@ -13,6 +13,8 @@ import java.util.Set;
  */
 public interface ContactNetwork {
 
+  String networkId();
+
   Set<Integer> users();
 
   Set<Contact> contacts();
