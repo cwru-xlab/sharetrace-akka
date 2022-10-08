@@ -60,6 +60,7 @@ abstract class AbstractContactNetwork implements ContactNetwork, LoggableRef {
   }
 
   private Graph<Integer, DefaultEdge> graph() {
+    // Lazily assign to make Immutables subclassing work properly; subclass must be instantiated.
     return (graph == null) ? (graph = newGraph()) : graph;
   }
 
@@ -72,6 +73,7 @@ abstract class AbstractContactNetwork implements ContactNetwork, LoggableRef {
   protected abstract ContactTimeFactory contactTimeFactory();
 
   private Logger logger() {
+    // Lazily assign to make Immutables subclassing work properly; subclass must be instantiated.
     return (logger == null) ? (logger = Logging.metricsLogger(loggable())) : logger;
   }
 
