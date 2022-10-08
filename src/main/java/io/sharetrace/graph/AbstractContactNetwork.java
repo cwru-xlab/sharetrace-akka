@@ -55,13 +55,13 @@ abstract class AbstractContactNetwork implements ContactNetwork, LoggableRef {
     }
   }
 
-  private static TypedSupplier<GraphTopology> graphTopology(String filename) {
-    return TypedSupplier.of(GraphTopology.class, () -> GraphTopology.of(filename));
-  }
-
   private Logger logger() {
     // Lazily assign to make Immutables subclassing work properly; subclass must be instantiated.
     return (logger == null) ? (logger = Logging.metricsLogger(loggable())) : logger;
+  }
+
+  private static TypedSupplier<GraphTopology> graphTopology(String filename) {
+    return TypedSupplier.of(GraphTopology.class, () -> GraphTopology.of(filename));
   }
 
   private void exportGraph(String filename) {
