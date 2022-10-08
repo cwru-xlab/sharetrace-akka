@@ -2,7 +2,6 @@ package io.sharetrace.util;
 
 import com.google.common.collect.Range;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
-
 import java.time.Clock;
 import java.time.Instant;
 import java.time.temporal.ChronoField;
@@ -55,8 +54,8 @@ public final class IntervalCache<T> {
     comparator = params.comparator();
     clock = params.clock();
     interval = getLong(params.interval());
-    lookBack = Math.multiplyExact(interval, params.numIntervals() - params.numLookAhead());
-    lookAhead = Math.multiplyExact(interval, params.numLookAhead());
+    lookBack = interval * (params.numIntervals() - params.numLookAhead());
+    lookAhead = interval * params.numLookAhead();
     refreshPeriod = getLong(params.refreshPeriod());
     lastRefresh = getLong(Instant.MIN);
   }
@@ -71,11 +70,6 @@ public final class IntervalCache<T> {
 
   public static <T> IntervalCache<T> create(CacheParams<T> params) {
     return new IntervalCache<>(params);
-  }
-
-  private static Predicate<Entry<Long, ?>> isNotAfter(Temporal temporal) {
-    long t = getLong(temporal);
-    return entry -> entry.getKey() <= t;
   }
 
   /**
@@ -93,20 +87,18 @@ public final class IntervalCache<T> {
 
   private void refresh() {
     long now = getTime();
-    if (Math.subtractExact(now, lastRefresh) > refreshPeriod) {
-      rangeStart = Math.subtractExact(now, lookBack);
-      long rangeEnd = Math.addExact(now, lookAhead);
+    if (now - lastRefresh > refreshPeriod) {
+      rangeStart = now - lookBack;
+      long rangeEnd = now + lookAhead;
       range = Range.closedOpen(rangeStart, rangeEnd);
       cache.entrySet().removeIf(isExpired());
-      lastRefresh = getTime();
+      lastRefresh = now;
     }
   }
 
-  private long floorKey(long temporal) {
-    long sinceStart = Math.subtractExact(temporal, rangeStart);
-    long multiplier = Math.floorDiv(sinceStart, interval);
-    long offset = Math.multiplyExact(interval, multiplier);
-    return Math.addExact(rangeStart, offset);
+  private static Predicate<Entry<Long, ?>> isNotAfter(Temporal temporal) {
+    long t = getLong(temporal);
+    return entry -> entry.getKey() <= t;
   }
 
   private long getTime() {
@@ -150,5 +142,9 @@ public final class IntervalCache<T> {
         .filter(isNotAfter(temporal))
         .map(Entry::getValue)
         .max(comparator);
+  }
+
+  private long floorKey(long temporal) {
+    return rangeStart + interval * Math.floorDiv(temporal - rangeStart, interval);
   }
 }
