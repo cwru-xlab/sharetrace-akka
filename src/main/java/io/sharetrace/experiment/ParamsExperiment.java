@@ -38,9 +38,8 @@ public final class ParamsExperiment extends Experiment<ParamsExperimentConfig> {
    */
   @Override
   public void run(ExperimentState initialState, ParamsExperimentConfig config) {
-    Dataset dataset = initialState.dataset();
     for (int iNetwork = 0; iNetwork < config.numIterations(); iNetwork++) {
-      dataset = cacheScores(dataset.withNewContactNetwork());
+      Dataset dataset = cacheScores(initialState.dataset().withNewContactNetwork());
       for (float tr : config.transRates()) {
         for (float sc : config.sendCoeffs()) {
           initialState.toBuilder()

@@ -40,12 +40,10 @@ public final class NoiseExperiment extends Experiment<NoiseExperimentConfig> {
    */
   @Override
   public void run(ExperimentState initialState, NoiseExperimentConfig config) {
-    Dataset dataset = initialState.dataset();
-    RiskScoreFactory noisyFactory;
     for (int iNetwork = 0; iNetwork < config.numNetworks(); iNetwork++) {
-      dataset = dataset.withNewContactNetwork();
+      Dataset dataset = initialState.dataset().withNewContactNetwork();
       for (RealDistribution noise : config.noises()) {
-        noisyFactory = newNoisyFactory(dataset, noise);
+        RiskScoreFactory noisyFactory = newNoisyFactory(dataset, noise);
         initialState.toBuilder()
             .dataset(dataset.withScoreFactory(noisyFactory))
             .build()

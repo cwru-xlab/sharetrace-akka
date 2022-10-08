@@ -35,9 +35,8 @@ abstract class BaseFileContactNetwork extends AbstractContactNetwork implements 
   }
 
   private void generate(Graph<Integer, DefaultEdge> target) {
-    List<Integer> users;
     for (Set<Integer> contact : contactMap().keySet()) {
-      users = List.copyOf(contact);
+      List<Integer> users = List.copyOf(contact);
       Graphs.addEdgeWithVertices(target, users.get(0), users.get(1));
     }
   }

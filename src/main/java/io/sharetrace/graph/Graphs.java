@@ -49,10 +49,9 @@ public final class Graphs {
       directed = graph;
     } else {
       directed = newDirectedGraph();
-      int source, target;
       for (DefaultEdge edge : graph.edgeSet()) {
-        source = graph.getEdgeSource(edge);
-        target = graph.getEdgeTarget(edge);
+        int source = graph.getEdgeSource(edge);
+        int target = graph.getEdgeTarget(edge);
         directed.addVertex(source);
         directed.addVertex(target);
         directed.addEdge(source, target);

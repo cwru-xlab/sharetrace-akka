@@ -1,6 +1,7 @@
 package io.sharetrace.experiment;
 
 import io.sharetrace.actor.RiskPropagation;
+import io.sharetrace.data.Dataset;
 import io.sharetrace.data.SampledDataset;
 import io.sharetrace.experiment.config.RuntimeExperimentConfig;
 import io.sharetrace.experiment.state.Defaults;
@@ -45,9 +46,8 @@ public final class RuntimeExperiment extends Experiment<RuntimeExperimentConfig>
    */
   @Override
   public void run(ExperimentState initialState, RuntimeExperimentConfig config) {
-    SampledDataset dataset = (SampledDataset) initialState.dataset();
     for (int n : config.numNodes()) {
-      dataset = dataset.withNumNodes(n);
+      Dataset dataset = ((SampledDataset) initialState.dataset()).withNumNodes(n);
       for (int iNetwork = 0; iNetwork < config.numNetworks(); iNetwork++) {
         initialState.toBuilder()
             .dataset(dataset.withNewContactNetwork())
