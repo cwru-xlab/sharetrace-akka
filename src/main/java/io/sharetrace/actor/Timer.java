@@ -34,7 +34,7 @@ final class Timer<T> extends StopWatch {
   }
 
   public static long milli(long nanos) {
-    return TimeUnit.MILLISECONDS.convert(nanos, TimeUnit.NANOSECONDS);
+    return TimeUnit.NANOSECONDS.toMillis(nanos);
   }
 
   public long nanos(T metric) {
