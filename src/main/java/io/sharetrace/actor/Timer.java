@@ -16,17 +16,15 @@ final class Timer<T> extends StopWatch {
   }
 
   public <R> R time(Callable<R> task, T metric) {
-    long start, stop;
-    R result;
     try {
-      start = getNanoTime();
-      result = task.call();
-      stop = getNanoTime();
+      long start = getNanoTime();
+      R result = task.call();
+      long stop = getNanoTime();
+      runtimes.put(metric, stop - start);
+      return result;
     } catch (Exception exception) {
       throw new RuntimeException(exception);
     }
-    runtimes.put(metric, stop - start);
-    return result;
   }
 
   public long milli(T metric) {
