@@ -67,8 +67,8 @@ public final class ExperimentState implements Runnable {
 
   @Override
   public void run() {
-    logMetricsAndSettings();
     newRiskPropagation().run();
+    logMetricsAndSettings();
   }
 
   public Builder toBuilder() {
