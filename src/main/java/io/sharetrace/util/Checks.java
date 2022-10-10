@@ -14,8 +14,12 @@ public final class Checks {
   }
 
   public static <T extends Comparable<T>> T inRange(T value, Range<T> range, String name) {
-    Preconditions.checkArgument(range.contains(value), RANGE_MSG, name, range, value);
+    isTrue(range.contains(value), RANGE_MSG, name, range, value);
     return value;
+  }
+
+  public static void isTrue(boolean condition, String template, Object... args) {
+    Preconditions.checkArgument(condition, template, args);
   }
 
   public static <T extends Comparable<T>> void isGreaterThan(T value, T greaterThan, String name) {
