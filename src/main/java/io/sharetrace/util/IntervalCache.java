@@ -96,9 +96,9 @@ public final class IntervalCache<T> {
     }
   }
 
-  private static Predicate<Entry<Long, ?>> isNotAfter(Temporal temporal) {
-    long t = getLong(temporal);
-    return entry -> entry.getKey() <= t;
+  private Predicate<Entry<Long, ?>> isNotAfter(Temporal temporal) {
+    long key = floorKey(getLong(temporal));
+    return entry -> entry.getKey() < key;
   }
 
   private long getTime() {
