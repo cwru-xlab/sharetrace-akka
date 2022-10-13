@@ -7,6 +7,7 @@ import java.time.Instant;
 public final class Caches {
 
   private static final Duration INTERVAL = Duration.ofDays(1L);
+  private static final Clock NOW_FIXED = Clocks.nowFixed();
 
   private Caches() {}
 
@@ -32,7 +33,7 @@ public final class Caches {
   }
 
   public static IntervalCache<Integer> withEntry() {
-    return withEntry(Clocks.nowFixed());
+    return withEntry(NOW_FIXED);
   }
 
   public static IntervalCache<Integer> withEntry(Clock clock) {
@@ -42,19 +43,19 @@ public final class Caches {
   }
 
   public static Instant inRange() {
-    return Clocks.nowFixed().instant().minusSeconds(10L);
+    return NOW_FIXED.instant().minusSeconds(10L);
   }
 
   public static Instant atUpperBound() {
-    return Clocks.nowFixed().instant();
+    return NOW_FIXED.instant();
   }
 
   public static Instant atLowerBound() {
-    return Clocks.nowFixed().instant().minus(INTERVAL);
+    return NOW_FIXED.instant().minus(INTERVAL);
   }
 
   public static Instant belowLowerBound() {
-    return Clocks.nowFixed().instant().minus(INTERVAL.plusSeconds(1L));
+    return NOW_FIXED.instant().minus(INTERVAL.plusSeconds(1L));
   }
 
   public static int cached() {
