@@ -123,8 +123,8 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
 
   private Behavior<UserMsg> handle(RiskScoreMsg msg) {
     logger.logReceive(msg);
+    cache.put(msg.score().time(), msg);
     RiskScoreMsg transmit = updateIfAboveCurrent(msg);
-    cache.put(transmit.score().time(), transmit);
     propagate(transmit);
     resetTimeout();
     return this;
@@ -232,6 +232,7 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
     cache
         .max(contact.bufferedContactTime())
         .filter(msgUtil::isAlive)
+        .map(msgUtil::transmitted)
         .ifPresent(cached -> contact.tell(cached, logger::logSendCached));
   }
 }
