@@ -109,6 +109,14 @@ public final class ExperimentState implements Runnable {
     return IntervalCache.create(cacheParams);
   }
 
+  public long seed() {
+    return ctx.seed();
+  }
+
+  public GraphType graphType() {
+    return graphType;
+  }
+
   public UserParams userParams() {
     return userParams;
   }

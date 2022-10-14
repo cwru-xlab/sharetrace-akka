@@ -20,7 +20,7 @@ public final class FileExperiment extends Experiment<FileExperimentConfig> {
 
   /** Evaluates {@link RiskPropagation} on a given {@link FileDataset} 1 or more times. */
   @Override
-  public void run(ExperimentState initialState, FileExperimentConfig config) {
+  public void run(FileExperimentConfig config, ExperimentState initialState) {
     initialState.run(config.numIterations());
   }
 

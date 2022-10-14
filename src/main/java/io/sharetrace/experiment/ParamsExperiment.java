@@ -37,7 +37,7 @@ public final class ParamsExperiment extends Experiment<ParamsExperimentConfig> {
    * given {@link ContactNetwork} so that cross-parameter comparisons are possible.
    */
   @Override
-  public void run(ExperimentState initialState, ParamsExperimentConfig config) {
+  public void run(ParamsExperimentConfig config, ExperimentState initialState) {
     for (int iNetwork = 0; iNetwork < config.numIterations(); iNetwork++) {
       Dataset dataset = cacheScores(initialState.dataset().withNewContactNetwork());
       for (float tr : config.transRates()) {
