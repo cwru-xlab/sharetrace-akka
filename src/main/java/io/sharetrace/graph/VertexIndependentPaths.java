@@ -42,7 +42,7 @@ public final class VertexIndependentPaths {
 
   public int getPathCount(int source, int target, int maxFind) {
     int stopAt = Math.min(maxFind, maxPossiblePaths(source, target));
-    return (stopAt > 0) ? nontrivialPathCount(source, target, stopAt) : 0;
+    return (stopAt > 0) ? pathCount(source, target, stopAt) : 0;
   }
 
   private int maxPossiblePaths(int source, int target) {
@@ -57,14 +57,14 @@ public final class VertexIndependentPaths {
     return numPaths;
   }
 
-  private int nontrivialPathCount(int source, int target, int maxFind) {
+  private int pathCount(int source, int target, int maxFind) {
     return isAdjacent(source, target)
         ? adjacentPathCount(source, target, maxFind)
         : nonadjacentPathCount(source, target, maxFind);
   }
 
-  private boolean isAdjacent(int v1, int v2) {
-    return graph.getEdge(v1, v2) != null;
+  private boolean isAdjacent(int source, int target) {
+    return graph.getEdge(source, target) != null;
   }
 
   private int adjacentPathCount(int source, int target, int maxFind) {
@@ -126,7 +126,7 @@ public final class VertexIndependentPaths {
   }
 
   private IntStream vertices(boolean allowParallel) {
-    return numVertices > MIN_PARALLEL_VERTICES && allowParallel
+    return allowParallel && numVertices > MIN_PARALLEL_VERTICES
         ? graph.vertexSet().parallelStream().mapToInt(Number::intValue)
         : graph.vertexSet().stream().mapToInt(Number::intValue);
   }
