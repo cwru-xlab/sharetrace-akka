@@ -6,7 +6,6 @@ import java.util.function.Supplier;
 import java.util.stream.IntStream;
 import org.jgrapht.Graph;
 import org.jgrapht.GraphPath;
-import org.jgrapht.alg.interfaces.KShortestPathAlgorithm;
 import org.jgrapht.alg.interfaces.ShortestPathAlgorithm;
 import org.jgrapht.alg.shortestpath.BidirectionalDijkstraShortestPath;
 import org.jgrapht.alg.shortestpath.SuurballeKDisjointShortestPaths;
@@ -22,6 +21,7 @@ import org.jheaps.tree.FibonacciHeap;
 public final class VertexIndependentPaths {
 
   private static final int MIN_PARALLEL_VERTICES = 50;
+  private static final int ADJACENT_PATHS = 2;
   private final Graph<Integer, DefaultEdge> graph;
   private final boolean isDirected;
   private final int numVertices;
@@ -68,39 +68,36 @@ public final class VertexIndependentPaths {
   }
 
   private int adjacentPathCount(int source, int target, int maxFind) {
-    Graph<Integer, ?> graph = Graphs.copyDirected(directed);
-    KShortestPathAlgorithm<Integer, ?> shortestPaths = newKShortestPaths(graph);
-    List<? extends GraphPath<Integer, ?>> paths;
+    Graph<Integer, ?> graph = Graphs.copyGraph(directed);
+    List<? extends GraphPath<Integer, ?>> paths = adjacentKShortestPaths(graph, source, target);
     int numFound = 1; // Trivial path along edge incident to source and target.
-    do {
-      if ((paths = shortestPaths.getPaths(source, target, 2)).size() == 2) {
-        numFound++;
-        // Remove the vertices along the path that is not the edge between the source and target.
-        graph.removeAllVertices(withoutEndpoints(paths.get(1)));
-        // Suurballe copies internally, so we must pass in the updated graph.
-        shortestPaths = newKShortestPaths(graph);
-      }
-    } while (paths.size() > 1 && numFound < maxFind);
+    while (paths.size() > 1 && numFound < maxFind) {
+      numFound++;
+      // Remove the vertices along the path that is not the edge between the source and target.
+      graph.removeAllVertices(withoutEndpoints(paths.get(1)));
+      paths = adjacentKShortestPaths(graph, source, target);
+    }
     return numFound;
+  }
+
+  private static List<? extends GraphPath<Integer, ?>> adjacentKShortestPaths(
+      Graph<Integer, ?> graph, int source, int target) {
+    // Suurballe provides a simpler implementation since it ensures no loops.
+    // Suurballe copies internally, so we must pass in the graph on every call.
+    return new SuurballeKDisjointShortestPaths<>(graph).getPaths(source, target, ADJACENT_PATHS);
   }
 
   private int nonadjacentPathCount(int source, int target, int maxFind) {
     Graph<Integer, ?> graph = Graphs.copyGraph(this.graph);
     ShortestPathAlgorithm<Integer, ?> shortestPaths = newShortestPaths(graph);
-    GraphPath<Integer, ?> path;
+    GraphPath<Integer, ?> path = shortestPaths.getPath(source, target);
     int numFound = 0;
-    do {
-      if ((path = shortestPaths.getPath(source, target)) != null) {
-        numFound++;
-        graph.removeAllVertices(withoutEndpoints(path));
-      }
-    } while (path != null && numFound < maxFind);
+    while (path != null && numFound < maxFind) {
+      numFound++;
+      graph.removeAllVertices(withoutEndpoints(path));
+      path = shortestPaths.getPath(source, target);
+    }
     return numFound;
-  }
-
-  private static <V, E> KShortestPathAlgorithm<V, E> newKShortestPaths(Graph<V, E> graph) {
-    // Suurballe provides a simpler implementation since it ensures no loops.
-    return new SuurballeKDisjointShortestPaths<>(graph);
   }
 
   private static <V> List<V> withoutEndpoints(GraphPath<V, ?> path) {
