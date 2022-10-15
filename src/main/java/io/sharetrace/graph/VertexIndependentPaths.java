@@ -1,6 +1,7 @@
 package io.sharetrace.graph;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
@@ -73,8 +74,8 @@ public final class VertexIndependentPaths {
     int numFound = 1; // Trivial path along edge incident to source and target.
     while (paths.size() > 1 && numFound < maxFind) {
       numFound++;
-      // Remove the vertices along the path that is not the edge between the source and target.
-      graph.removeAllVertices(withoutEndpoints(paths.get(1)));
+      Collection<Integer> nonTrivialVertices = withoutEndpoints(paths.get(1));
+      graph.removeAllVertices(nonTrivialVertices);
       paths = adjacentKShortestPaths(graph, source, target);
     }
     return numFound;
