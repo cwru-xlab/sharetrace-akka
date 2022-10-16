@@ -1,6 +1,5 @@
 package io.sharetrace.util;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Range;
 
 public final class Checks {
@@ -19,7 +18,9 @@ public final class Checks {
   }
 
   public static void isTrue(boolean condition, String template, Object... args) {
-    Preconditions.checkArgument(condition, template, args);
+    if (!condition) {
+      throw new IllegalArgumentException(String.format(template, args));
+    }
   }
 
   public static <T extends Comparable<T>> void isGreaterThan(T value, T greaterThan, String name) {
