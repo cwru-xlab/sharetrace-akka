@@ -27,7 +27,7 @@ abstract class BaseFileDataset extends AbstractDataset implements TimeRef {
 
   @Override
   @Value.Default // Allows the contact network to be passed on to a copied instance.
-  protected ContactNetwork contactNetwork() {
+  public ContactNetwork contactNetwork() {
     return FileContactNetwork.builder()
         .addAllLoggable(loggable())
         .delimiter(delimiter())

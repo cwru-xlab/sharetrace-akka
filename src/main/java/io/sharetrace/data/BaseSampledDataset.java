@@ -31,7 +31,7 @@ abstract class BaseSampledDataset extends AbstractDataset {
 
   @Override
   @Value.Default // Allows the contact network to be passed on to a copied instance.
-  protected ContactNetwork contactNetwork() {
+  public ContactNetwork contactNetwork() {
     return SampledContactNetwork.builder()
         .addAllLoggable(loggable())
         .graphGenerator(graphGenerator())

@@ -2,13 +2,16 @@ package io.sharetrace.data;
 
 import io.sharetrace.data.factory.RiskScoreFactory;
 import io.sharetrace.graph.ContactNetwork;
+import io.sharetrace.model.Identifiable;
 import io.sharetrace.model.LoggableRef;
 
-public interface Dataset extends RiskScoreFactory, ContactNetwork, LoggableRef {
+public interface Dataset extends Identifiable, LoggableRef {
 
   Dataset withScoreFactory(RiskScoreFactory scoreFactory);
 
   Dataset withNewContactNetwork();
 
-  String datasetId();
+  RiskScoreFactory scoreFactory();
+
+  ContactNetwork contactNetwork();
 }

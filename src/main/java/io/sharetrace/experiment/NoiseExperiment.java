@@ -43,18 +43,18 @@ public final class NoiseExperiment extends Experiment<NoiseExperimentConfig> {
     for (int iNetwork = 0; iNetwork < config.numNetworks(); iNetwork++) {
       Dataset dataset = initialState.dataset().withNewContactNetwork();
       for (RealDistribution noise : config.noises()) {
-        RiskScoreFactory noisyFactory = newNoisyFactory(dataset, noise);
         initialState.toBuilder()
-            .dataset(dataset.withScoreFactory(noisyFactory))
+            .dataset(withNoisyScoreFactory(dataset, noise))
             .build()
             .run(config.numIterations());
       }
     }
   }
 
-  private static RiskScoreFactory newNoisyFactory(
-      RiskScoreFactory factory, RealDistribution noise) {
-    return NoisyRiskScoreFactory.of(CachedRiskScoreFactory.of(factory), noise);
+  private static Dataset withNoisyScoreFactory(Dataset dataset, RealDistribution noise) {
+    RiskScoreFactory cached = CachedRiskScoreFactory.of(dataset.scoreFactory());
+    RiskScoreFactory noisy = NoisyRiskScoreFactory.of(cached, noise);
+    return dataset.withScoreFactory(noisy);
   }
 
   @Override

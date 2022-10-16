@@ -3,6 +3,7 @@ package io.sharetrace.experiment;
 import io.sharetrace.actor.RiskPropagation;
 import io.sharetrace.data.Dataset;
 import io.sharetrace.data.factory.CachedRiskScoreFactory;
+import io.sharetrace.data.factory.RiskScoreFactory;
 import io.sharetrace.experiment.config.ParamsExperimentConfig;
 import io.sharetrace.experiment.state.Defaults;
 import io.sharetrace.experiment.state.ExperimentContext;
@@ -53,7 +54,8 @@ public final class ParamsExperiment extends Experiment<ParamsExperimentConfig> {
   }
 
   private static Dataset cacheScores(Dataset dataset) {
-    return dataset.withScoreFactory(CachedRiskScoreFactory.of(dataset));
+    RiskScoreFactory cachedScoreFactory = CachedRiskScoreFactory.of(dataset.scoreFactory());
+    return dataset.withScoreFactory(cachedScoreFactory);
   }
 
   @Override

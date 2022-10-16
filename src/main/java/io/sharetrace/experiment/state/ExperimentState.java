@@ -10,6 +10,7 @@ import io.sharetrace.logging.Logging;
 import io.sharetrace.logging.setting.ExperimentSettings;
 import io.sharetrace.logging.setting.LoggableSetting;
 import io.sharetrace.message.RiskScoreMsg;
+import io.sharetrace.model.Identifiable;
 import io.sharetrace.model.UserParams;
 import io.sharetrace.util.CacheParams;
 import io.sharetrace.util.IntervalCache;
@@ -29,7 +30,7 @@ import org.apache.commons.math3.distribution.UniformRealDistribution;
 import org.apache.commons.math3.random.Well512a;
 import org.slf4j.MDC;
 
-public final class ExperimentState implements Runnable {
+public final class ExperimentState implements Runnable, Identifiable {
 
   private final ExperimentContext ctx;
   private final Logger logger;
@@ -75,29 +76,22 @@ public final class ExperimentState implements Runnable {
     return Builder.from(this);
   }
 
-  private void logMetricsAndSettings() {
-    mdc.forEach(MDC::put);
-    dataset.logMetrics();
-    logger.log(LoggableSetting.KEY, TypedSupplier.of(ExperimentSettings.class, this::settings));
+  @Override
+  public String id() {
+    return id;
   }
 
-  private Runnable newRiskPropagation() {
-    return RiskPropagationBuilder.create()
-        .addAllLoggable(ctx.loggable())
-        .putAllMdc(mdc)
-        .contactNetwork(dataset)
-        .userParams(userParams)
-        .clock(ctx.clock())
-        .scoreFactory(dataset)
-        .cacheFactory(this::newCache)
-        .build();
+  private void logMetricsAndSettings() {
+    mdc.forEach(MDC::put);
+    dataset.contactNetwork().logMetrics();
+    logger.log(LoggableSetting.KEY, TypedSupplier.of(ExperimentSettings.class, this::settings));
   }
 
   private ExperimentSettings settings() {
     return ExperimentSettings.builder()
         .graphType(graphType.toString())
-        .networkId(dataset.networkId())
-        .datasetId(dataset.datasetId())
+        .networkId(dataset.contactNetwork().id())
+        .datasetId(dataset.id())
         .stateId(id)
         .seed(ctx.seed())
         .userParams(userParams)
@@ -123,6 +117,18 @@ public final class ExperimentState implements Runnable {
 
   public Dataset dataset() {
     return dataset;
+  }
+
+  private Runnable newRiskPropagation() {
+    return RiskPropagationBuilder.create()
+        .addAllLoggable(ctx.loggable())
+        .putAllMdc(mdc)
+        .contactNetwork(dataset.contactNetwork())
+        .userParams(userParams)
+        .clock(ctx.clock())
+        .scoreFactory(dataset.scoreFactory())
+        .cacheFactory(this::newCache)
+        .build();
   }
 
   private enum Setter {

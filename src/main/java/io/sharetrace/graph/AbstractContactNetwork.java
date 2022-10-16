@@ -70,11 +70,12 @@ abstract class AbstractContactNetwork implements ContactNetwork, LoggableRef {
   }
 
   private TypedSupplier<GraphTopology> graphTopology() {
-    return TypedSupplier.of(GraphTopology.class, () -> GraphTopology.of(networkId()));
+    return TypedSupplier.of(GraphTopology.class, () -> GraphTopology.of(id()));
   }
 
-  private void exportGraph() {
-    Exporter.export(graph, networkId());
+  @Value.Derived
+  public String id() {
+    return Uid.ofIntString();
   }
 
   private Graph<Integer, DefaultEdge> graph() {
@@ -88,8 +89,7 @@ abstract class AbstractContactNetwork implements ContactNetwork, LoggableRef {
 
   protected abstract GraphGenerator<Integer, DefaultEdge, ?> graphGenerator();
 
-  @Value.Derived
-  public String networkId() {
-    return Uid.ofIntString();
+  private void exportGraph() {
+    Exporter.export(graph, id());
   }
 }
