@@ -3,6 +3,7 @@ package io.sharetrace.message;
 import akka.actor.typed.ActorRef;
 import io.sharetrace.actor.RiskPropagation;
 import io.sharetrace.actor.UserActor;
+import io.sharetrace.model.Identifiable;
 import io.sharetrace.model.RiskScore;
 import io.sharetrace.util.Uid;
 import org.immutables.value.Value;
@@ -14,7 +15,7 @@ import org.immutables.value.Value;
  * @see RiskPropagation
  */
 @Value.Immutable
-abstract class BaseRiskScoreMsg implements UserMsg, Comparable<RiskScoreMsg> {
+abstract class BaseRiskScoreMsg implements UserMsg, Identifiable, Comparable<RiskScoreMsg> {
 
   public static RiskScoreMsg of(RiskScore score, ActorRef<UserMsg> replyTo, String id) {
     return RiskScoreMsg.builder().score(score).replyTo(replyTo).id(id).build();
