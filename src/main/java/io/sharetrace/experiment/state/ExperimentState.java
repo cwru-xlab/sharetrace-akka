@@ -177,8 +177,8 @@ public final class ExperimentState implements Runnable, Identifiable {
       mdc = new Object2ObjectOpenHashMap<>();
     }
 
-    private static <B> Map<Setter, Function<? super B, B>> newSetters() {
-      Map<Setter, Function<? super B, B>> setters = new EnumMap<>(Setter.class);
+    private static Map<Setter, Function<? super Builder, Builder>> newSetters() {
+      Map<Setter, Function<? super Builder, Builder>> setters = new EnumMap<>(Setter.class);
       for (Setter setter : Setter.values()) {
         setters.put(setter, Function.identity());
       }
