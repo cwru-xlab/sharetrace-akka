@@ -10,7 +10,6 @@ import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAmount;
 import java.util.Comparator;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
@@ -102,7 +101,7 @@ public final class IntervalCache<T extends Comparable<T>> {
     return getLong(clock.instant());
   }
 
-  private Predicate<Entry<Long, ?>> isExpired() {
+  private Predicate<Map.Entry<Long, ?>> isExpired() {
     return entry -> entry.getKey() < rangeStart;
   }
 
@@ -137,11 +136,11 @@ public final class IntervalCache<T extends Comparable<T>> {
     refresh();
     return cache.entrySet().stream()
         .filter(isNotAfter(temporal))
-        .map(Entry::getValue)
+        .map(Map.Entry::getValue)
         .max(Comparator.naturalOrder());
   }
 
-  private Predicate<Entry<Long, ?>> isNotAfter(Temporal temporal) {
+  private Predicate<Map.Entry<Long, ?>> isNotAfter(Temporal temporal) {
     long key = floorKey(getLong(temporal));
     return entry -> entry.getKey() < key;
   }

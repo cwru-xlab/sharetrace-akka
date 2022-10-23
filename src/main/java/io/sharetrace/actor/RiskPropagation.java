@@ -35,7 +35,6 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import java.time.Clock;
 import java.util.BitSet;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.function.Supplier;
 import org.immutables.builder.Builder;
@@ -179,7 +178,7 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
 
   private void sendSymptomScores(Map<Integer, ActorRef<UserMsg>> users) {
     // Assumes at-least-once message delivery to the user actors.
-    for (Entry<Integer, ActorRef<UserMsg>> entry : users.entrySet()) {
+    for (Map.Entry<Integer, ActorRef<UserMsg>> entry : users.entrySet()) {
       int name = entry.getKey();
       ActorRef<UserMsg> user = entry.getValue();
       RiskScore symptomScore = scoreFactory.riskScore(name);
