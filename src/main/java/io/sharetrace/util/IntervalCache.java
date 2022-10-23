@@ -33,12 +33,11 @@ import java.util.function.Predicate;
  *
  * @param <T> The type of the cached values.
  */
-public final class IntervalCache<T> {
+public final class IntervalCache<T extends Comparable<T>> {
 
   private static final String TEMPORAL = "temporal";
   private final Map<Long, T> cache;
   private final BinaryOperator<T> mergeStrategy;
-  private final Comparator<T> comparator;
   private final Clock clock;
   private final long interval;
   private final long lookBack;
@@ -51,7 +50,6 @@ public final class IntervalCache<T> {
   private IntervalCache(CacheParams<T> params) {
     cache = new Long2ObjectOpenHashMap<>();
     mergeStrategy = params.mergeStrategy();
-    comparator = params.comparator();
     clock = params.clock();
     interval = getLong(params.interval());
     lookBack = interval * (params.numIntervals() - params.numLookAhead());
@@ -68,7 +66,7 @@ public final class IntervalCache<T> {
     return temporal.getLong(ChronoField.INSTANT_SECONDS);
   }
 
-  public static <T> IntervalCache<T> create(CacheParams<T> params) {
+  public static <T extends Comparable<T>> IntervalCache<T> create(CacheParams<T> params) {
     return new IntervalCache<>(params);
   }
 
@@ -141,7 +139,7 @@ public final class IntervalCache<T> {
     return cache.entrySet().stream()
         .filter(isNotAfter(temporal))
         .map(Entry::getValue)
-        .max(comparator);
+        .max(Comparator.naturalOrder());
   }
 
   private long floorKey(long temporal) {

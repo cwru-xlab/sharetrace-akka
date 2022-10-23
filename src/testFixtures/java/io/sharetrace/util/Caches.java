@@ -23,7 +23,6 @@ public final class Caches {
             .numIntervals(1)
             .refreshPeriod(Duration.ofMinutes(1L))
             .numLookAhead(0)
-            .comparator(Integer::compare)
             .mergeStrategy(Integer::max)
             .build());
   }

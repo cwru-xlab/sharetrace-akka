@@ -3,7 +3,6 @@ package io.sharetrace.util;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.time.Clock;
 import java.time.Duration;
-import java.util.Comparator;
 import java.util.function.BinaryOperator;
 import org.immutables.value.Value;
 
@@ -16,9 +15,6 @@ abstract class BaseCacheParams<T> {
 
   @JsonIgnore
   public abstract Clock clock();
-
-  @JsonIgnore
-  public abstract Comparator<T> comparator();
 
   @Value.Check
   protected void checkFields() {

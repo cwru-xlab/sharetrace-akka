@@ -149,7 +149,6 @@ public final class Defaults {
         .refreshPeriod(Duration.ofHours(1L))
         .mergeStrategy(Defaults::cacheMerge)
         .clock(CLOCK)
-        .comparator(RiskScoreMsg::compareTo)
         .build();
   }
 
