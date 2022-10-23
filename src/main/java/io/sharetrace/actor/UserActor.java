@@ -216,7 +216,8 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
 
   private RiskScoreMsg updateCurrent(RiskScoreMsg msg) {
     RiskScoreMsg previous = current;
-    transmitted = msgUtil.transmitted(current = msg);
+    current = msg;
+    transmitted = msgUtil.transmitted(current);
     return previous;
   }
 

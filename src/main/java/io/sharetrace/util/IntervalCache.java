@@ -94,9 +94,8 @@ public final class IntervalCache<T extends Comparable<T>> {
     }
   }
 
-  private Predicate<Entry<Long, ?>> isNotAfter(Temporal temporal) {
-    long key = floorKey(getLong(temporal));
-    return entry -> entry.getKey() < key;
+  private long floorKey(long temporal) {
+    return rangeStart + interval * Math.floorDiv(temporal - rangeStart, interval);
   }
 
   private long getTime() {
@@ -142,7 +141,8 @@ public final class IntervalCache<T extends Comparable<T>> {
         .max(Comparator.naturalOrder());
   }
 
-  private long floorKey(long temporal) {
-    return rangeStart + interval * Math.floorDiv(temporal - rangeStart, interval);
+  private Predicate<Entry<Long, ?>> isNotAfter(Temporal temporal) {
+    long key = floorKey(getLong(temporal));
+    return entry -> entry.getKey() < key;
   }
 }
