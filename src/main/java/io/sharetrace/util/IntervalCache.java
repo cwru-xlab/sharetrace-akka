@@ -14,6 +14,7 @@ import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
 import java.util.function.Predicate;
+import org.apache.commons.math3.util.FastMath;
 
 /**
  * A cache that lazily maintains a finite number of contiguous, half-closed (start-inclusive) time
@@ -78,12 +79,12 @@ public final class IntervalCache<T extends Comparable<T>> {
    */
   public Optional<T> get(Temporal temporal) {
     refresh();
-    long key = floorKey(getLong(temporal));
+    long key = floorKey(temporal);
     return Optional.ofNullable(cache.get(key));
   }
 
   private void refresh() {
-    long now = getTime();
+    long now = getLong(clock.instant());
     if (now - lastRefresh > refreshPeriod) {
       rangeStart = now - lookBack;
       long rangeEnd = now + lookAhead;
@@ -94,11 +95,11 @@ public final class IntervalCache<T extends Comparable<T>> {
   }
 
   private long floorKey(long temporal) {
-    return rangeStart + interval * Math.floorDiv(temporal - rangeStart, interval);
+    return rangeStart + interval * FastMath.floorDiv(temporal - rangeStart, interval);
   }
 
-  private long getTime() {
-    return getLong(clock.instant());
+  private long floorKey(Temporal temporal) {
+    return floorKey(getLong(temporal));
   }
 
   private Predicate<Map.Entry<Long, ?>> isExpired() {
@@ -116,9 +117,7 @@ public final class IntervalCache<T extends Comparable<T>> {
   public void put(Temporal temporal, T value) {
     refresh();
     long key = checkedFloorKey(temporal);
-    T oldValue = cache.get(key);
-    T newValue = (oldValue == null) ? value : mergeStrategy.apply(oldValue, value);
-    cache.put(key, newValue);
+    cache.merge(key, value, mergeStrategy);
   }
 
   private long checkedFloorKey(Temporal temporal) {
@@ -141,7 +140,7 @@ public final class IntervalCache<T extends Comparable<T>> {
   }
 
   private Predicate<Map.Entry<Long, ?>> isNotAfter(Temporal temporal) {
-    long key = floorKey(getLong(temporal));
+    long key = floorKey(temporal);
     return entry -> entry.getKey() < key;
   }
 }
