@@ -94,16 +94,16 @@ public final class IntervalCache<T extends Comparable<T>> {
     }
   }
 
-  private long floorKey(long temporal) {
-    return rangeStart + interval * FastMath.floorDiv(temporal - rangeStart, interval);
-  }
-
   private long floorKey(Temporal temporal) {
     return floorKey(getLong(temporal));
   }
 
   private Predicate<Map.Entry<Long, ?>> isExpired() {
     return entry -> entry.getKey() < rangeStart;
+  }
+
+  private long floorKey(long temporal) {
+    return rangeStart + interval * FastMath.floorDiv(temporal - rangeStart, interval);
   }
 
   /**
