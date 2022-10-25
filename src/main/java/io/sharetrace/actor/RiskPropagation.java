@@ -221,24 +221,24 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
   }
 
   private CreateUsersRuntime createRuntime() {
-    return CreateUsersRuntime.of(timer.milli(CreateUsersRuntime.class));
+    return CreateUsersRuntime.of(timer.millis(CreateUsersRuntime.class));
   }
 
   private SendScoresRuntime scoresRuntime() {
-    return SendScoresRuntime.of(timer.milli(SendScoresRuntime.class));
+    return SendScoresRuntime.of(timer.millis(SendScoresRuntime.class));
   }
 
   private SendContactsRuntime contactsRuntime() {
-    return SendContactsRuntime.of(timer.milli(SendContactsRuntime.class));
+    return SendContactsRuntime.of(timer.millis(SendContactsRuntime.class));
   }
 
   private RiskPropRuntime riskPropRuntime() {
-    return RiskPropRuntime.of(timer.milli(RiskPropRuntime.class));
+    return RiskPropRuntime.of(timer.millis(RiskPropRuntime.class));
   }
 
   private MsgPassingRuntime msgPassingRuntime() {
     long total = timer.nanos(RiskPropRuntime.class);
     long exclude = timer.nanos(SendScoresRuntime.class) + timer.nanos(CreateUsersRuntime.class);
-    return MsgPassingRuntime.of(Timer.milli(total - exclude));
+    return MsgPassingRuntime.of(Timer.millis(total - exclude));
   }
 }
