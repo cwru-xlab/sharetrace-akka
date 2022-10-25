@@ -13,6 +13,9 @@ public final class Logging {
   public static final String METRICS_LOGGER_NAME = "MetricsLogger";
   public static final String SETTINGS_LOGGER_NAME = "SettingsLogger";
 
+  private static final String GRAPHS_PATH = "graphs.log.dir";
+  private static final String STATE_ID = "sid";
+
   private Logging() {}
 
   public static Logger metricsLogger(Set<Class<? extends Loggable>> loggable) {
@@ -30,10 +33,10 @@ public final class Logging {
 
   public static Path graphsPath() {
     PropertyContainer properties = (PropertyContainer) LoggerFactory.getILoggerFactory();
-    return Path.of(properties.getProperty("graphs.log.dir"));
+    return Path.of(properties.getProperty(GRAPHS_PATH));
   }
 
   public static Map<String, String> mdc(String stateId) {
-    return Map.of("sid", stateId);
+    return Map.of(STATE_ID, stateId);
   }
 }

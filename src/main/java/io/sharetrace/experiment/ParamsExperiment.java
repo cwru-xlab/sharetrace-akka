@@ -16,6 +16,9 @@ import java.util.Set;
 
 public final class ParamsExperiment extends Experiment<ParamsExperimentConfig> {
 
+  private static final String GRAPH_TYPE = "graphType";
+  private static final String NUM_NODES = "numNodes";
+
   private static final ParamsExperiment INSTANCE = new ParamsExperiment();
   private static final ExperimentContext DEFAULT_CTX = newDefaultContext();
 
@@ -65,8 +68,8 @@ public final class ParamsExperiment extends Experiment<ParamsExperimentConfig> {
 
   @Override
   public ExperimentState newDefaultState(ExperimentContext context, ParamsExperimentConfig config) {
-    GraphType graphType = getProperty(config.graphType(), "graphType");
-    int numNodes = getProperty(config.numNodes(), "numNodes");
+    GraphType graphType = getProperty(config.graphType(), GRAPH_TYPE);
+    int numNodes = getProperty(config.numNodes(), NUM_NODES);
     return ExperimentState.builder(context)
         .graphType(graphType)
         .dataset(ctx -> Defaults.sampledDataset(ctx, numNodes))

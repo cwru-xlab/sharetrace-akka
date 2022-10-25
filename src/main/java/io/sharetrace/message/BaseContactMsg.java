@@ -18,13 +18,15 @@ import org.immutables.value.Value;
 @Value.Immutable
 abstract class BaseContactMsg implements UserMsg {
 
+  private static final String CONTACT_TIME = "contactTime";
+
   /** Returns the actor reference of the contacted user. */
   @Value.Parameter
   public abstract ActorRef<UserMsg> contact();
 
   @Value.Check
   protected void check() {
-    Checks.isAtLeast(contactTime(), Instant.EPOCH, "contactTime");
+    Checks.isAtLeast(contactTime(), Contact.MIN_TIME, CONTACT_TIME);
   }
 
   /** Returns the time at which the two users came in contact. */

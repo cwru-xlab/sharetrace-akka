@@ -20,16 +20,28 @@ abstract class BaseUserParams {
   public static final float MAX_TRANS_RATE = 1f;
   public static final float MIN_SEND_COEFF = 0f;
   public static final float MIN_TOLERANCE = 0f;
+  public static final Duration MIN_TIME_BUFFER = Duration.ZERO;
+  public static final Duration MIN_SCORE_TTL = Duration.ZERO;
+  public static final Duration MIN_CONTACT_TTL = Duration.ZERO;
+  public static final Duration MIN_IDLE_TIMEOUT = Duration.ZERO;
+
+  private static final String TRANS_RATE = "transRate";
+  private static final String SEND_COEFF = "sendCoeff";
+  private static final String TIME_BUFFER = "timeBuffer";
+  private static final String SCORE_TTL = "scoreTtl";
+  private static final String CONTACT_TTL = "contactTtl";
+  private static final String TOLERANCE = "tolerance";
+  private static final String IDLE_TIMEOUT = "idleTimeout";
 
   @Value.Check
   protected void check() {
-    Checks.inOpen(transRate(), MIN_TRANS_RATE, MAX_TRANS_RATE, "transRate");
-    Checks.isAtLeast(sendCoeff(), MIN_SEND_COEFF, "sendCoeff");
-    Checks.isAtLeast(timeBuffer(), Duration.ZERO, "timeBuffer");
-    Checks.isGreaterThan(scoreTtl(), Duration.ZERO, "scoreTtl");
-    Checks.isGreaterThan(contactTtl(), Duration.ZERO, "contactTtl");
-    Checks.isAtLeast(tolerance(), MIN_TOLERANCE, "tolerance");
-    Checks.isGreaterThan(idleTimeout(), Duration.ZERO, "idleTimeout");
+    Checks.inOpen(transRate(), MIN_TRANS_RATE, MAX_TRANS_RATE, TRANS_RATE);
+    Checks.isAtLeast(sendCoeff(), MIN_SEND_COEFF, SEND_COEFF);
+    Checks.isAtLeast(timeBuffer(), MIN_TIME_BUFFER, TIME_BUFFER);
+    Checks.isGreaterThan(scoreTtl(), MIN_SCORE_TTL, SCORE_TTL);
+    Checks.isGreaterThan(contactTtl(), MIN_CONTACT_TTL, CONTACT_TTL);
+    Checks.isAtLeast(tolerance(), MIN_TOLERANCE, TOLERANCE);
+    Checks.isGreaterThan(idleTimeout(), MIN_IDLE_TIMEOUT, IDLE_TIMEOUT);
   }
 
   /**
