@@ -1,5 +1,6 @@
 package io.sharetrace.graph;
 
+import com.google.common.collect.Range;
 import io.sharetrace.util.Checks;
 import java.time.Instant;
 import org.immutables.value.Value;
@@ -9,12 +10,14 @@ abstract class BaseContact {
 
   public static final Instant MIN_TIME = Instant.EPOCH;
 
+  private static final Range<Instant> TIME_RANGE = Range.atLeast(MIN_TIME);
+
   private static final String TIME = "time";
   private static final String USER_MSG = "Users must be distinct";
 
   @Value.Check
   protected void check() {
-    Checks.isAtLeast(time(), MIN_TIME, TIME);
+    Checks.inRange(time(), TIME_RANGE, TIME);
     Checks.isTrue(user1() != user2(), USER_MSG);
   }
 

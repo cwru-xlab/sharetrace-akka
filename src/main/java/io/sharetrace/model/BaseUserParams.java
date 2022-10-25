@@ -1,5 +1,6 @@
 package io.sharetrace.model;
 
+import com.google.common.collect.Range;
 import io.sharetrace.actor.RiskPropagation;
 import io.sharetrace.actor.UserActor;
 import io.sharetrace.message.RiskScoreMsg;
@@ -25,6 +26,14 @@ abstract class BaseUserParams {
   public static final Duration MIN_CONTACT_TTL = Duration.ZERO;
   public static final Duration MIN_IDLE_TIMEOUT = Duration.ZERO;
 
+  private static final Range<Float> TRANS_RATE_RANGE = Range.open(MIN_TRANS_RATE, MAX_TRANS_RATE);
+  private static final Range<Float> SEND_COEFF_RANGE = Range.atLeast(MIN_SEND_COEFF);
+  private static final Range<Duration> TIME_BUFFER_RANGE = Range.atLeast(MIN_TIME_BUFFER);
+  private static final Range<Duration> SCORE_TTL_RANGE = Range.greaterThan(MIN_SCORE_TTL);
+  private static final Range<Duration> CONTACT_TTL_RANGE = Range.greaterThan(MIN_CONTACT_TTL);
+  private static final Range<Float> TOLERANCE_RANGE = Range.atLeast(MIN_TOLERANCE);
+  private static final Range<Duration> IDLE_TIMEOUT_RANGE = Range.greaterThan(MIN_IDLE_TIMEOUT);
+
   private static final String TRANS_RATE = "transRate";
   private static final String SEND_COEFF = "sendCoeff";
   private static final String TIME_BUFFER = "timeBuffer";
@@ -35,13 +44,13 @@ abstract class BaseUserParams {
 
   @Value.Check
   protected void check() {
-    Checks.inOpen(transRate(), MIN_TRANS_RATE, MAX_TRANS_RATE, TRANS_RATE);
-    Checks.isAtLeast(sendCoeff(), MIN_SEND_COEFF, SEND_COEFF);
-    Checks.isAtLeast(timeBuffer(), MIN_TIME_BUFFER, TIME_BUFFER);
-    Checks.isGreaterThan(scoreTtl(), MIN_SCORE_TTL, SCORE_TTL);
-    Checks.isGreaterThan(contactTtl(), MIN_CONTACT_TTL, CONTACT_TTL);
-    Checks.isAtLeast(tolerance(), MIN_TOLERANCE, TOLERANCE);
-    Checks.isGreaterThan(idleTimeout(), MIN_IDLE_TIMEOUT, IDLE_TIMEOUT);
+    Checks.inRange(transRate(), TRANS_RATE_RANGE, TRANS_RATE);
+    Checks.inRange(sendCoeff(), SEND_COEFF_RANGE, SEND_COEFF);
+    Checks.inRange(timeBuffer(), TIME_BUFFER_RANGE, TIME_BUFFER);
+    Checks.inRange(scoreTtl(), SCORE_TTL_RANGE, SCORE_TTL);
+    Checks.inRange(contactTtl(), CONTACT_TTL_RANGE, CONTACT_TTL);
+    Checks.inRange(tolerance(), TOLERANCE_RANGE, TOLERANCE);
+    Checks.inRange(idleTimeout(), IDLE_TIMEOUT_RANGE, IDLE_TIMEOUT);
   }
 
   /**

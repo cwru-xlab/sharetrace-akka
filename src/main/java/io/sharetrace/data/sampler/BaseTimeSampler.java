@@ -1,5 +1,6 @@
 package io.sharetrace.data.sampler;
 
+import com.google.common.collect.Range;
 import io.sharetrace.model.TimeRef;
 import io.sharetrace.util.Checks;
 import java.time.Duration;
@@ -10,6 +11,12 @@ import org.immutables.value.Value;
 
 @Value.Immutable
 abstract class BaseTimeSampler extends BaseSampler<Instant> implements TimeRef {
+
+  public static final Duration MIN_LOOK_BACK = Duration.ZERO;
+
+  private static final Range<Duration> MAX_LOOK_BACK_RANGE = Range.greaterThan(MIN_LOOK_BACK);
+
+  private static final String MAX_LOOK_BACK = "maxLookBack";
 
   @Override
   public Instant sample() {
@@ -24,7 +31,7 @@ abstract class BaseTimeSampler extends BaseSampler<Instant> implements TimeRef {
 
   @Value.Check
   protected BaseTimeSampler check() {
-    Checks.isGreaterThan(maxLookBack(), Duration.ZERO, "maxLookBack");
+    Checks.inRange(maxLookBack(), MAX_LOOK_BACK_RANGE, MAX_LOOK_BACK);
     return (refTime().getNano() != 0)
         ? TimeSampler.builder()
             .refTime(refTime().truncatedTo(ChronoUnit.SECONDS))

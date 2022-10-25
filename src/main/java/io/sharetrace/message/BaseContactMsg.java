@@ -1,6 +1,7 @@
 package io.sharetrace.message;
 
 import akka.actor.typed.ActorRef;
+import com.google.common.collect.Range;
 import io.sharetrace.actor.RiskPropagation;
 import io.sharetrace.actor.UserActor;
 import io.sharetrace.graph.Contact;
@@ -18,6 +19,8 @@ import org.immutables.value.Value;
 @Value.Immutable
 abstract class BaseContactMsg implements UserMsg {
 
+  private static final Range<Instant> TIME_RANGE = Range.atLeast(Contact.MIN_TIME);
+
   private static final String CONTACT_TIME = "contactTime";
 
   /** Returns the actor reference of the contacted user. */
@@ -26,7 +29,7 @@ abstract class BaseContactMsg implements UserMsg {
 
   @Value.Check
   protected void check() {
-    Checks.isAtLeast(contactTime(), Contact.MIN_TIME, CONTACT_TIME);
+    Checks.inRange(contactTime(), TIME_RANGE, CONTACT_TIME);
   }
 
   /** Returns the time at which the two users came in contact. */

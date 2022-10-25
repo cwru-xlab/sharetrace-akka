@@ -1,6 +1,7 @@
 package io.sharetrace.model;
 
 import com.google.common.collect.ComparisonChain;
+import com.google.common.collect.Range;
 import io.sharetrace.actor.RiskPropagation;
 import io.sharetrace.actor.UserActor;
 import io.sharetrace.message.RiskScoreMsg;
@@ -23,11 +24,13 @@ abstract class BaseRiskScore implements Comparable<RiskScore> {
 
   public static final float MIN_VALUE = 0f;
   public static final float MAX_VALUE = 1f;
-  public static final float VALUE_RANGE = MAX_VALUE - MIN_VALUE;
+  public static final float RANGE = MAX_VALUE - MIN_VALUE;
   public static final Instant MIN_TIME = Instant.EPOCH;
 
   private static final String TIME = "time";
   private static final String VALUE = "value";
+  private static final Range<Float> VALUE_RANGE = Range.closed(MIN_VALUE, MAX_VALUE);
+  private static final Range<Instant> TIME_RANGE = Range.atLeast(MIN_TIME);
 
   public static final RiskScore MIN = RiskScore.of(MIN_VALUE, MIN_TIME);
 
@@ -49,7 +52,7 @@ abstract class BaseRiskScore implements Comparable<RiskScore> {
 
   @Value.Check
   protected void check() {
-    Checks.inClosed(value(), MIN_VALUE, MAX_VALUE, VALUE);
-    Checks.isAtLeast(time(), MIN_TIME, TIME);
+    Checks.inRange(value(), VALUE_RANGE, VALUE);
+    Checks.inRange(time(), TIME_RANGE, TIME);
   }
 }
