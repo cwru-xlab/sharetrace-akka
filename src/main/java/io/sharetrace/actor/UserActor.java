@@ -22,6 +22,7 @@ import io.sharetrace.model.UserParams;
 import io.sharetrace.util.IntervalCache;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import java.time.Clock;
+import java.util.Comparator;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -178,7 +179,7 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
     message. While this timer is based on the minimum contact TTL, the delay to refresh contacts
     may be such that all contacts expire. Thus, a new refresh timer may not always be started. */
     contacts.values().stream()
-        .min(ContactActor::compareTo)
+        .min(Comparator.naturalOrder())
         .map(ContactActor::ttl)
         .ifPresent(minTtl -> timers.startSingleTimer(ContactsRefreshMsg.INSTANCE, minTtl));
   }
