@@ -7,7 +7,6 @@ import java.util.Map;
 public final class Indexer<T> {
 
   private static final String VALUE = "value";
-
   private final Map<T, Integer> index;
   private int value;
 

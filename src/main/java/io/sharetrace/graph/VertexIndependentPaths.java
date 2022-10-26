@@ -81,13 +81,6 @@ public final class VertexIndependentPaths {
     return numFound;
   }
 
-  private static List<? extends GraphPath<Integer, ?>> adjacentKShortestPaths(
-      Graph<Integer, ?> graph, int source, int target) {
-    // Suurballe provides a simpler implementation since it ensures no loops.
-    // Suurballe copies internally, so we must pass in the graph on every call.
-    return new SuurballeKDisjointShortestPaths<>(graph).getPaths(source, target, ADJACENT_PATHS);
-  }
-
   private int nonadjacentPathCount(int source, int target, int maxFind) {
     Graph<Integer, ?> graph = Graphs.copyGraph(this.graph);
     ShortestPathAlgorithm<Integer, ?> shortestPaths = newShortestPaths(graph);
@@ -99,6 +92,13 @@ public final class VertexIndependentPaths {
       path = shortestPaths.getPath(source, target);
     }
     return numFound;
+  }
+
+  private static List<? extends GraphPath<Integer, ?>> adjacentKShortestPaths(
+      Graph<Integer, ?> graph, int source, int target) {
+    // Suurballe provides a simpler implementation since it ensures no loops.
+    // Suurballe copies internally, so we must pass in the graph on every call.
+    return new SuurballeKDisjointShortestPaths<>(graph).getPaths(source, target, ADJACENT_PATHS);
   }
 
   private static <V> List<V> withoutEndpoints(GraphPath<V, ?> path) {

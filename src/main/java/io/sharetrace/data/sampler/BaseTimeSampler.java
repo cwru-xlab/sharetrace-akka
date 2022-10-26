@@ -14,8 +14,8 @@ abstract class BaseTimeSampler extends BaseSampler<Instant> implements TimeRef {
 
   public static final Duration MIN_LOOK_BACK = Duration.ZERO;
 
-  private static final Range<Duration> MAX_LOOK_BACK_RANGE = Range.greaterThan(MIN_LOOK_BACK);
   private static final String MAX_LOOK_BACK = "maxLookBack";
+  private static final Range<Duration> MAX_LOOK_BACK_RANGE = Range.greaterThan(MIN_LOOK_BACK);
 
   @Override
   public Instant sample() {

@@ -10,10 +10,9 @@ abstract class BaseContact {
 
   public static final Instant MIN_TIME = Instant.EPOCH;
 
-  private static final Range<Instant> TIME_RANGE = Range.atLeast(MIN_TIME);
-
   private static final String TIME = "time";
   private static final String USER_MSG = "Users must be distinct";
+  private static final Range<Instant> TIME_RANGE = Range.atLeast(MIN_TIME);
 
   @Value.Check
   protected void check() {

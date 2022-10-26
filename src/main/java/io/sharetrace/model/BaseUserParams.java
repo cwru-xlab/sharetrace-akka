@@ -26,14 +26,6 @@ abstract class BaseUserParams {
   public static final Duration MIN_CONTACT_TTL = Duration.ZERO;
   public static final Duration MIN_IDLE_TIMEOUT = Duration.ZERO;
 
-  private static final Range<Float> TRANS_RATE_RANGE = Range.open(MIN_TRANS_RATE, MAX_TRANS_RATE);
-  private static final Range<Float> SEND_COEFF_RANGE = Range.atLeast(MIN_SEND_COEFF);
-  private static final Range<Duration> TIME_BUFFER_RANGE = Range.atLeast(MIN_TIME_BUFFER);
-  private static final Range<Duration> SCORE_TTL_RANGE = Range.greaterThan(MIN_SCORE_TTL);
-  private static final Range<Duration> CONTACT_TTL_RANGE = Range.greaterThan(MIN_CONTACT_TTL);
-  private static final Range<Float> TOLERANCE_RANGE = Range.atLeast(MIN_TOLERANCE);
-  private static final Range<Duration> IDLE_TIMEOUT_RANGE = Range.greaterThan(MIN_IDLE_TIMEOUT);
-
   private static final String TRANS_RATE = "transRate";
   private static final String SEND_COEFF = "sendCoeff";
   private static final String TIME_BUFFER = "timeBuffer";
@@ -41,6 +33,13 @@ abstract class BaseUserParams {
   private static final String CONTACT_TTL = "contactTtl";
   private static final String TOLERANCE = "tolerance";
   private static final String IDLE_TIMEOUT = "idleTimeout";
+  private static final Range<Float> TRANS_RATE_RANGE = Range.open(MIN_TRANS_RATE, MAX_TRANS_RATE);
+  private static final Range<Float> SEND_COEFF_RANGE = Range.atLeast(MIN_SEND_COEFF);
+  private static final Range<Duration> TIME_BUFFER_RANGE = Range.atLeast(MIN_TIME_BUFFER);
+  private static final Range<Duration> SCORE_TTL_RANGE = Range.greaterThan(MIN_SCORE_TTL);
+  private static final Range<Duration> CONTACT_TTL_RANGE = Range.greaterThan(MIN_CONTACT_TTL);
+  private static final Range<Float> TOLERANCE_RANGE = Range.atLeast(MIN_TOLERANCE);
+  private static final Range<Duration> IDLE_TIMEOUT_RANGE = Range.greaterThan(MIN_IDLE_TIMEOUT);
 
   @Value.Check
   protected void check() {

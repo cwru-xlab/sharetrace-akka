@@ -19,9 +19,8 @@ import org.immutables.value.Value;
 @Value.Immutable
 abstract class BaseContactMsg implements UserMsg {
 
-  private static final Range<Instant> TIME_RANGE = Range.atLeast(Contact.MIN_TIME);
-
   private static final String CONTACT_TIME = "contactTime";
+  private static final Range<Instant> TIME_RANGE = Range.atLeast(Contact.MIN_TIME);
 
   /** Returns the actor reference of the contacted user. */
   @Value.Parameter

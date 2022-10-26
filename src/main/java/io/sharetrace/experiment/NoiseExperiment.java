@@ -19,7 +19,6 @@ public final class NoiseExperiment extends Experiment<NoiseExperimentConfig> {
 
   private static final String DATASET_FACTORY = "datasetFactory";
   private static final String GRAPH_TYPE = "graphType";
-
   private static final NoiseExperiment INSTANCE = new NoiseExperiment();
   private static final ExperimentContext DEFAULT_CTX = newDefaultContext();
 

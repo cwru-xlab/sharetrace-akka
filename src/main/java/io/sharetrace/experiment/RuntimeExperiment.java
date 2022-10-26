@@ -19,9 +19,8 @@ import io.sharetrace.logging.setting.ExperimentSettings;
 public final class RuntimeExperiment extends Experiment<RuntimeExperimentConfig> {
 
   private static final String GRAPH_TYPE = "graphType";
-
-  private static final RuntimeExperiment INSTANCE = new RuntimeExperiment();
   private static final int IGNORED = 50;
+  private static final RuntimeExperiment INSTANCE = new RuntimeExperiment();
   private static final ExperimentContext DEFAULT_CTX = newDefaultContext();
 
   private RuntimeExperiment() {}

@@ -12,7 +12,6 @@ public final class FileExperiment extends Experiment<FileExperimentConfig> {
 
   private static final String GRAPH_TYPE = "graphType";
   private static final String PATH = "path";
-
   private static final FileExperiment INSTANCE = new FileExperiment();
 
   private FileExperiment() {}

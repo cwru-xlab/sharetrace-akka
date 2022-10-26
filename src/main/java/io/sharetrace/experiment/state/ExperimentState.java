@@ -76,15 +76,15 @@ public final class ExperimentState implements Runnable, Identifiable {
     return Builder.from(this);
   }
 
-  @Override
-  public String id() {
-    return id;
-  }
-
   private void logMetricsAndSettings() {
     mdc.forEach(MDC::put);
     dataset.contactNetwork().logMetrics();
     logger.log(LoggableSetting.KEY, TypedSupplier.of(ExperimentSettings.class, this::settings));
+  }
+
+  @Override
+  public String id() {
+    return id;
   }
 
   private ExperimentSettings settings() {
@@ -103,6 +103,18 @@ public final class ExperimentState implements Runnable, Identifiable {
     return IntervalCache.create(cacheParams);
   }
 
+  private Runnable newRiskPropagation() {
+    return RiskPropagationBuilder.create()
+        .addAllLoggable(ctx.loggable())
+        .putAllMdc(mdc)
+        .contactNetwork(dataset.contactNetwork())
+        .userParams(userParams)
+        .clock(ctx.clock())
+        .scoreFactory(dataset.scoreFactory())
+        .cacheFactory(this::newCache)
+        .build();
+  }
+
   public long seed() {
     return ctx.seed();
   }
@@ -117,18 +129,6 @@ public final class ExperimentState implements Runnable, Identifiable {
 
   public Dataset dataset() {
     return dataset;
-  }
-
-  private Runnable newRiskPropagation() {
-    return RiskPropagationBuilder.create()
-        .addAllLoggable(ctx.loggable())
-        .putAllMdc(mdc)
-        .contactNetwork(dataset.contactNetwork())
-        .userParams(userParams)
-        .clock(ctx.clock())
-        .scoreFactory(dataset.scoreFactory())
-        .cacheFactory(this::newCache)
-        .build();
   }
 
   private enum Setter {

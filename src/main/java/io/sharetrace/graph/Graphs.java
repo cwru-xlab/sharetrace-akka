@@ -21,13 +21,13 @@ public final class Graphs {
     return copyGraph(GraphTests.requireDirected(directed), newDirectedGraph());
   }
 
+  public static Graph<Integer, DefaultEdge> copyUndirected(Graph<Integer, DefaultEdge> undirected) {
+    return copyGraph(GraphTests.requireUndirected(undirected), newUndirectedGraph());
+  }
+
   private static <V, E> Graph<V, E> copyGraph(Graph<V, E> src, Graph<V, E> dst) {
     org.jgrapht.Graphs.addGraph(dst, src);
     return dst;
-  }
-
-  public static Graph<Integer, DefaultEdge> copyUndirected(Graph<Integer, DefaultEdge> undirected) {
-    return copyGraph(GraphTests.requireUndirected(undirected), newUndirectedGraph());
   }
 
   public static Graph<Integer, DefaultEdge> newDirectedGraph() {

@@ -30,15 +30,6 @@ abstract class AbstractContactNetwork implements ContactNetwork, LoggableRef {
 
   protected AbstractContactNetwork() {}
 
-  private Contact contactFrom(DefaultEdge edge) {
-    int user1 = graph().getEdgeSource(edge);
-    int user2 = graph().getEdgeTarget(edge);
-    Instant contactTime = contactTimeFactory().contactTime(user1, user2);
-    return Contact.builder().user1(user1).user2(user2).time(contactTime).build();
-  }
-
-  protected abstract ContactTimeFactory contactTimeFactory();
-
   @Override
   public Set<Integer> users() {
     return Collections.unmodifiableSet(graph().vertexSet());
@@ -73,6 +64,10 @@ abstract class AbstractContactNetwork implements ContactNetwork, LoggableRef {
     return TypedSupplier.of(GraphTopology.class, () -> GraphTopology.of(id()));
   }
 
+  private void exportGraph() {
+    Exporter.export(graph, id());
+  }
+
   @Value.Derived
   public String id() {
     return Uid.ofIntString();
@@ -89,7 +84,12 @@ abstract class AbstractContactNetwork implements ContactNetwork, LoggableRef {
 
   protected abstract GraphGenerator<Integer, DefaultEdge, ?> graphGenerator();
 
-  private void exportGraph() {
-    Exporter.export(graph, id());
+  private Contact contactFrom(DefaultEdge edge) {
+    int user1 = graph().getEdgeSource(edge);
+    int user2 = graph().getEdgeTarget(edge);
+    Instant contactTime = contactTimeFactory().contactTime(user1, user2);
+    return Contact.builder().user1(user1).user2(user2).time(contactTime).build();
   }
+
+  protected abstract ContactTimeFactory contactTimeFactory();
 }

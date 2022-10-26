@@ -9,9 +9,8 @@ abstract class BaseRuntimeExperimentConfig extends ExperimentConfig {
 
   public static final int MIN_NETWORKS = 1;
 
-  private static final Range<Integer> NETWORKS_RANGE = Range.atLeast(MIN_NETWORKS);
-
   private static final String NUM_NETWORKS = "numNetworks";
+  private static final Range<Integer> NETWORKS_RANGE = Range.atLeast(MIN_NETWORKS);
 
   public abstract Iterable<Integer> numNodes();
 

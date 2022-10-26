@@ -16,14 +16,13 @@ abstract class BaseCacheParams<T> {
   public static final Duration MIN_INTERVAL = Duration.ZERO;
   public static final Duration MIN_REFRESH_PERIOD = Duration.ZERO;
 
-  private static final Range<Duration> INTERVAL_RANGE = Range.atLeast(MIN_INTERVAL);
-  private static final Range<Integer> INTERVALS_RANGE = Range.atLeast(MIN_INTERVALS);
-  private static final Range<Duration> REFRESH_PERIOD_RANGE = Range.atLeast(MIN_REFRESH_PERIOD);
-
   private static final String INTERVAL = "interval";
   private static final String NUM_INTERVALS = "numIntervals";
   private static final String NUM_LOOK_AHEAD = "numLookAhead";
   private static final String REFRESH_PERIOD = "refreshPeriod";
+  private static final Range<Duration> INTERVAL_RANGE = Range.atLeast(MIN_INTERVAL);
+  private static final Range<Integer> INTERVALS_RANGE = Range.atLeast(MIN_INTERVALS);
+  private static final Range<Duration> REFRESH_PERIOD_RANGE = Range.atLeast(MIN_REFRESH_PERIOD);
 
   @JsonIgnore
   public abstract BinaryOperator<T> mergeStrategy();

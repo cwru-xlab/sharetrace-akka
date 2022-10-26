@@ -15,9 +15,8 @@ abstract class BaseNoiseExperimentConfig extends ExperimentConfig {
 
   public static final int MIN_NETWORKS = 1;
 
-  private static final Range<Integer> NETWORKS_RANGE = Range.atLeast(MIN_NETWORKS);
-
   private static final String NUM_NETWORKS = "numNetworks";
+  private static final Range<Integer> NETWORKS_RANGE = Range.atLeast(MIN_NETWORKS);
 
   public abstract Optional<GraphType> graphType();
 

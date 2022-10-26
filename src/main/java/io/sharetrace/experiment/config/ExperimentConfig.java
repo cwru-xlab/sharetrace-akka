@@ -10,9 +10,8 @@ abstract class ExperimentConfig {
 
   public static final int MIN_ITERATIONS = 1;
 
-  private static final Range<Integer> ITERATIONS_RANGE = Range.atLeast(MIN_ITERATIONS);
-
   private static final String NUM_ITERATIONS = "numIterations";
+  private static final Range<Integer> ITERATIONS_RANGE = Range.atLeast(MIN_ITERATIONS);
 
   public abstract Optional<GraphType> graphType();
 
