@@ -13,6 +13,7 @@ import io.sharetrace.message.RiskScoreMsg;
 import io.sharetrace.model.Identifiable;
 import io.sharetrace.model.UserParams;
 import io.sharetrace.util.CacheParams;
+import io.sharetrace.util.Checks;
 import io.sharetrace.util.IntervalCache;
 import io.sharetrace.util.TypedSupplier;
 import io.sharetrace.util.Uid;
@@ -82,9 +83,16 @@ public final class ExperimentState implements Runnable, Identifiable {
     logger.log(LoggableSetting.KEY, TypedSupplier.of(ExperimentSettings.class, this::settings));
   }
 
-  @Override
-  public String id() {
-    return id;
+  private Runnable newRiskPropagation() {
+    return RiskPropagationBuilder.create()
+        .addAllLoggable(ctx.loggable())
+        .putAllMdc(mdc)
+        .contactNetwork(dataset.contactNetwork())
+        .userParams(userParams)
+        .clock(ctx.clock())
+        .scoreFactory(dataset.scoreFactory())
+        .cacheFactory(this::newCache)
+        .build();
   }
 
   private ExperimentSettings settings() {
@@ -103,16 +111,9 @@ public final class ExperimentState implements Runnable, Identifiable {
     return IntervalCache.create(cacheParams);
   }
 
-  private Runnable newRiskPropagation() {
-    return RiskPropagationBuilder.create()
-        .addAllLoggable(ctx.loggable())
-        .putAllMdc(mdc)
-        .contactNetwork(dataset.contactNetwork())
-        .userParams(userParams)
-        .clock(ctx.clock())
-        .scoreFactory(dataset.scoreFactory())
-        .cacheFactory(this::newCache)
-        .build();
+  @Override
+  public String id() {
+    return id;
   }
 
   public long seed() {
@@ -154,6 +155,7 @@ public final class ExperimentState implements Runnable, Identifiable {
           UserParamsContext,
           DatasetContext {
 
+    private static final String NOT_SET_MSG = "Not all attributes have been set: %s";
     private final ExperimentContext ctx;
     private final Logger logger;
     private final Map<Setter, Function<? super Builder, Builder>> setters;
@@ -322,7 +324,7 @@ public final class ExperimentState implements Runnable, Identifiable {
     public ExperimentState build() {
       setters.put(Setter.DISTRIBUTIONS, x -> setDistributions());
       setters.values().forEach(setter -> setter.apply(this));
-      ensureSet();
+      Checks.isTrue(setters.isEmpty(), NOT_SET_MSG, setters.keySet());
       return new ExperimentState(this);
     }
 
@@ -332,12 +334,6 @@ public final class ExperimentState implements Runnable, Identifiable {
       contactTimes = contactTimesFactory.distribution(ctx.seed());
       setters.remove(Setter.DISTRIBUTIONS);
       return this;
-    }
-
-    private void ensureSet() {
-      if (!setters.isEmpty()) {
-        throw new IllegalStateException("Not all attributes have been set: " + setters.keySet());
-      }
     }
 
     @Override
