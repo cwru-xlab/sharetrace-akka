@@ -17,6 +17,7 @@ abstract class BaseRuntimeExperimentConfig extends ExperimentConfig {
 
   @Value.Check
   protected void check() {
+    super.check();
     Checks.inRange(numNetworks(), NETWORKS_RANGE, NUM_NETWORKS);
   }
 
