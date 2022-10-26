@@ -15,14 +15,13 @@ abstract class BaseTimeSampler extends BaseSampler<Instant> implements TimeRef {
   public static final Duration MIN_LOOK_BACK = Duration.ZERO;
 
   private static final Range<Duration> MAX_LOOK_BACK_RANGE = Range.greaterThan(MIN_LOOK_BACK);
-
   private static final String MAX_LOOK_BACK = "maxLookBack";
 
   @Override
   public Instant sample() {
     float scale = normalizedSample(lookBacks());
-    long maxLookBack = maxLookBack().getSeconds();
-    return refTime().minusSeconds(Math.round(scale * maxLookBack));
+    long lookBack = Math.round(scale * maxLookBack().toNanos());
+    return refTime().minusNanos(lookBack).truncatedTo(ChronoUnit.SECONDS);
   }
 
   protected abstract RealDistribution lookBacks();
@@ -30,14 +29,7 @@ abstract class BaseTimeSampler extends BaseSampler<Instant> implements TimeRef {
   protected abstract Duration maxLookBack();
 
   @Value.Check
-  protected BaseTimeSampler check() {
+  protected void check() {
     Checks.inRange(maxLookBack(), MAX_LOOK_BACK_RANGE, MAX_LOOK_BACK);
-    return (refTime().getNano() != 0)
-        ? TimeSampler.builder()
-            .refTime(refTime().truncatedTo(ChronoUnit.SECONDS))
-            .lookBacks(lookBacks())
-            .maxLookBack(maxLookBack())
-            .build()
-        : this;
   }
 }
