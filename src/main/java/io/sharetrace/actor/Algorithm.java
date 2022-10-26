@@ -5,7 +5,6 @@ import akka.actor.typed.ActorSystem;
 import akka.actor.typed.Behavior;
 import akka.actor.typed.Props;
 import akka.actor.typed.Terminated;
-import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import io.sharetrace.message.AlgorithmMsg;
 import io.sharetrace.message.RunMsg;
@@ -29,7 +28,7 @@ public final class Algorithm implements Runnable {
 
   @Override
   public void run() {
-    waitUntilDone(ActorSystem.create(Behaviors.setup(this::newInstance), name));
+    waitUntilDone(ActorSystem.create(newInstance(), name));
   }
 
   private static void waitUntilDone(ActorSystem<Void> running) {
@@ -40,12 +39,15 @@ public final class Algorithm implements Runnable {
     }
   }
 
-  private Behavior<Void> newInstance(ActorContext<Void> ctx) {
-    ActorRef<AlgorithmMsg> instance = ctx.spawn(behavior, name, props);
-    ctx.watch(instance);
-    instance.tell(RunMsg.INSTANCE);
-    return Behaviors.receive(Void.class)
-        .onSignal(Terminated.class, x -> Behaviors.stopped())
-        .build();
+  private Behavior<Void> newInstance() {
+    return Behaviors.setup(
+        ctx -> {
+          ActorRef<AlgorithmMsg> instance = ctx.spawn(behavior, name, props);
+          ctx.watch(instance);
+          instance.tell(RunMsg.INSTANCE);
+          return Behaviors.receive(Void.class)
+              .onSignal(Terminated.class, x -> Behaviors.stopped())
+              .build();
+        });
   }
 }
