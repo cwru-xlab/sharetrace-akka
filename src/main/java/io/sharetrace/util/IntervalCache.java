@@ -35,7 +35,6 @@ import org.apache.commons.math3.util.FastMath;
  */
 public final class IntervalCache<T extends Comparable<T>> {
 
-  private static final String TEMPORAL = "temporal";
   private final Map<Long, T> cache;
   private final BinaryOperator<T> mergeStrategy;
   private final Clock clock;
@@ -121,7 +120,7 @@ public final class IntervalCache<T extends Comparable<T>> {
   }
 
   private long checkedFloorKey(Temporal temporal) {
-    return floorKey(Checks.inRange(getLong(temporal), range, TEMPORAL));
+    return floorKey(Checks.inRange(getLong(temporal), range, "temporal"));
   }
 
   /**

@@ -10,14 +10,13 @@ abstract class ExperimentConfig {
 
   public static final int MIN_ITERATIONS = 1;
 
-  private static final String NUM_ITERATIONS = "numIterations";
   private static final Range<Integer> ITERATIONS_RANGE = Range.atLeast(MIN_ITERATIONS);
 
   public abstract Optional<GraphType> graphType();
 
   @Value.Check
   protected void check() {
-    Checks.inRange(numIterations(), ITERATIONS_RANGE, NUM_ITERATIONS);
+    Checks.inRange(numIterations(), ITERATIONS_RANGE, "numIterations");
   }
 
   @Value.Default

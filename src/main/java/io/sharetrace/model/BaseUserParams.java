@@ -26,13 +26,6 @@ abstract class BaseUserParams {
   public static final Duration MIN_CONTACT_TTL = Duration.ZERO;
   public static final Duration MIN_IDLE_TIMEOUT = Duration.ZERO;
 
-  private static final String TRANS_RATE = "transRate";
-  private static final String SEND_COEFF = "sendCoeff";
-  private static final String TIME_BUFFER = "timeBuffer";
-  private static final String SCORE_TTL = "scoreTtl";
-  private static final String CONTACT_TTL = "contactTtl";
-  private static final String TOLERANCE = "tolerance";
-  private static final String IDLE_TIMEOUT = "idleTimeout";
   private static final Range<Float> TRANS_RATE_RANGE = Range.open(MIN_TRANS_RATE, MAX_TRANS_RATE);
   private static final Range<Float> SEND_COEFF_RANGE = Range.atLeast(MIN_SEND_COEFF);
   private static final Range<Duration> TIME_BUFFER_RANGE = Range.atLeast(MIN_TIME_BUFFER);
@@ -43,13 +36,13 @@ abstract class BaseUserParams {
 
   @Value.Check
   protected void check() {
-    Checks.inRange(transRate(), TRANS_RATE_RANGE, TRANS_RATE);
-    Checks.inRange(sendCoeff(), SEND_COEFF_RANGE, SEND_COEFF);
-    Checks.inRange(timeBuffer(), TIME_BUFFER_RANGE, TIME_BUFFER);
-    Checks.inRange(scoreTtl(), SCORE_TTL_RANGE, SCORE_TTL);
-    Checks.inRange(contactTtl(), CONTACT_TTL_RANGE, CONTACT_TTL);
-    Checks.inRange(tolerance(), TOLERANCE_RANGE, TOLERANCE);
-    Checks.inRange(idleTimeout(), IDLE_TIMEOUT_RANGE, IDLE_TIMEOUT);
+    Checks.inRange(transRate(), TRANS_RATE_RANGE, "transRate");
+    Checks.inRange(sendCoeff(), SEND_COEFF_RANGE, "sendCoeff");
+    Checks.inRange(timeBuffer(), TIME_BUFFER_RANGE, "timeBuffer");
+    Checks.inRange(scoreTtl(), SCORE_TTL_RANGE, "scoreTtl");
+    Checks.inRange(contactTtl(), CONTACT_TTL_RANGE, "contactTtl");
+    Checks.inRange(tolerance(), TOLERANCE_RANGE, "tolerance");
+    Checks.inRange(idleTimeout(), IDLE_TIMEOUT_RANGE, "idleTimeout");
   }
 
   /**

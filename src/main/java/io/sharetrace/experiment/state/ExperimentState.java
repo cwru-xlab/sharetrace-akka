@@ -155,7 +155,6 @@ public final class ExperimentState implements Runnable, Identifiable {
           UserParamsContext,
           DatasetContext {
 
-    private static final String NOT_SET_MSG = "Not all attributes have been set: %s";
     private final ExperimentContext ctx;
     private final Logger logger;
     private final Map<Setter, Function<? super Builder, Builder>> setters;
@@ -324,7 +323,7 @@ public final class ExperimentState implements Runnable, Identifiable {
     public ExperimentState build() {
       setters.put(Setter.DISTRIBUTIONS, x -> setDistributions());
       setters.values().forEach(setter -> setter.apply(this));
-      Checks.isTrue(setters.isEmpty(), NOT_SET_MSG, setters.keySet());
+      Checks.isTrue(setters.isEmpty(), "Not all attributes have been set: %s", setters.keySet());
       return new ExperimentState(this);
     }
 

@@ -14,13 +14,6 @@ import org.jgrapht.graph.DefaultEdge;
 
 final class GraphGenerators {
 
-  private static final String NUM_EDGES = "numEdges";
-  private static final String DEGREE = "degree";
-  private static final String NUM_INITIAL_NODES = "numInitialNodes";
-  private static final String NUM_NEW_EDGES = "numNewEdges";
-  private static final String NUM_NEAREST_NEIGHBORS = "numNearestNeighbors";
-  private static final String REWIRING_PROBABILITY = "rewiringProbability";
-
   private GraphGenerators() {}
 
   @Builder.Factory
@@ -39,22 +32,22 @@ final class GraphGenerators {
         // Random
       case GNM_RANDOM:
         return new GnmRandomGraphGenerator<>(
-            numNodes, getOrThrow(numEdges, NUM_EDGES, GraphType.GNM_RANDOM), seed, false, false);
+            numNodes, getOrThrow(numEdges, "numEdges", GraphType.GNM_RANDOM), seed, false, false);
       case RANDOM_REGULAR:
         return new RandomRegularGraphGenerator<>(
-            numNodes, getOrThrow(degree, DEGREE, GraphType.RANDOM_REGULAR), seed);
+            numNodes, getOrThrow(degree, "degree", GraphType.RANDOM_REGULAR), seed);
         // Non-random
       case BARABASI_ALBERT:
         return new BarabasiAlbertGraphGenerator<>(
-            getOrThrow(numInitialNodes, NUM_INITIAL_NODES, GraphType.BARABASI_ALBERT),
-            getOrThrow(numNewEdges, NUM_NEW_EDGES, GraphType.BARABASI_ALBERT),
+            getOrThrow(numInitialNodes, "numInitialNodes", GraphType.BARABASI_ALBERT),
+            getOrThrow(numNewEdges, "numNewEdges", GraphType.BARABASI_ALBERT),
             numNodes,
             seed);
       case WATTS_STROGATZ:
         return new WattsStrogatzGraphGenerator<>(
             numNodes,
-            getOrThrow(numNearestNeighbors, NUM_NEAREST_NEIGHBORS, GraphType.WATTS_STROGATZ),
-            getOrThrow(rewiringProbability, REWIRING_PROBABILITY, GraphType.WATTS_STROGATZ),
+            getOrThrow(numNearestNeighbors, "numNearestNeighbors", GraphType.WATTS_STROGATZ),
+            getOrThrow(rewiringProbability, "rewiringProbability", GraphType.WATTS_STROGATZ),
             seed);
       case SCALE_FREE:
         return new ScaleFreeGraphGenerator<>(numNodes, seed);

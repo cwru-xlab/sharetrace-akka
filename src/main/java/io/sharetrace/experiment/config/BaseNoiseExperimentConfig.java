@@ -15,7 +15,6 @@ abstract class BaseNoiseExperimentConfig extends ExperimentConfig {
 
   public static final int MIN_NETWORKS = 1;
 
-  private static final String NUM_NETWORKS = "numNetworks";
   private static final Range<Integer> NETWORKS_RANGE = Range.atLeast(MIN_NETWORKS);
 
   public abstract Optional<GraphType> graphType();
@@ -23,7 +22,7 @@ abstract class BaseNoiseExperimentConfig extends ExperimentConfig {
   @Value.Check
   protected void check() {
     super.check();
-    Checks.inRange(numNetworks(), NETWORKS_RANGE, NUM_NETWORKS);
+    Checks.inRange(numNetworks(), NETWORKS_RANGE, "numNetworks");
   }
 
   @Value.Default

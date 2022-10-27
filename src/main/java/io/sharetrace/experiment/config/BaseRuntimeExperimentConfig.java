@@ -9,7 +9,6 @@ abstract class BaseRuntimeExperimentConfig extends ExperimentConfig {
 
   public static final int MIN_NETWORKS = 1;
 
-  private static final String NUM_NETWORKS = "numNetworks";
   private static final Range<Integer> NETWORKS_RANGE = Range.atLeast(MIN_NETWORKS);
 
   public abstract Iterable<Integer> numNodes();
@@ -17,7 +16,7 @@ abstract class BaseRuntimeExperimentConfig extends ExperimentConfig {
   @Value.Check
   protected void check() {
     super.check();
-    Checks.inRange(numNetworks(), NETWORKS_RANGE, NUM_NETWORKS);
+    Checks.inRange(numNetworks(), NETWORKS_RANGE, "numNetworks");
   }
 
   @Value.Default

@@ -17,8 +17,6 @@ import org.apache.commons.math3.distribution.RealDistribution;
 
 public final class NoiseExperiment extends Experiment<NoiseExperimentConfig> {
 
-  private static final String DATASET_FACTORY = "datasetFactory";
-  private static final String GRAPH_TYPE = "graphType";
   private static final NoiseExperiment INSTANCE = new NoiseExperiment();
   private static final ExperimentContext DEFAULT_CTX = newDefaultContext();
 
@@ -67,8 +65,8 @@ public final class NoiseExperiment extends Experiment<NoiseExperimentConfig> {
   @Override
   public ExperimentState newDefaultState(ExperimentContext context, NoiseExperimentConfig config) {
     return ExperimentState.builder(context)
-        .dataset(getProperty(config.datasetFactory(), DATASET_FACTORY))
-        .graphType(getProperty(config.graphType(), GRAPH_TYPE))
+        .dataset(getProperty(config.datasetFactory(), "datasetFactory"))
+        .graphType(getProperty(config.graphType(), "graphType"))
         .build();
   }
 }

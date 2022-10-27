@@ -10,8 +10,6 @@ import java.nio.file.Path;
 
 public final class FileExperiment extends Experiment<FileExperimentConfig> {
 
-  private static final String GRAPH_TYPE = "graphType";
-  private static final String PATH = "path";
   private static final FileExperiment INSTANCE = new FileExperiment();
 
   private FileExperiment() {}
@@ -33,8 +31,8 @@ public final class FileExperiment extends Experiment<FileExperimentConfig> {
 
   @Override
   public ExperimentState newDefaultState(ExperimentContext context, FileExperimentConfig config) {
-    GraphType graphType = getProperty(config.graphType(), GRAPH_TYPE);
-    Path path = getProperty(config.path(), PATH);
+    GraphType graphType = getProperty(config.graphType(), "graphType");
+    Path path = getProperty(config.path(), "path");
     return ExperimentState.builder(context)
         .graphType(graphType)
         .dataset(ctx -> Defaults.fileDataset(ctx, path))

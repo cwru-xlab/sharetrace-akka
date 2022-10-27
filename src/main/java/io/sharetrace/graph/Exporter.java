@@ -12,7 +12,6 @@ import org.jgrapht.nio.graphml.GraphMLExporter;
 
 final class Exporter<V, E> {
 
-  private static final String FILE_EXT = ".graphml";
   private final GraphExporter<V, E> exporter;
   private final File file;
 
@@ -23,7 +22,7 @@ final class Exporter<V, E> {
 
   private static File newFile(String filename) {
     String directory = ensureExists(Logging.graphsPath()).toString();
-    return Path.of(directory, filename + FILE_EXT).toFile();
+    return Path.of(directory, filename + ".graphml").toFile();
   }
 
   private static Path ensureExists(Path path) {

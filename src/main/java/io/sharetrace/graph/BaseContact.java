@@ -10,14 +10,12 @@ abstract class BaseContact {
 
   public static final Instant MIN_TIME = Instant.EPOCH;
 
-  private static final String TIME = "time";
-  private static final String USER_MSG = "Users must be distinct; got %s == %s";
   private static final Range<Instant> TIME_RANGE = Range.atLeast(MIN_TIME);
 
   @Value.Check
   protected void check() {
-    Checks.inRange(time(), TIME_RANGE, TIME);
-    Checks.isTrue(user1() != user2(), USER_MSG, user1(), user2());
+    Checks.inRange(time(), TIME_RANGE, "time");
+    Checks.isTrue(user1() != user2(), "Users must be distinct; got %s == %s", user1(), user2());
   }
 
   public abstract Instant time();

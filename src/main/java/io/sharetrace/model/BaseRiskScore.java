@@ -27,8 +27,6 @@ abstract class BaseRiskScore implements Comparable<RiskScore> {
   public static final float RANGE = MAX_VALUE - MIN_VALUE;
   public static final Instant MIN_TIME = Instant.EPOCH;
 
-  private static final String TIME = "time";
-  private static final String VALUE = "value";
   private static final Range<Float> VALUE_RANGE = Range.closed(MIN_VALUE, MAX_VALUE);
   private static final Range<Instant> TIME_RANGE = Range.atLeast(MIN_TIME);
 
@@ -52,7 +50,7 @@ abstract class BaseRiskScore implements Comparable<RiskScore> {
 
   @Value.Check
   protected void check() {
-    Checks.inRange(value(), VALUE_RANGE, VALUE);
-    Checks.inRange(time(), TIME_RANGE, TIME);
+    Checks.inRange(value(), VALUE_RANGE, "value");
+    Checks.inRange(time(), TIME_RANGE, "time");
   }
 }

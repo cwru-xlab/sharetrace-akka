@@ -6,7 +6,6 @@ import java.util.Map;
 
 public final class Indexer<T> {
 
-  private static final String VALUE = "value";
   private final Map<T, Integer> index;
   private int value;
 
@@ -25,6 +24,6 @@ public final class Indexer<T> {
 
   @Override
   public String toString() {
-    return MoreObjects.toStringHelper(this).add(VALUE, value).toString();
+    return MoreObjects.toStringHelper(this).add("value", value).toString();
   }
 }
