@@ -17,6 +17,8 @@ import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.Set;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 import org.immutables.value.Value;
 import org.jgrapht.Graph;
 import org.jgrapht.generate.GraphGenerator;
@@ -37,9 +39,7 @@ abstract class AbstractContactNetwork implements ContactNetwork, LoggableRef {
 
   @Override
   public Set<Contact> contacts() {
-    Set<Contact> contacts = new ObjectOpenHashSet<>(graph().edgeSet().size());
-    graph().edgeSet().forEach(edge -> contacts.add(contactFrom(edge)));
-    return Collections.unmodifiableSet(contacts);
+    return graph().edgeSet().stream().map(this::contactFrom).collect(contactCollector());
   }
 
   @Override
@@ -84,12 +84,18 @@ abstract class AbstractContactNetwork implements ContactNetwork, LoggableRef {
 
   protected abstract GraphGenerator<Integer, DefaultEdge, ?> graphGenerator();
 
+  protected abstract ContactTimeFactory contactTimeFactory();
+
+  private <T> Collector<T, ?, Set<T>> contactCollector() {
+    int numContacts = graph().edgeSet().size();
+    return Collectors.collectingAndThen(
+        ObjectOpenHashSet.toSetWithExpectedSize(numContacts), Collections::unmodifiableSet);
+  }
+
   private Contact contactFrom(DefaultEdge edge) {
     int user1 = graph().getEdgeSource(edge);
     int user2 = graph().getEdgeTarget(edge);
     Instant contactTime = contactTimeFactory().contactTime(user1, user2);
     return Contact.builder().user1(user1).user2(user2).time(contactTime).build();
   }
-
-  protected abstract ContactTimeFactory contactTimeFactory();
 }
