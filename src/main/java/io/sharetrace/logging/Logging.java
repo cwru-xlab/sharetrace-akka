@@ -20,8 +20,8 @@ public final class Logging {
   }
 
   public static Logger logger(
-      Set<Class<? extends Loggable>> loggable, Supplier<org.slf4j.Logger> logger) {
-    return DefaultLogger.of(loggable, logger);
+      Set<Class<? extends Loggable>> loggable, Supplier<org.slf4j.Logger> delegate) {
+    return new Logger(loggable, delegate);
   }
 
   public static Logger settingsLogger(Set<Class<? extends Loggable>> loggable) {
