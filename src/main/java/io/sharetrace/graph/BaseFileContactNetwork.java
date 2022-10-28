@@ -12,7 +12,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -36,10 +35,9 @@ abstract class BaseFileContactNetwork extends AbstractContactNetwork implements 
   }
 
   private void generate(Graph<Integer, DefaultEdge> target) {
-    for (Collection<Integer> contact : contactMap().keySet()) {
-      List<Integer> users = List.copyOf(contact);
-      Graphs.addEdgeWithVertices(target, users.get(0), users.get(1));
-    }
+    contactMap().keySet().stream()
+        .map(List::copyOf)
+        .forEach(users -> Graphs.addEdgeWithVertices(target, users.get(0), users.get(1)));
   }
 
   @Value.Lazy
