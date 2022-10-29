@@ -4,7 +4,7 @@ import org.immutables.value.Value;
 
 public interface Loggable {
 
-  @Value.Derived
+  @Value.Lazy
   default String type() {
     return getClass().getSimpleName();
   }

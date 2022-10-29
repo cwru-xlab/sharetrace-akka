@@ -33,11 +33,13 @@ abstract class AbstractContactNetwork implements ContactNetwork, LoggableRef {
   protected AbstractContactNetwork() {}
 
   @Override
+  @Value.Lazy
   public Set<Integer> users() {
     return Collections.unmodifiableSet(graph().vertexSet());
   }
 
   @Override
+  @Value.Lazy
   public Set<Contact> contacts() {
     return graph().edgeSet().stream().map(this::contactFrom).collect(contactCollector());
   }
@@ -68,7 +70,7 @@ abstract class AbstractContactNetwork implements ContactNetwork, LoggableRef {
     Exporter.export(graph, id());
   }
 
-  @Value.Derived
+  @Value.Lazy
   public String id() {
     return Uid.ofIntString();
   }
