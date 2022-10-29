@@ -93,7 +93,6 @@ public final class Defaults {
     return FileDataset.builder()
         .delimiter(WHITESPACE_DELIMITER)
         .path(path)
-        .addAllLoggable(ctx.loggable())
         .refTime(ctx.refTime())
         .scoreFactory(scoreFactory(ctx))
         .build();
@@ -105,7 +104,6 @@ public final class Defaults {
 
   public static SampledDataset sampledDataset(DatasetContext ctx, int numNodes) {
     return SampledDataset.builder()
-        .addAllLoggable(ctx.loggable())
         .scoreFactory(scoreFactory(ctx))
         .contactTimeFactory(contactTimeFactory(ctx))
         .graphGeneratorFactory(graphGeneratorFactory(ctx))

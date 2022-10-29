@@ -10,7 +10,6 @@ import io.sharetrace.logging.metric.GraphScores;
 import io.sharetrace.logging.metric.GraphSize;
 import io.sharetrace.logging.metric.GraphTopology;
 import io.sharetrace.logging.metric.LoggableMetric;
-import io.sharetrace.model.LoggableRef;
 import io.sharetrace.util.TypedSupplier;
 import io.sharetrace.util.Uid;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
@@ -25,7 +24,7 @@ import org.jgrapht.generate.GraphGenerator;
 import org.jgrapht.graph.DefaultEdge;
 
 @JsonIgnoreType
-abstract class AbstractContactNetwork implements ContactNetwork, LoggableRef {
+abstract class AbstractContactNetwork implements ContactNetwork {
 
   private Graph<Integer, DefaultEdge> graph;
   private Logger logger;
@@ -59,7 +58,7 @@ abstract class AbstractContactNetwork implements ContactNetwork, LoggableRef {
 
   private Logger logger() {
     // Lazily assign to make Immutables subclassing work properly; subclass must be instantiated.
-    return (logger == null) ? (logger = Logging.metricsLogger(loggable())) : logger;
+    return (logger == null) ? (logger = Logging.metricsLogger()) : logger;
   }
 
   private TypedSupplier<GraphTopology> graphTopology() {

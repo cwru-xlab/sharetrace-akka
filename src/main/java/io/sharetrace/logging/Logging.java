@@ -1,7 +1,9 @@
 package io.sharetrace.logging;
 
 import ch.qos.logback.core.spi.PropertyContainer;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -13,19 +15,20 @@ public final class Logging {
   public static final String METRICS_LOGGER_NAME = "MetricsLogger";
   public static final String SETTINGS_LOGGER_NAME = "SettingsLogger";
 
+  private static final Set<Class<? extends Loggable>> enabled = new ObjectOpenHashSet<>();
+
   private Logging() {}
 
-  public static Logger metricsLogger(Set<Class<? extends Loggable>> loggable) {
-    return logger(loggable, () -> LoggerFactory.getLogger(METRICS_LOGGER_NAME));
+  public static Logger metricsLogger() {
+    return logger(() -> LoggerFactory.getLogger(METRICS_LOGGER_NAME));
   }
 
-  public static Logger logger(
-      Set<Class<? extends Loggable>> loggable, Supplier<org.slf4j.Logger> delegate) {
-    return new Logger(loggable, delegate);
+  public static Logger logger(Supplier<org.slf4j.Logger> delegate) {
+    return new Logger(delegate);
   }
 
-  public static Logger settingsLogger(Set<Class<? extends Loggable>> loggable) {
-    return logger(loggable, () -> LoggerFactory.getLogger(SETTINGS_LOGGER_NAME));
+  public static Logger settingsLogger() {
+    return logger(() -> LoggerFactory.getLogger(SETTINGS_LOGGER_NAME));
   }
 
   public static Path graphsPath() {
@@ -35,5 +38,13 @@ public final class Logging {
 
   public static Map<String, String> mdc(String stateId) {
     return Map.of("sid", stateId);
+  }
+
+  public static synchronized void setLoggable(Collection<Class<? extends Loggable>> loggable) {
+    enabled.retainAll(loggable);
+  }
+
+  public static synchronized boolean isEnabled(Class<? extends Loggable> loggable) {
+    return enabled.contains(loggable);
   }
 }

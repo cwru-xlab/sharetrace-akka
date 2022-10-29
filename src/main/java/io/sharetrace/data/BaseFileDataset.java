@@ -13,7 +13,6 @@ abstract class BaseFileDataset extends AbstractDataset implements TimeRef {
   @Override
   public FileDataset withNewContactNetwork() {
     return FileDataset.builder()
-        .addAllLoggable(loggable())
         .path(path())
         .refTime(refTime())
         .delimiter(delimiter())
@@ -29,7 +28,6 @@ abstract class BaseFileDataset extends AbstractDataset implements TimeRef {
   @Value.Default // Allows the contact network to be passed on to a copied instance.
   public ContactNetwork contactNetwork() {
     return FileContactNetwork.builder()
-        .addAllLoggable(loggable())
         .delimiter(delimiter())
         .path(path())
         .refTime(refTime())

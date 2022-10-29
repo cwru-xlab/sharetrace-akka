@@ -35,7 +35,6 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import java.time.Clock;
 import java.util.BitSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Supplier;
 import org.immutables.builder.Builder;
 import org.slf4j.MDC;
@@ -71,7 +70,6 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
   private static final Props USER_PROPS = DispatcherSelector.fromConfig("user-dispatcher");
 
   private final Logger logger;
-  private final Set<Class<? extends Loggable>> loggable;
   private final Map<String, String> mdc;
   private final UserParams userParams;
   private final Dataset dataset;
@@ -83,15 +81,13 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
 
   private RiskPropagation(
       ActorContext<AlgorithmMsg> ctx,
-      Set<Class<? extends Loggable>> loggable,
       Map<String, String> mdc,
       Dataset dataset,
       UserParams userParams,
       Clock clock,
       CacheFactory<RiskScoreMsg> cacheFactory) {
     super(ctx);
-    this.loggable = loggable;
-    this.logger = Logging.logger(loggable, getContext()::getLog);
+    this.logger = Logging.logger(getContext()::getLog);
     this.mdc = mdc;
     this.dataset = dataset;
     this.numUsers = dataset.contactNetwork().users().size();
@@ -105,7 +101,6 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
   @Builder.Factory
   static Algorithm riskPropagation(
       Dataset dataset,
-      Set<Class<? extends Loggable>> loggable,
       Map<String, String> mdc,
       UserParams userParams,
       Clock clock,
@@ -114,8 +109,7 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
         Behaviors.setup(
             ctx -> {
               ctx.setLoggerName(Logging.METRICS_LOGGER_NAME);
-              return new RiskPropagation(
-                  ctx, loggable, mdc, dataset, userParams, clock, cacheFactory);
+              return new RiskPropagation(ctx, mdc, dataset, userParams, clock, cacheFactory);
             });
     return Algorithm.of(behavior, NAME, PROPS);
   }
@@ -198,7 +192,6 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
         .riskProp(getContext().getSelf())
         .timeoutId(timeoutId)
         .putAllMdc(mdc)
-        .addAllLoggable(loggable)
         .userParams(userParams)
         .clock(clock)
         .cache(cacheFactory.newCache())

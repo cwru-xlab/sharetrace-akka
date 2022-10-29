@@ -8,7 +8,6 @@ import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import akka.actor.typed.javadsl.TimerScheduler;
 import io.sharetrace.graph.ContactNetwork;
-import io.sharetrace.logging.Loggable;
 import io.sharetrace.logging.Logging;
 import io.sharetrace.message.AlgorithmMsg;
 import io.sharetrace.message.ContactMsg;
@@ -24,7 +23,6 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import java.time.Clock;
 import java.util.Comparator;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Predicate;
 import org.immutables.builder.Builder;
 
@@ -61,7 +59,6 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
       ActorRef<AlgorithmMsg> riskProp,
       int timeoutId,
       TimerScheduler<UserMsg> timers,
-      Set<Class<? extends Loggable>> loggable,
       UserParams userParams,
       Clock clock,
       IntervalCache<RiskScoreMsg> cache) {
@@ -69,7 +66,7 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
     this.riskProp = riskProp;
     this.timedOutMsg = TimedOutMsg.of(timeoutId);
     this.timers = timers;
-    this.logger = new UserLogger(loggable, getContext());
+    this.logger = new UserLogger(getContext());
     this.userParams = userParams;
     this.clock = clock;
     this.cache = cache;
@@ -84,7 +81,6 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
       ActorRef<AlgorithmMsg> riskProp,
       int timeoutId,
       Map<String, String> mdc,
-      Set<Class<? extends Loggable>> loggable,
       UserParams userParams,
       Clock clock,
       IntervalCache<RiskScoreMsg> cache) {
@@ -94,8 +90,7 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
           Behavior<UserMsg> user =
               Behaviors.withTimers(
                   timers ->
-                      new UserActor(
-                          ctx, riskProp, timeoutId, timers, loggable, userParams, clock, cache));
+                      new UserActor(ctx, riskProp, timeoutId, timers, userParams, clock, cache));
           return Behaviors.withMdc(UserMsg.class, msg -> mdc, user);
         });
   }

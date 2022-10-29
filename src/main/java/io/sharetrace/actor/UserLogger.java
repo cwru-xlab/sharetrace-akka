@@ -18,7 +18,6 @@ import io.sharetrace.logging.event.TimeoutEvent;
 import io.sharetrace.logging.event.UpdateEvent;
 import io.sharetrace.message.RiskScoreMsg;
 import io.sharetrace.util.TypedSupplier;
-import java.util.Set;
 import java.util.function.Supplier;
 
 final class UserLogger {
@@ -26,8 +25,8 @@ final class UserLogger {
   private final Logger logger;
   private final String userName;
 
-  public UserLogger(Set<Class<? extends Loggable>> loggable, ActorContext<?> ctx) {
-    this.logger = Logging.logger(loggable, ctx::getLog);
+  public UserLogger(ActorContext<?> ctx) {
+    this.logger = Logging.logger(ctx::getLog);
     this.userName = name(ctx.getSelf());
   }
 

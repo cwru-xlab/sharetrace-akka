@@ -78,6 +78,7 @@ public final class ExperimentState implements Runnable, Identifiable {
   }
 
   private void logMetricsAndSettings() {
+    Logging.setLoggable(ctx.loggable());
     MDC.setContextMap(mdc);
     dataset.contactNetwork().logMetrics();
     logger.log(LoggableSetting.KEY, TypedSupplier.of(ExperimentSettings.class, this::settings));
@@ -85,7 +86,6 @@ public final class ExperimentState implements Runnable, Identifiable {
 
   private void runAlgorithm() {
     RiskPropagationBuilder.create()
-        .addAllLoggable(ctx.loggable())
         .putAllMdc(mdc)
         .dataset(dataset)
         .userParams(userParams)
@@ -181,7 +181,7 @@ public final class ExperimentState implements Runnable, Identifiable {
 
     private Builder(ExperimentContext context) {
       ctx = context;
-      logger = Logging.settingsLogger(ctx.loggable());
+      logger = Logging.settingsLogger();
       setters = newSetters();
       mdc = new Object2ObjectOpenHashMap<>();
     }
