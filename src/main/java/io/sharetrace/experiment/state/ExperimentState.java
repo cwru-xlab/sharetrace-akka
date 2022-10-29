@@ -70,7 +70,7 @@ public final class ExperimentState implements Runnable, Identifiable {
   @Override
   public void run() {
     logMetricsAndSettings();
-    newRiskPropagation().run();
+    runAlgorithm();
   }
 
   public Builder toBuilder() {
@@ -83,16 +83,16 @@ public final class ExperimentState implements Runnable, Identifiable {
     logger.log(LoggableSetting.KEY, TypedSupplier.of(ExperimentSettings.class, this::settings));
   }
 
-  private Runnable newRiskPropagation() {
-    return RiskPropagationBuilder.create()
+  private void runAlgorithm() {
+    RiskPropagationBuilder.create()
         .addAllLoggable(ctx.loggable())
         .putAllMdc(mdc)
-        .contactNetwork(dataset.contactNetwork())
+        .dataset(dataset)
         .userParams(userParams)
         .clock(ctx.clock())
-        .scoreFactory(dataset.scoreFactory())
         .cacheFactory(this::newCache)
-        .build();
+        .build()
+        .run();
   }
 
   private ExperimentSettings settings() {

@@ -8,8 +8,8 @@ import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
+import io.sharetrace.data.Dataset;
 import io.sharetrace.data.factory.CacheFactory;
-import io.sharetrace.data.factory.RiskScoreFactory;
 import io.sharetrace.graph.Contact;
 import io.sharetrace.graph.ContactNetwork;
 import io.sharetrace.logging.Loggable;
@@ -74,10 +74,9 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
   private final Set<Class<? extends Loggable>> loggable;
   private final Map<String, String> mdc;
   private final UserParams userParams;
-  private final ContactNetwork contactNetwork;
+  private final Dataset dataset;
   private final int numUsers;
   private final Clock clock;
-  private final RiskScoreFactory scoreFactory;
   private final CacheFactory<RiskScoreMsg> cacheFactory;
   private final Timer<Class<? extends LoggableMetric>> timer;
   private final BitSet stopped;
@@ -86,47 +85,37 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
       ActorContext<AlgorithmMsg> ctx,
       Set<Class<? extends Loggable>> loggable,
       Map<String, String> mdc,
-      ContactNetwork contactNetwork,
+      Dataset dataset,
       UserParams userParams,
       Clock clock,
-      CacheFactory<RiskScoreMsg> cacheFactory,
-      RiskScoreFactory scoreFactory) {
+      CacheFactory<RiskScoreMsg> cacheFactory) {
     super(ctx);
     this.loggable = loggable;
     this.logger = Logging.logger(loggable, getContext()::getLog);
     this.mdc = mdc;
-    this.contactNetwork = contactNetwork;
-    this.numUsers = contactNetwork.users().size();
+    this.dataset = dataset;
+    this.numUsers = dataset.contactNetwork().users().size();
     this.userParams = userParams;
     this.clock = clock;
     this.cacheFactory = cacheFactory;
-    this.scoreFactory = scoreFactory;
     this.timer = new Timer<>();
     this.stopped = new BitSet(numUsers);
   }
 
   @Builder.Factory
   static Algorithm riskPropagation(
-      ContactNetwork contactNetwork,
+      Dataset dataset,
       Set<Class<? extends Loggable>> loggable,
       Map<String, String> mdc,
       UserParams userParams,
       Clock clock,
-      CacheFactory<RiskScoreMsg> cacheFactory,
-      RiskScoreFactory scoreFactory) {
+      CacheFactory<RiskScoreMsg> cacheFactory) {
     Behavior<AlgorithmMsg> behavior =
         Behaviors.setup(
             ctx -> {
               ctx.setLoggerName(Logging.METRICS_LOGGER_NAME);
               return new RiskPropagation(
-                  ctx,
-                  loggable,
-                  mdc,
-                  contactNetwork,
-                  userParams,
-                  clock,
-                  cacheFactory,
-                  scoreFactory);
+                  ctx, loggable, mdc, dataset, userParams, clock, cacheFactory);
             });
     return Algorithm.of(behavior, NAME, PROPS);
   }
@@ -167,7 +156,7 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
 
   private Map<Integer, ActorRef<UserMsg>> newUsers() {
     Map<Integer, ActorRef<UserMsg>> users = new Int2ObjectOpenHashMap<>(numUsers);
-    for (int name : contactNetwork.users()) {
+    for (int name : dataset.contactNetwork().users()) {
       // Timeout IDs must be 0-based contiguous to use with 'stopped' BitSet.
       ActorRef<UserMsg> user = getContext().spawn(newUser(name), String.valueOf(name), USER_PROPS);
       getContext().watch(user);
@@ -181,14 +170,14 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
     for (Map.Entry<Integer, ActorRef<UserMsg>> entry : users.entrySet()) {
       int name = entry.getKey();
       ActorRef<UserMsg> user = entry.getValue();
-      RiskScore symptomScore = scoreFactory.riskScore(name);
+      RiskScore symptomScore = dataset.scoreFactory().riskScore(name);
       user.tell(RiskScoreMsg.of(symptomScore, user));
     }
   }
 
   private void sendContacts(Map<Integer, ActorRef<UserMsg>> users) {
     // Assumes at-least-once message delivery to the user actors.
-    for (Contact contact : contactNetwork.contacts()) {
+    for (Contact contact : dataset.contactNetwork().contacts()) {
       ActorRef<UserMsg> user1 = users.get(contact.user1());
       ActorRef<UserMsg> user2 = users.get(contact.user2());
       user1.tell(ContactMsg.of(user2, contact.time()));
