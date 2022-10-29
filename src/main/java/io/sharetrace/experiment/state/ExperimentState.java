@@ -78,7 +78,7 @@ public final class ExperimentState implements Runnable, Identifiable {
   }
 
   private void logMetricsAndSettings() {
-    mdc.forEach(MDC::put);
+    MDC.setContextMap(mdc);
     dataset.contactNetwork().logMetrics();
     logger.log(LoggableSetting.KEY, TypedSupplier.of(ExperimentSettings.class, this::settings));
   }

@@ -158,7 +158,7 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
     stopped.set(msg.user());
     if (stopped.cardinality() == numUsers) {
       timer.stop();
-      mdc.forEach(MDC::put);
+      MDC.setContextMap(mdc);
       logMetrics();
       behavior = Behaviors.stopped();
     }
