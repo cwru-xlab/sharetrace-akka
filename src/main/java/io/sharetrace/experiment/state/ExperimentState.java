@@ -116,12 +116,20 @@ public final class ExperimentState implements Runnable, Identifiable {
     return id;
   }
 
-  public long seed() {
-    return ctx.seed();
+  public Map<String, String> mdc() {
+    return Collections.unmodifiableMap(mdc);
+  }
+
+  public ExperimentContext context() {
+    return ctx;
   }
 
   public GraphType graphType() {
     return graphType;
+  }
+
+  public CacheParams<RiskScoreMsg> cacheParams() {
+    return cacheParams;
   }
 
   public UserParams userParams() {
