@@ -12,9 +12,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.immutables.value.Value;
 import org.jgrapht.Graph;
 import org.jgrapht.Graphs;
@@ -41,7 +41,7 @@ abstract class BaseFileContactNetwork extends AbstractContactNetwork implements 
   }
 
   @Value.Lazy
-  protected Map<Collection<Integer>, Instant> contactMap() {
+  protected Map<Set<Integer>, Instant> contactMap() {
     try (BufferedReader reader = Files.newBufferedReader(path())) {
       return toContacts(reader.lines()::iterator);
     } catch (IOException exception) {
@@ -51,10 +51,10 @@ abstract class BaseFileContactNetwork extends AbstractContactNetwork implements 
 
   protected abstract Path path();
 
-  private Map<Collection<Integer>, Instant> toContacts(Iterable<String> lines) {
+  private Map<Set<Integer>, Instant> toContacts(Iterable<String> lines) {
     Instant lastContactTime = Instant.MIN;
     Indexer<String> indexer = new Indexer<>();
-    Map<Collection<Integer>, Instant> contacts = new Object2ObjectOpenHashMap<>();
+    Map<Set<Integer>, Instant> contacts = new Object2ObjectOpenHashMap<>();
     for (String line : lines) {
       String[] args = line.split(delimiter());
       int user1 = indexer.index(args[1].strip());
@@ -72,7 +72,7 @@ abstract class BaseFileContactNetwork extends AbstractContactNetwork implements 
 
   protected abstract String delimiter();
 
-  private static Collection<Integer> key(int user1, int user2) {
+  private static Set<Integer> key(int user1, int user2) {
     return IntSet.of(user1, user2);
   }
 
