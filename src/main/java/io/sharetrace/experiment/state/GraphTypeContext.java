@@ -1,3 +1,3 @@
 package io.sharetrace.experiment.state;
 
-public interface GraphTypeContext extends AbstractExperimentContext {}
+public interface GraphTypeContext extends AbstractContext {}

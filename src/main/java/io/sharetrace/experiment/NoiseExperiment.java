@@ -6,9 +6,9 @@ import io.sharetrace.data.factory.CachedRiskScoreFactory;
 import io.sharetrace.data.factory.NoisyRiskScoreFactory;
 import io.sharetrace.data.factory.RiskScoreFactory;
 import io.sharetrace.experiment.config.NoiseExperimentConfig;
+import io.sharetrace.experiment.state.Context;
 import io.sharetrace.experiment.state.Defaults;
-import io.sharetrace.experiment.state.ExperimentContext;
-import io.sharetrace.experiment.state.ExperimentState;
+import io.sharetrace.experiment.state.State;
 import io.sharetrace.graph.ContactNetwork;
 import io.sharetrace.logging.event.UpdateEvent;
 import io.sharetrace.logging.metric.GraphSize;
@@ -18,7 +18,7 @@ import org.apache.commons.math3.distribution.RealDistribution;
 public final class NoiseExperiment extends Experiment<NoiseExperimentConfig> {
 
   private static final NoiseExperiment INSTANCE = new NoiseExperiment();
-  private static final ExperimentContext DEFAULT_CTX = newDefaultContext();
+  private static final Context DEFAULT_CTX = newDefaultContext();
 
   private NoiseExperiment() {}
 
@@ -26,7 +26,7 @@ public final class NoiseExperiment extends Experiment<NoiseExperimentConfig> {
     return INSTANCE;
   }
 
-  public static ExperimentContext newDefaultContext() {
+  public static Context newDefaultContext() {
     return Defaults.context()
         .withLoggable(UpdateEvent.class, GraphSize.class, ExperimentSettings.class);
   }
@@ -39,7 +39,7 @@ public final class NoiseExperiment extends Experiment<NoiseExperimentConfig> {
    * accuracy to be measured.
    */
   @Override
-  public void run(NoiseExperimentConfig config, ExperimentState initialState) {
+  public void run(NoiseExperimentConfig config, State initialState) {
     for (int iNetwork = 0; iNetwork < config.numNetworks(); iNetwork++) {
       Dataset dataset = initialState.dataset().withNewContactNetwork();
       for (RealDistribution noise : config.noises()) {
@@ -58,13 +58,13 @@ public final class NoiseExperiment extends Experiment<NoiseExperimentConfig> {
   }
 
   @Override
-  public ExperimentState newDefaultState(NoiseExperimentConfig config) {
+  public State newDefaultState(NoiseExperimentConfig config) {
     return newDefaultState(DEFAULT_CTX, config);
   }
 
   @Override
-  public ExperimentState newDefaultState(ExperimentContext context, NoiseExperimentConfig config) {
-    return ExperimentState.builder(context)
+  public State newDefaultState(Context context, NoiseExperimentConfig config) {
+    return State.builder(context)
         .dataset(getProperty(config.datasetFactory(), "datasetFactory"))
         .graphType(getProperty(config.graphType(), "graphType"))
         .build();

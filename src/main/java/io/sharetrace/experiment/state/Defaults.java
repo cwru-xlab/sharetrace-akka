@@ -46,7 +46,7 @@ public final class Defaults {
   private static final Duration TTL = Duration.ofDays(14L);
   private static final UserParams USER_PARAMS = newUserParams();
   private static final CacheParams<RiskScoreMsg> CACHE_PARAMS = newCacheParams();
-  private static final ExperimentContext CONTEXT = newContext();
+  private static final Context CONTEXT = newContext();
 
   private Defaults() {}
 
@@ -58,7 +58,7 @@ public final class Defaults {
     return CACHE_PARAMS;
   }
 
-  public static ExperimentContext context() {
+  public static Context context() {
     return CONTEXT;
   }
 
@@ -170,8 +170,8 @@ public final class Defaults {
     return Math.abs(msg1.score().value() - msg2.score().value()) < USER_PARAMS.tolerance();
   }
 
-  private static ExperimentContext newContext() {
-    return ExperimentContext.builder()
+  private static Context newContext() {
+    return Context.builder()
         .clock(CLOCK)
         .refTime(CLOCK.instant())
         .seed(Uid.ofInt())

@@ -31,9 +31,9 @@ import org.apache.commons.math3.distribution.UniformRealDistribution;
 import org.apache.commons.math3.random.Well512a;
 import org.slf4j.MDC;
 
-public final class ExperimentState implements Runnable, Identifiable {
+public final class State implements Runnable, Identifiable {
 
-  private final ExperimentContext ctx;
+  private final Context ctx;
   private final Logger logger;
   private final GraphType graphType;
   private final String id;
@@ -45,7 +45,7 @@ public final class ExperimentState implements Runnable, Identifiable {
   private final Dataset dataset;
   private final UserParams userParams;
 
-  private ExperimentState(Builder builder) {
+  private State(Builder builder) {
     ctx = builder.ctx;
     logger = builder.logger;
     graphType = builder.graphType;
@@ -59,7 +59,7 @@ public final class ExperimentState implements Runnable, Identifiable {
     dataset = builder.dataset;
   }
 
-  public static Builder builder(ExperimentContext ctx) {
+  public static Builder builder(Context ctx) {
     return Builder.withDefaults(ctx);
   }
 
@@ -120,7 +120,7 @@ public final class ExperimentState implements Runnable, Identifiable {
     return Collections.unmodifiableMap(mdc);
   }
 
-  public ExperimentContext context() {
+  public Context context() {
     return ctx;
   }
 
@@ -140,20 +140,6 @@ public final class ExperimentState implements Runnable, Identifiable {
     return dataset;
   }
 
-  private enum Setter {
-    // Ordered by dependency
-    GRAPH_TYPE,
-    ID,
-    MDC,
-    CACHE_PARAMS,
-    SCORE_VALUES,
-    SCORE_TIMES,
-    CONTACT_TIMES,
-    DISTRIBUTIONS,
-    USER_PARAMS,
-    DATASET
-  }
-
   public static class Builder
       implements GraphTypeContext,
           IdContext,
@@ -163,9 +149,9 @@ public final class ExperimentState implements Runnable, Identifiable {
           UserParamsContext,
           DatasetContext {
 
-    private final ExperimentContext ctx;
+    private final Context ctx;
     private final Logger logger;
-    private final Map<Setter, Function<? super Builder, Builder>> setters;
+    private final Map<Setter, Function<? super Builder, ?>> setters;
     private final Map<String, String> mdc;
     private GraphType graphType;
     private String id;
@@ -179,103 +165,22 @@ public final class ExperimentState implements Runnable, Identifiable {
     private UserParams userParams;
     private Dataset dataset;
 
-    private Builder(ExperimentContext context) {
+    private Builder(Context context) {
       ctx = context;
       logger = Logging.settingsLogger();
       setters = newSetters();
       mdc = new Object2ObjectOpenHashMap<>();
     }
 
-    private static Map<Setter, Function<? super Builder, Builder>> newSetters() {
-      Map<Setter, Function<? super Builder, Builder>> setters = new EnumMap<>(Setter.class);
+    private static Map<Setter, Function<? super Builder, ?>> newSetters() {
+      Map<Setter, Function<? super Builder, ?>> setters = new EnumMap<>(Setter.class);
       for (Setter setter : Setter.values()) {
         setters.put(setter, Function.identity());
       }
       return setters;
     }
 
-    protected static Builder from(ExperimentState state) {
-      return new Builder(state.ctx)
-          .graphType(state.graphType)
-          .id(ctx -> newId())
-          .mdc(ctx -> Logging.mdc(ctx.id()))
-          .cacheParams(state.cacheParams)
-          .scoreValuesFactory(state.scoreValuesFactory)
-          .scoreTimesFactory(state.scoreTimesFactory)
-          .contactTimesFactory(state.contactTimesFactory)
-          .userParams(state.userParams)
-          .dataset(state.dataset);
-    }
-
-    public Builder dataset(Dataset dataset) {
-      this.dataset = dataset;
-      setters.remove(Setter.DATASET);
-      return this;
-    }
-
-    public Builder userParams(UserParams params) {
-      userParams = params;
-      setters.remove(Setter.USER_PARAMS);
-      return this;
-    }
-
-    public Builder contactTimesFactory(DistributionFactory factory) {
-      contactTimesFactory = factory;
-      setters.remove(Setter.CONTACT_TIMES);
-      return this;
-    }
-
-    public Builder scoreTimesFactory(DistributionFactory factory) {
-      scoreTimesFactory = factory;
-      setters.remove(Setter.SCORE_TIMES);
-      return this;
-    }
-
-    public Builder scoreValuesFactory(DistributionFactory factory) {
-      scoreValuesFactory = factory;
-      setters.remove(Setter.SCORE_VALUES);
-      return this;
-    }
-
-    public Builder cacheParams(CacheParams<RiskScoreMsg> params) {
-      cacheParams = params;
-      setters.remove(Setter.CACHE_PARAMS);
-      return this;
-    }
-
-    public Builder mdc(Function<MdcContext, Map<String, String>> factory) {
-      setters.put(Setter.MDC, factory.andThen(this::mdc));
-      return this;
-    }
-
-    public Builder id(Function<IdContext, String> factory) {
-      setters.put(Setter.ID, factory.andThen(this::id));
-      return this;
-    }
-
-    public Builder graphType(GraphType graphType) {
-      this.graphType = graphType;
-      setters.remove(Setter.GRAPH_TYPE);
-      return this;
-    }
-
-    private static String newId() {
-      return Uid.ofIntString();
-    }
-
-    public Builder mdc(Map<String, String> mdc) {
-      this.mdc.putAll(mdc);
-      setters.remove(Setter.MDC);
-      return this;
-    }
-
-    public Builder id(String id) {
-      this.id = id;
-      setters.remove(Setter.ID);
-      return this;
-    }
-
-    protected static Builder withDefaults(ExperimentContext context) {
+    private static Builder withDefaults(Context context) {
       return new Builder(context)
           .id(ctx -> newId())
           .mdc(ctx -> Logging.mdc(ctx.id()))
@@ -314,8 +219,89 @@ public final class ExperimentState implements Runnable, Identifiable {
       return this;
     }
 
+    public Builder mdc(Function<MdcContext, Map<String, String>> factory) {
+      setters.put(Setter.MDC, factory.andThen(this::mdc));
+      return this;
+    }
+
+    public Builder id(Function<IdContext, String> factory) {
+      setters.put(Setter.ID, factory.andThen(this::id));
+      return this;
+    }
+
+    private static String newId() {
+      return Uid.ofIntString();
+    }
+
     private static Function<DistributionFactoryContext, DistributionFactory> defaultFactory() {
       return ctx -> seed -> new UniformRealDistribution(new Well512a(seed), 0d, 1d);
+    }
+
+    public Builder userParams(UserParams params) {
+      userParams = params;
+      setters.remove(Setter.USER_PARAMS);
+      return this;
+    }
+
+    public Builder contactTimesFactory(DistributionFactory factory) {
+      contactTimesFactory = factory;
+      setters.remove(Setter.CONTACT_TIMES);
+      return this;
+    }
+
+    public Builder scoreValuesFactory(DistributionFactory factory) {
+      scoreValuesFactory = factory;
+      setters.remove(Setter.SCORE_VALUES);
+      return this;
+    }
+
+    public Builder scoreTimesFactory(DistributionFactory factory) {
+      scoreTimesFactory = factory;
+      setters.remove(Setter.SCORE_TIMES);
+      return this;
+    }
+
+    public Builder cacheParams(CacheParams<RiskScoreMsg> params) {
+      cacheParams = params;
+      setters.remove(Setter.CACHE_PARAMS);
+      return this;
+    }
+
+    public Builder mdc(Map<String, String> mdc) {
+      this.mdc.putAll(mdc);
+      setters.remove(Setter.MDC);
+      return this;
+    }
+
+    public Builder id(String id) {
+      this.id = id;
+      setters.remove(Setter.ID);
+      return this;
+    }
+
+    private static Builder from(State state) {
+      return new Builder(state.ctx)
+          .graphType(state.graphType)
+          .id(ctx -> newId())
+          .mdc(ctx -> Logging.mdc(ctx.id()))
+          .cacheParams(state.cacheParams)
+          .scoreValuesFactory(state.scoreValuesFactory)
+          .scoreTimesFactory(state.scoreTimesFactory)
+          .contactTimesFactory(state.contactTimesFactory)
+          .userParams(state.userParams)
+          .dataset(state.dataset);
+    }
+
+    public Builder dataset(Dataset dataset) {
+      this.dataset = dataset;
+      setters.remove(Setter.DATASET);
+      return this;
+    }
+
+    public Builder graphType(GraphType graphType) {
+      this.graphType = graphType;
+      setters.remove(Setter.GRAPH_TYPE);
+      return this;
     }
 
     public Builder graphType(Function<GraphTypeContext, GraphType> factory) {
@@ -328,11 +314,11 @@ public final class ExperimentState implements Runnable, Identifiable {
       return this;
     }
 
-    public ExperimentState build() {
+    public State build() {
       setters.put(Setter.DISTRIBUTIONS, x -> setDistributions());
       setters.values().forEach(setter -> setter.apply(this));
       Checks.isTrue(setters.isEmpty(), "Not all attributes have been set: %s", setters.keySet());
-      return new ExperimentState(this);
+      return new State(this);
     }
 
     private Builder setDistributions() {
@@ -401,6 +387,20 @@ public final class ExperimentState implements Runnable, Identifiable {
     @Override
     public RealDistribution contactTimes() {
       return contactTimes;
+    }
+
+    private enum Setter {
+      // Ordered by dependency
+      GRAPH_TYPE,
+      ID,
+      MDC,
+      CACHE_PARAMS,
+      SCORE_VALUES,
+      SCORE_TIMES,
+      CONTACT_TIMES,
+      DISTRIBUTIONS,
+      USER_PARAMS,
+      DATASET
     }
   }
 }

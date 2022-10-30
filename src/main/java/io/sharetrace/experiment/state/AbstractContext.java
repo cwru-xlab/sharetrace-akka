@@ -5,7 +5,7 @@ import io.sharetrace.model.TimeRef;
 import java.time.Clock;
 import java.util.Set;
 
-interface AbstractExperimentContext extends TimeRef {
+interface AbstractContext extends TimeRef {
 
   Clock clock();
 

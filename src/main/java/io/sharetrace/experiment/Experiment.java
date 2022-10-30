@@ -1,7 +1,7 @@
 package io.sharetrace.experiment;
 
-import io.sharetrace.experiment.state.ExperimentContext;
-import io.sharetrace.experiment.state.ExperimentState;
+import io.sharetrace.experiment.state.Context;
+import io.sharetrace.experiment.state.State;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -15,15 +15,15 @@ public abstract class Experiment<Config> {
     runWithDefaults(config, UnaryOperator.identity());
   }
 
-  public void runWithDefaults(Config config, UnaryOperator<ExperimentState> overrideDefaults) {
+  public void runWithDefaults(Config config, UnaryOperator<State> overrideDefaults) {
     run(config, overrideDefaults.apply(newDefaultState(config)));
   }
 
-  public abstract void run(Config config, ExperimentState initialState);
+  public abstract void run(Config config, State initialState);
 
-  public abstract ExperimentState newDefaultState(Config config);
+  public abstract State newDefaultState(Config config);
 
-  public abstract ExperimentState newDefaultState(ExperimentContext context, Config config);
+  public abstract State newDefaultState(Context context, Config config);
 
   @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
   protected <R> R getProperty(Optional<R> property, String name) {
