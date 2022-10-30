@@ -13,6 +13,7 @@ import io.sharetrace.logging.metric.LoggableMetric;
 import io.sharetrace.util.TypedSupplier;
 import io.sharetrace.util.Uid;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
+import it.unimi.dsi.fastutil.objects.ObjectSets;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.Set;
@@ -90,7 +91,7 @@ abstract class AbstractContactNetwork implements ContactNetwork {
   private <T> Collector<T, ?, Set<T>> contactCollector() {
     int numContacts = graph().edgeSet().size();
     return Collectors.collectingAndThen(
-        ObjectOpenHashSet.toSetWithExpectedSize(numContacts), Collections::unmodifiableSet);
+        ObjectOpenHashSet.toSetWithExpectedSize(numContacts), ObjectSets::unmodifiable);
   }
 
   private Contact contactFrom(DefaultEdge edge) {
