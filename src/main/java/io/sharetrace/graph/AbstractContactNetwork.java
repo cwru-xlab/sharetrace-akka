@@ -28,18 +28,17 @@ import org.jgrapht.graph.DefaultEdge;
 abstract class AbstractContactNetwork implements ContactNetwork {
 
   private static final Logger LOGGER = Logging.metricsLogger();
-  private Graph<Integer, DefaultEdge> graph;
 
   protected AbstractContactNetwork() {}
 
   @Override
-  @Value.Lazy
+  @Value.Derived
   public Set<Integer> users() {
     return Collections.unmodifiableSet(graph().vertexSet());
   }
 
   @Override
-  @Value.Lazy
+  @Value.Derived
   public Set<Contact> contacts() {
     return graph().edgeSet().stream().map(this::contactFrom).collect(contactCollector());
   }
@@ -52,7 +51,7 @@ abstract class AbstractContactNetwork implements ContactNetwork {
     logMetric(GraphEccentricity.class, stats::graphEccentricity);
     logMetric(GraphScores.class, stats::graphScores);
     if (logMetric(GraphTopology.class, this::graphTopology)) {
-      Exporter.export(graph, id());
+      Exporter.export(graph(), id());
     }
   }
 
@@ -65,17 +64,13 @@ abstract class AbstractContactNetwork implements ContactNetwork {
   }
 
   @Value.Lazy
+  protected Graph<Integer, DefaultEdge> graph() {
+    return Graphs.newUndirectedGraph(graphGenerator());
+  }
+
+  @Value.Lazy
   public String id() {
     return Uid.ofIntString();
-  }
-
-  private Graph<Integer, DefaultEdge> graph() {
-    // Lazily assign to make Immutables subclassing work properly; subclass must be instantiated.
-    return (graph == null) ? (graph = newGraph()) : graph;
-  }
-
-  private Graph<Integer, DefaultEdge> newGraph() {
-    return Graphs.newUndirectedGraph(graphGenerator());
   }
 
   protected abstract GraphGenerator<Integer, DefaultEdge, ?> graphGenerator();
