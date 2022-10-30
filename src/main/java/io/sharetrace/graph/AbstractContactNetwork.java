@@ -16,6 +16,7 @@ import it.unimi.dsi.fastutil.objects.ObjectSets;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import org.immutables.value.Value;
@@ -26,8 +27,8 @@ import org.jgrapht.graph.DefaultEdge;
 @JsonIgnoreType
 abstract class AbstractContactNetwork implements ContactNetwork {
 
+  private static final Logger LOGGER = Logging.metricsLogger();
   private Graph<Integer, DefaultEdge> graph;
-  private Logger logger;
 
   protected AbstractContactNetwork() {}
 
@@ -46,28 +47,26 @@ abstract class AbstractContactNetwork implements ContactNetwork {
   @Override
   public void logMetrics() {
     GraphStats<?, ?> stats = GraphStats.of(graph());
-    String key = LoggableMetric.KEY;
-    logger().log(key, GraphSize.class, stats::graphSize);
-    logger().log(key, GraphCycles.class, stats::graphCycles);
-    logger().log(key, GraphEccentricity.class, stats::graphEccentricity);
-    logger().log(key, GraphScores.class, stats::graphScores);
-    if (logger().log(key, GraphTopology.class, () -> GraphTopology.of(id()))) {
-      exportGraph();
+    logMetric(GraphSize.class, stats::graphSize);
+    logMetric(GraphCycles.class, stats::graphCycles);
+    logMetric(GraphEccentricity.class, stats::graphEccentricity);
+    logMetric(GraphScores.class, stats::graphScores);
+    if (logMetric(GraphTopology.class, this::graphTopology)) {
+      Exporter.export(graph, id());
     }
   }
 
-  private Logger logger() {
-    // Lazily assign to make Immutables subclassing work properly; subclass must be instantiated.
-    return (logger == null) ? (logger = Logging.metricsLogger()) : logger;
+  private <T extends LoggableMetric> boolean logMetric(Class<T> type, Supplier<T> metric) {
+    return LOGGER.log(LoggableMetric.KEY, type, metric);
+  }
+
+  private GraphTopology graphTopology() {
+    return GraphTopology.of(id());
   }
 
   @Value.Lazy
   public String id() {
     return Uid.ofIntString();
-  }
-
-  private void exportGraph() {
-    Exporter.export(graph, id());
   }
 
   private Graph<Integer, DefaultEdge> graph() {
