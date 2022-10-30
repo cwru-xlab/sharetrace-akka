@@ -2,15 +2,15 @@ package io.sharetrace.graph;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreType;
 import io.sharetrace.experiment.data.factory.ContactTimeFactory;
-import io.sharetrace.logging.Logger;
-import io.sharetrace.logging.Logging;
 import io.sharetrace.logging.metric.GraphCycles;
 import io.sharetrace.logging.metric.GraphEccentricity;
 import io.sharetrace.logging.metric.GraphScores;
 import io.sharetrace.logging.metric.GraphSize;
 import io.sharetrace.logging.metric.GraphTopology;
-import io.sharetrace.logging.metric.LoggableMetric;
 import io.sharetrace.util.Uid;
+import io.sharetrace.util.logging.Logger;
+import io.sharetrace.util.logging.Logging;
+import io.sharetrace.util.logging.metric.LoggableMetric;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectSets;
 import java.time.Instant;

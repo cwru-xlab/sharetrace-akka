@@ -1,6 +1,6 @@
 package io.sharetrace.graph;
 
-import io.sharetrace.logging.Logging;
+import io.sharetrace.util.logging.Logging;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;

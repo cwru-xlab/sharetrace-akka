@@ -1,7 +1,7 @@
 package io.sharetrace.experiment.state;
 
-import io.sharetrace.logging.Loggable;
 import io.sharetrace.model.TimeRef;
+import io.sharetrace.util.logging.Loggable;
 import java.time.Clock;
 import java.util.Set;
 
