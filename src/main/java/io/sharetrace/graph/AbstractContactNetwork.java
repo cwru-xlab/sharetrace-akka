@@ -29,8 +29,6 @@ abstract class AbstractContactNetwork implements ContactNetwork {
 
   private static final Logger LOGGER = Logging.metricsLogger();
 
-  protected AbstractContactNetwork() {}
-
   @Override
   @Value.Derived
   public Set<Integer> users() {
@@ -64,13 +62,13 @@ abstract class AbstractContactNetwork implements ContactNetwork {
   }
 
   @Value.Lazy
-  protected Graph<Integer, DefaultEdge> graph() {
-    return Graphs.newUndirectedGraph(graphGenerator());
+  public String id() {
+    return Uid.ofIntString();
   }
 
   @Value.Lazy
-  public String id() {
-    return Uid.ofIntString();
+  protected Graph<Integer, DefaultEdge> graph() {
+    return Graphs.newUndirectedGraph(graphGenerator());
   }
 
   protected abstract GraphGenerator<Integer, DefaultEdge, ?> graphGenerator();
