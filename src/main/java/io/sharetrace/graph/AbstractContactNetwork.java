@@ -10,7 +10,6 @@ import io.sharetrace.logging.metric.GraphScores;
 import io.sharetrace.logging.metric.GraphSize;
 import io.sharetrace.logging.metric.GraphTopology;
 import io.sharetrace.logging.metric.LoggableMetric;
-import io.sharetrace.util.TypedSupplier;
 import io.sharetrace.util.Uid;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectSets;
@@ -48,11 +47,11 @@ abstract class AbstractContactNetwork implements ContactNetwork {
   public void logMetrics() {
     GraphStats<?, ?> stats = GraphStats.of(graph());
     String key = LoggableMetric.KEY;
-    logger().log(key, TypedSupplier.of(GraphSize.class, stats::graphSize));
-    logger().log(key, TypedSupplier.of(GraphCycles.class, stats::graphCycles));
-    logger().log(key, TypedSupplier.of(GraphEccentricity.class, stats::graphEccentricity));
-    logger().log(key, TypedSupplier.of(GraphScores.class, stats::graphScores));
-    if (logger().log(key, graphTopology())) {
+    logger().log(key, GraphSize.class, stats::graphSize);
+    logger().log(key, GraphCycles.class, stats::graphCycles);
+    logger().log(key, GraphEccentricity.class, stats::graphEccentricity);
+    logger().log(key, GraphScores.class, stats::graphScores);
+    if (logger().log(key, GraphTopology.class, () -> GraphTopology.of(id()))) {
       exportGraph();
     }
   }
@@ -62,17 +61,13 @@ abstract class AbstractContactNetwork implements ContactNetwork {
     return (logger == null) ? (logger = Logging.metricsLogger()) : logger;
   }
 
-  private TypedSupplier<GraphTopology> graphTopology() {
-    return TypedSupplier.of(GraphTopology.class, () -> GraphTopology.of(id()));
+  @Value.Lazy
+  public String id() {
+    return Uid.ofIntString();
   }
 
   private void exportGraph() {
     Exporter.export(graph, id());
-  }
-
-  @Value.Lazy
-  public String id() {
-    return Uid.ofIntString();
   }
 
   private Graph<Integer, DefaultEdge> graph() {

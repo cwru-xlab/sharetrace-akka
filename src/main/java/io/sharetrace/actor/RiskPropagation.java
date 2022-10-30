@@ -30,7 +30,6 @@ import io.sharetrace.message.UserMsg;
 import io.sharetrace.model.RiskScore;
 import io.sharetrace.model.UserParams;
 import io.sharetrace.util.CacheParams;
-import io.sharetrace.util.TypedSupplier;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import java.time.Clock;
 import java.util.BitSet;
@@ -199,7 +198,7 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
   }
 
   private <T extends Loggable> void logMetric(Class<T> type, Supplier<T> supplier) {
-    logger.log(LoggableMetric.KEY, TypedSupplier.of(type, supplier));
+    logger.log(LoggableMetric.KEY, type, supplier);
   }
 
   private CreateUsersRuntime createRuntime() {

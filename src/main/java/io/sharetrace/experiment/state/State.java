@@ -15,7 +15,6 @@ import io.sharetrace.model.UserParams;
 import io.sharetrace.util.CacheParams;
 import io.sharetrace.util.Checks;
 import io.sharetrace.util.IntervalCache;
-import io.sharetrace.util.TypedSupplier;
 import io.sharetrace.util.Uid;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import java.time.Clock;
@@ -81,7 +80,7 @@ public final class State implements Runnable, Identifiable {
     Logging.setLoggable(ctx.loggable());
     MDC.setContextMap(mdc);
     dataset.contactNetwork().logMetrics();
-    logger.log(LoggableSetting.KEY, TypedSupplier.of(ExperimentSettings.class, this::settings));
+    logger.log(LoggableSetting.KEY, ExperimentSettings.class, this::settings);
   }
 
   private void runAlgorithm() {

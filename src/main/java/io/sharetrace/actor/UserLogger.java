@@ -17,7 +17,6 @@ import io.sharetrace.logging.event.SendCurrentEvent;
 import io.sharetrace.logging.event.TimeoutEvent;
 import io.sharetrace.logging.event.UpdateEvent;
 import io.sharetrace.message.RiskScoreMsg;
-import io.sharetrace.util.TypedSupplier;
 import java.util.function.Supplier;
 
 final class UserLogger {
@@ -39,7 +38,7 @@ final class UserLogger {
   }
 
   private <T extends Loggable> void log(Class<T> type, Supplier<T> supplier) {
-    logger.log(LoggableEvent.KEY, TypedSupplier.of(type, supplier));
+    logger.log(LoggableEvent.KEY, type, supplier);
   }
 
   private ContactEvent contactEvent(ActorRef<?> contact) {

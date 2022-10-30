@@ -6,6 +6,7 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 import net.logstash.logback.argument.StructuredArguments;
 import org.slf4j.LoggerFactory;
 
@@ -24,12 +25,15 @@ public final class Logging {
   }
 
   public static Logger logger(org.slf4j.Logger delegate) {
-    return (key, loggable) -> {
-      boolean logged = delegate.isInfoEnabled() && enabled.contains(loggable.getType());
-      if (logged) {
-        delegate.info(key, StructuredArguments.value(key, loggable.get()));
+    return new Logger() {
+      @Override
+      public <T extends Loggable> boolean log(String key, Class<T> type, Supplier<T> loggable) {
+        boolean logged = delegate.isInfoEnabled() && enabled.contains(type);
+        if (logged) {
+          delegate.info(key, StructuredArguments.value(key, loggable.get()));
+        }
+        return logged;
       }
-      return logged;
     };
   }
 

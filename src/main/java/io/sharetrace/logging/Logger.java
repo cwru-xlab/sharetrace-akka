@@ -1,9 +1,9 @@
 package io.sharetrace.logging;
 
-import io.sharetrace.util.TypedSupplier;
+import java.util.function.Supplier;
 
 @FunctionalInterface
 public interface Logger {
 
-  boolean log(String key, TypedSupplier<? extends Loggable> loggable);
+  <T extends Loggable> boolean log(String key, Class<T> type, Supplier<T> loggable);
 }
