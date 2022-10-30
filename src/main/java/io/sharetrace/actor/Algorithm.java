@@ -6,8 +6,8 @@ import akka.actor.typed.Behavior;
 import akka.actor.typed.Props;
 import akka.actor.typed.Terminated;
 import akka.actor.typed.javadsl.Behaviors;
-import io.sharetrace.message.AlgorithmMsg;
-import io.sharetrace.message.RunMsg;
+import io.sharetrace.model.message.AlgorithmMsg;
+import io.sharetrace.model.message.RunMsg;
 import java.util.concurrent.ExecutionException;
 
 public final class Algorithm implements Runnable {

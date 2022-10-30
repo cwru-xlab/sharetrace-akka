@@ -1,4 +1,4 @@
-package io.sharetrace.message;
+package io.sharetrace.model.message;
 
 import akka.actor.typed.ActorRef;
 import org.immutables.value.Value;

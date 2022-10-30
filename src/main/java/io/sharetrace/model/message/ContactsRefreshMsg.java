@@ -1,4 +1,4 @@
-package io.sharetrace.message;
+package io.sharetrace.model.message;
 
 public enum ContactsRefreshMsg implements UserMsg {
   INSTANCE
