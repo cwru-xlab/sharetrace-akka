@@ -185,8 +185,8 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
         .build();
   }
 
-  private <T extends LoggableMetric> void logMetric(Class<T> type, Supplier<T> supplier) {
-    LOGGER.log(LoggableMetric.KEY, type, supplier);
+  private <T extends LoggableMetric> void logMetric(Class<T> type, Supplier<T> metric) {
+    LOGGER.log(LoggableMetric.KEY, type, metric);
   }
 
   private CreateUsersRuntime createRuntime() {

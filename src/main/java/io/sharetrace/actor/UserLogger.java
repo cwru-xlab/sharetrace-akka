@@ -31,11 +31,11 @@ final class UserLogger {
   }
 
   public void logContact(ActorRef<?> contact) {
-    log(ContactEvent.class, () -> contactEvent(contact));
+    logEvent(ContactEvent.class, () -> contactEvent(contact));
   }
 
-  private <T extends LoggableEvent> void log(Class<T> type, Supplier<T> supplier) {
-    LOGGER.log(LoggableEvent.KEY, type, supplier);
+  private <T extends LoggableEvent> void logEvent(Class<T> type, Supplier<T> event) {
+    LOGGER.log(LoggableEvent.KEY, type, event);
   }
 
   private ContactEvent contactEvent(ActorRef<?> contact) {
@@ -43,7 +43,7 @@ final class UserLogger {
   }
 
   public void logSendCached(ActorRef<?> contact, RiskScoreMsg cached) {
-    log(SendCachedEvent.class, () -> sendCachedEvent(contact, cached));
+    logEvent(SendCachedEvent.class, () -> sendCachedEvent(contact, cached));
   }
 
   private SendCachedEvent sendCachedEvent(ActorRef<?> contact, RiskScoreMsg cached) {
@@ -56,7 +56,7 @@ final class UserLogger {
   }
 
   public void logSendCurrent(ActorRef<?> contact, RiskScoreMsg current) {
-    log(SendCurrentEvent.class, () -> sendCurrentEvent(contact, current));
+    logEvent(SendCurrentEvent.class, () -> sendCurrentEvent(contact, current));
   }
 
   private SendCurrentEvent sendCurrentEvent(ActorRef<?> contact, RiskScoreMsg current) {
@@ -69,7 +69,7 @@ final class UserLogger {
   }
 
   public void logReceive(RiskScoreMsg received) {
-    log(ReceiveEvent.class, () -> receiveEvent(received));
+    logEvent(ReceiveEvent.class, () -> receiveEvent(received));
   }
 
   private ReceiveEvent receiveEvent(RiskScoreMsg received) {
@@ -82,7 +82,7 @@ final class UserLogger {
   }
 
   public void logUpdate(RiskScoreMsg previous, RiskScoreMsg current) {
-    log(UpdateEvent.class, () -> updateEvent(previous, current));
+    logEvent(UpdateEvent.class, () -> updateEvent(previous, current));
   }
 
   private UpdateEvent updateEvent(RiskScoreMsg previous, RiskScoreMsg current) {
@@ -97,7 +97,7 @@ final class UserLogger {
   }
 
   public void logPropagate(ActorRef<?> contact, RiskScoreMsg propagated) {
-    log(PropagateEvent.class, () -> propagateEvent(contact, propagated));
+    logEvent(PropagateEvent.class, () -> propagateEvent(contact, propagated));
   }
 
   private PropagateEvent propagateEvent(ActorRef<?> contact, RiskScoreMsg propagated) {
@@ -110,7 +110,7 @@ final class UserLogger {
   }
 
   public void logContactsRefresh(int numRemaining, int numExpired) {
-    log(ContactsRefreshEvent.class, () -> contactsRefreshEvent(numRemaining, numExpired));
+    logEvent(ContactsRefreshEvent.class, () -> contactsRefreshEvent(numRemaining, numExpired));
   }
 
   private ContactsRefreshEvent contactsRefreshEvent(int numRemaining, int numExpired) {
@@ -122,7 +122,7 @@ final class UserLogger {
   }
 
   public void logCurrentRefresh(RiskScoreMsg previous, RiskScoreMsg current) {
-    log(CurrentRefreshEvent.class, () -> currentRefreshEvent(previous, current));
+    logEvent(CurrentRefreshEvent.class, () -> currentRefreshEvent(previous, current));
   }
 
   private CurrentRefreshEvent currentRefreshEvent(RiskScoreMsg previous, RiskScoreMsg current) {
@@ -136,7 +136,7 @@ final class UserLogger {
   }
 
   public void logTimeout() {
-    log(TimeoutEvent.class, this::timeoutEvent);
+    logEvent(TimeoutEvent.class, this::timeoutEvent);
   }
 
   private TimeoutEvent timeoutEvent() {
@@ -144,7 +144,7 @@ final class UserLogger {
   }
 
   public void logResume() {
-    log(ResumeEvent.class, this::resumeEvent);
+    logEvent(ResumeEvent.class, this::resumeEvent);
   }
 
   private ResumeEvent resumeEvent() {
