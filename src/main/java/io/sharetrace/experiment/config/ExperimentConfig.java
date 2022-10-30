@@ -1,7 +1,7 @@
 package io.sharetrace.experiment.config;
 
 import com.google.common.collect.Range;
-import io.sharetrace.experiment.GraphType;
+import io.sharetrace.graph.GraphType;
 import io.sharetrace.util.Checks;
 import java.util.Optional;
 import org.immutables.value.Value;

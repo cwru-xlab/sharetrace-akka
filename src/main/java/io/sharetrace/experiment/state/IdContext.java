@@ -1,6 +1,6 @@
 package io.sharetrace.experiment.state;
 
-import io.sharetrace.experiment.GraphType;
+import io.sharetrace.graph.GraphType;
 
 public interface IdContext extends GraphTypeContext {
 

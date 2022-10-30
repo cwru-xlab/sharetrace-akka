@@ -1,6 +1,6 @@
 package io.sharetrace.experiment.data.factory;
 
-import io.sharetrace.experiment.GraphType;
+import io.sharetrace.graph.GraphType;
 import java.util.OptionalDouble;
 import java.util.OptionalInt;
 import org.immutables.builder.Builder;

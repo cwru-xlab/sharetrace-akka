@@ -1,10 +1,10 @@
 import io.sharetrace.experiment.FileExperiment;
-import io.sharetrace.experiment.GraphType;
 import io.sharetrace.experiment.ParamsExperiment;
 import io.sharetrace.experiment.RuntimeExperiment;
 import io.sharetrace.experiment.config.FileExperimentConfig;
 import io.sharetrace.experiment.config.ParamsExperimentConfig;
 import io.sharetrace.experiment.config.RuntimeExperimentConfig;
+import io.sharetrace.graph.GraphType;
 import java.nio.file.Path;
 import java.util.List;
 import org.junit.jupiter.api.Assertions;

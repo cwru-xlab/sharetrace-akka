@@ -9,6 +9,7 @@ import io.sharetrace.experiment.state.Context;
 import io.sharetrace.experiment.state.Defaults;
 import io.sharetrace.experiment.state.State;
 import io.sharetrace.graph.ContactNetwork;
+import io.sharetrace.graph.GraphType;
 import io.sharetrace.util.logging.Loggable;
 import io.sharetrace.util.logging.metric.GraphTopology;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;

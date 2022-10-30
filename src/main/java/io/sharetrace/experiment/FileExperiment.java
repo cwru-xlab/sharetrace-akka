@@ -6,6 +6,7 @@ import io.sharetrace.experiment.data.FileDataset;
 import io.sharetrace.experiment.state.Context;
 import io.sharetrace.experiment.state.Defaults;
 import io.sharetrace.experiment.state.State;
+import io.sharetrace.graph.GraphType;
 import java.nio.file.Path;
 
 public final class FileExperiment extends Experiment<FileExperimentConfig> {

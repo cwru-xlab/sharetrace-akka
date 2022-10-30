@@ -1,4 +1,4 @@
-package io.sharetrace.experiment;
+package io.sharetrace.graph;
 
 import java.util.EnumSet;
 import java.util.Set;

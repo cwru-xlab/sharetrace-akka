@@ -1,9 +1,9 @@
 package io.sharetrace.experiment.state;
 
 import io.sharetrace.actor.RiskPropagationBuilder;
-import io.sharetrace.experiment.GraphType;
 import io.sharetrace.experiment.data.Dataset;
 import io.sharetrace.experiment.data.factory.DistributionFactory;
+import io.sharetrace.graph.GraphType;
 import io.sharetrace.model.Identifiable;
 import io.sharetrace.model.UserParams;
 import io.sharetrace.model.message.RiskScoreMsg;

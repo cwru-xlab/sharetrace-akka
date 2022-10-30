@@ -8,6 +8,7 @@ import io.sharetrace.experiment.state.Context;
 import io.sharetrace.experiment.state.Defaults;
 import io.sharetrace.experiment.state.State;
 import io.sharetrace.graph.ContactNetwork;
+import io.sharetrace.graph.GraphType;
 import io.sharetrace.util.logging.metric.CreateUsersRuntime;
 import io.sharetrace.util.logging.metric.GraphSize;
 import io.sharetrace.util.logging.metric.MsgPassingRuntime;
