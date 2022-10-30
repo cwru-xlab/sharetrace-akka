@@ -26,7 +26,7 @@ final class UserLogger {
   private final String userName;
 
   public UserLogger(ActorContext<?> ctx) {
-    this.logger = Logging.logger(ctx::getLog);
+    this.logger = Logging.logger(ctx.getLog());
     this.userName = name(ctx.getSelf());
   }
 

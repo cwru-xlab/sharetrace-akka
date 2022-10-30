@@ -87,7 +87,7 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
       Clock clock,
       CacheFactory<RiskScoreMsg> cacheFactory) {
     super(ctx);
-    this.logger = Logging.logger(getContext()::getLog);
+    this.logger = Logging.logger(getContext().getLog());
     this.mdc = mdc;
     this.dataset = dataset;
     this.numUsers = dataset.contactNetwork().users().size();
