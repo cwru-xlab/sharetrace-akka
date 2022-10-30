@@ -5,9 +5,9 @@ import java.util.function.Supplier;
 public final class TypedSupplier<T> implements Supplier<T> {
 
   private final Class<T> type;
-  private final Supplier<? extends T> supplier;
+  private final Supplier<T> supplier;
 
-  private TypedSupplier(Class<T> type, Supplier<? extends T> supplier) {
+  private TypedSupplier(Class<T> type, Supplier<T> supplier) {
     this.type = type;
     this.supplier = supplier;
   }
@@ -17,7 +17,7 @@ public final class TypedSupplier<T> implements Supplier<T> {
     return new TypedSupplier<>((Class<T>) result.getClass(), () -> result);
   }
 
-  public static <T> TypedSupplier<T> of(Class<T> type, Supplier<? extends T> supplier) {
+  public static <T> TypedSupplier<T> of(Class<T> type, Supplier<T> supplier) {
     return new TypedSupplier<>(type, supplier);
   }
 
