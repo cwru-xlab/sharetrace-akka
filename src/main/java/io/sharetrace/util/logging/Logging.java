@@ -24,17 +24,8 @@ public final class Logging {
     return logger(LoggerFactory.getLogger("MetricsLogger"));
   }
 
-  public static Logger logger(org.slf4j.Logger delegate) {
-    return new Logger() {
-      @Override
-      public <T extends Loggable> boolean log(String key, Class<T> type, Supplier<T> loggable) {
-        boolean logged = delegate.isInfoEnabled() && enabled.contains(type);
-        if (logged) {
-          delegate.info(key, StructuredArguments.value(key, loggable.get()));
-        }
-        return logged;
-      }
-    };
+  private static Logger logger(org.slf4j.Logger delegate) {
+    return new StandardLogger(delegate);
   }
 
   public static Logger eventsLogger() {
@@ -62,5 +53,23 @@ public final class Logging {
   public static synchronized void setLoggable(Collection<Class<? extends Loggable>> loggable) {
     enabled.clear();
     enabled.addAll(loggable);
+  }
+
+  private static final class StandardLogger implements Logger {
+
+    private final org.slf4j.Logger delegate;
+
+    public StandardLogger(org.slf4j.Logger delegate) {
+      this.delegate = delegate;
+    }
+
+    @Override
+    public <T extends Loggable> boolean log(String key, Class<T> type, Supplier<T> loggable) {
+      boolean logged = delegate.isInfoEnabled() && enabled.contains(type);
+      if (logged) {
+        delegate.info(key, StructuredArguments.value(key, loggable.get()));
+      }
+      return logged;
+    }
   }
 }
