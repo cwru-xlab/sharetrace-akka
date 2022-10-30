@@ -1,8 +1,6 @@
 package io.sharetrace.experiment.state;
 
-import java.util.Map;
+public interface CacheParamsContext extends IdContext {
 
-public interface CacheParamsContext extends MdcContext {
-
-  Map<String, String> mdc();
+  String id();
 }

@@ -12,7 +12,6 @@ import io.sharetrace.data.Dataset;
 import io.sharetrace.data.factory.CacheFactory;
 import io.sharetrace.graph.Contact;
 import io.sharetrace.graph.ContactNetwork;
-import io.sharetrace.logging.Loggable;
 import io.sharetrace.logging.Logger;
 import io.sharetrace.logging.Logging;
 import io.sharetrace.logging.metric.CreateUsersRuntime;
@@ -36,7 +35,6 @@ import java.util.BitSet;
 import java.util.Map;
 import java.util.function.Supplier;
 import org.immutables.builder.Builder;
-import org.slf4j.MDC;
 
 /**
  * A non-iterative, asynchronous, concurrent implementation of the ShareTrace algorithm. The
@@ -64,12 +62,11 @@ import org.slf4j.MDC;
  */
 public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
 
+  private static final Logger LOGGER = Logging.metricsLogger();
   private static final String NAME = RiskPropagation.class.getSimpleName();
   private static final Props PROPS = DispatcherSelector.fromConfig("algorithm-dispatcher");
   private static final Props USER_PROPS = DispatcherSelector.fromConfig("user-dispatcher");
 
-  private final Logger logger;
-  private final Map<String, String> mdc;
   private final UserParams userParams;
   private final Dataset dataset;
   private final int numUsers;
@@ -80,14 +77,11 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
 
   private RiskPropagation(
       ActorContext<AlgorithmMsg> ctx,
-      Map<String, String> mdc,
       Dataset dataset,
       UserParams userParams,
       Clock clock,
       CacheFactory<RiskScoreMsg> cacheFactory) {
     super(ctx);
-    this.logger = Logging.logger(getContext().getLog());
-    this.mdc = mdc;
     this.dataset = dataset;
     this.numUsers = dataset.contactNetwork().users().size();
     this.userParams = userParams;
@@ -100,16 +94,12 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
   @Builder.Factory
   static Algorithm riskPropagation(
       Dataset dataset,
-      Map<String, String> mdc,
       UserParams userParams,
       Clock clock,
       CacheFactory<RiskScoreMsg> cacheFactory) {
     Behavior<AlgorithmMsg> behavior =
-        Behaviors.setup(
-            ctx -> {
-              ctx.setLoggerName(Logging.METRICS_LOGGER_NAME);
-              return new RiskPropagation(ctx, mdc, dataset, userParams, clock, cacheFactory);
-            });
+        Behaviors.setup(ctx -> new RiskPropagation(ctx, dataset, userParams, clock, cacheFactory));
+    behavior = Behaviors.withMdc(AlgorithmMsg.class, Logging.mdc(), behavior);
     return Algorithm.of(behavior, NAME, PROPS);
   }
 
@@ -140,7 +130,6 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
     stopped.set(msg.user());
     if (stopped.cardinality() == numUsers) {
       timer.stop();
-      MDC.setContextMap(mdc);
       logMetrics();
       behavior = Behaviors.stopped();
     }
@@ -190,15 +179,14 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
     return UserBuilder.create()
         .riskProp(getContext().getSelf())
         .timeoutId(timeoutId)
-        .putAllMdc(mdc)
         .userParams(userParams)
         .clock(clock)
         .cache(cacheFactory.newCache())
         .build();
   }
 
-  private <T extends Loggable> void logMetric(Class<T> type, Supplier<T> supplier) {
-    logger.log(LoggableMetric.KEY, type, supplier);
+  private <T extends LoggableMetric> void logMetric(Class<T> type, Supplier<T> supplier) {
+    LOGGER.log(LoggableMetric.KEY, type, supplier);
   }
 
   private CreateUsersRuntime createRuntime() {

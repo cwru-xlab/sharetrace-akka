@@ -1,8 +1,6 @@
 package io.sharetrace.actor;
 
 import akka.actor.typed.ActorRef;
-import akka.actor.typed.javadsl.ActorContext;
-import io.sharetrace.logging.Loggable;
 import io.sharetrace.logging.Logger;
 import io.sharetrace.logging.Logging;
 import io.sharetrace.logging.event.ContactEvent;
@@ -21,12 +19,11 @@ import java.util.function.Supplier;
 
 final class UserLogger {
 
-  private final Logger logger;
-  private final String userName;
+  private static final Logger LOGGER = Logging.eventsLogger();
+  private final String selfName;
 
-  public UserLogger(ActorContext<?> ctx) {
-    this.logger = Logging.logger(ctx.getLog());
-    this.userName = name(ctx.getSelf());
+  public UserLogger(ActorRef<?> self) {
+    this.selfName = name(self);
   }
 
   private static String name(ActorRef<?> user) {
@@ -37,12 +34,12 @@ final class UserLogger {
     log(ContactEvent.class, () -> contactEvent(contact));
   }
 
-  private <T extends Loggable> void log(Class<T> type, Supplier<T> supplier) {
-    logger.log(LoggableEvent.KEY, type, supplier);
+  private <T extends LoggableEvent> void log(Class<T> type, Supplier<T> supplier) {
+    LOGGER.log(LoggableEvent.KEY, type, supplier);
   }
 
   private ContactEvent contactEvent(ActorRef<?> contact) {
-    return ContactEvent.builder().user(userName).addUsers(userName, name(contact)).build();
+    return ContactEvent.builder().user(selfName).addUsers(selfName, name(contact)).build();
   }
 
   public void logSendCached(ActorRef<?> contact, RiskScoreMsg cached) {
@@ -78,7 +75,7 @@ final class UserLogger {
   private ReceiveEvent receiveEvent(RiskScoreMsg received) {
     return ReceiveEvent.builder()
         .from(name(received.replyTo()))
-        .to(userName)
+        .to(selfName)
         .score(received.score())
         .id(received.id())
         .build();
@@ -91,7 +88,7 @@ final class UserLogger {
   private UpdateEvent updateEvent(RiskScoreMsg previous, RiskScoreMsg current) {
     return UpdateEvent.builder()
         .from(name(current.replyTo()))
-        .to(userName)
+        .to(selfName)
         .oldScore(previous.score())
         .newScore(current.score())
         .oldId(previous.id())
@@ -118,7 +115,7 @@ final class UserLogger {
 
   private ContactsRefreshEvent contactsRefreshEvent(int numRemaining, int numExpired) {
     return ContactsRefreshEvent.builder()
-        .user(userName)
+        .user(selfName)
         .numRemaining(numRemaining)
         .numExpired(numExpired)
         .build();
@@ -130,7 +127,7 @@ final class UserLogger {
 
   private CurrentRefreshEvent currentRefreshEvent(RiskScoreMsg previous, RiskScoreMsg current) {
     return CurrentRefreshEvent.builder()
-        .user(userName)
+        .user(selfName)
         .oldScore(previous.score())
         .newScore(current.score())
         .oldId(previous.id())
@@ -143,7 +140,7 @@ final class UserLogger {
   }
 
   private TimeoutEvent timeoutEvent() {
-    return TimeoutEvent.builder().user(userName).build();
+    return TimeoutEvent.builder().user(selfName).build();
   }
 
   public void logResume() {
@@ -151,6 +148,6 @@ final class UserLogger {
   }
 
   private ResumeEvent resumeEvent() {
-    return ResumeEvent.builder().user(userName).build();
+    return ResumeEvent.builder().user(selfName).build();
   }
 }

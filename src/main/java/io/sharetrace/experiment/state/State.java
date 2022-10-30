@@ -16,7 +16,6 @@ import io.sharetrace.util.CacheParams;
 import io.sharetrace.util.Checks;
 import io.sharetrace.util.IntervalCache;
 import io.sharetrace.util.Uid;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.Collections;
@@ -28,15 +27,13 @@ import java.util.stream.IntStream;
 import org.apache.commons.math3.distribution.RealDistribution;
 import org.apache.commons.math3.distribution.UniformRealDistribution;
 import org.apache.commons.math3.random.Well512a;
-import org.slf4j.MDC;
 
 public final class State implements Runnable, Identifiable {
 
+  private static final Logger LOGGER = Logging.settingsLogger();
   private final Context ctx;
-  private final Logger logger;
   private final GraphType graphType;
   private final String id;
-  private final Map<String, String> mdc;
   private final CacheParams<RiskScoreMsg> cacheParams;
   private final DistributionFactory scoreValuesFactory;
   private final DistributionFactory scoreTimesFactory;
@@ -46,10 +43,8 @@ public final class State implements Runnable, Identifiable {
 
   private State(Builder builder) {
     ctx = builder.ctx;
-    logger = builder.logger;
     graphType = builder.graphType;
     id = builder.id;
-    mdc = builder.mdc;
     cacheParams = builder.cacheParams;
     scoreValuesFactory = builder.scoreValuesFactory;
     scoreTimesFactory = builder.scoreTimesFactory;
@@ -68,6 +63,7 @@ public final class State implements Runnable, Identifiable {
 
   @Override
   public void run() {
+    setUpLogging();
     logMetricsAndSettings();
     runAlgorithm();
   }
@@ -76,16 +72,18 @@ public final class State implements Runnable, Identifiable {
     return Builder.from(this);
   }
 
-  private void logMetricsAndSettings() {
+  private void setUpLogging() {
+    Logging.setMdc(id);
     Logging.setLoggable(ctx.loggable());
-    MDC.setContextMap(mdc);
+  }
+
+  private void logMetricsAndSettings() {
     dataset.contactNetwork().logMetrics();
-    logger.log(LoggableSetting.KEY, ExperimentSettings.class, this::settings);
+    LOGGER.log(LoggableSetting.KEY, ExperimentSettings.class, this::settings);
   }
 
   private void runAlgorithm() {
     RiskPropagationBuilder.create()
-        .putAllMdc(mdc)
         .dataset(dataset)
         .userParams(userParams)
         .clock(ctx.clock())
@@ -115,10 +113,6 @@ public final class State implements Runnable, Identifiable {
     return id;
   }
 
-  public Map<String, String> mdc() {
-    return Collections.unmodifiableMap(mdc);
-  }
-
   public Context context() {
     return ctx;
   }
@@ -142,16 +136,13 @@ public final class State implements Runnable, Identifiable {
   public static class Builder
       implements GraphTypeContext,
           IdContext,
-          MdcContext,
           CacheParamsContext,
           DistributionFactoryContext,
           UserParamsContext,
           DatasetContext {
 
     private final Context ctx;
-    private final Logger logger;
     private final Map<Setter, Function<? super Builder, ?>> setters;
-    private final Map<String, String> mdc;
     private GraphType graphType;
     private String id;
     private CacheParams<RiskScoreMsg> cacheParams;
@@ -166,9 +157,7 @@ public final class State implements Runnable, Identifiable {
 
     private Builder(Context context) {
       ctx = context;
-      logger = Logging.settingsLogger();
       setters = newSetters();
-      mdc = new Object2ObjectOpenHashMap<>();
     }
 
     private static Map<Setter, Function<? super Builder, ?>> newSetters() {
@@ -182,7 +171,6 @@ public final class State implements Runnable, Identifiable {
     private static Builder withDefaults(Context context) {
       return new Builder(context)
           .id(ctx -> newId())
-          .mdc(ctx -> Logging.mdc(ctx.id()))
           .cacheParams(ctx -> Defaults.cacheParams())
           .scoreTimesFactory(defaultFactory())
           .scoreValuesFactory(defaultFactory())
@@ -215,11 +203,6 @@ public final class State implements Runnable, Identifiable {
 
     public Builder cacheParams(Function<CacheParamsContext, CacheParams<RiskScoreMsg>> factory) {
       setters.put(Setter.CACHE_PARAMS, factory.andThen(this::cacheParams));
-      return this;
-    }
-
-    public Builder mdc(Function<MdcContext, Map<String, String>> factory) {
-      setters.put(Setter.MDC, factory.andThen(this::mdc));
       return this;
     }
 
@@ -266,12 +249,6 @@ public final class State implements Runnable, Identifiable {
       return this;
     }
 
-    public Builder mdc(Map<String, String> mdc) {
-      this.mdc.putAll(mdc);
-      setters.remove(Setter.MDC);
-      return this;
-    }
-
     public Builder id(String id) {
       this.id = id;
       setters.remove(Setter.ID);
@@ -282,7 +259,6 @@ public final class State implements Runnable, Identifiable {
       return new Builder(state.ctx)
           .graphType(state.graphType)
           .id(ctx -> newId())
-          .mdc(ctx -> Logging.mdc(ctx.id()))
           .cacheParams(state.cacheParams)
           .scoreValuesFactory(state.scoreValuesFactory)
           .scoreTimesFactory(state.scoreTimesFactory)
@@ -364,11 +340,6 @@ public final class State implements Runnable, Identifiable {
     }
 
     @Override
-    public Map<String, String> mdc() {
-      return Collections.unmodifiableMap(mdc);
-    }
-
-    @Override
     public CacheParams<RiskScoreMsg> cacheParams() {
       return cacheParams;
     }
@@ -392,7 +363,6 @@ public final class State implements Runnable, Identifiable {
       // Ordered by dependency
       GRAPH_TYPE,
       ID,
-      MDC,
       CACHE_PARAMS,
       SCORE_VALUES,
       SCORE_TIMES,

@@ -66,12 +66,12 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
     this.riskProp = riskProp;
     this.timedOutMsg = TimedOutMsg.of(timeoutId);
     this.timers = timers;
-    this.logger = new UserLogger(getContext());
+    this.logger = new UserLogger(getContext().getSelf());
     this.userParams = userParams;
     this.clock = clock;
     this.cache = cache;
     this.contacts = new Object2ObjectOpenHashMap<>();
-    this.msgUtil = new MsgUtil(getContext(), clock, userParams);
+    this.msgUtil = new MsgUtil(getContext().getSelf(), clock, userParams);
     this.defaultCurrent = msgUtil.defaultMsg();
     this.current = defaultCurrent;
   }
@@ -80,18 +80,16 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
   static Behavior<UserMsg> user(
       ActorRef<AlgorithmMsg> riskProp,
       int timeoutId,
-      Map<String, String> mdc,
       UserParams userParams,
       Clock clock,
       IntervalCache<RiskScoreMsg> cache) {
     return Behaviors.setup(
         ctx -> {
-          ctx.setLoggerName(Logging.EVENTS_LOGGER_NAME);
           Behavior<UserMsg> user =
               Behaviors.withTimers(
                   timers ->
                       new UserActor(ctx, riskProp, timeoutId, timers, userParams, clock, cache));
-          return Behaviors.withMdc(UserMsg.class, msg -> mdc, user);
+          return Behaviors.withMdc(UserMsg.class, Logging.mdc(), user);
         });
   }
 
@@ -126,6 +124,7 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
     return this;
   }
 
+  @SuppressWarnings("unused")
   private Behavior<UserMsg> handle(CurrentRefreshMsg msg) {
     RiskScoreMsg cachedOrDefault = cache.max(clock.instant()).orElse(defaultCurrent);
     RiskScoreMsg previous = updateCurrent(cachedOrDefault);
@@ -136,6 +135,7 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
     return this;
   }
 
+  @SuppressWarnings("unused")
   private Behavior<UserMsg> handle(ContactsRefreshMsg msg) {
     int numContacts = contacts.size();
     contacts.values().removeIf(Predicate.not(ContactActor::isAlive));

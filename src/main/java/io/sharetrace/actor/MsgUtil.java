@@ -1,6 +1,6 @@
 package io.sharetrace.actor;
 
-import akka.actor.typed.javadsl.ActorContext;
+import akka.actor.typed.ActorRef;
 import io.sharetrace.message.ContactMsg;
 import io.sharetrace.message.RiskScoreMsg;
 import io.sharetrace.message.UserMsg;
@@ -13,12 +13,12 @@ import java.time.temporal.Temporal;
 
 final class MsgUtil {
 
-  private final ActorContext<UserMsg> ctx;
+  private final ActorRef<UserMsg> self;
   private final Clock clock;
   private final UserParams params;
 
-  public MsgUtil(ActorContext<UserMsg> ctx, Clock clock, UserParams params) {
-    this.ctx = ctx;
+  public MsgUtil(ActorRef<UserMsg> self, Clock clock, UserParams params) {
+    this.self = self;
     this.clock = clock;
     this.params = params;
   }
@@ -38,11 +38,11 @@ final class MsgUtil {
   public RiskScoreMsg transmitted(RiskScoreMsg msg) {
     RiskScore original = msg.score();
     RiskScore transmitted = original.withValue(original.value() * params.transRate());
-    return RiskScoreMsg.of(transmitted, ctx.getSelf(), msg.id());
+    return RiskScoreMsg.of(transmitted, self, msg.id());
   }
 
   public RiskScoreMsg defaultMsg() {
-    return RiskScoreMsg.of(RiskScore.MIN, ctx.getSelf());
+    return RiskScoreMsg.of(RiskScore.MIN, self);
   }
 
   public boolean isGreaterThan(RiskScoreMsg msg1, RiskScoreMsg msg2) {

@@ -98,7 +98,7 @@
     </appender>
   </appender>
 
-  <root level="debug">
+  <root level="info">
     <appender-ref ref="ConsoleAppender"/>
   </root>
   <logger name="EventsLogger" level="info" additivity="false">
