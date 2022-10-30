@@ -2,10 +2,10 @@ package io.sharetrace.actor;
 
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.javadsl.TimerScheduler;
-import io.sharetrace.message.ContactMsg;
-import io.sharetrace.message.RiskScoreMsg;
-import io.sharetrace.message.ThresholdMsg;
 import io.sharetrace.model.RiskScore;
+import io.sharetrace.model.message.ContactMsg;
+import io.sharetrace.model.message.RiskScoreMsg;
+import io.sharetrace.model.message.ThresholdMsg;
 import io.sharetrace.model.message.UserMsg;
 import io.sharetrace.util.IntervalCache;
 import java.time.Duration;

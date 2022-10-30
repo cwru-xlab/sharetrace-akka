@@ -1,6 +1,5 @@
 package io.sharetrace.experiment.data;
 
-import io.sharetrace.data.FileDataset;
 import io.sharetrace.graph.ContactNetwork;
 import io.sharetrace.graph.FileContactNetwork;
 import io.sharetrace.model.TimeRef;

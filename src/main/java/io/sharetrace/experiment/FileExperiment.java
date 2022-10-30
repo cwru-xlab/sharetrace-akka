@@ -1,8 +1,8 @@
 package io.sharetrace.experiment;
 
 import io.sharetrace.actor.RiskPropagation;
-import io.sharetrace.data.FileDataset;
 import io.sharetrace.experiment.config.FileExperimentConfig;
+import io.sharetrace.experiment.data.FileDataset;
 import io.sharetrace.experiment.state.Context;
 import io.sharetrace.experiment.state.Defaults;
 import io.sharetrace.experiment.state.State;

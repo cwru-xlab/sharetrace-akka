@@ -1,10 +1,10 @@
 package io.sharetrace.actor;
 
 import akka.actor.typed.ActorRef;
-import io.sharetrace.message.ContactMsg;
-import io.sharetrace.message.RiskScoreMsg;
 import io.sharetrace.model.RiskScore;
 import io.sharetrace.model.UserParams;
+import io.sharetrace.model.message.ContactMsg;
+import io.sharetrace.model.message.RiskScoreMsg;
 import io.sharetrace.model.message.UserMsg;
 import java.time.Clock;
 import java.time.Duration;

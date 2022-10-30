@@ -3,7 +3,7 @@ package io.sharetrace.model;
 import com.google.common.collect.Range;
 import io.sharetrace.actor.RiskPropagation;
 import io.sharetrace.actor.UserActor;
-import io.sharetrace.message.RiskScoreMsg;
+import io.sharetrace.model.message.RiskScoreMsg;
 import io.sharetrace.util.Checks;
 import java.time.Duration;
 import org.immutables.value.Value;

@@ -1,10 +1,10 @@
 package io.sharetrace.graph;
 
-import io.sharetrace.logging.metric.GraphCycles;
-import io.sharetrace.logging.metric.GraphEccentricity;
-import io.sharetrace.logging.metric.GraphScores;
-import io.sharetrace.logging.metric.GraphSize;
 import io.sharetrace.util.Stats;
+import io.sharetrace.util.logging.metric.GraphCycles;
+import io.sharetrace.util.logging.metric.GraphEccentricity;
+import io.sharetrace.util.logging.metric.GraphScores;
+import io.sharetrace.util.logging.metric.GraphSize;
 import it.unimi.dsi.fastutil.floats.FloatArrayList;
 import java.util.Collection;
 import java.util.List;

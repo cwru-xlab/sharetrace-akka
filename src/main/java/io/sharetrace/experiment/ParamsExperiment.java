@@ -1,16 +1,16 @@
 package io.sharetrace.experiment;
 
 import io.sharetrace.actor.RiskPropagation;
-import io.sharetrace.data.factory.CachedRiskScoreFactory;
 import io.sharetrace.experiment.config.ParamsExperimentConfig;
 import io.sharetrace.experiment.data.Dataset;
+import io.sharetrace.experiment.data.factory.CachedRiskScoreFactory;
 import io.sharetrace.experiment.data.factory.RiskScoreFactory;
 import io.sharetrace.experiment.state.Context;
 import io.sharetrace.experiment.state.Defaults;
 import io.sharetrace.experiment.state.State;
 import io.sharetrace.graph.ContactNetwork;
-import io.sharetrace.logging.metric.GraphTopology;
 import io.sharetrace.util.logging.Loggable;
+import io.sharetrace.util.logging.metric.GraphTopology;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import java.util.Set;
 

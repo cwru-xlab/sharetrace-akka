@@ -4,7 +4,7 @@ import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Range;
 import io.sharetrace.actor.RiskPropagation;
 import io.sharetrace.actor.UserActor;
-import io.sharetrace.message.RiskScoreMsg;
+import io.sharetrace.model.message.RiskScoreMsg;
 import io.sharetrace.util.Checks;
 import java.time.Instant;
 import org.immutables.value.Value;

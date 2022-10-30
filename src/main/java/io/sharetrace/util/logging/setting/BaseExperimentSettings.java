@@ -1,7 +1,7 @@
 package io.sharetrace.util.logging.setting;
 
-import io.sharetrace.message.RiskScoreMsg;
 import io.sharetrace.model.UserParams;
+import io.sharetrace.model.message.RiskScoreMsg;
 import io.sharetrace.util.CacheParams;
 import org.immutables.value.Value;
 

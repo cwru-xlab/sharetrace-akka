@@ -1,20 +1,20 @@
 package io.sharetrace.actor;
 
 import akka.actor.typed.ActorRef;
-import io.sharetrace.logging.event.ContactEvent;
-import io.sharetrace.logging.event.ContactsRefreshEvent;
-import io.sharetrace.logging.event.CurrentRefreshEvent;
-import io.sharetrace.logging.event.PropagateEvent;
-import io.sharetrace.logging.event.ReceiveEvent;
-import io.sharetrace.logging.event.ResumeEvent;
-import io.sharetrace.logging.event.SendCachedEvent;
-import io.sharetrace.logging.event.SendCurrentEvent;
-import io.sharetrace.logging.event.TimeoutEvent;
-import io.sharetrace.logging.event.UpdateEvent;
-import io.sharetrace.message.RiskScoreMsg;
+import io.sharetrace.model.message.RiskScoreMsg;
 import io.sharetrace.util.logging.Logger;
 import io.sharetrace.util.logging.Logging;
+import io.sharetrace.util.logging.event.ContactEvent;
+import io.sharetrace.util.logging.event.ContactsRefreshEvent;
+import io.sharetrace.util.logging.event.CurrentRefreshEvent;
 import io.sharetrace.util.logging.event.LoggableEvent;
+import io.sharetrace.util.logging.event.PropagateEvent;
+import io.sharetrace.util.logging.event.ReceiveEvent;
+import io.sharetrace.util.logging.event.ResumeEvent;
+import io.sharetrace.util.logging.event.SendCachedEvent;
+import io.sharetrace.util.logging.event.SendCurrentEvent;
+import io.sharetrace.util.logging.event.TimeoutEvent;
+import io.sharetrace.util.logging.event.UpdateEvent;
 import java.util.function.Supplier;
 
 final class UserLogger {

@@ -3,7 +3,6 @@ package io.sharetrace.model.message;
 import akka.actor.typed.ActorRef;
 import io.sharetrace.actor.RiskPropagation;
 import io.sharetrace.actor.UserActor;
-import io.sharetrace.message.RiskScoreMsg;
 import io.sharetrace.model.Identifiable;
 import io.sharetrace.model.RiskScore;
 import io.sharetrace.util.Uid;

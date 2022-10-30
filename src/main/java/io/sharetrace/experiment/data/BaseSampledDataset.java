@@ -1,6 +1,5 @@
 package io.sharetrace.experiment.data;
 
-import io.sharetrace.data.SampledDataset;
 import io.sharetrace.experiment.data.factory.ContactTimeFactory;
 import io.sharetrace.experiment.data.factory.GraphGeneratorFactory;
 import io.sharetrace.graph.ContactNetwork;
