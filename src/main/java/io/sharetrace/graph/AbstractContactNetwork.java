@@ -1,7 +1,7 @@
 package io.sharetrace.graph;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreType;
-import io.sharetrace.data.factory.ContactTimeFactory;
+import io.sharetrace.experiment.data.factory.ContactTimeFactory;
 import io.sharetrace.logging.Logger;
 import io.sharetrace.logging.Logging;
 import io.sharetrace.logging.metric.GraphCycles;

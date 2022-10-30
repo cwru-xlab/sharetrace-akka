@@ -1,6 +1,6 @@
-package io.sharetrace.data;
+package io.sharetrace.experiment.data;
 
-import io.sharetrace.data.factory.RiskScoreFactory;
+import io.sharetrace.experiment.data.factory.RiskScoreFactory;
 import io.sharetrace.graph.ContactNetwork;
 import io.sharetrace.model.Identifiable;
 

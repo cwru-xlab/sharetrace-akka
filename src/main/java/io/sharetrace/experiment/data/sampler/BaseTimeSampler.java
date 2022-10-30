@@ -1,4 +1,4 @@
-package io.sharetrace.data.sampler;
+package io.sharetrace.experiment.data.sampler;
 
 import com.google.common.collect.Range;
 import io.sharetrace.model.TimeRef;

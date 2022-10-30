@@ -1,6 +1,6 @@
 package io.sharetrace.graph;
 
-import io.sharetrace.data.factory.ContactTimeFactory;
+import io.sharetrace.experiment.data.factory.ContactTimeFactory;
 import io.sharetrace.model.TimeRef;
 import io.sharetrace.util.Indexer;
 import it.unimi.dsi.fastutil.ints.IntSet;

@@ -1,4 +1,4 @@
-package io.sharetrace.data.factory;
+package io.sharetrace.experiment.data.factory;
 
 import org.apache.commons.math3.distribution.RealDistribution;
 

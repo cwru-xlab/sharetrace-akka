@@ -1,4 +1,4 @@
-package io.sharetrace.data;
+package io.sharetrace.experiment.data;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreType;
 import io.sharetrace.util.Uid;

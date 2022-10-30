@@ -1,4 +1,4 @@
-package io.sharetrace.data.sampler;
+package io.sharetrace.experiment.data.sampler;
 
 import io.sharetrace.model.RiskScore;
 import java.time.Instant;

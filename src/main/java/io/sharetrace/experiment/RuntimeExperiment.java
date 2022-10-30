@@ -1,9 +1,9 @@
 package io.sharetrace.experiment;
 
 import io.sharetrace.actor.RiskPropagation;
-import io.sharetrace.data.Dataset;
 import io.sharetrace.data.SampledDataset;
 import io.sharetrace.experiment.config.RuntimeExperimentConfig;
+import io.sharetrace.experiment.data.Dataset;
 import io.sharetrace.experiment.state.Context;
 import io.sharetrace.experiment.state.Defaults;
 import io.sharetrace.experiment.state.State;

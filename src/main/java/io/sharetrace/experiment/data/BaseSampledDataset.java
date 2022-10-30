@@ -1,7 +1,8 @@
-package io.sharetrace.data;
+package io.sharetrace.experiment.data;
 
-import io.sharetrace.data.factory.ContactTimeFactory;
-import io.sharetrace.data.factory.GraphGeneratorFactory;
+import io.sharetrace.data.SampledDataset;
+import io.sharetrace.experiment.data.factory.ContactTimeFactory;
+import io.sharetrace.experiment.data.factory.GraphGeneratorFactory;
 import io.sharetrace.graph.ContactNetwork;
 import io.sharetrace.graph.SampledContactNetwork;
 import org.immutables.value.Value;

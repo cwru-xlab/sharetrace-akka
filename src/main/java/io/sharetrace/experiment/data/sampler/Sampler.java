@@ -1,4 +1,4 @@
-package io.sharetrace.data.sampler;
+package io.sharetrace.experiment.data.sampler;
 
 @FunctionalInterface
 public interface Sampler<T> {

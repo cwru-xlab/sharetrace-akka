@@ -1,4 +1,4 @@
-package io.sharetrace.data.factory;
+package io.sharetrace.experiment.data.factory;
 
 import java.time.Instant;
 import java.util.function.Supplier;

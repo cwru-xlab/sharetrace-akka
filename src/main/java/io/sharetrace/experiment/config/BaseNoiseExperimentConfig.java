@@ -1,6 +1,6 @@
 package io.sharetrace.experiment.config;
 
-import io.sharetrace.data.Dataset;
+import io.sharetrace.experiment.data.Dataset;
 import io.sharetrace.experiment.state.DatasetContext;
 import java.util.Optional;
 import java.util.function.Function;
