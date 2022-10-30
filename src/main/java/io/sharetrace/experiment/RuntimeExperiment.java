@@ -63,10 +63,10 @@ public final class RuntimeExperiment extends Experiment<RuntimeExperimentConfig>
   }
 
   @Override
-  public State newDefaultState(Context context, RuntimeExperimentConfig config) {
-    return State.builder(context)
+  public State newDefaultState(Context ctx, RuntimeExperimentConfig config) {
+    return State.builder(ctx)
         .graphType(getProperty(config.graphType(), "graphType"))
-        .dataset(ctx -> Defaults.sampledDataset(ctx, IGNORED))
+        .dataset(context -> Defaults.sampledDataset(context, IGNORED))
         .build();
   }
 }

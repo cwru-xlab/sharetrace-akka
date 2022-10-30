@@ -39,7 +39,7 @@ public final class ParamsExperiment extends Experiment<ParamsExperimentConfig> {
    */
   @Override
   public void run(ParamsExperimentConfig config, State initialState) {
-    for (int iNetwork = 0; iNetwork < config.numIterations(); iNetwork++) {
+    for (int iNetwork = 0; iNetwork < config.numNetworks(); iNetwork++) {
       Dataset dataset = cacheScores(initialState.dataset().withNewContactNetwork());
       for (float tr : config.transRates()) {
         for (float sc : config.sendCoeffs()) {
@@ -47,7 +47,7 @@ public final class ParamsExperiment extends Experiment<ParamsExperimentConfig> {
               .userParams(initialState.userParams().withTransRate(tr).withSendCoeff(sc))
               .dataset(dataset)
               .build()
-              .run();
+              .run(config.numIterations());
         }
       }
     }
@@ -64,12 +64,12 @@ public final class ParamsExperiment extends Experiment<ParamsExperimentConfig> {
   }
 
   @Override
-  public State newDefaultState(Context context, ParamsExperimentConfig config) {
+  public State newDefaultState(Context ctx, ParamsExperimentConfig config) {
     GraphType graphType = getProperty(config.graphType(), "graphType");
     int numNodes = getProperty(config.numNodes(), "numNodes");
-    return State.builder(context)
+    return State.builder(ctx)
         .graphType(graphType)
-        .dataset(ctx -> Defaults.sampledDataset(ctx, numNodes))
+        .dataset(context -> Defaults.sampledDataset(context, numNodes))
         .build();
   }
 }

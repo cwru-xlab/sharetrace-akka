@@ -25,17 +25,12 @@ public final class FileExperiment extends Experiment<FileExperimentConfig> {
   }
 
   @Override
-  public State newDefaultState(FileExperimentConfig config) {
-    return newDefaultState(Defaults.context(), config);
-  }
-
-  @Override
-  public State newDefaultState(Context context, FileExperimentConfig config) {
+  public State newDefaultState(Context ctx, FileExperimentConfig config) {
     GraphType graphType = getProperty(config.graphType(), "graphType");
     Path path = getProperty(config.path(), "path");
-    return State.builder(context)
+    return State.builder(ctx)
         .graphType(graphType)
-        .dataset(ctx -> Defaults.fileDataset(ctx, path))
+        .dataset(context -> Defaults.fileDataset(context, path))
         .build();
   }
 }

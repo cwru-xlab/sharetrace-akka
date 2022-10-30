@@ -4,7 +4,7 @@ import java.util.OptionalInt;
 import org.immutables.value.Value;
 
 @Value.Immutable
-abstract class BaseParamsExperimentConfig extends ExperimentConfig {
+abstract class BaseParamsExperimentConfig extends NetworkExperimentConfig {
 
   public abstract OptionalInt numNodes();
 

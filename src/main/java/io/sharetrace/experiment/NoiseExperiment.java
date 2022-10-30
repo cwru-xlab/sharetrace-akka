@@ -63,8 +63,8 @@ public final class NoiseExperiment extends Experiment<NoiseExperimentConfig> {
   }
 
   @Override
-  public State newDefaultState(Context context, NoiseExperimentConfig config) {
-    return State.builder(context)
+  public State newDefaultState(Context ctx, NoiseExperimentConfig config) {
+    return State.builder(ctx)
         .dataset(getProperty(config.datasetFactory(), "datasetFactory"))
         .graphType(getProperty(config.graphType(), "graphType"))
         .build();
