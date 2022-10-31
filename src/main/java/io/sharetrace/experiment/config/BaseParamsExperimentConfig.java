@@ -1,5 +1,6 @@
 package io.sharetrace.experiment.config;
 
+import java.util.List;
 import java.util.OptionalInt;
 import org.immutables.value.Value;
 
@@ -8,7 +9,7 @@ abstract class BaseParamsExperimentConfig extends NetworkExperimentConfig {
 
   public abstract OptionalInt numNodes();
 
-  public abstract Iterable<Float> transRates();
+  public abstract List<Float> transRates();
 
-  public abstract Iterable<Float> sendCoeffs();
+  public abstract List<Float> sendCoeffs();
 }
