@@ -30,6 +30,7 @@ _ZERO_16 = np.uint16(0)
 
 class Event(str, Enum):
     """Types of events logged by user actors."""
+
     CONTACT = "ContactEvent"
     CONTACTS_REFRESH = "ContactsRefreshEvent"
     CURRENT_REFRESH = "CurrentRefreshEvent"
@@ -185,7 +186,6 @@ class EventCounter(collections.Counter):
 
 
 class CallbackData(Callable):
-
     @abc.abstractmethod
     def __call__(self, record: Record, **kwargs) -> None:
         pass
@@ -197,6 +197,7 @@ class CallbackData(Callable):
 @final
 class EventCallback(CallbackData):
     """A callable that processes event records."""
+
     __slots__ = ("_states",)
 
     def __init__(self, factory: Callable[[], CallbackData]):
@@ -250,8 +251,9 @@ class UpdatesData(CallbackData):
        num_updated (int): Number of users that were updated.
        num_updates (int): Number of updates for all users.
     """
+
     __slots__ = (
-        "updates", "symptoms", "exposures", "num_updated", "num_updates")
+    "updates", "symptoms", "exposures", "num_updated", "num_updates")
 
     def __init__(self) -> None:
         self.updates: dict | np.ndarray = {}
@@ -304,6 +306,7 @@ class TimelineData(CallbackData):
         e2i (dict): Maps an Event to its encoded integer.
         i2e (ndarray): `i`-th entry is the Event value encoded as `i`.
     """
+
     __slots__ = ("e2i", "i2e", "timestamps", "_events", "_repeats")
 
     def __init__(self):
@@ -354,7 +357,8 @@ class TimelineData(CallbackData):
         if decoded:
             encoded = np.array(
                 list(zip(events, repeats)),
-                dtype=[("event", _EVENT_WIDTH), ("count", np.uint64)])
+                dtype=[("event", _EVENT_WIDTH), ("count", np.uint64)],
+            )
         else:
             encoded = np.column_stack((events, repeats))
         return encoded
@@ -382,7 +386,8 @@ class ReachabilityData(CallbackData):
         "_msg_reach",
         "_reach_ratio",
         "_influence",
-        "_source_size")
+        "_source_size",
+    )
 
     def __init__(self) -> None:
         self.adj: sparse.csr_matrix | None = None

@@ -11,9 +11,7 @@ EventPlotPositions = namedtuple("EventPlotPositions", "positions n_events")
 
 
 def event_plot_positions(
-        timeline: TimelineData,
-        x_axis: str = "time",
-        timescale: Real = 1e3
+        timeline: TimelineData, x_axis: str = "time", timescale: Real = 1e3
 ) -> EventPlotPositions:
     if x_axis not in (valid := ("message", "time")):
         raise ValueError(f"'x_axis' must be one of {valid}")

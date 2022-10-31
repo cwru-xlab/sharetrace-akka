@@ -46,7 +46,8 @@ class Settings(BaseModel):
         return Settings(
             user=UserParams(**record.pop("userParams")),
             cache=CacheParams(**record.pop("cacheParams")),
-            misc=MiscParams(**record))
+            misc=MiscParams(**record),
+        )
 
 
 def load(path: os.PathLike | AnyStr) -> list[Settings]:
