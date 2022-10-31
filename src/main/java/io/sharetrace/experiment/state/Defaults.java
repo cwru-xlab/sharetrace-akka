@@ -38,6 +38,8 @@ import java.nio.file.Path;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import org.apache.commons.math3.random.RandomGenerator;
+import org.apache.commons.math3.random.Well1024a;
 
 public final class Defaults {
 
@@ -60,6 +62,14 @@ public final class Defaults {
 
   public static Context context() {
     return CONTEXT;
+  }
+
+  public static RandomGenerator rng() {
+    return rng(CONTEXT.seed());
+  }
+
+  public static RandomGenerator rng(long seed) {
+    return new Well1024a(seed);
   }
 
   public static Sampler<RiskScore> scoreSampler(DatasetContext ctx) {

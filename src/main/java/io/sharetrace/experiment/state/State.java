@@ -26,7 +26,6 @@ import java.util.function.Function;
 import java.util.stream.IntStream;
 import org.apache.commons.math3.distribution.RealDistribution;
 import org.apache.commons.math3.distribution.UniformRealDistribution;
-import org.apache.commons.math3.random.Well512a;
 
 public final class State implements Runnable, Identifiable {
 
@@ -216,7 +215,7 @@ public final class State implements Runnable, Identifiable {
     }
 
     private static Function<DistributionFactoryContext, DistributionFactory> defaultFactory() {
-      return ctx -> seed -> new UniformRealDistribution(new Well512a(seed), 0d, 1d);
+      return ctx -> seed -> new UniformRealDistribution(Defaults.rng(seed), 0d, 1d);
     }
 
     public Builder userParams(UserParams params) {
