@@ -73,7 +73,6 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
     this.contacts = new Object2ObjectOpenHashMap<>();
     this.msgUtil = new MsgUtil(getContext().getSelf(), clock, userParams);
     this.defaultCurrent = msgUtil.defaultMsg();
-    this.current = defaultCurrent;
   }
 
   @Builder.Factory
@@ -189,11 +188,13 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
 
   private RiskScoreMsg updateIfAboveCurrent(RiskScoreMsg msg) {
     RiskScoreMsg transmit;
-    if (msgUtil.isGreaterThan(msg, current)) {
+    if (!isInitialized() || msgUtil.isGreaterThan(msg, current)) {
       RiskScoreMsg previous = updateCurrent(msg);
       logger.logUpdate(previous, current);
-      startCurrentRefreshTimer();
       transmit = transmitted;
+      if (previous != defaultCurrent) {
+        startCurrentRefreshTimer();
+      }
     } else {
       transmit = msgUtil.transmitted(msg);
     }
@@ -210,11 +211,10 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
     timers.startSingleTimer(timedOutMsg, userParams.idleTimeout());
   }
 
-  private RiskScoreMsg updateCurrent(RiskScoreMsg msg) {
-    RiskScoreMsg previous = current;
-    current = msg;
-    transmitted = msgUtil.transmitted(current);
-    return previous;
+  /* This is a hack to ensure the symptom score is always logged for analysis. This covers the
+  edge case where the symptom score has a value of 0, which would not otherwise be logged. */
+  private boolean isInitialized() {
+    return current != null;
   }
 
   private void startCurrentRefreshTimer() {
@@ -231,5 +231,12 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
         .filter(msgUtil::isAlive)
         .map(msgUtil::transmitted)
         .ifPresent(cached -> contact.tell(cached, logger::logSendCached));
+  }
+
+  private RiskScoreMsg updateCurrent(RiskScoreMsg msg) {
+    RiskScoreMsg previous = isInitialized() ? current : defaultCurrent;
+    current = msg;
+    transmitted = msgUtil.transmitted(current);
+    return previous;
   }
 }
