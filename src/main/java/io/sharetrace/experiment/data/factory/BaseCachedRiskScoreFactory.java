@@ -9,8 +9,8 @@ import org.immutables.value.Value;
 abstract class BaseCachedRiskScoreFactory implements RiskScoreFactory {
 
   @Override
-  public RiskScore riskScore(int user) {
-    return cache().computeIfAbsent(user, cached()::riskScore);
+  public RiskScore get(int user) {
+    return cache().computeIfAbsent(user, cached()::get);
   }
 
   @Value.Lazy

@@ -9,8 +9,8 @@ import org.immutables.value.Value;
 abstract class BaseNoisyRiskScoreFactory implements RiskScoreFactory {
 
   @Override
-  public RiskScore riskScore(int user) {
-    RiskScore score = scoreFactory().riskScore(user);
+  public RiskScore get(int user) {
+    RiskScore score = scoreFactory().get(user);
     float noisy = constrain(score.value() + (float) noise().sample());
     return score.withValue(noisy);
   }

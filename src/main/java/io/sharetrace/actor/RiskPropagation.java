@@ -144,9 +144,9 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
     Map<Integer, ActorRef<UserMsg>> users = new Int2ObjectOpenHashMap<>(numUsers);
     for (int name : dataset.contactNetwork().users()) {
       // Timeout IDs must be 0-based contiguous to use with 'stopped' BitSet.
-      ActorRef<UserMsg> user = getContext().spawn(newUser(name), String.valueOf(name), USER_PROPS);
-      getContext().watch(user);
-      users.put(name, user);
+      ActorRef<UserMsg> actor = getContext().spawn(newUser(name), String.valueOf(name), USER_PROPS);
+      getContext().watch(actor);
+      users.put(name, actor);
     }
     return users;
   }
@@ -156,7 +156,7 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
     for (Map.Entry<Integer, ActorRef<UserMsg>> entry : users.entrySet()) {
       int name = entry.getKey();
       ActorRef<UserMsg> user = entry.getValue();
-      RiskScore symptomScore = dataset.scoreFactory().riskScore(name);
+      RiskScore symptomScore = dataset.scoreFactory().get(name);
       user.tell(RiskScoreMsg.of(symptomScore, user));
     }
   }

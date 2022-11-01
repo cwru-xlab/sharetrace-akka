@@ -48,7 +48,7 @@ final class UserLogger {
 
   private SendCachedEvent sendCachedEvent(ActorRef<?> contact, RiskScoreMsg cached) {
     return SendCachedEvent.builder()
-        .from(name(cached.replyTo()))
+        .from(name(cached.sender()))
         .to(name(contact))
         .score(cached.score())
         .id(cached.id())
@@ -61,7 +61,7 @@ final class UserLogger {
 
   private SendCurrentEvent sendCurrentEvent(ActorRef<?> contact, RiskScoreMsg current) {
     return SendCurrentEvent.builder()
-        .from(name(current.replyTo()))
+        .from(name(current.sender()))
         .to(name(contact))
         .score(current.score())
         .id(current.id())
@@ -74,7 +74,7 @@ final class UserLogger {
 
   private ReceiveEvent receiveEvent(RiskScoreMsg received) {
     return ReceiveEvent.builder()
-        .from(name(received.replyTo()))
+        .from(name(received.sender()))
         .to(selfName)
         .score(received.score())
         .id(received.id())
@@ -87,7 +87,7 @@ final class UserLogger {
 
   private UpdateEvent updateEvent(RiskScoreMsg previous, RiskScoreMsg current) {
     return UpdateEvent.builder()
-        .from(name(current.replyTo()))
+        .from(name(current.sender()))
         .to(selfName)
         .oldScore(previous.score())
         .newScore(current.score())
@@ -102,7 +102,7 @@ final class UserLogger {
 
   private PropagateEvent propagateEvent(ActorRef<?> contact, RiskScoreMsg propagated) {
     return PropagateEvent.builder()
-        .from(name(propagated.replyTo()))
+        .from(name(propagated.sender()))
         .to(name(contact))
         .score(propagated.score())
         .id(propagated.id())

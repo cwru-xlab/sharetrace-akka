@@ -34,7 +34,7 @@ public final class VertexIndependentPaths {
     this.isDirected = graph.getType().isDirected();
     this.numVertices = graph.vertexSet().size();
     this.numPairs = numVertices * (numVertices - 1) / (isDirected ? 1 : 2);
-    this.directed = Graphs.toDirected(graph);
+    this.directed = Graphs.asDirected(graph);
   }
 
   public int getPathCount(int source, int target) {
@@ -69,7 +69,7 @@ public final class VertexIndependentPaths {
   }
 
   private int adjacentPathCount(int source, int target, int maxFind) {
-    Graph<Integer, ?> graph = Graphs.copyGraph(directed);
+    Graph<Integer, ?> graph = Graphs.copy(directed);
     List<? extends GraphPath<Integer, ?>> paths = adjacentKShortestPaths(graph, source, target);
     int numFound = 1; // Trivial path along edge incident to source and target.
     while (paths.size() > 1 && numFound < maxFind) {
@@ -82,7 +82,7 @@ public final class VertexIndependentPaths {
   }
 
   private int nonadjacentPathCount(int source, int target, int maxFind) {
-    Graph<Integer, ?> graph = Graphs.copyGraph(this.graph);
+    Graph<Integer, ?> graph = Graphs.copy(this.graph);
     ShortestPathAlgorithm<Integer, ?> shortestPaths = newShortestPaths(graph);
     GraphPath<Integer, ?> path = shortestPaths.getPath(source, target);
     int numFound = 0;

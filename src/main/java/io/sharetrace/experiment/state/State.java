@@ -296,9 +296,9 @@ public final class State implements Runnable, Identifiable {
     }
 
     private Builder setDistributions() {
-      scoreValues = scoreValuesFactory.distribution(ctx.seed());
-      scoreTimes = scoreTimesFactory.distribution(ctx.seed());
-      contactTimes = contactTimesFactory.distribution(ctx.seed());
+      scoreValues = scoreValuesFactory.get(ctx.seed());
+      scoreTimes = scoreTimesFactory.get(ctx.seed());
+      contactTimes = contactTimesFactory.get(ctx.seed());
       setters.remove(Setter.DISTRIBUTIONS);
       return this;
     }

@@ -43,7 +43,7 @@ abstract class BaseFileContactNetwork extends AbstractContactNetwork implements 
   @Value.Lazy
   protected Map<Set<Integer>, Instant> contactMap() {
     try (BufferedReader reader = Files.newBufferedReader(path())) {
-      return toContacts(reader.lines()::iterator);
+      return contactsFrom(reader.lines()::iterator);
     } catch (IOException exception) {
       throw new UncheckedIOException(exception);
     }
@@ -51,7 +51,7 @@ abstract class BaseFileContactNetwork extends AbstractContactNetwork implements 
 
   protected abstract Path path();
 
-  private Map<Set<Integer>, Instant> toContacts(Iterable<String> lines) {
+  private Map<Set<Integer>, Instant> contactsFrom(Iterable<String> lines) {
     Instant lastContactTime = Instant.MIN;
     Indexer<String> indexer = new Indexer<>();
     Map<Set<Integer>, Instant> contacts = new Object2ObjectOpenHashMap<>();

@@ -20,7 +20,7 @@ public abstract class Experiment<Config> {
     run(config, overrideDefaults.apply(newDefaultState(config)));
   }
 
-  public abstract void run(Config config, State initialState);
+  public abstract void run(Config config, State state);
 
   public State newDefaultState(Config config) {
     return newDefaultState(Defaults.context(), config);

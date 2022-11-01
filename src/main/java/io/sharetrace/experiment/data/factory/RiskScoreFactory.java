@@ -10,5 +10,5 @@ public interface RiskScoreFactory {
     return x -> supplier.get();
   }
 
-  RiskScore riskScore(int user);
+  RiskScore get(int user);
 }

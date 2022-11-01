@@ -31,8 +31,8 @@ final class MsgUtil {
     return msg.score().value() * params.sendCoeff();
   }
 
-  public Instant buffered(Instant time) {
-    return time.plus(params.timeBuffer());
+  public Instant buffered(Instant instant) {
+    return instant.plus(params.timeBuffer());
   }
 
   public RiskScoreMsg transmitted(RiskScoreMsg msg) {

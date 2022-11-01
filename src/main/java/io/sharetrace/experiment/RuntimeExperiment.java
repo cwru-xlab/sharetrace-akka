@@ -46,11 +46,11 @@ public final class RuntimeExperiment extends Experiment<RuntimeExperimentConfig>
    * same {@link ContactNetwork} is evaluated 1 or more times for each number of nodes.
    */
   @Override
-  public void run(RuntimeExperimentConfig config, State initialState) {
+  public void run(RuntimeExperimentConfig config, State state) {
     for (int n : config.numNodes()) {
-      Dataset dataset = ((SampledDataset) initialState.dataset()).withNumNodes(n);
+      Dataset dataset = ((SampledDataset) state.dataset()).withNumNodes(n);
       for (int iNetwork = 0; iNetwork < config.numNetworks(); iNetwork++) {
-        initialState.toBuilder()
+        state.toBuilder()
             .dataset(dataset.withNewContactNetwork())
             .build()
             .run(config.numIterations());

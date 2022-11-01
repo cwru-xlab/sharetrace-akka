@@ -39,6 +39,6 @@ abstract class BaseSampledDataset extends AbstractDataset {
 
   @Value.Lazy
   protected GraphGenerator<Integer, DefaultEdge, ?> graphGenerator() {
-    return graphGeneratorFactory().graphGenerator(numNodes());
+    return graphGeneratorFactory().get(numNodes());
   }
 }

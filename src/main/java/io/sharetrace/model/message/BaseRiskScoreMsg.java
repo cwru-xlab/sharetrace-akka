@@ -17,8 +17,8 @@ import org.immutables.value.Value;
 @Value.Immutable
 abstract class BaseRiskScoreMsg implements UserMsg, Identifiable, Comparable<RiskScoreMsg> {
 
-  public static RiskScoreMsg of(RiskScore score, ActorRef<UserMsg> replyTo, String id) {
-    return RiskScoreMsg.builder().score(score).replyTo(replyTo).id(id).build();
+  public static RiskScoreMsg of(RiskScore score, ActorRef<UserMsg> sender, String id) {
+    return RiskScoreMsg.builder().score(score).sender(sender).id(id).build();
   }
 
   @Override
@@ -32,7 +32,7 @@ abstract class BaseRiskScoreMsg implements UserMsg, Identifiable, Comparable<Ris
 
   /** Returns the actor reference associated with the {@link UserActor} that sent this message. */
   @Value.Parameter
-  public abstract ActorRef<UserMsg> replyTo();
+  public abstract ActorRef<UserMsg> sender();
 
   /** Returns a unique identifier to track this message during {@link RiskPropagation}. */
   @Value.Default

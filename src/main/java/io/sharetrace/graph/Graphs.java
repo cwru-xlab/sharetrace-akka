@@ -13,19 +13,19 @@ public final class Graphs {
 
   private Graphs() {}
 
-  public static Graph<Integer, DefaultEdge> copyGraph(Graph<Integer, DefaultEdge> graph) {
+  public static Graph<Integer, DefaultEdge> copy(Graph<Integer, DefaultEdge> graph) {
     return graph.getType().isDirected() ? copyDirected(graph) : copyUndirected(graph);
   }
 
   public static Graph<Integer, DefaultEdge> copyDirected(Graph<Integer, DefaultEdge> directed) {
-    return copyGraph(GraphTests.requireDirected(directed), newDirectedGraph());
+    return copy(GraphTests.requireDirected(directed), newDirectedGraph());
   }
 
   public static Graph<Integer, DefaultEdge> copyUndirected(Graph<Integer, DefaultEdge> undirected) {
-    return copyGraph(GraphTests.requireUndirected(undirected), newUndirectedGraph());
+    return copy(GraphTests.requireUndirected(undirected), newUndirectedGraph());
   }
 
-  private static <V, E> Graph<V, E> copyGraph(Graph<V, E> src, Graph<V, E> dst) {
+  private static <V, E> Graph<V, E> copy(Graph<V, E> src, Graph<V, E> dst) {
     org.jgrapht.Graphs.addGraph(dst, src);
     return dst;
   }
@@ -43,7 +43,7 @@ public final class Graphs {
         SupplierUtil.createIntegerSupplier(), DefaultEdge::new, graphType, false);
   }
 
-  public static Graph<Integer, DefaultEdge> toDirected(Graph<Integer, DefaultEdge> graph) {
+  public static Graph<Integer, DefaultEdge> asDirected(Graph<Integer, DefaultEdge> graph) {
     Graph<Integer, DefaultEdge> directed;
     if (graph.getType().isDirected()) {
       directed = graph;

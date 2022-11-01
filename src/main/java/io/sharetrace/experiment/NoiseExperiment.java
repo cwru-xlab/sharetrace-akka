@@ -39,11 +39,11 @@ public final class NoiseExperiment extends Experiment<NoiseExperimentConfig> {
    * accuracy to be measured.
    */
   @Override
-  public void run(NoiseExperimentConfig config, State initialState) {
+  public void run(NoiseExperimentConfig config, State state) {
     for (int iNetwork = 0; iNetwork < config.numNetworks(); iNetwork++) {
-      Dataset dataset = initialState.dataset().withNewContactNetwork();
+      Dataset dataset = state.dataset().withNewContactNetwork();
       for (RealDistribution noise : config.noises()) {
-        initialState.toBuilder()
+        state.toBuilder()
             .dataset(withNoisyScoreFactory(dataset, noise))
             .build()
             .run(config.numIterations());

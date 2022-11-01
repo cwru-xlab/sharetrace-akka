@@ -56,7 +56,7 @@ final class ContactActor implements Comparable<ContactActor> {
   }
 
   private boolean isNotSender(RiskScoreMsg msg) {
-    return !ref.equals(msg.replyTo());
+    return !ref.equals(msg.sender());
   }
 
   public Instant bufferedContactTime() {

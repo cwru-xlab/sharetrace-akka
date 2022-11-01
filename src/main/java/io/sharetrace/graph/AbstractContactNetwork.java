@@ -84,7 +84,7 @@ abstract class AbstractContactNetwork implements ContactNetwork {
   private Contact contactFrom(DefaultEdge edge) {
     int user1 = graph().getEdgeSource(edge);
     int user2 = graph().getEdgeTarget(edge);
-    Instant contactTime = contactTimeFactory().contactTime(user1, user2);
+    Instant contactTime = contactTimeFactory().get(user1, user2);
     return Contact.builder().user1(user1).user2(user2).time(contactTime).build();
   }
 }
