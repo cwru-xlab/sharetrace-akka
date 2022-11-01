@@ -24,10 +24,10 @@ public final class VertexIndependentPaths {
   private static final int MIN_PARALLEL_VERTICES = 50;
   private static final int ADJACENT_PATHS = 2;
   private final Graph<Integer, DefaultEdge> graph;
+  private final Graph<Integer, DefaultEdge> directed;
   private final boolean isDirected;
   private final int numVertices;
   private final int numPairs;
-  private final Graph<Integer, DefaultEdge> directed;
 
   public VertexIndependentPaths(Graph<Integer, DefaultEdge> graph) {
     this.graph = graph;
