@@ -88,7 +88,7 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
               Behaviors.withTimers(
                   timers ->
                       new UserActor(ctx, riskProp, timeoutId, timers, userParams, clock, cache));
-          return Behaviors.withMdc(UserMsg.class, Logging.mdc(), user);
+          return Behaviors.withMdc(UserMsg.class, Logging.getMdc(), user);
         });
   }
 

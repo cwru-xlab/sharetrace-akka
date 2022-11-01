@@ -102,7 +102,7 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
             ctx ->
                 Behaviors.withMdc(
                     AlgorithmMsg.class,
-                    Logging.mdc(),
+                    Logging.getMdc(),
                     new RiskPropagation(ctx, dataset, userParams, clock, cacheFactory)));
     return Algorithm.of(behavior, NAME, PROPS);
   }

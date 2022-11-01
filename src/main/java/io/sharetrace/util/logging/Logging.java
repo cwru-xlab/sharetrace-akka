@@ -46,7 +46,7 @@ public final class Logging {
     MDC.setContextMap(mdc); // Still set MDC for calling/main thread.
   }
 
-  public static Map<String, String> mdc() {
+  public static Map<String, String> getMdc() {
     return Collections.unmodifiableMap(mdc);
   }
 
