@@ -25,7 +25,7 @@ public final class Logging {
   }
 
   private static Logger logger(org.slf4j.Logger delegate) {
-    return new StandardLogger(delegate);
+    return new DefaultLogger(delegate);
   }
 
   public static Logger eventsLogger() {
@@ -55,11 +55,11 @@ public final class Logging {
     enabled.addAll(loggable);
   }
 
-  private static final class StandardLogger implements Logger {
+  private static final class DefaultLogger implements Logger {
 
     private final org.slf4j.Logger delegate;
 
-    public StandardLogger(org.slf4j.Logger delegate) {
+    public DefaultLogger(org.slf4j.Logger delegate) {
       this.delegate = delegate;
     }
 
