@@ -32,7 +32,7 @@ public final class VertexIndependentPaths {
   private final int numPairs;
 
   public VertexIndependentPaths(Graph<Integer, DefaultEdge> graph) {
-    this(graph, Executors.newCachedThreadPool());
+    this(graph, Executors.newWorkStealingPool());
   }
 
   public VertexIndependentPaths(
