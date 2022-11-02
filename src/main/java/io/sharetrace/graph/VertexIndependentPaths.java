@@ -1,7 +1,11 @@
 package io.sharetrace.graph;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
+import it.unimi.dsi.fastutil.ints.IntLists;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import it.unimi.dsi.fastutil.objects.ObjectList;
+import it.unimi.dsi.fastutil.objects.ObjectLists;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -9,6 +13,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.function.Supplier;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 import org.jgrapht.Graph;
 import org.jgrapht.GraphPath;
 import org.jgrapht.alg.interfaces.ShortestPathAlgorithm;
@@ -70,14 +76,14 @@ public final class VertexIndependentPaths {
   }
 
   public List<Integer> computeForSource(int source, int maxFind) {
-    return getCounts(newTasks(source, maxFind));
+    return getResult(newTasks(source, maxFind));
   }
 
-  private List<Integer> getCounts(List<Callable<Integer>> tasks) {
+  private List<Integer> getResult(List<Callable<Integer>> tasks) {
     try {
       return executorService.invokeAll(tasks).stream()
           .map(VertexIndependentPaths::getResult)
-          .collect(intListFactory(tasks.size()), List::add, List::addAll);
+          .collect(toUnmodifiableIntList(tasks.size()));
     } catch (InterruptedException e) {
       throw new RuntimeException(e);
     }
@@ -87,18 +93,34 @@ public final class VertexIndependentPaths {
     return graph.vertexSet().stream()
         .filter(target -> source != target)
         .map(target -> newTask(source, target, maxFind))
-        .collect(listFactory(numVertices), List::add, List::addAll);
+        .collect(toUnmodifiableList(numVertices));
   }
 
-  private static Supplier<List<Integer>> intListFactory(int size) {
-    return () -> new IntArrayList(size);
+  private static Collector<Integer, ?, List<Integer>> toUnmodifiableIntList(int size) {
+    return Collectors.collectingAndThen(
+        Collector.of(
+            (Supplier<IntList>) () -> new IntArrayList(size),
+            List::add,
+            (left, right) -> {
+              left.addAll(right);
+              return left;
+            }),
+        IntLists::unmodifiable);
   }
 
-  private static <T> Supplier<List<T>> listFactory(int size) {
-    return () -> newList(size);
+  private static <T> Collector<T, ?, List<T>> toUnmodifiableList(int size) {
+    return Collectors.collectingAndThen(
+        Collector.of(
+            (Supplier<ObjectList<T>>) () -> newList(size),
+            List::add,
+            (left, right) -> {
+              left.addAll(right);
+              return left;
+            }),
+        ObjectLists::unmodifiable);
   }
 
-  private static <T> List<T> newList(int size) {
+  private static <T> ObjectList<T> newList(int size) {
     return new ObjectArrayList<>(size);
   }
 
@@ -107,7 +129,7 @@ public final class VertexIndependentPaths {
   }
 
   public List<Integer> computeForAll(int maxFind) {
-    return getCounts(newTasks(maxFind));
+    return getResult(newTasks(maxFind));
   }
 
   private List<Callable<Integer>> newTasks(int maxFind) {
