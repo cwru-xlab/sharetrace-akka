@@ -1,20 +1,12 @@
 package io.sharetrace.graph;
 
-import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.ints.IntList;
-import it.unimi.dsi.fastutil.ints.IntLists;
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import it.unimi.dsi.fastutil.objects.ObjectList;
-import it.unimi.dsi.fastutil.objects.ObjectLists;
+import io.sharetrace.util.Collections;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.function.Supplier;
-import java.util.stream.Collector;
-import java.util.stream.Collectors;
 import org.jgrapht.Graph;
 import org.jgrapht.GraphPath;
 import org.jgrapht.alg.interfaces.ShortestPathAlgorithm;
@@ -83,7 +75,7 @@ public final class VertexIndependentPaths {
     try {
       return executorService.invokeAll(tasks).stream()
           .map(VertexIndependentPaths::getResult)
-          .collect(toUnmodifiableIntList(tasks.size()));
+          .collect(Collections.toImmutableIntList(tasks.size()));
     } catch (InterruptedException e) {
       throw new RuntimeException(e);
     }
@@ -93,35 +85,7 @@ public final class VertexIndependentPaths {
     return graph.vertexSet().stream()
         .filter(target -> source != target)
         .map(target -> newTask(source, target, maxFind))
-        .collect(toUnmodifiableList(numVertices));
-  }
-
-  private static Collector<Integer, ?, List<Integer>> toUnmodifiableIntList(int size) {
-    return Collectors.collectingAndThen(
-        Collector.of(
-            (Supplier<IntList>) () -> new IntArrayList(size),
-            List::add,
-            (left, right) -> {
-              left.addAll(right);
-              return left;
-            }),
-        IntLists::unmodifiable);
-  }
-
-  private static <T> Collector<T, ?, List<T>> toUnmodifiableList(int size) {
-    return Collectors.collectingAndThen(
-        Collector.of(
-            (Supplier<ObjectList<T>>) () -> newList(size),
-            List::add,
-            (left, right) -> {
-              left.addAll(right);
-              return left;
-            }),
-        ObjectLists::unmodifiable);
-  }
-
-  private static <T> ObjectList<T> newList(int size) {
-    return new ObjectArrayList<>(size);
+        .collect(Collections.toImmutableList(numVertices));
   }
 
   public List<Integer> computeForAll() {
@@ -133,7 +97,7 @@ public final class VertexIndependentPaths {
   }
 
   private List<Callable<Integer>> newTasks(int maxFind) {
-    List<Callable<Integer>> tasks = newList(numPairs);
+    List<Callable<Integer>> tasks = Collections.newList(numPairs);
     for (int source : graph.vertexSet()) {
       for (int target : graph.vertexSet()) {
         if ((isDirected && source != target) || (!isDirected && source < target)) {

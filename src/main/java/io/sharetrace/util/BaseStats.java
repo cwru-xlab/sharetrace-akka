@@ -1,7 +1,6 @@
 package io.sharetrace.util;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import it.unimi.dsi.fastutil.floats.FloatArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -85,6 +84,6 @@ abstract class BaseStats {
     return Arrays.stream(statistics().getValues())
         .mapToObj(v -> (float) v)
         .filter(v -> v < lowerWhisker() || v > upperWhisker())
-        .collect(FloatArrayList::new, List::add, List::addAll);
+        .collect(Collections.toImmutableFloatList());
   }
 }

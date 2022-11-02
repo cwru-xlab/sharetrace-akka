@@ -2,9 +2,8 @@ package io.sharetrace.graph;
 
 import io.sharetrace.experiment.data.factory.ContactTimeFactory;
 import io.sharetrace.model.TimeRef;
+import io.sharetrace.util.Collections;
 import io.sharetrace.util.Indexer;
-import it.unimi.dsi.fastutil.ints.IntSet;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -25,13 +24,13 @@ import org.jgrapht.graph.DefaultEdge;
 abstract class BaseFileContactNetwork extends AbstractContactNetwork implements TimeRef {
 
   @Override
-  protected GraphGenerator<Integer, DefaultEdge, ?> graphGenerator() {
-    return (target, x) -> generate(target);
+  protected ContactTimeFactory contactTimeFactory() {
+    return (user1, user2) -> contactMap().get(key(user1, user2));
   }
 
   @Override
-  protected ContactTimeFactory contactTimeFactory() {
-    return (user1, user2) -> contactMap().get(key(user1, user2));
+  protected GraphGenerator<Integer, DefaultEdge, ?> graphGenerator() {
+    return (target, x) -> generate(target);
   }
 
   private void generate(Graph<Integer, DefaultEdge> target) {
@@ -49,12 +48,10 @@ abstract class BaseFileContactNetwork extends AbstractContactNetwork implements 
     }
   }
 
-  protected abstract Path path();
-
   private Map<Set<Integer>, Instant> contactsFrom(Iterable<String> lines) {
     Instant lastContactTime = Instant.MIN;
     Indexer<String> indexer = new Indexer<>();
-    Map<Set<Integer>, Instant> contacts = new Object2ObjectOpenHashMap<>();
+    Map<Set<Integer>, Instant> contacts = Collections.newHashMap();
     for (String line : lines) {
       String[] args = line.split(delimiter());
       int user1 = indexer.index(args[1].strip());
@@ -70,11 +67,13 @@ abstract class BaseFileContactNetwork extends AbstractContactNetwork implements 
     return contacts;
   }
 
-  protected abstract String delimiter();
+  protected abstract Path path();
 
   private static Set<Integer> key(int user1, int user2) {
-    return IntSet.of(user1, user2);
+    return Collections.newIntSet(user1, user2);
   }
+
+  protected abstract String delimiter();
 
   private static Instant newer(Instant time1, Instant time2) {
     return time1.isAfter(time2) ? time1 : time2;

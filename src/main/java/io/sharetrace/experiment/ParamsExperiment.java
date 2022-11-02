@@ -10,9 +10,9 @@ import io.sharetrace.experiment.state.Defaults;
 import io.sharetrace.experiment.state.State;
 import io.sharetrace.graph.ContactNetwork;
 import io.sharetrace.graph.GraphType;
+import io.sharetrace.util.Collections;
 import io.sharetrace.util.logging.Loggable;
 import io.sharetrace.util.logging.metric.GraphTopology;
-import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import java.util.Set;
 
 public final class ParamsExperiment extends Experiment<ParamsExperimentConfig> {
@@ -28,7 +28,7 @@ public final class ParamsExperiment extends Experiment<ParamsExperimentConfig> {
 
   public static Context newDefaultContext() {
     Context ctx = Defaults.context();
-    Set<Class<? extends Loggable>> loggable = new ObjectOpenHashSet<>(ctx.loggable());
+    Set<Class<? extends Loggable>> loggable = Collections.newHashSet(ctx.loggable());
     loggable.remove(GraphTopology.class);
     return ctx.withLoggable(loggable);
   }

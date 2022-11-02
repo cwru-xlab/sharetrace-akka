@@ -21,6 +21,7 @@ import io.sharetrace.model.message.RunMsg;
 import io.sharetrace.model.message.TimedOutMsg;
 import io.sharetrace.model.message.UserMsg;
 import io.sharetrace.util.CacheParams;
+import io.sharetrace.util.Collections;
 import io.sharetrace.util.logging.Logger;
 import io.sharetrace.util.logging.Logging;
 import io.sharetrace.util.logging.metric.CreateUsersRuntime;
@@ -29,7 +30,6 @@ import io.sharetrace.util.logging.metric.MsgPassingRuntime;
 import io.sharetrace.util.logging.metric.RiskPropRuntime;
 import io.sharetrace.util.logging.metric.SendContactsRuntime;
 import io.sharetrace.util.logging.metric.SendScoresRuntime;
-import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import java.time.Clock;
 import java.util.BitSet;
 import java.util.Map;
@@ -141,7 +141,7 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
   }
 
   private Map<Integer, ActorRef<UserMsg>> newUsers() {
-    Map<Integer, ActorRef<UserMsg>> users = new Int2ObjectOpenHashMap<>(numUsers);
+    Map<Integer, ActorRef<UserMsg>> users = Collections.newIntKeyedHashMap(numUsers);
     for (int name : dataset.contactNetwork().users()) {
       // Timeout IDs must be 0-based contiguous to use with 'stopped' BitSet.
       ActorRef<UserMsg> actor = getContext().spawn(newUser(name), String.valueOf(name), USER_PROPS);

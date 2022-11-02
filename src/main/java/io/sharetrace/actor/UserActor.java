@@ -17,9 +17,9 @@ import io.sharetrace.model.message.RiskScoreMsg;
 import io.sharetrace.model.message.ThresholdMsg;
 import io.sharetrace.model.message.TimedOutMsg;
 import io.sharetrace.model.message.UserMsg;
+import io.sharetrace.util.Collections;
 import io.sharetrace.util.IntervalCache;
 import io.sharetrace.util.logging.Logging;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import java.time.Clock;
 import java.util.Comparator;
 import java.util.Map;
@@ -70,7 +70,7 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
     this.userParams = userParams;
     this.clock = clock;
     this.cache = cache;
-    this.contacts = new Object2ObjectOpenHashMap<>();
+    this.contacts = Collections.newHashMap();
     this.msgUtil = new MsgUtil(getContext().getSelf(), clock, userParams);
     this.defaultCurrent = msgUtil.defaultMsg();
   }
@@ -211,12 +211,6 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
     timers.startSingleTimer(timedOutMsg, userParams.idleTimeout());
   }
 
-  /* This is a hack to ensure the symptom score is always logged for analysis. This covers the
-  edge case where the symptom score has a value of 0, which would not otherwise be logged. */
-  private boolean isInitialized() {
-    return current != null;
-  }
-
   private void startCurrentRefreshTimer() {
     timers.startSingleTimer(CurrentRefreshMsg.INSTANCE, msgUtil.computeTtl(current));
   }
@@ -238,5 +232,11 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
     current = msg;
     transmitted = msgUtil.transmitted(current);
     return previous;
+  }
+
+  /* This is a hack to ensure the symptom score is always logged for analysis. This covers the
+  edge case where the symptom score has a value of 0, which would not otherwise be logged. */
+  private boolean isInitialized() {
+    return current != null;
   }
 }

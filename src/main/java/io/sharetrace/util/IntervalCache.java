@@ -1,7 +1,6 @@
 package io.sharetrace.util;
 
 import com.google.common.collect.Range;
-import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.temporal.ChronoField;
@@ -47,7 +46,7 @@ public final class IntervalCache<T extends Comparable<T>> {
   private Range<Long> range;
 
   private IntervalCache(CacheParams<T> params) {
-    cache = new Long2ObjectOpenHashMap<>();
+    cache = Collections.newLongKeyedHashMap();
     mergeStrategy = params.mergeStrategy();
     clock = params.clock();
     interval = getLong(params.interval());

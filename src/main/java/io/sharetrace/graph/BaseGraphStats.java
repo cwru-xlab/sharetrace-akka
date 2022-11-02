@@ -1,11 +1,11 @@
 package io.sharetrace.graph;
 
+import io.sharetrace.util.Collections;
 import io.sharetrace.util.Stats;
 import io.sharetrace.util.logging.metric.GraphCycles;
 import io.sharetrace.util.logging.metric.GraphEccentricity;
 import io.sharetrace.util.logging.metric.GraphScores;
 import io.sharetrace.util.logging.metric.GraphSize;
-import it.unimi.dsi.fastutil.floats.FloatArrayList;
 import java.util.Collection;
 import java.util.List;
 import org.immutables.value.Value;
@@ -109,7 +109,7 @@ abstract class BaseGraphStats<V, E> {
     Collection<? extends Number> scores = algorithm.getScores().values();
     return scores.stream()
         .map(Number::floatValue)
-        .collect(() -> new FloatArrayList(scores.size()), List::add, List::addAll);
+        .collect(Collections.toImmutableFloatList(scores.size()));
   }
 
   @Value.Lazy

@@ -1,7 +1,6 @@
 package io.sharetrace.util;
 
 import com.google.common.base.MoreObjects;
-import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import java.util.Map;
 
 public final class Indexer<T> {
@@ -10,11 +9,7 @@ public final class Indexer<T> {
   private int value;
 
   public Indexer() {
-    this(Object2IntOpenHashMap.DEFAULT_INITIAL_SIZE);
-  }
-
-  public Indexer(int capacity) {
-    index = new Object2IntOpenHashMap<>(capacity);
+    index = Collections.newIntValuedHashMap();
     value = 0;
   }
 

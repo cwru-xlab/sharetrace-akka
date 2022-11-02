@@ -9,6 +9,7 @@ import io.sharetrace.model.UserParams;
 import io.sharetrace.model.message.RiskScoreMsg;
 import io.sharetrace.util.CacheParams;
 import io.sharetrace.util.Checks;
+import io.sharetrace.util.Collections;
 import io.sharetrace.util.IntervalCache;
 import io.sharetrace.util.Uid;
 import io.sharetrace.util.logging.Loggable;
@@ -18,7 +19,6 @@ import io.sharetrace.util.logging.setting.ExperimentSettings;
 import io.sharetrace.util.logging.setting.LoggableSetting;
 import java.time.Clock;
 import java.time.Instant;
-import java.util.Collections;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.Set;
@@ -325,7 +325,7 @@ public final class State implements Runnable, Identifiable {
 
     @Override
     public Set<Class<? extends Loggable>> loggable() {
-      return Collections.unmodifiableSet(ctx.loggable());
+      return Collections.immutable(ctx.loggable());
     }
 
     @Override
