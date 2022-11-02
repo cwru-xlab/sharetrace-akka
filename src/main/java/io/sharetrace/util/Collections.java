@@ -25,36 +25,11 @@ public final class Collections {
 
   private Collections() {}
 
-  public static <T> Set<T> immutable(Set<? extends T> set) {
-    return java.util.Collections.unmodifiableSet(set);
-  }
-
-  public static <K, V> Map<K, V> immutable(Map<? extends K, ? extends V> map) {
-    return java.util.Collections.unmodifiableMap(map);
-  }
-
-  public static <T> Collector<T, ?, Set<T>> toImmutableSet(int size) {
-    return Collectors.collectingAndThen(
-        ObjectOpenHashSet.toSetWithExpectedSize(size), ObjectSets::unmodifiable);
-  }
-
-  public static Set<Integer> newIntSet(int... elements) {
+  public static Set<Integer> ofInts(int... elements) {
     return IntSet.of(elements);
   }
 
-  public static <T> Collector<T, ?, List<T>> toImmutableList(int size) {
-    return Collectors.collectingAndThen(
-        Collector.of(
-            () -> (ObjectList<T>) newList(size),
-            List::add,
-            (left, right) -> {
-              left.addAll(right);
-              return left;
-            }),
-        ObjectLists::unmodifiable);
-  }
-
-  public static <T> List<T> newList(int size) {
+  public static <T> List<T> newArrayList(int size) {
     return new ObjectArrayList<>(size);
   }
 
@@ -70,24 +45,50 @@ public final class Collections {
     return new Object2ObjectOpenHashMap<>();
   }
 
-  public static <K> Map<K, Integer> newIntValuedHashMap() {
-    return new Object2IntOpenHashMap<>();
-  }
-
   public static <V> Map<Integer, V> newIntKeyedHashMap() {
     return new Int2ObjectOpenHashMap<>();
-  }
-
-  public static <V> Map<Long, V> newLongKeyedHashMap() {
-    return new Long2ObjectOpenHashMap<>();
   }
 
   public static <V> Map<Integer, V> newIntKeyedHashMap(int size) {
     return new Int2ObjectOpenHashMap<>(size);
   }
 
+  public static <K> Map<K, Integer> newIntValuedHashMap() {
+    return new Object2IntOpenHashMap<>();
+  }
+
+  public static <V> Map<Long, V> newLongKeyedHashMap() {
+    return new Long2ObjectOpenHashMap<>();
+  }
+
   public static <K> Map<K, Long> newLongValuedHashMap() {
     return new Object2LongOpenHashMap<>();
+  }
+
+  public static <T> Set<T> immutable(Set<? extends T> set) {
+    return java.util.Collections.unmodifiableSet(set);
+  }
+
+  public static <K, V> Map<K, V> immutable(Map<? extends K, ? extends V> map) {
+    return java.util.Collections.unmodifiableMap(map);
+  }
+
+  @SuppressWarnings("unchecked")
+  public static <T> Collector<T, ?, List<T>> toImmutableList(int size) {
+    return Collectors.collectingAndThen(
+        Collector.of(
+            () -> (ObjectList<T>) new ObjectArrayList<>(size),
+            List::add,
+            (left, right) -> {
+              left.addAll(right);
+              return left;
+            }),
+        ObjectLists::unmodifiable);
+  }
+
+  public static <T> Collector<T, ?, Set<T>> toImmutableSet(int size) {
+    return Collectors.collectingAndThen(
+        ObjectOpenHashSet.toSetWithExpectedSize(size), ObjectSets::unmodifiable);
   }
 
   public static Collector<Integer, ?, List<Integer>> toImmutableIntList(int size) {

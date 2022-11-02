@@ -97,7 +97,7 @@ public final class VertexIndependentPaths {
   }
 
   private List<Callable<Integer>> newTasks(int maxFind) {
-    List<Callable<Integer>> tasks = Collections.newList(numPairs);
+    List<Callable<Integer>> tasks = Collections.newArrayList(numPairs);
     for (int source : graph.vertexSet()) {
       for (int target : graph.vertexSet()) {
         if ((isDirected && source != target) || (!isDirected && source < target)) {

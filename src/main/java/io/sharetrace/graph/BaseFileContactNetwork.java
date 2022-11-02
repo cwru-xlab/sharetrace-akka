@@ -70,7 +70,7 @@ abstract class BaseFileContactNetwork extends AbstractContactNetwork implements 
   protected abstract Path path();
 
   private static Set<Integer> key(int user1, int user2) {
-    return Collections.newIntSet(user1, user2);
+    return Collections.ofInts(user1, user2);
   }
 
   protected abstract String delimiter();
