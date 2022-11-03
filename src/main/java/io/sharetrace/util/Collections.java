@@ -11,7 +11,6 @@ import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import it.unimi.dsi.fastutil.objects.ObjectList;
 import it.unimi.dsi.fastutil.objects.ObjectLists;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ObjectSets;
@@ -73,17 +72,9 @@ public final class Collections {
     return java.util.Collections.unmodifiableMap(map);
   }
 
-  @SuppressWarnings("unchecked")
   public static <T> Collector<T, ?, List<T>> toImmutableList(int size) {
     return Collectors.collectingAndThen(
-        Collector.of(
-            () -> (ObjectList<T>) new ObjectArrayList<>(size),
-            List::add,
-            (left, right) -> {
-              left.addAll(right);
-              return left;
-            }),
-        ObjectLists::unmodifiable);
+        ObjectArrayList.toListWithExpectedSize(size), ObjectLists::unmodifiable);
   }
 
   public static <T> Collector<T, ?, Set<T>> toImmutableSet(int size) {
@@ -103,22 +94,14 @@ public final class Collections {
         IntLists::unmodifiable);
   }
 
+  public static Collector<Float, ?, List<Float>> toImmutableFloatList() {
+    return toImmutableFloatList(FloatArrayList.DEFAULT_INITIAL_CAPACITY);
+  }
+
   public static Collector<Float, ?, List<Float>> toImmutableFloatList(int size) {
     return Collectors.collectingAndThen(
         Collector.of(
             () -> new FloatArrayList(size),
-            List::add,
-            (left, right) -> {
-              left.addAll(right);
-              return left;
-            }),
-        FloatLists::unmodifiable);
-  }
-
-  public static Collector<Float, ?, List<Float>> toImmutableFloatList() {
-    return Collectors.collectingAndThen(
-        Collector.of(
-            FloatArrayList::new,
             List::add,
             (left, right) -> {
               left.addAll(right);
