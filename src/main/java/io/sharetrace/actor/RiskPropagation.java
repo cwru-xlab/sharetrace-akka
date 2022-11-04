@@ -144,9 +144,9 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
     Map<Integer, ActorRef<UserMsg>> users = Collections.newIntKeyedHashMap(numUsers);
     for (int name : dataset.contactNetwork().users()) {
       // Timeout IDs must be 0-based contiguous to use with 'stopped' BitSet.
-      ActorRef<UserMsg> actor = getContext().spawn(newUser(name), String.valueOf(name), USER_PROPS);
-      getContext().watch(actor);
-      users.put(name, actor);
+      ActorRef<UserMsg> user = getContext().spawn(newUser(name), String.valueOf(name), USER_PROPS);
+      getContext().watch(user);
+      users.put(name, user);
     }
     return users;
   }
