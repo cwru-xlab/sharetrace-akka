@@ -57,13 +57,13 @@ abstract class BaseFileContactNetwork extends AbstractContactNetwork implements 
       int user1 = indexer.index(args[1].strip());
       int user2 = indexer.index(args[2].strip());
       if (user1 != user2) {
-        Instant time = Instant.ofEpochSecond(Long.parseLong(args[0].strip()));
-        contacts.merge(key(user1, user2), time, BaseFileContactNetwork::newer);
-        lastContactTime = newer(lastContactTime, time);
+        Instant contactTime = Instant.ofEpochSecond(Long.parseLong(args[0].strip()));
+        contacts.merge(key(user1, user2), contactTime, BaseFileContactNetwork::newer);
+        lastContactTime = newer(lastContactTime, contactTime);
       }
     }
     Duration offset = Duration.between(lastContactTime, refTime());
-    contacts.replaceAll((x, time) -> time.plus(offset));
+    contacts.replaceAll((x, contactTime) -> contactTime.plus(offset));
     return contacts;
   }
 
