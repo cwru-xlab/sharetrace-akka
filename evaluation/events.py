@@ -7,18 +7,17 @@ import fileinput
 import gzip
 import itertools
 import json
+import numpy as np
 import shutil
 import sys
 from collections.abc import Callable, Iterable
 from enum import Enum
 from os import PathLike
 from pathlib import Path
-from tempfile import TemporaryDirectory
-from typing import Iterator, final, ContextManager, AnyStr
-
-import numpy as np
 from scipy import sparse
+from tempfile import TemporaryDirectory
 from tqdm.notebook import tqdm
+from typing import Iterator, final, ContextManager, AnyStr
 
 from hints import Record
 
@@ -61,7 +60,7 @@ class Event(str, Enum):
         return Event(record["type"])
 
 
-_EVENT_WIDTH = f"<U{max(len(e) for e in Event)}"
+_EVENT_WIDTH = f"<U{max(map(len, Event))}"
 
 _READ_MODE = "rb"
 _WRITE_MODE = "wb"
