@@ -507,9 +507,12 @@ def analyze(logdir: PathLike | AnyStr, *callbacks: EventCallback) -> None:
     with LogStream(logdir) as stream:
         size = (stream.bytes + 1) * len(callbacks)
         with tqdm(total=size, unit_scale=True) as t:
-            for event, callback in itertools.product(stream(), callbacks):
-                callback(json.loads(event))
-                t.update(sys.getsizeof(event))
+            for event in stream():
+                size = sys.getsizeof(event)
+                event = json.loads(event)
+                for callback in callbacks:
+                    callback(event)
+                    t.update(size)
             for callback in callbacks:
                 callback.on_complete()
                 t.update()
