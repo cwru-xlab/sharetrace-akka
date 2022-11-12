@@ -7,17 +7,18 @@ import fileinput
 import gzip
 import itertools
 import json
-import numpy as np
 import shutil
 import sys
 from collections.abc import Callable, Iterable
 from enum import Enum
 from os import PathLike
 from pathlib import Path
-from scipy import sparse
 from tempfile import TemporaryDirectory
-from tqdm.notebook import tqdm
 from typing import Iterator, final, ContextManager, AnyStr
+
+import numpy as np
+from scipy import sparse
+from tqdm.notebook import tqdm
 
 from hints import Record
 
@@ -251,8 +252,7 @@ class UpdatesData(CallbackData):
        num_updates (int): Number of updates for all users.
     """
 
-    __slots__ = (
-    "updates", "symptoms", "exposures", "num_updated", "num_updates")
+    __slots__ = ("updates", "symptoms", "exposures", "num_updated", "num_updates")
 
     def __init__(self) -> None:
         self.updates: dict | np.ndarray = {}
