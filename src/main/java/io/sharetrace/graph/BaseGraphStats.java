@@ -1,145 +1,95 @@
 package io.sharetrace.graph;
 
-import io.sharetrace.util.Collections;
 import io.sharetrace.util.Stats;
 import io.sharetrace.util.logging.metric.GraphCycles;
 import io.sharetrace.util.logging.metric.GraphEccentricity;
 import io.sharetrace.util.logging.metric.GraphScores;
 import io.sharetrace.util.logging.metric.GraphSize;
-import java.util.Collection;
-import java.util.List;
 import org.immutables.value.Value;
 import org.jgrapht.Graph;
 import org.jgrapht.GraphMetrics;
 import org.jgrapht.alg.interfaces.ShortestPathAlgorithm;
 import org.jgrapht.alg.interfaces.VertexScoringAlgorithm;
-import org.jgrapht.alg.scoring.ClosenessCentrality;
-import org.jgrapht.alg.scoring.ClusteringCoefficient;
-import org.jgrapht.alg.scoring.Coreness;
-import org.jgrapht.alg.scoring.EigenvectorCentrality;
-import org.jgrapht.alg.scoring.KatzCentrality;
+import org.jgrapht.alg.scoring.*;
 import org.jgrapht.alg.shortestpath.FloydWarshallShortestPaths;
 import org.jgrapht.alg.shortestpath.GraphMeasurer;
 
 @Value.Immutable
 abstract class BaseGraphStats<V, E> {
 
+  private static Stats computeScoreStats(VertexScoringAlgorithm<?, ? extends Number> algorithm) {
+    return Stats.of(algorithm.getScores().values());
+  }
+
+  @Value.Lazy
   public GraphSize graphSize() {
-    return GraphSize.builder().numNodes(numNodes()).numEdges(numEdges()).build();
-  }
-
-  @Value.Lazy
-  protected int numNodes() {
-    return graph().vertexSet().size();
-  }
-
-  @Value.Lazy
-  protected int numEdges() {
-    return graph().edgeSet().size();
+    return GraphSize.builder()
+        .numNodes(graph().vertexSet().size())
+        .numEdges(graph().edgeSet().size())
+        .build();
   }
 
   @Value.Parameter
   protected abstract Graph<V, E> graph();
 
+  @Value.Lazy
   public GraphCycles graphCycles() {
-    return GraphCycles.builder().numTriangles(numTriangles()).girth(girth()).build();
-  }
-
-  @Value.Lazy
-  protected long numTriangles() {
-    return GraphMetrics.getNumberOfTriangles(graph());
-  }
-
-  @Value.Lazy
-  protected int girth() {
-    return GraphMetrics.getGirth(graph());
-  }
-
-  public GraphEccentricity graphEccentricity() {
-    return GraphEccentricity.builder()
-        .radius(radius())
-        .diameter(diameter())
-        .center(center())
-        .periphery(periphery())
+    return GraphCycles.builder()
+        .numTriangles(GraphMetrics.getNumberOfTriangles(graph()))
+        .girth(GraphMetrics.getGirth(graph()))
         .build();
   }
 
+  @Value.Lazy
+  public GraphEccentricity graphEccentricity() {
+    GraphMeasurer<?, ?> measurer = new GraphMeasurer<>(graph(), shortestPath());
+    return GraphEccentricity.builder()
+        .radius((int) measurer.getRadius())
+        .diameter((int) measurer.getDiameter())
+        .center(measurer.getGraphCenter().size())
+        .periphery(measurer.getGraphPeriphery().size())
+        .build();
+  }
+
+  @Value.Lazy
   public GraphScores graphScores() {
     return GraphScores.builder()
         .degeneracy(degeneracy())
         .globalClusteringCoefficient(globalClusteringCoefficient())
-        .localClusteringCoefficient(Stats.of(localClusteringCoefficients()))
-        .harmonicCentrality(Stats.of(harmonicCentralities()))
-        .katzCentrality(Stats.of(katzCentralities()))
-        .eigenvectorCentrality(Stats.of(eigenvectorCentralities()))
+        .localClusteringCoefficient(localClusteringCoefficients())
+        .harmonicCentrality(harmonicCentralities())
+        .katzCentrality(katzCentralities())
+        .eigenvectorCentrality(eigenvectorCentralities())
         .build();
   }
 
-  @Value.Lazy
-  protected int degeneracy() {
+  private int degeneracy() {
     return new Coreness<>(graph()).getDegeneracy();
   }
 
-  @Value.Lazy
-  protected float globalClusteringCoefficient() {
+  private float globalClusteringCoefficient() {
     return (float) new ClusteringCoefficient<>(graph()).getGlobalClusteringCoefficient();
   }
 
-  @Value.Lazy
-  protected List<Float> localClusteringCoefficients() {
-    return getScores(new ClusteringCoefficient<>(graph()));
+  private Stats localClusteringCoefficients() {
+    return computeScoreStats(new ClusteringCoefficient<>(graph()));
   }
 
-  @Value.Lazy
-  protected List<Float> harmonicCentralities() {
-    return getScores(new HarmonicCentrality<>(graph(), shortestPath()));
+  private Stats harmonicCentralities() {
+    return computeScoreStats(new HarmonicCentrality<>(graph(), shortestPath()));
   }
 
-  @Value.Lazy
-  protected List<Float> katzCentralities() {
-    return getScores(new KatzCentrality<>(graph()));
+  private Stats katzCentralities() {
+    return computeScoreStats(new KatzCentrality<>(graph()));
   }
 
-  @Value.Lazy
-  protected List<Float> eigenvectorCentralities() {
-    return getScores(new EigenvectorCentrality<>(graph()));
-  }
-
-  private static List<Float> getScores(VertexScoringAlgorithm<?, ? extends Number> algorithm) {
-    Collection<? extends Number> scores = algorithm.getScores().values();
-    return scores.stream()
-        .map(Number::floatValue)
-        .collect(Collections.toImmutableFloatList(scores.size()));
+  private Stats eigenvectorCentralities() {
+    return computeScoreStats(new EigenvectorCentrality<>(graph()));
   }
 
   @Value.Lazy
   protected ShortestPathAlgorithm<V, E> shortestPath() {
     return new FloydWarshallShortestPaths<>(graph());
-  }
-
-  @Value.Lazy
-  protected int radius() {
-    return (int) graphMeasurer().getRadius();
-  }
-
-  @Value.Lazy
-  protected int diameter() {
-    return (int) graphMeasurer().getDiameter();
-  }
-
-  @Value.Lazy
-  protected int center() {
-    return graphMeasurer().getGraphCenter().size();
-  }
-
-  @Value.Lazy
-  protected int periphery() {
-    return graphMeasurer().getGraphPeriphery().size();
-  }
-
-  @Value.Lazy
-  protected GraphMeasurer<V, E> graphMeasurer() {
-    return new GraphMeasurer<>(graph(), shortestPath());
   }
 
   private static final class HarmonicCentrality<V, E> extends ClosenessCentrality<V, E> {
