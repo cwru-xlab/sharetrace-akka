@@ -3,6 +3,7 @@ package io.sharetrace.experiment;
 import io.sharetrace.experiment.state.Context;
 import io.sharetrace.experiment.state.Defaults;
 import io.sharetrace.experiment.state.State;
+
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -23,10 +24,14 @@ public abstract class Experiment<Config> {
   public abstract void run(Config config, State state);
 
   public State newDefaultState(Config config) {
-    return newDefaultState(Defaults.context(), config);
+    return newDefaultState(defaultContext(), config);
   }
 
   public abstract State newDefaultState(Context ctx, Config config);
+
+  public Context defaultContext() {
+    return Defaults.context();
+  }
 
   @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
   protected <R> R getProperty(Optional<R> property, String name) {

@@ -5,10 +5,11 @@ import io.sharetrace.experiment.config.FileExperimentConfig;
 import io.sharetrace.experiment.config.ParamsExperimentConfig;
 import io.sharetrace.experiment.config.RuntimeExperimentConfig;
 import io.sharetrace.graph.GraphType;
-import java.nio.file.Path;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+
+import java.nio.file.Path;
 
 public class ExperimentTests {
 
@@ -24,7 +25,7 @@ public class ExperimentTests {
             .graphType(graphType)
             .path(Path.of(String.format(GRAPH_PATH_TEMPLATE, graphType)))
             .build();
-    Assertions.assertDoesNotThrow(() -> FileExperiment.instance().runWithDefaults(config));
+    Assertions.assertDoesNotThrow(() -> new FileExperiment().runWithDefaults(config));
   }
 
   @ParameterizedTest
@@ -39,7 +40,7 @@ public class ExperimentTests {
             .graphType(graphType)
             .numNodes(1000)
             .build();
-    Assertions.assertDoesNotThrow(() -> ParamsExperiment.instance().runWithDefaults(config));
+    Assertions.assertDoesNotThrow(() -> new ParamsExperiment().runWithDefaults(config));
   }
 
   @ParameterizedTest
@@ -49,6 +50,6 @@ public class ExperimentTests {
   public void testRuntimeExperiment(GraphType graphType) {
     RuntimeExperimentConfig config =
         RuntimeExperimentConfig.builder().graphType(graphType).addNumNodes(1000).build();
-    Assertions.assertDoesNotThrow(() -> RuntimeExperiment.instance().runWithDefaults(config));
+    Assertions.assertDoesNotThrow(() -> new RuntimeExperiment().runWithDefaults(config));
   }
 }

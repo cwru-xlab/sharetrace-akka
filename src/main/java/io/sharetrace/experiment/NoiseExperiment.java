@@ -17,18 +17,17 @@ import org.apache.commons.math3.distribution.RealDistribution;
 
 public final class NoiseExperiment extends Experiment<NoiseExperimentConfig> {
 
-  private static final NoiseExperiment INSTANCE = new NoiseExperiment();
   private static final Context DEFAULT_CTX = newDefaultContext();
 
-  private NoiseExperiment() {}
-
-  public static NoiseExperiment instance() {
-    return INSTANCE;
-  }
-
-  public static Context newDefaultContext() {
+  private static Context newDefaultContext() {
     return Defaults.context()
         .withLoggable(UpdateEvent.class, GraphSize.class, ExperimentSettings.class);
+  }
+
+  private static Dataset withNoisyScoreFactory(Dataset dataset, RealDistribution noise) {
+    RiskScoreFactory cached = CachedRiskScoreFactory.of(dataset.scoreFactory());
+    RiskScoreFactory noisy = NoisyRiskScoreFactory.of(cached, noise);
+    return dataset.withScoreFactory(noisy);
   }
 
   /**
@@ -51,15 +50,9 @@ public final class NoiseExperiment extends Experiment<NoiseExperimentConfig> {
     }
   }
 
-  private static Dataset withNoisyScoreFactory(Dataset dataset, RealDistribution noise) {
-    RiskScoreFactory cached = CachedRiskScoreFactory.of(dataset.scoreFactory());
-    RiskScoreFactory noisy = NoisyRiskScoreFactory.of(cached, noise);
-    return dataset.withScoreFactory(noisy);
-  }
-
   @Override
-  public State newDefaultState(NoiseExperimentConfig config) {
-    return newDefaultState(DEFAULT_CTX, config);
+  public Context defaultContext() {
+    return DEFAULT_CTX;
   }
 
   @Override

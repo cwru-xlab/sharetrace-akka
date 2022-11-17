@@ -13,24 +13,23 @@ import io.sharetrace.graph.GraphType;
 import io.sharetrace.util.Collections;
 import io.sharetrace.util.logging.Loggable;
 import io.sharetrace.util.logging.metric.GraphTopology;
+
 import java.util.Set;
 
 public final class ParamsExperiment extends Experiment<ParamsExperimentConfig> {
 
-  private static final ParamsExperiment INSTANCE = new ParamsExperiment();
   private static final Context DEFAULT_CTX = newDefaultContext();
 
-  private ParamsExperiment() {}
-
-  public static ParamsExperiment instance() {
-    return INSTANCE;
-  }
-
-  public static Context newDefaultContext() {
+  private static Context newDefaultContext() {
     Context ctx = Defaults.context();
     Set<Class<? extends Loggable>> loggable = Collections.newHashSet(ctx.loggable());
     loggable.remove(GraphTopology.class);
     return ctx.withLoggable(loggable);
+  }
+
+  private static Dataset cacheScores(Dataset dataset) {
+    RiskScoreFactory cachedScoreFactory = CachedRiskScoreFactory.of(dataset.scoreFactory());
+    return dataset.withScoreFactory(cachedScoreFactory);
   }
 
   /**
@@ -54,14 +53,9 @@ public final class ParamsExperiment extends Experiment<ParamsExperimentConfig> {
     }
   }
 
-  private static Dataset cacheScores(Dataset dataset) {
-    RiskScoreFactory cachedScoreFactory = CachedRiskScoreFactory.of(dataset.scoreFactory());
-    return dataset.withScoreFactory(cachedScoreFactory);
-  }
-
   @Override
-  public State newDefaultState(ParamsExperimentConfig config) {
-    return newDefaultState(DEFAULT_CTX, config);
+  public Context defaultContext() {
+    return DEFAULT_CTX;
   }
 
   @Override

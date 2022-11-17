@@ -9,27 +9,15 @@ import io.sharetrace.experiment.state.Defaults;
 import io.sharetrace.experiment.state.State;
 import io.sharetrace.graph.ContactNetwork;
 import io.sharetrace.graph.GraphType;
-import io.sharetrace.util.logging.metric.CreateUsersRuntime;
-import io.sharetrace.util.logging.metric.GraphSize;
-import io.sharetrace.util.logging.metric.MsgPassingRuntime;
-import io.sharetrace.util.logging.metric.RiskPropRuntime;
-import io.sharetrace.util.logging.metric.SendContactsRuntime;
-import io.sharetrace.util.logging.metric.SendScoresRuntime;
+import io.sharetrace.util.logging.metric.*;
 import io.sharetrace.util.logging.setting.ExperimentSettings;
 
 public final class RuntimeExperiment extends Experiment<RuntimeExperimentConfig> {
 
   private static final int IGNORED = 50;
-  private static final RuntimeExperiment INSTANCE = new RuntimeExperiment();
   private static final Context DEFAULT_CTX = newDefaultContext();
 
-  private RuntimeExperiment() {}
-
-  public static RuntimeExperiment instance() {
-    return INSTANCE;
-  }
-
-  public static Context newDefaultContext() {
+  private static Context newDefaultContext() {
     return Defaults.context()
         .withLoggable(
             GraphSize.class,
@@ -59,8 +47,8 @@ public final class RuntimeExperiment extends Experiment<RuntimeExperimentConfig>
   }
 
   @Override
-  public State newDefaultState(RuntimeExperimentConfig config) {
-    return newDefaultState(DEFAULT_CTX, config);
+  public Context defaultContext() {
+    return DEFAULT_CTX;
   }
 
   @Override

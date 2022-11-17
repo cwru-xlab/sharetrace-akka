@@ -7,17 +7,10 @@ import io.sharetrace.experiment.state.Context;
 import io.sharetrace.experiment.state.Defaults;
 import io.sharetrace.experiment.state.State;
 import io.sharetrace.graph.GraphType;
+
 import java.nio.file.Path;
 
 public final class FileExperiment extends Experiment<FileExperimentConfig> {
-
-  private static final FileExperiment INSTANCE = new FileExperiment();
-
-  private FileExperiment() {}
-
-  public static FileExperiment instance() {
-    return INSTANCE;
-  }
 
   /** Evaluates {@link RiskPropagation} on a given {@link FileDataset} 1 or more times. */
   @Override
