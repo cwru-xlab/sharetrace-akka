@@ -17,6 +17,12 @@ public final class RuntimeExperiment extends Experiment<RuntimeExperimentConfig>
   private static final int IGNORED = 50;
   private static final Context DEFAULT_CTX = newDefaultContext();
 
+  private RuntimeExperiment() {}
+
+  public static RuntimeExperiment create() {
+    return new RuntimeExperiment();
+  }
+
   private static Context newDefaultContext() {
     return Defaults.context()
         .withLoggable(

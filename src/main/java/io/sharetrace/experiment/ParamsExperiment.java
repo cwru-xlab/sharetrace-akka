@@ -20,6 +20,12 @@ public final class ParamsExperiment extends Experiment<ParamsExperimentConfig> {
 
   private static final Context DEFAULT_CTX = newDefaultContext();
 
+  private ParamsExperiment() {}
+
+  public static ParamsExperiment create() {
+    return new ParamsExperiment();
+  }
+
   private static Context newDefaultContext() {
     Context ctx = Defaults.context();
     Set<Class<? extends Loggable>> loggable = Collections.newHashSet(ctx.loggable());

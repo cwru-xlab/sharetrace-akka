@@ -12,6 +12,12 @@ import java.nio.file.Path;
 
 public final class FileExperiment extends Experiment<FileExperimentConfig> {
 
+  private FileExperiment() {}
+
+  public static FileExperiment create() {
+    return new FileExperiment();
+  }
+
   /** Evaluates {@link RiskPropagation} on a given {@link FileDataset} 1 or more times. */
   @Override
   public void run(FileExperimentConfig config, State state) {

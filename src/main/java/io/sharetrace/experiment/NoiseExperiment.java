@@ -19,6 +19,12 @@ public final class NoiseExperiment extends Experiment<NoiseExperimentConfig> {
 
   private static final Context DEFAULT_CTX = newDefaultContext();
 
+  private NoiseExperiment() {}
+
+  public static NoiseExperiment create() {
+    return new NoiseExperiment();
+  }
+
   private static Context newDefaultContext() {
     return Defaults.context()
         .withLoggable(UpdateEvent.class, GraphSize.class, ExperimentSettings.class);
