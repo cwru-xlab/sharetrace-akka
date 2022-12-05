@@ -19,19 +19,19 @@ public final class Logging {
   private Logging() {}
 
   public static Logger metricsLogger() {
-    return logger(LoggerFactory.getLogger("MetricsLogger"));
+    return newLogger("MetricsLogger");
   }
 
-  private static Logger logger(org.slf4j.Logger delegate) {
-    return new DefaultLogger(delegate);
+  private static Logger newLogger(String name) {
+    return new DefaultLogger(LoggerFactory.getLogger(name));
   }
 
   public static Logger eventsLogger() {
-    return logger(LoggerFactory.getLogger("EventsLogger"));
+    return newLogger("EventsLogger");
   }
 
   public static Logger settingsLogger() {
-    return logger(LoggerFactory.getLogger("SettingsLogger"));
+    return newLogger("SettingsLogger");
   }
 
   public static Path graphsPath() {
