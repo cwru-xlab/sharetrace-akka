@@ -6,12 +6,14 @@ import org.apache.commons.math3.distribution.RealDistribution;
 import org.immutables.value.Value;
 
 @Value.Immutable
-abstract class BaseRiskScoreSampler extends BaseSampler<RiskScore> {
+abstract class BaseRiskScoreSampler extends AbstractSampler<RiskScore> {
 
   @Override
   public RiskScore sample() {
-    float scale = normalizedSample(values());
-    return RiskScore.of(RiskScore.RANGE * scale, timeSampler().sample());
+    return RiskScore.builder()
+        .value((float) normalizedSample(values(), RiskScore.RANGE))
+        .time(timeSampler().sample())
+        .build();
   }
 
   protected abstract RealDistribution values();
