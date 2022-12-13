@@ -130,11 +130,11 @@ public final class VertexIndependentPaths {
 
     @Override
     public Integer call() throws Exception {
-      int stopAt = Math.min(maxFind, maxPaths(source, target));
-      return (stopAt > 0) ? compute(source, target, stopAt) : 0;
+      int stopAt = Math.min(maxFind, maxPaths());
+      return (stopAt > 0) ? compute(stopAt) : 0;
     }
 
-    private int maxPaths(int source, int target) {
+    private int maxPaths() {
       int numPaths;
       if (source == target) {
         numPaths = 0;
@@ -146,29 +146,27 @@ public final class VertexIndependentPaths {
       return numPaths;
     }
 
-    private int compute(int source, int target, int maxFind) {
-      return isAdjacent(source, target)
-          ? computeForAdjacent(source, target, maxFind)
-          : computeForNonadjacent(source, target, maxFind);
+    private int compute(int maxFind) {
+      return isAdjacent() ? computeForAdjacent(maxFind) : computeForNonadjacent(maxFind);
     }
 
-    private boolean isAdjacent(int source, int target) {
+    private boolean isAdjacent() {
       return graph.getEdge(source, target) != null;
     }
 
-    private int computeForAdjacent(int source, int target, int maxFind) {
+    private int computeForAdjacent(int maxFind) {
       Graph<Integer, ?> graph = getDirectedCopy();
-      List<? extends GraphPath<Integer, ?>> paths = kShortestPaths(graph, source, target);
+      List<? extends GraphPath<Integer, ?>> paths = kShortestPaths(graph);
       int numFound = 1; // Trivial path along edge incident to source and target.
       while (paths.size() > 1 && numFound < maxFind) {
         numFound++;
         graph.removeAllVertices(withoutEndpoints(paths.get(1)));
-        paths = kShortestPaths(graph, source, target);
+        paths = kShortestPaths(graph);
       }
       return numFound;
     }
 
-    private int computeForNonadjacent(int source, int target, int maxFind) {
+    private int computeForNonadjacent(int maxFind) {
       Graph<Integer, ?> graph = Graphs.copy(this.graph);
       ShortestPathAlgorithm<Integer, ?> shortestPaths = newShortestPaths(graph);
       GraphPath<Integer, ?> path = shortestPaths.getPath(source, target);
@@ -185,8 +183,7 @@ public final class VertexIndependentPaths {
       return isDirected ? Graphs.copyDirected(graph) : Graphs.asDirected(graph);
     }
 
-    private static List<? extends GraphPath<Integer, ?>> kShortestPaths(
-        Graph<Integer, ?> graph, int source, int target) {
+    private List<? extends GraphPath<Integer, ?>> kShortestPaths(Graph<Integer, ?> graph) {
       // Suurballe provides a simpler implementation since it ensures no loops.
       // Suurballe copies internally, so we must pass in the graph on every call.
       return new SuurballeKDisjointShortestPaths<>(graph).getPaths(source, target, ADJACENT_PATHS);
