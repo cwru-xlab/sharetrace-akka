@@ -1,9 +1,10 @@
 package io.sharetrace.experiment.data.factory;
 
 import io.sharetrace.model.RiskScore;
-import io.sharetrace.util.Collections;
-import java.util.Map;
+import io.sharetrace.util.Collecting;
 import org.immutables.value.Value;
+
+import java.util.Map;
 
 @Value.Immutable
 abstract class BaseCachedRiskScoreFactory implements RiskScoreFactory {
@@ -15,7 +16,7 @@ abstract class BaseCachedRiskScoreFactory implements RiskScoreFactory {
 
   @Value.Lazy
   protected Map<Integer, RiskScore> cache() {
-    return Collections.newIntKeyedHashMap();
+      return Collecting.newIntKeyedHashMap();
   }
 
   @Value.Parameter

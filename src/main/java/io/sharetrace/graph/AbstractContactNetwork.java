@@ -2,23 +2,19 @@ package io.sharetrace.graph;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreType;
 import io.sharetrace.experiment.data.factory.ContactTimeFactory;
-import io.sharetrace.util.Collections;
+import io.sharetrace.util.Collecting;
 import io.sharetrace.util.Uid;
 import io.sharetrace.util.logging.Logger;
 import io.sharetrace.util.logging.Logging;
-import io.sharetrace.util.logging.metric.GraphCycles;
-import io.sharetrace.util.logging.metric.GraphEccentricity;
-import io.sharetrace.util.logging.metric.GraphScores;
-import io.sharetrace.util.logging.metric.GraphSize;
-import io.sharetrace.util.logging.metric.GraphTopology;
-import io.sharetrace.util.logging.metric.LoggableMetric;
-import java.time.Instant;
-import java.util.Set;
-import java.util.function.Supplier;
+import io.sharetrace.util.logging.metric.*;
 import org.immutables.value.Value;
 import org.jgrapht.Graph;
 import org.jgrapht.generate.GraphGenerator;
 import org.jgrapht.graph.DefaultEdge;
+
+import java.time.Instant;
+import java.util.Set;
+import java.util.function.Supplier;
 
 @JsonIgnoreType
 abstract class AbstractContactNetwork implements ContactNetwork {
@@ -28,14 +24,14 @@ abstract class AbstractContactNetwork implements ContactNetwork {
   @Override
   @Value.Derived
   public Set<Integer> users() {
-    return Collections.immutable(graph().vertexSet());
+    return Collecting.immutable(graph().vertexSet());
   }
 
   @Override
   @Value.Derived
   public Set<Contact> contacts() {
     Set<DefaultEdge> edges = graph().edgeSet();
-    return edges.stream().map(this::contactFrom).collect(Collections.toImmutableSet(edges.size()));
+    return edges.stream().map(this::contactFrom).collect(Collecting.toImmutableSet(edges.size()));
   }
 
   @Override

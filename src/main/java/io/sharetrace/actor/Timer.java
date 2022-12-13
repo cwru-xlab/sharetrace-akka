@@ -1,15 +1,16 @@
 package io.sharetrace.actor;
 
-import io.sharetrace.util.Collections;
+import io.sharetrace.util.Collecting;
+import org.apache.commons.lang3.time.StopWatch;
+
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import org.apache.commons.lang3.time.StopWatch;
 
 final class Timer<K> extends StopWatch {
 
-  private final Map<K, Long> runtimes = Collections.newLongValuedHashMap();
+    private final Map<K, Long> runtimes = Collecting.newLongValuedHashMap();
 
   public void time(Runnable task, K key) {
     time(Executors.callable(task), key);

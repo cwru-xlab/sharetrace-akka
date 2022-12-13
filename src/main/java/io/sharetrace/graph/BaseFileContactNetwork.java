@@ -2,8 +2,14 @@ package io.sharetrace.graph;
 
 import io.sharetrace.experiment.data.factory.ContactTimeFactory;
 import io.sharetrace.model.TimeRef;
-import io.sharetrace.util.Collections;
+import io.sharetrace.util.Collecting;
 import io.sharetrace.util.Indexer;
+import org.immutables.value.Value;
+import org.jgrapht.Graph;
+import org.jgrapht.Graphs;
+import org.jgrapht.generate.GraphGenerator;
+import org.jgrapht.graph.DefaultEdge;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -14,11 +20,6 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.immutables.value.Value;
-import org.jgrapht.Graph;
-import org.jgrapht.Graphs;
-import org.jgrapht.generate.GraphGenerator;
-import org.jgrapht.graph.DefaultEdge;
 
 @Value.Immutable
 abstract class BaseFileContactNetwork extends AbstractContactNetwork implements TimeRef {
@@ -48,10 +49,16 @@ abstract class BaseFileContactNetwork extends AbstractContactNetwork implements 
     }
   }
 
+  private static Set<Integer> key(int user1, int user2) {
+    return Collecting.ofInts(user1, user2);
+  }
+
+  protected abstract Path path();
+
   private Map<Set<Integer>, Instant> contactsFrom(Iterable<String> lines) {
     Instant lastContactTime = Instant.MIN;
     Indexer<String> indexer = new Indexer<>();
-    Map<Set<Integer>, Instant> contacts = Collections.newHashMap();
+    Map<Set<Integer>, Instant> contacts = Collecting.newHashMap();
     for (String line : lines) {
       String[] args = line.split(delimiter());
       int user1 = indexer.index(args[1].strip());
@@ -65,12 +72,6 @@ abstract class BaseFileContactNetwork extends AbstractContactNetwork implements 
     Duration offset = Duration.between(lastContactTime, refTime());
     contacts.replaceAll((x, contactTime) -> contactTime.plus(offset));
     return contacts;
-  }
-
-  protected abstract Path path();
-
-  private static Set<Integer> key(int user1, int user2) {
-    return Collections.ofInts(user1, user2);
   }
 
   protected abstract String delimiter();

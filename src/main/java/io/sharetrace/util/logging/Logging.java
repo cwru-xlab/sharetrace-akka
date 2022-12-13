@@ -1,22 +1,24 @@
 package io.sharetrace.util.logging;
 
 import ch.qos.logback.core.spi.PropertyContainer;
-import io.sharetrace.util.Collections;
+import io.sharetrace.util.Collecting;
+import net.logstash.logback.argument.StructuredArguments;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
+
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
-import net.logstash.logback.argument.StructuredArguments;
-import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 
 public final class Logging {
 
-  private static final Map<String, String> mdc = Collections.newHashMap();
-  private static final Set<Class<? extends Loggable>> enabled = Collections.newHashSet();
+  private static final Map<String, String> mdc = Collecting.newHashMap();
+  private static final Set<Class<? extends Loggable>> enabled = Collecting.newHashSet();
 
-  private Logging() {}
+  private Logging() {
+  }
 
   public static Logger metricsLogger() {
     return newLogger("MetricsLogger");
@@ -40,7 +42,7 @@ public final class Logging {
   }
 
   public static Map<String, String> getMdc() {
-    return Collections.immutable(mdc);
+    return Collecting.immutable(mdc);
   }
 
   public static synchronized void setMdc(String stateId) {

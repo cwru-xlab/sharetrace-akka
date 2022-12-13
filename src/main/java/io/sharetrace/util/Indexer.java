@@ -1,6 +1,7 @@
 package io.sharetrace.util;
 
 import com.google.common.base.MoreObjects;
+
 import java.util.Map;
 
 public final class Indexer<T> {
@@ -9,7 +10,7 @@ public final class Indexer<T> {
   private int value;
 
   public Indexer() {
-    index = Collections.newIntValuedHashMap();
+    index = Collecting.newIntValuedHashMap();
     value = 0;
   }
 

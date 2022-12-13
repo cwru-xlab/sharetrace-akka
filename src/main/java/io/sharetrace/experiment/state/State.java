@@ -7,16 +7,15 @@ import io.sharetrace.graph.GraphType;
 import io.sharetrace.model.Identifiable;
 import io.sharetrace.model.UserParams;
 import io.sharetrace.model.message.RiskScoreMsg;
-import io.sharetrace.util.CacheParams;
-import io.sharetrace.util.Checks;
-import io.sharetrace.util.Collections;
-import io.sharetrace.util.IntervalCache;
-import io.sharetrace.util.Uid;
+import io.sharetrace.util.*;
 import io.sharetrace.util.logging.Loggable;
 import io.sharetrace.util.logging.Logger;
 import io.sharetrace.util.logging.Logging;
 import io.sharetrace.util.logging.setting.ExperimentSettings;
 import io.sharetrace.util.logging.setting.LoggableSetting;
+import org.apache.commons.math3.distribution.RealDistribution;
+import org.apache.commons.math3.distribution.UniformRealDistribution;
+
 import java.time.Clock;
 import java.time.Instant;
 import java.util.EnumMap;
@@ -24,8 +23,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.IntStream;
-import org.apache.commons.math3.distribution.RealDistribution;
-import org.apache.commons.math3.distribution.UniformRealDistribution;
 
 public final class State implements Runnable, Identifiable {
 
@@ -325,7 +322,7 @@ public final class State implements Runnable, Identifiable {
 
     @Override
     public Set<Class<? extends Loggable>> loggable() {
-      return Collections.immutable(ctx.loggable());
+        return Collecting.immutable(ctx.loggable());
     }
 
     @Override

@@ -1,11 +1,12 @@
 package io.sharetrace.util;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
+import org.immutables.value.Value;
+
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
-import org.immutables.value.Value;
 
 @Value.Immutable
 abstract class BaseStats {
@@ -82,8 +83,8 @@ abstract class BaseStats {
   @Value.Derived
   public List<Float> outliers() {
     return Arrays.stream(statistics().getValues())
-        .mapToObj(v -> (float) v)
-        .filter(v -> v < lowerWhisker() || v > upperWhisker())
-        .collect(Collections.toImmutableFloatList());
+            .mapToObj(v -> (float) v)
+            .filter(v -> v < lowerWhisker() || v > upperWhisker())
+            .collect(Collecting.toImmutableFloatList());
   }
 }

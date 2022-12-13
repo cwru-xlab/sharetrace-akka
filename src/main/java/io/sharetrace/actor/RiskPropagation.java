@@ -14,27 +14,18 @@ import io.sharetrace.graph.Contact;
 import io.sharetrace.graph.ContactNetwork;
 import io.sharetrace.model.RiskScore;
 import io.sharetrace.model.UserParams;
-import io.sharetrace.model.message.AlgorithmMsg;
-import io.sharetrace.model.message.ContactMsg;
-import io.sharetrace.model.message.RiskScoreMsg;
-import io.sharetrace.model.message.RunMsg;
-import io.sharetrace.model.message.TimedOutMsg;
-import io.sharetrace.model.message.UserMsg;
+import io.sharetrace.model.message.*;
 import io.sharetrace.util.CacheParams;
-import io.sharetrace.util.Collections;
+import io.sharetrace.util.Collecting;
 import io.sharetrace.util.logging.Logger;
 import io.sharetrace.util.logging.Logging;
-import io.sharetrace.util.logging.metric.CreateUsersRuntime;
-import io.sharetrace.util.logging.metric.LoggableMetric;
-import io.sharetrace.util.logging.metric.MsgPassingRuntime;
-import io.sharetrace.util.logging.metric.RiskPropRuntime;
-import io.sharetrace.util.logging.metric.SendContactsRuntime;
-import io.sharetrace.util.logging.metric.SendScoresRuntime;
+import io.sharetrace.util.logging.metric.*;
+import org.immutables.builder.Builder;
+
 import java.time.Clock;
 import java.util.BitSet;
 import java.util.Map;
 import java.util.function.Supplier;
-import org.immutables.builder.Builder;
 
 /**
  * A non-iterative, asynchronous, concurrent implementation of the ShareTrace algorithm. The
@@ -141,7 +132,7 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
   }
 
   private Map<Integer, ActorRef<UserMsg>> newUsers() {
-    Map<Integer, ActorRef<UserMsg>> users = Collections.newIntKeyedHashMap(numUsers);
+    Map<Integer, ActorRef<UserMsg>> users = Collecting.newIntKeyedHashMap(numUsers);
     for (int name : dataset.contactNetwork().users()) {
       // Timeout IDs must be 0-based contiguous to use with 'stopped' BitSet.
       ActorRef<UserMsg> user = getContext().spawn(newUser(name), String.valueOf(name), USER_PROPS);

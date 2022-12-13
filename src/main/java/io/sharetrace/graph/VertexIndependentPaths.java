@@ -1,12 +1,6 @@
 package io.sharetrace.graph;
 
-import io.sharetrace.util.Collections;
-import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import io.sharetrace.util.Collecting;
 import org.jgrapht.Graph;
 import org.jgrapht.GraphPath;
 import org.jgrapht.alg.interfaces.ShortestPathAlgorithm;
@@ -14,6 +8,9 @@ import org.jgrapht.alg.shortestpath.BidirectionalDijkstraShortestPath;
 import org.jgrapht.alg.shortestpath.SuurballeKDisjointShortestPaths;
 import org.jgrapht.graph.DefaultEdge;
 import org.jheaps.tree.FibonacciHeap;
+
+import java.util.List;
+import java.util.concurrent.*;
 
 /**
  * Computes the approximate number of vertex-independent paths (<a
@@ -73,19 +70,19 @@ public final class VertexIndependentPaths {
 
   private List<Integer> getResult(List<Callable<Integer>> tasks) {
     try {
-      return executorService.invokeAll(tasks).stream()
-          .map(VertexIndependentPaths::getResult)
-          .collect(Collections.toImmutableIntList(tasks.size()));
+        return executorService.invokeAll(tasks).stream()
+                .map(VertexIndependentPaths::getResult)
+                .collect(Collecting.toImmutableIntList(tasks.size()));
     } catch (InterruptedException e) {
       throw new RuntimeException(e);
     }
   }
 
   private List<Callable<Integer>> newTasks(int source, int maxFind) {
-    return graph.vertexSet().stream()
-        .filter(target -> source != target)
-        .map(target -> newTask(source, target, maxFind))
-        .collect(Collections.toImmutableList(numVertices));
+      return graph.vertexSet().stream()
+              .filter(target -> source != target)
+              .map(target -> newTask(source, target, maxFind))
+              .collect(Collecting.toImmutableList(numVertices));
   }
 
   public List<Integer> computeForAll() {
@@ -97,7 +94,7 @@ public final class VertexIndependentPaths {
   }
 
   private List<Callable<Integer>> newTasks(int maxFind) {
-    List<Callable<Integer>> tasks = Collections.newArrayList(numPairs);
+      List<Callable<Integer>> tasks = Collecting.newArrayList(numPairs);
     for (int source : graph.vertexSet()) {
       for (int target : graph.vertexSet()) {
         if ((isDirected && source != target) || (!isDirected && source < target)) {

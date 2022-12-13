@@ -2,29 +2,19 @@ package io.sharetrace.actor;
 
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
-import akka.actor.typed.javadsl.AbstractBehavior;
-import akka.actor.typed.javadsl.ActorContext;
-import akka.actor.typed.javadsl.Behaviors;
-import akka.actor.typed.javadsl.Receive;
-import akka.actor.typed.javadsl.TimerScheduler;
+import akka.actor.typed.javadsl.*;
 import io.sharetrace.graph.ContactNetwork;
 import io.sharetrace.model.UserParams;
-import io.sharetrace.model.message.AlgorithmMsg;
-import io.sharetrace.model.message.ContactMsg;
-import io.sharetrace.model.message.ContactsRefreshMsg;
-import io.sharetrace.model.message.CurrentRefreshMsg;
-import io.sharetrace.model.message.RiskScoreMsg;
-import io.sharetrace.model.message.ThresholdMsg;
-import io.sharetrace.model.message.TimedOutMsg;
-import io.sharetrace.model.message.UserMsg;
-import io.sharetrace.util.Collections;
+import io.sharetrace.model.message.*;
+import io.sharetrace.util.Collecting;
 import io.sharetrace.util.IntervalCache;
 import io.sharetrace.util.logging.Logging;
+import org.immutables.builder.Builder;
+
 import java.time.Clock;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.function.Predicate;
-import org.immutables.builder.Builder;
 
 /**
  * An actor that corresponds to a vertex in a {@link ContactNetwork}. Collectively, all {@link
@@ -69,9 +59,9 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
     this.logger = new UserLogger(getContext().getSelf());
     this.userParams = userParams;
     this.clock = clock;
-    this.cache = cache;
-    this.contacts = Collections.newHashMap();
-    this.msgUtil = new MsgUtil(getContext().getSelf(), clock, userParams);
+      this.cache = cache;
+      this.contacts = Collecting.newHashMap();
+      this.msgUtil = new MsgUtil(getContext().getSelf(), clock, userParams);
     this.defaultCurrent = msgUtil.defaultMsg();
   }
 

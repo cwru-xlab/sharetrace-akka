@@ -10,7 +10,7 @@ import io.sharetrace.experiment.state.Defaults;
 import io.sharetrace.experiment.state.State;
 import io.sharetrace.graph.ContactNetwork;
 import io.sharetrace.graph.GraphType;
-import io.sharetrace.util.Collections;
+import io.sharetrace.util.Collecting;
 import io.sharetrace.util.logging.Loggable;
 import io.sharetrace.util.logging.metric.GraphTopology;
 
@@ -27,8 +27,8 @@ public final class ParamsExperiment extends Experiment<ParamsExperimentConfig> {
   }
 
   private static Context newDefaultContext() {
-    Context ctx = Defaults.context();
-    Set<Class<? extends Loggable>> loggable = Collections.newHashSet(ctx.loggable());
+      Context ctx = Defaults.context();
+      Set<Class<? extends Loggable>> loggable = Collecting.newHashSet(ctx.loggable());
     loggable.remove(GraphTopology.class);
     return ctx.withLoggable(loggable);
   }

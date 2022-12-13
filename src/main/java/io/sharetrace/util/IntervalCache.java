@@ -1,6 +1,8 @@
 package io.sharetrace.util;
 
 import com.google.common.collect.Range;
+import org.apache.commons.math3.util.FastMath;
+
 import java.time.Clock;
 import java.time.Instant;
 import java.time.temporal.ChronoField;
@@ -13,7 +15,6 @@ import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
 import java.util.function.Predicate;
-import org.apache.commons.math3.util.FastMath;
 
 /**
  * A cache that lazily maintains a finite number of contiguous, half-closed (start-inclusive) time
@@ -46,7 +47,7 @@ public final class IntervalCache<T extends Comparable<T>> {
   private Range<Long> range;
 
   private IntervalCache(CacheParams<T> params) {
-    cache = Collections.newLongKeyedHashMap();
+    cache = Collecting.newLongKeyedHashMap();
     mergeStrategy = params.mergeStrategy();
     clock = params.clock();
     interval = getLong(params.interval());
