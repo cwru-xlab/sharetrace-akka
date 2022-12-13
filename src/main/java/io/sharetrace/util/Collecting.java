@@ -9,6 +9,7 @@ import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.*;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -61,11 +62,11 @@ public final class Collecting {
   }
 
   public static <T> Set<T> immutable(Set<? extends T> set) {
-    return java.util.Collections.unmodifiableSet(set);
+    return Collections.unmodifiableSet(set);
   }
 
   public static <K, V> Map<K, V> immutable(Map<? extends K, ? extends V> map) {
-    return java.util.Collections.unmodifiableMap(map);
+    return Collections.unmodifiableMap(map);
   }
 
   public static <T> Collector<T, ?, List<T>> toImmutableList(int size) {
