@@ -10,10 +10,8 @@ import io.sharetrace.util.logging.event.CurrentRefreshEvent;
 import io.sharetrace.util.logging.event.LoggableEvent;
 import io.sharetrace.util.logging.event.PropagateEvent;
 import io.sharetrace.util.logging.event.ReceiveEvent;
-import io.sharetrace.util.logging.event.ResumeEvent;
 import io.sharetrace.util.logging.event.SendCachedEvent;
 import io.sharetrace.util.logging.event.SendCurrentEvent;
-import io.sharetrace.util.logging.event.TimeoutEvent;
 import io.sharetrace.util.logging.event.UpdateEvent;
 import java.util.function.Supplier;
 
@@ -133,21 +131,5 @@ final class UserLogger {
         .oldId(previous.id())
         .newId(current.id())
         .build();
-  }
-
-  public void logTimeout() {
-    logEvent(TimeoutEvent.class, this::timeoutEvent);
-  }
-
-  private TimeoutEvent timeoutEvent() {
-    return TimeoutEvent.builder().user(selfName).build();
-  }
-
-  public void logResume() {
-    logEvent(ResumeEvent.class, this::resumeEvent);
-  }
-
-  private ResumeEvent resumeEvent() {
-    return ResumeEvent.builder().user(selfName).build();
   }
 }

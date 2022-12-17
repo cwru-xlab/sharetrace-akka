@@ -18,10 +18,8 @@ import io.sharetrace.util.logging.event.ContactEvent;
 import io.sharetrace.util.logging.event.ContactsRefreshEvent;
 import io.sharetrace.util.logging.event.CurrentRefreshEvent;
 import io.sharetrace.util.logging.event.ReceiveEvent;
-import io.sharetrace.util.logging.event.ResumeEvent;
 import io.sharetrace.util.logging.event.SendCachedEvent;
 import io.sharetrace.util.logging.event.SendCurrentEvent;
-import io.sharetrace.util.logging.event.TimeoutEvent;
 import io.sharetrace.util.logging.event.UpdateEvent;
 import io.sharetrace.util.logging.metric.CreateUsersRuntime;
 import io.sharetrace.util.logging.metric.GraphCycles;
@@ -194,8 +192,6 @@ public final class Defaults {
             SendCachedEvent.class,
             SendCurrentEvent.class,
             UpdateEvent.class,
-            TimeoutEvent.class,
-            ResumeEvent.class,
             // Graph metrics
             GraphCycles.class,
             GraphEccentricity.class,
