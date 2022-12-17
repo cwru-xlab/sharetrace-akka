@@ -6,18 +6,18 @@ import org.immutables.value.Value;
 
 abstract class NetworkExperimentConfig extends ExperimentConfig {
 
-  public static final int MIN_NETWORKS = 1;
+    public static final int MIN_NETWORKS = 1;
 
-  private static final Range<Integer> NETWORKS_RANGE = Range.atLeast(MIN_NETWORKS);
+    private static final Range<Integer> NETWORKS_RANGE = Range.atLeast(MIN_NETWORKS);
 
-  @Value.Check
-  protected void check() {
-    super.check();
-    Checks.inRange(numNetworks(), NETWORKS_RANGE, "numNetworks");
-  }
+    @Value.Check
+    protected void check() {
+        super.check();
+        Checks.inRange(numNetworks(), NETWORKS_RANGE, "numNetworks");
+    }
 
-  @Value.Default
-  public int numNetworks() {
-    return MIN_NETWORKS;
-  }
+    @Value.Default
+    public int numNetworks() {
+        return MIN_NETWORKS;
+    }
 }

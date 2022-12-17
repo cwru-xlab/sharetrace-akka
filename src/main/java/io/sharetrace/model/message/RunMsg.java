@@ -8,5 +8,5 @@ import io.sharetrace.actor.RiskPropagation;
  * @see RiskPropagation
  */
 public enum RunMsg implements AlgorithmMsg {
-  INSTANCE
+    INSTANCE
 }

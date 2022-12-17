@@ -5,10 +5,10 @@ import org.immutables.value.Value;
 
 public interface LoggableEvent extends Loggable {
 
-  String KEY = "event";
+    String KEY = "event";
 
-  @Value.Default
-  default long timestamp() {
-    return System.currentTimeMillis();
-  }
+    @Value.Default
+    default long timestamp() {
+        return System.currentTimeMillis();
+    }
 }

@@ -5,9 +5,9 @@ import org.immutables.value.Value;
 @Value.Immutable
 interface BaseContactsRefreshEvent extends LoggableEvent {
 
-  String user();
+    String user();
 
-  int numRemaining();
+    int numRemaining();
 
-  int numExpired();
+    int numExpired();
 }

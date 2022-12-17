@@ -17,26 +17,32 @@ import org.immutables.value.Value;
 @Value.Immutable
 abstract class BaseRiskScoreMsg implements UserMsg, Identifiable, Comparable<RiskScoreMsg> {
 
-  public static RiskScoreMsg of(RiskScore score, ActorRef<UserMsg> sender, String id) {
-    return RiskScoreMsg.builder().score(score).sender(sender).id(id).build();
-  }
+    public static RiskScoreMsg of(RiskScore score, ActorRef<UserMsg> sender, String id) {
+        return RiskScoreMsg.builder().score(score).sender(sender).id(id).build();
+    }
 
-  @Override
-  public int compareTo(RiskScoreMsg msg) {
-    return score().compareTo(msg.score());
-  }
+    @Override
+    public int compareTo(RiskScoreMsg msg) {
+        return score().compareTo(msg.score());
+    }
 
-  /** Returns the risk score contained in this message. */
-  @Value.Parameter
-  public abstract RiskScore score();
+    /**
+     * Returns the risk score contained in this message.
+     */
+    @Value.Parameter
+    public abstract RiskScore score();
 
-  /** Returns the actor reference associated with the {@link UserActor} that sent this message. */
-  @Value.Parameter
-  public abstract ActorRef<UserMsg> sender();
+    /**
+     * Returns the actor reference associated with the {@link UserActor} that sent this message.
+     */
+    @Value.Parameter
+    public abstract ActorRef<UserMsg> sender();
 
-  /** Returns a unique identifier to track this message during {@link RiskPropagation}. */
-  @Value.Default
-  public String id() {
-    return Uid.ofLongString();
-  }
+    /**
+     * Returns a unique identifier to track this message during {@link RiskPropagation}.
+     */
+    @Value.Default
+    public String id() {
+        return Uid.ofLongString();
+    }
 }

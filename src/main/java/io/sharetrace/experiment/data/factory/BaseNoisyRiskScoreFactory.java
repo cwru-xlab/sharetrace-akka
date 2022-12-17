@@ -8,20 +8,20 @@ import org.immutables.value.Value;
 @Value.Immutable(copy = true)
 abstract class BaseNoisyRiskScoreFactory implements RiskScoreFactory {
 
-  @Override
-  public RiskScore get(int user) {
-    RiskScore score = scoreFactory().get(user);
-    float noisy = constrain(score.value() + (float) noise().sample());
-    return score.withValue(noisy);
-  }
+    @Override
+    public RiskScore get(int user) {
+        RiskScore score = scoreFactory().get(user);
+        float noisy = constrain(score.value() + (float) noise().sample());
+        return score.withValue(noisy);
+    }
 
-  @Value.Parameter
-  protected abstract RiskScoreFactory scoreFactory();
+    @Value.Parameter
+    protected abstract RiskScoreFactory scoreFactory();
 
-  private static float constrain(float value) {
-    return Math.max(RiskScore.MIN_VALUE, Math.min(RiskScore.MAX_VALUE, value));
-  }
+    private static float constrain(float value) {
+        return Math.max(RiskScore.MIN_VALUE, Math.min(RiskScore.MAX_VALUE, value));
+    }
 
-  @Value.Parameter
-  protected abstract RealDistribution noise();
+    @Value.Parameter
+    protected abstract RealDistribution noise();
 }

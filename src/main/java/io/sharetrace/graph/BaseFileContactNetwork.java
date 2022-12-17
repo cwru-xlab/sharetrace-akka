@@ -24,59 +24,59 @@ import java.util.Set;
 @Value.Immutable
 abstract class BaseFileContactNetwork extends AbstractContactNetwork implements TimeRef {
 
-  @Override
-  protected ContactTimeFactory contactTimeFactory() {
-    return (user1, user2) -> contactMap().get(key(user1, user2));
-  }
-
-  @Override
-  protected GraphGenerator<Integer, DefaultEdge, ?> graphGenerator() {
-    return (target, x) -> generate(target);
-  }
-
-  private void generate(Graph<Integer, DefaultEdge> target) {
-    contactMap().keySet().stream()
-        .map(List::copyOf)
-        .forEach(users -> Graphs.addEdgeWithVertices(target, users.get(0), users.get(1)));
-  }
-
-  @Value.Lazy
-  protected Map<Set<Integer>, Instant> contactMap() {
-    try (BufferedReader reader = Files.newBufferedReader(path())) {
-      return contactsFrom(reader.lines()::iterator);
-    } catch (IOException exception) {
-      throw new UncheckedIOException(exception);
+    @Override
+    protected ContactTimeFactory contactTimeFactory() {
+        return (user1, user2) -> contactMap().get(key(user1, user2));
     }
-  }
 
-  private static Set<Integer> key(int user1, int user2) {
-    return Collecting.ofInts(user1, user2);
-  }
-
-  protected abstract Path path();
-
-  private Map<Set<Integer>, Instant> contactsFrom(Iterable<String> lines) {
-    Instant lastContactTime = Instant.MIN;
-    Indexer<String> indexer = new Indexer<>();
-    Map<Set<Integer>, Instant> contacts = Collecting.newHashMap();
-    for (String line : lines) {
-      String[] args = line.split(delimiter());
-      int user1 = indexer.index(args[1].strip());
-      int user2 = indexer.index(args[2].strip());
-      if (user1 != user2) {
-        Instant contactTime = Instant.ofEpochSecond(Long.parseLong(args[0].strip()));
-        contacts.merge(key(user1, user2), contactTime, BaseFileContactNetwork::newer);
-        lastContactTime = newer(lastContactTime, contactTime);
-      }
+    @Override
+    protected GraphGenerator<Integer, DefaultEdge, ?> graphGenerator() {
+        return (target, x) -> generate(target);
     }
-    Duration offset = Duration.between(lastContactTime, refTime());
-    contacts.replaceAll((x, contactTime) -> contactTime.plus(offset));
-    return contacts;
-  }
 
-  protected abstract String delimiter();
+    private void generate(Graph<Integer, DefaultEdge> target) {
+        contactMap().keySet().stream()
+                .map(List::copyOf)
+                .forEach(users -> Graphs.addEdgeWithVertices(target, users.get(0), users.get(1)));
+    }
 
-  private static Instant newer(Instant time1, Instant time2) {
-    return time1.isAfter(time2) ? time1 : time2;
-  }
+    @Value.Lazy
+    protected Map<Set<Integer>, Instant> contactMap() {
+        try (BufferedReader reader = Files.newBufferedReader(path())) {
+            return contactsFrom(reader.lines()::iterator);
+        } catch (IOException exception) {
+            throw new UncheckedIOException(exception);
+        }
+    }
+
+    private static Set<Integer> key(int user1, int user2) {
+        return Collecting.ofInts(user1, user2);
+    }
+
+    protected abstract Path path();
+
+    private Map<Set<Integer>, Instant> contactsFrom(Iterable<String> lines) {
+        Instant lastContactTime = Instant.MIN;
+        Indexer<String> indexer = new Indexer<>();
+        Map<Set<Integer>, Instant> contacts = Collecting.newHashMap();
+        for (String line : lines) {
+            String[] args = line.split(delimiter());
+            int user1 = indexer.index(args[1].strip());
+            int user2 = indexer.index(args[2].strip());
+            if (user1 != user2) {
+                Instant contactTime = Instant.ofEpochSecond(Long.parseLong(args[0].strip()));
+                contacts.merge(key(user1, user2), contactTime, BaseFileContactNetwork::newer);
+                lastContactTime = newer(lastContactTime, contactTime);
+            }
+        }
+        Duration offset = Duration.between(lastContactTime, refTime());
+        contacts.replaceAll((x, contactTime) -> contactTime.plus(offset));
+        return contacts;
+    }
+
+    protected abstract String delimiter();
+
+    private static Instant newer(Instant time1, Instant time2) {
+        return time1.isAfter(time2) ? time1 : time2;
+    }
 }

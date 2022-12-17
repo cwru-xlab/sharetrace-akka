@@ -14,54 +14,55 @@ import io.sharetrace.util.logging.setting.ExperimentSettings;
 
 public final class RuntimeExperiment extends Experiment<RuntimeExperimentConfig> {
 
-  private static final int IGNORED = 50;
-  private static final Context DEFAULT_CTX = newDefaultContext();
+    private static final int IGNORED = 50;
+    private static final Context DEFAULT_CTX = newDefaultContext();
 
-  private RuntimeExperiment() {}
-
-  public static RuntimeExperiment create() {
-    return new RuntimeExperiment();
-  }
-
-  private static Context newDefaultContext() {
-    return Defaults.context()
-        .withLoggable(
-            GraphSize.class,
-            CreateUsersRuntime.class,
-            SendScoresRuntime.class,
-            SendContactsRuntime.class,
-            RiskPropRuntime.class,
-            MsgPassingRuntime.class,
-            ExperimentSettings.class);
-  }
-
-  /**
-   * Evaluates the runtime performance of {@link RiskPropagation} for a given {@link GraphType}. The
-   * same {@link ContactNetwork} is evaluated 1 or more times for each number of nodes.
-   */
-  @Override
-  public void run(RuntimeExperimentConfig config, State state) {
-    for (int n : config.numNodes()) {
-      Dataset dataset = ((SampledDataset) state.dataset()).withNumNodes(n);
-      for (int iNetwork = 0; iNetwork < config.numNetworks(); iNetwork++) {
-        state.toBuilder()
-            .dataset(dataset.withNewContactNetwork())
-            .build()
-            .run(config.numIterations());
-      }
+    private RuntimeExperiment() {
     }
-  }
 
-  @Override
-  public Context defaultContext() {
-    return DEFAULT_CTX;
-  }
+    public static RuntimeExperiment create() {
+        return new RuntimeExperiment();
+    }
 
-  @Override
-  public State newDefaultState(Context ctx, RuntimeExperimentConfig config) {
-    return State.builder(ctx)
-        .graphType(getProperty(config.graphType(), "graphType"))
-        .dataset(context -> Defaults.sampledDataset(context, IGNORED))
-        .build();
-  }
+    private static Context newDefaultContext() {
+        return Defaults.context()
+                .withLoggable(
+                        GraphSize.class,
+                        CreateUsersRuntime.class,
+                        SendScoresRuntime.class,
+                        SendContactsRuntime.class,
+                        RiskPropRuntime.class,
+                        MsgPassingRuntime.class,
+                        ExperimentSettings.class);
+    }
+
+    /**
+     * Evaluates the runtime performance of {@link RiskPropagation} for a given {@link GraphType}. The
+     * same {@link ContactNetwork} is evaluated 1 or more times for each number of nodes.
+     */
+    @Override
+    public void run(RuntimeExperimentConfig config, State state) {
+        for (int n : config.numNodes()) {
+            Dataset dataset = ((SampledDataset) state.dataset()).withNumNodes(n);
+            for (int iNetwork = 0; iNetwork < config.numNetworks(); iNetwork++) {
+                state.toBuilder()
+                        .dataset(dataset.withNewContactNetwork())
+                        .build()
+                        .run(config.numIterations());
+            }
+        }
+    }
+
+    @Override
+    public Context defaultContext() {
+        return DEFAULT_CTX;
+    }
+
+    @Override
+    public State newDefaultState(Context ctx, RuntimeExperimentConfig config) {
+        return State.builder(ctx)
+                .graphType(getProperty(config.graphType(), "graphType"))
+                .dataset(context -> Defaults.sampledDataset(context, IGNORED))
+                .build();
+    }
 }

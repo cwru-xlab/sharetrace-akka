@@ -4,5 +4,5 @@ import io.sharetrace.util.logging.Loggable;
 
 public interface LoggableSetting extends Loggable {
 
-  String KEY = "setting";
+    String KEY = "setting";
 }

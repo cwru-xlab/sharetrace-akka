@@ -5,7 +5,7 @@ import org.immutables.value.Value;
 @Value.Immutable
 interface BaseGraphSize extends LoggableMetric {
 
-  long numNodes();
+    long numNodes();
 
-  long numEdges();
+    long numEdges();
 }

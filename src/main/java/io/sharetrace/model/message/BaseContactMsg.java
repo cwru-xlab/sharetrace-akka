@@ -6,7 +6,9 @@ import io.sharetrace.actor.RiskPropagation;
 import io.sharetrace.actor.UserActor;
 import io.sharetrace.graph.Contact;
 import io.sharetrace.util.Checks;
+
 import java.time.Instant;
+
 import org.immutables.value.Value;
 
 /**
@@ -19,18 +21,22 @@ import org.immutables.value.Value;
 @Value.Immutable
 abstract class BaseContactMsg implements UserMsg {
 
-  private static final Range<Instant> TIME_RANGE = Range.atLeast(Contact.MIN_TIME);
+    private static final Range<Instant> TIME_RANGE = Range.atLeast(Contact.MIN_TIME);
 
-  /** Returns the actor reference of the contacted user. */
-  @Value.Parameter
-  public abstract ActorRef<UserMsg> contact();
+    /**
+     * Returns the actor reference of the contacted user.
+     */
+    @Value.Parameter
+    public abstract ActorRef<UserMsg> contact();
 
-  @Value.Check
-  protected void check() {
-    Checks.inRange(contactTime(), TIME_RANGE, "contactTime");
-  }
+    @Value.Check
+    protected void check() {
+        Checks.inRange(contactTime(), TIME_RANGE, "contactTime");
+    }
 
-  /** Returns the time at which the two users came in contact. */
-  @Value.Parameter
-  public abstract Instant contactTime();
+    /**
+     * Returns the time at which the two users came in contact.
+     */
+    @Value.Parameter
+    public abstract Instant contactTime();
 }

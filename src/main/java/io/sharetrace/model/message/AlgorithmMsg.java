@@ -7,4 +7,5 @@ import io.sharetrace.actor.RiskPropagation;
  *
  * @see RiskPropagation
  */
-public interface AlgorithmMsg {}
+public interface AlgorithmMsg {
+}

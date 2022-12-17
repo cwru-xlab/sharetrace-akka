@@ -6,15 +6,15 @@ import org.immutables.value.Value;
 @Value.Immutable
 interface BaseGraphScores extends LoggableMetric {
 
-  Stats harmonicCentrality();
+    Stats harmonicCentrality();
 
-  Stats katzCentrality();
+    Stats katzCentrality();
 
-  Stats eigenvectorCentrality();
+    Stats eigenvectorCentrality();
 
-  float degeneracy();
+    float degeneracy();
 
-  float globalClusteringCoefficient();
+    float globalClusteringCoefficient();
 
-  Stats localClusteringCoefficient();
+    Stats localClusteringCoefficient();
 }

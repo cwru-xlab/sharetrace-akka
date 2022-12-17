@@ -9,16 +9,16 @@ import java.util.Map;
 @Value.Immutable
 abstract class BaseCachedRiskScoreFactory implements RiskScoreFactory {
 
-  @Override
-  public RiskScore get(int user) {
-    return cache().computeIfAbsent(user, cached()::get);
-  }
+    @Override
+    public RiskScore get(int user) {
+        return cache().computeIfAbsent(user, cached()::get);
+    }
 
-  @Value.Lazy
-  protected Map<Integer, RiskScore> cache() {
-      return Collecting.newIntKeyedHashMap();
-  }
+    @Value.Lazy
+    protected Map<Integer, RiskScore> cache() {
+        return Collecting.newIntKeyedHashMap();
+    }
 
-  @Value.Parameter
-  protected abstract RiskScoreFactory cached();
+    @Value.Parameter
+    protected abstract RiskScoreFactory cached();
 }

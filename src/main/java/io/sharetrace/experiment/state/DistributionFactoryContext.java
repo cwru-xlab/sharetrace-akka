@@ -5,5 +5,5 @@ import io.sharetrace.util.CacheParams;
 
 public interface DistributionFactoryContext extends CacheParamsContext {
 
-  CacheParams<RiskScoreMsg> cacheParams();
+    CacheParams<RiskScoreMsg> cacheParams();
 }

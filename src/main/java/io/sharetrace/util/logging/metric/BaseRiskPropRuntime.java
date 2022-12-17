@@ -3,4 +3,5 @@ package io.sharetrace.util.logging.metric;
 import org.immutables.value.Value;
 
 @Value.Immutable
-interface BaseRiskPropRuntime extends RuntimeMetric {}
+interface BaseRiskPropRuntime extends RuntimeMetric {
+}

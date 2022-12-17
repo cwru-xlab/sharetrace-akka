@@ -5,5 +5,5 @@ import java.time.Instant;
 @FunctionalInterface
 public interface TimeRef {
 
-  Instant refTime();
+    Instant refTime();
 }

@@ -12,33 +12,33 @@ import org.jgrapht.graph.DefaultEdge;
 @Value.Immutable(copy = true)
 abstract class BaseSampledDataset extends AbstractDataset {
 
-  @Override
-  public SampledDataset withNewContactNetwork() {
-    return SampledDataset.builder()
-        .graphGeneratorFactory(graphGeneratorFactory())
-        .numNodes(numNodes())
-        .scoreFactory(scoreFactory())
-        .contactTimeFactory(contactTimeFactory())
-        .build();
-  }
+    @Override
+    public SampledDataset withNewContactNetwork() {
+        return SampledDataset.builder()
+                .graphGeneratorFactory(graphGeneratorFactory())
+                .numNodes(numNodes())
+                .scoreFactory(scoreFactory())
+                .contactTimeFactory(contactTimeFactory())
+                .build();
+    }
 
-  protected abstract GraphGeneratorFactory graphGeneratorFactory();
+    protected abstract GraphGeneratorFactory graphGeneratorFactory();
 
-  protected abstract int numNodes();
+    protected abstract int numNodes();
 
-  protected abstract ContactTimeFactory contactTimeFactory();
+    protected abstract ContactTimeFactory contactTimeFactory();
 
-  @Override
-  @Value.Default // Allows the contact network to be passed on to a copied instance.
-  public ContactNetwork contactNetwork() {
-    return SampledContactNetwork.builder()
-        .graphGenerator(graphGenerator())
-        .contactTimeFactory(contactTimeFactory())
-        .build();
-  }
+    @Override
+    @Value.Default // Allows the contact network to be passed on to a copied instance.
+    public ContactNetwork contactNetwork() {
+        return SampledContactNetwork.builder()
+                .graphGenerator(graphGenerator())
+                .contactTimeFactory(contactTimeFactory())
+                .build();
+    }
 
-  @Value.Lazy
-  protected GraphGenerator<Integer, DefaultEdge, ?> graphGenerator() {
-    return graphGeneratorFactory().get(numNodes());
-  }
+    @Value.Lazy
+    protected GraphGenerator<Integer, DefaultEdge, ?> graphGenerator() {
+        return graphGeneratorFactory().get(numNodes());
+    }
 }

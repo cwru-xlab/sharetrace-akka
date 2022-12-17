@@ -6,6 +6,7 @@ import io.sharetrace.model.UserParams;
 import io.sharetrace.model.message.ContactMsg;
 import io.sharetrace.model.message.RiskScoreMsg;
 import io.sharetrace.model.message.UserMsg;
+
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -13,75 +14,75 @@ import java.time.temporal.Temporal;
 
 final class MsgUtil {
 
-  private final ActorRef<UserMsg> self;
-  private final Clock clock;
-  private final UserParams params;
+    private final ActorRef<UserMsg> self;
+    private final Clock clock;
+    private final UserParams params;
 
-  public MsgUtil(ActorRef<UserMsg> self, Clock clock, UserParams params) {
-    this.self = self;
-    this.clock = clock;
-    this.params = params;
-  }
+    public MsgUtil(ActorRef<UserMsg> self, Clock clock, UserParams params) {
+        this.self = self;
+        this.clock = clock;
+        this.params = params;
+    }
 
-  public boolean isNotAfter(RiskScoreMsg msg, Instant time) {
-    return !msg.score().time().isAfter(time);
-  }
+    public boolean isNotAfter(RiskScoreMsg msg, Instant time) {
+        return !msg.score().time().isAfter(time);
+    }
 
-  public float computeThreshold(RiskScoreMsg msg) {
-    return msg.score().value() * params.sendCoeff();
-  }
+    public float computeThreshold(RiskScoreMsg msg) {
+        return msg.score().value() * params.sendCoeff();
+    }
 
-  public Instant buffered(Instant instant) {
-    return instant.plus(params.timeBuffer());
-  }
+    public Instant buffered(Instant instant) {
+        return instant.plus(params.timeBuffer());
+    }
 
-  public RiskScoreMsg transmitted(RiskScoreMsg msg) {
-    RiskScore original = msg.score();
-    RiskScore transmitted = original.withValue(original.value() * params.transRate());
-    return RiskScoreMsg.of(transmitted, self, msg.id());
-  }
+    public RiskScoreMsg transmitted(RiskScoreMsg msg) {
+        RiskScore original = msg.score();
+        RiskScore transmitted = original.withValue(original.value() * params.transRate());
+        return RiskScoreMsg.of(transmitted, self, msg.id());
+    }
 
-  public RiskScoreMsg defaultMsg() {
-    return RiskScoreMsg.of(RiskScore.MIN, self);
-  }
+    public RiskScoreMsg defaultMsg() {
+        return RiskScoreMsg.of(RiskScore.MIN, self);
+    }
 
-  public boolean isGreaterThan(RiskScoreMsg msg1, RiskScoreMsg msg2) {
-    return isGreaterThan(msg1, msg2.score().value());
-  }
+    public boolean isGreaterThan(RiskScoreMsg msg1, RiskScoreMsg msg2) {
+        return isGreaterThan(msg1, msg2.score().value());
+    }
 
-  public boolean isGreaterThan(RiskScoreMsg msg, float value) {
-    return msg.score().value() > value;
-  }
+    public boolean isGreaterThan(RiskScoreMsg msg, float value) {
+        return msg.score().value() > value;
+    }
 
-  public Duration computeTtl(RiskScoreMsg msg) {
-    return computeTtl(msg.score().time(), params.scoreTtl());
-  }
+    public Duration computeTtl(RiskScoreMsg msg) {
+        return computeTtl(msg.score().time(), params.scoreTtl());
+    }
 
-  private Duration computeTtl(Temporal temporal, Duration ttl) {
-    return ttl.minus(since(temporal));
-  }
+    private Duration computeTtl(Temporal temporal, Duration ttl) {
+        return ttl.minus(since(temporal));
+    }
 
-  private Duration since(Temporal temporal) {
-    return Duration.between(temporal, clock.instant());
-  }
+    private Duration since(Temporal temporal) {
+        return Duration.between(temporal, clock.instant());
+    }
 
-  public Duration computeTtl(Temporal contactTime) {
-    return computeTtl(contactTime, params.contactTtl());
-  }
+    public Duration computeTtl(Temporal contactTime) {
+        return computeTtl(contactTime, params.contactTtl());
+    }
 
-  public boolean isAlive(RiskScoreMsg msg) {
-    return isAlive(msg.score().time(), params.scoreTtl());
-  }
+    public boolean isAlive(RiskScoreMsg msg) {
+        return isAlive(msg.score().time(), params.scoreTtl());
+    }
 
-  private boolean isAlive(Temporal temporal, Duration ttl) {
-    return since(temporal).compareTo(ttl) < 0;
-  }
+    private boolean isAlive(Temporal temporal, Duration ttl) {
+        return since(temporal).compareTo(ttl) < 0;
+    }
 
-  public boolean isAlive(ContactMsg msg) {
-    return isAlive(msg.contactTime());
-  }
+    public boolean isAlive(ContactMsg msg) {
+        return isAlive(msg.contactTime());
+    }
 
-  public boolean isAlive(Temporal contactTime) {
-    return isAlive(contactTime, params.contactTtl());
-  }
+    public boolean isAlive(Temporal contactTime) {
+        return isAlive(contactTime, params.contactTtl());
+    }
 }

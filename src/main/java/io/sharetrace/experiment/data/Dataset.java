@@ -6,11 +6,11 @@ import io.sharetrace.model.Identifiable;
 
 public interface Dataset extends Identifiable {
 
-  Dataset withScoreFactory(RiskScoreFactory scoreFactory);
+    Dataset withScoreFactory(RiskScoreFactory scoreFactory);
 
-  Dataset withNewContactNetwork();
+    Dataset withNewContactNetwork();
 
-  RiskScoreFactory scoreFactory();
+    RiskScoreFactory scoreFactory();
 
-  ContactNetwork contactNetwork();
+    ContactNetwork contactNetwork();
 }

@@ -11,6 +11,6 @@ import org.immutables.value.Value;
 @Value.Immutable
 interface BaseTimedOutMsg extends UserMsg, AlgorithmMsg {
 
-  @Value.Parameter
-  int user();
+    @Value.Parameter
+    int user();
 }

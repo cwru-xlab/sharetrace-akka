@@ -2,6 +2,7 @@ package io.sharetrace.graph;
 
 import io.sharetrace.actor.RiskPropagation;
 import io.sharetrace.model.Identifiable;
+
 import java.util.Set;
 
 /**
@@ -14,9 +15,9 @@ import java.util.Set;
  */
 public interface ContactNetwork extends Identifiable {
 
-  Set<Integer> users();
+    Set<Integer> users();
 
-  Set<Contact> contacts();
+    Set<Contact> contacts();
 
-  void logMetrics();
+    void logMetrics();
 }
