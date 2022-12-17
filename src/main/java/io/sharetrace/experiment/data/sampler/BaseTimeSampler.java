@@ -3,11 +3,12 @@ package io.sharetrace.experiment.data.sampler;
 import com.google.common.collect.Range;
 import io.sharetrace.model.TimeRef;
 import io.sharetrace.util.Checks;
+import org.apache.commons.math3.distribution.RealDistribution;
+import org.immutables.value.Value;
+
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import org.apache.commons.math3.distribution.RealDistribution;
-import org.immutables.value.Value;
 
 @Value.Immutable
 abstract class BaseTimeSampler extends AbstractSampler<Instant> implements TimeRef {
@@ -19,8 +20,7 @@ abstract class BaseTimeSampler extends AbstractSampler<Instant> implements TimeR
   @Override
   public Instant sample() {
     double lookBack = normalizedSample(lookBacks(), maxLookBack().toNanos());
-    long rounded = Math.round(lookBack);
-    return refTime().minusNanos(rounded).truncatedTo(ChronoUnit.SECONDS);
+    return refTime().minusNanos((long) lookBack).truncatedTo(ChronoUnit.SECONDS);
   }
 
   protected abstract RealDistribution lookBacks();
