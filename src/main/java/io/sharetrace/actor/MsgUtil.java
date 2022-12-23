@@ -54,7 +54,7 @@ final class MsgUtil {
         return msg.score().value() > value;
     }
 
-    public Duration computeTtl(RiskScoreMsg msg) {
+    public Duration computeScoreTtl(RiskScoreMsg msg) {
         return computeTtl(msg.score().time(), params.scoreTtl());
     }
 
@@ -66,11 +66,11 @@ final class MsgUtil {
         return Duration.between(temporal, clock.instant());
     }
 
-    public Duration computeTtl(Temporal contactTime) {
+    public Duration computeContactTtl(Temporal contactTime) {
         return computeTtl(contactTime, params.contactTtl());
     }
 
-    public boolean isAlive(RiskScoreMsg msg) {
+    public boolean isScoreAlive(RiskScoreMsg msg) {
         return isAlive(msg.score().time(), params.scoreTtl());
     }
 
@@ -78,11 +78,11 @@ final class MsgUtil {
         return since(temporal).compareTo(ttl) < 0;
     }
 
-    public boolean isAlive(ContactMsg msg) {
-        return isAlive(msg.contactTime());
+    public boolean isContactAlive(ContactMsg msg) {
+        return isContactAlive(msg.contactTime());
     }
 
-    public boolean isAlive(Temporal contactTime) {
+    public boolean isContactAlive(Temporal contactTime) {
         return isAlive(contactTime, params.contactTtl());
     }
 }

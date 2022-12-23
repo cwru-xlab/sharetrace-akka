@@ -95,7 +95,7 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
     }
 
     private Behavior<UserMsg> handle(ContactMsg msg) {
-        if (msgUtil.isAlive(msg)) {
+        if (msgUtil.isContactAlive(msg)) {
             ContactActor contact = addNewContact(msg);
             startContactsRefreshTimer();
             logger.logContact(contact.ref());
@@ -202,7 +202,7 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
     }
 
     private void startCurrentRefreshTimer() {
-        timers.startSingleTimer(CurrentRefreshMsg.INSTANCE, msgUtil.computeTtl(current));
+        timers.startSingleTimer(CurrentRefreshMsg.INSTANCE, msgUtil.computeScoreTtl(current));
     }
 
     private void sendCurrent(ContactActor contact) {
@@ -212,7 +212,7 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
     private void sendCached(ContactActor contact) {
         cache
                 .max(contact.bufferedContactTime())
-                .filter(msgUtil::isAlive)
+                .filter(msgUtil::isScoreAlive)
                 .map(msgUtil::transmitted)
                 .ifPresent(cached -> contact.tell(cached, logger::logSendCached));
     }

@@ -45,7 +45,7 @@ final class ContactActor implements Comparable<ContactActor> {
 
     public boolean shouldReceive(RiskScoreMsg msg) {
         // Evaluated in ascending order of likelihood that they are true to possibly short circuit.
-        return isAboveThreshold(msg) && isRelevant(msg) && msgUtil.isAlive(msg) && isNotSender(msg);
+        return isAboveThreshold(msg) && isRelevant(msg) && msgUtil.isScoreAlive(msg) && isNotSender(msg);
     }
 
     private boolean isAboveThreshold(RiskScoreMsg msg) {
@@ -79,13 +79,13 @@ final class ContactActor implements Comparable<ContactActor> {
     }
 
     private void startThresholdTimer(RiskScoreMsg msg) {
-        timers.startSingleTimer(thresholdMsg, msgUtil.computeTtl(msg));
+        timers.startSingleTimer(thresholdMsg, msgUtil.computeScoreTtl(msg));
     }
 
     public void updateThreshold() {
         cache
                 .max(bufferedContactTime)
-                .filter(msgUtil::isAlive)
+                .filter(msgUtil::isScoreAlive)
                 .ifPresentOrElse(this::setThreshold, this::setThresholdAsDefault);
     }
 
@@ -104,10 +104,10 @@ final class ContactActor implements Comparable<ContactActor> {
     }
 
     public Duration ttl() {
-        return msgUtil.computeTtl(contactTime);
+        return msgUtil.computeContactTtl(contactTime);
     }
 
     public boolean isAlive() {
-        return msgUtil.isAlive(contactTime);
+        return msgUtil.isContactAlive(contactTime);
     }
 }
