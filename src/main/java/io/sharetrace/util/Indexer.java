@@ -6,13 +6,8 @@ import java.util.Map;
 
 public final class Indexer<T> {
 
-    private final Map<T, Integer> index;
-    private int value;
-
-    public Indexer() {
-        index = Collecting.newIntValuedHashMap();
-        value = 0;
-    }
+    private final Map<T, Integer> index = Collecting.newIntValuedHashMap();
+    private int value = 0;
 
     public int index(T value) {
         return index.computeIfAbsent(value, x -> this.value++);
