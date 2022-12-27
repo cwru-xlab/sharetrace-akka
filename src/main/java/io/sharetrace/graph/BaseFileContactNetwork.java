@@ -46,7 +46,7 @@ abstract class BaseFileContactNetwork extends AbstractContactNetwork implements 
     @Value.Lazy
     protected Map<Set<Integer>, Instant> contactMap() {
         try (BufferedReader reader = Files.newBufferedReader(path())) {
-            return contactsFrom(reader.lines()::iterator);
+            return newContactMap(reader.lines()::iterator);
         } catch (IOException exception) {
             throw new UncheckedIOException(exception);
         }
@@ -58,23 +58,23 @@ abstract class BaseFileContactNetwork extends AbstractContactNetwork implements 
 
     protected abstract Path path();
 
-    private Map<Set<Integer>, Instant> contactsFrom(Iterable<String> lines) {
+    private Map<Set<Integer>, Instant> newContactMap(Iterable<String> contacts) {
         Instant lastContactTime = Instant.MIN;
         Indexer<String> indexer = new Indexer<>();
-        Map<Set<Integer>, Instant> contacts = Collecting.newHashMap();
-        for (String line : lines) {
-            String[] args = line.split(delimiter());
+        Map<Set<Integer>, Instant> contactMap = Collecting.newHashMap();
+        for (String contact : contacts) {
+            String[] args = contact.split(delimiter());
             int user1 = indexer.index(args[1].strip());
             int user2 = indexer.index(args[2].strip());
             if (user1 != user2) {
                 Instant contactTime = Instant.ofEpochSecond(Long.parseLong(args[0].strip()));
-                contacts.merge(key(user1, user2), contactTime, NEWER);
+                contactMap.merge(key(user1, user2), contactTime, NEWER);
                 lastContactTime = NEWER.apply(lastContactTime, contactTime);
             }
         }
         Duration offset = Duration.between(lastContactTime, refTime());
-        contacts.replaceAll((x, contactTime) -> contactTime.plus(offset));
-        return contacts;
+        contactMap.replaceAll((x, contactTime) -> contactTime.plus(offset));
+        return contactMap;
     }
 
     protected abstract String delimiter();
