@@ -20,9 +20,12 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BinaryOperator;
 
 @Value.Immutable
 abstract class BaseFileContactNetwork extends AbstractContactNetwork implements TimeRef {
+
+    private static final BinaryOperator<Instant> NEWER = BinaryOperator.maxBy(Instant::compareTo);
 
     @Override
     protected ContactTimeFactory contactTimeFactory() {
@@ -65,8 +68,8 @@ abstract class BaseFileContactNetwork extends AbstractContactNetwork implements 
             int user2 = indexer.index(args[2].strip());
             if (user1 != user2) {
                 Instant contactTime = Instant.ofEpochSecond(Long.parseLong(args[0].strip()));
-                contacts.merge(key(user1, user2), contactTime, BaseFileContactNetwork::newer);
-                lastContactTime = newer(lastContactTime, contactTime);
+                contacts.merge(key(user1, user2), contactTime, NEWER);
+                lastContactTime = NEWER.apply(lastContactTime, contactTime);
             }
         }
         Duration offset = Duration.between(lastContactTime, refTime());
@@ -75,8 +78,4 @@ abstract class BaseFileContactNetwork extends AbstractContactNetwork implements 
     }
 
     protected abstract String delimiter();
-
-    private static Instant newer(Instant time1, Instant time2) {
-        return time1.isAfter(time2) ? time1 : time2;
-    }
 }
