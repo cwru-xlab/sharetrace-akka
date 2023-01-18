@@ -160,7 +160,8 @@ public final class VertexIndependentPaths {
             int numFound = 1; // Trivial path along edge incident to source and target.
             while (paths.size() > 1 && numFound < maxFind) {
                 numFound++;
-                graph.removeAllVertices(withoutEndpoints(paths.get(1)));
+                GraphPath<Integer, ?> nontrivialPath = paths.get(1);
+                graph.removeAllVertices(withoutEndpoints(nontrivialPath));
                 paths = kShortestPaths(graph);
             }
             return numFound;
