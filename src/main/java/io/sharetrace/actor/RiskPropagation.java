@@ -77,11 +77,11 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
     private final BitSet stopped;
 
     private RiskPropagation(
-            ActorContext<AlgorithmMsg> ctx,
-            Dataset dataset,
-            UserParams userParams,
-            Clock clock,
-            CacheFactory<RiskScoreMsg> cacheFactory) {
+        ActorContext<AlgorithmMsg> ctx,
+        Dataset dataset,
+        UserParams userParams,
+        Clock clock,
+        CacheFactory<RiskScoreMsg> cacheFactory) {
         super(ctx);
         this.dataset = dataset;
         this.numUsers = dataset.contactNetwork().users().size();
@@ -94,26 +94,26 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
 
     @Builder.Factory
     static Algorithm riskPropagation(
-            Dataset dataset,
-            UserParams userParams,
-            Clock clock,
-            CacheFactory<RiskScoreMsg> cacheFactory) {
+        Dataset dataset,
+        UserParams userParams,
+        Clock clock,
+        CacheFactory<RiskScoreMsg> cacheFactory) {
         Behavior<AlgorithmMsg> behavior =
-                Behaviors.setup(
-                        ctx ->
-                                Behaviors.withMdc(
-                                        AlgorithmMsg.class,
-                                        Logging.getMdc(),
-                                        new RiskPropagation(ctx, dataset, userParams, clock, cacheFactory)));
+            Behaviors.setup(
+                ctx ->
+                    Behaviors.withMdc(
+                        AlgorithmMsg.class,
+                        Logging.getMdc(),
+                        new RiskPropagation(ctx, dataset, userParams, clock, cacheFactory)));
         return Algorithm.of(behavior, NAME, PROPS);
     }
 
     @Override
     public Receive<AlgorithmMsg> createReceive() {
         return newReceiveBuilder()
-                .onMessage(RunMsg.class, this::handle)
-                .onMessage(TimedOutMsg.class, this::handle)
-                .build();
+            .onMessage(RunMsg.class, this::handle)
+            .onMessage(TimedOutMsg.class, this::handle)
+            .build();
     }
 
     private Behavior<AlgorithmMsg> handle(RunMsg msg) {
@@ -182,12 +182,12 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
 
     private Behavior<UserMsg> newUser(int timeoutId) {
         return UserBuilder.create()
-                .riskProp(getContext().getSelf())
-                .timeoutId(timeoutId)
-                .userParams(userParams)
-                .clock(clock)
-                .cache(cacheFactory.newCache())
-                .build();
+            .riskProp(getContext().getSelf())
+            .timeoutId(timeoutId)
+            .userParams(userParams)
+            .clock(clock)
+            .cache(cacheFactory.newCache())
+            .build();
     }
 
     private <T extends LoggableMetric> void logMetric(Class<T> type, Supplier<T> metric) {

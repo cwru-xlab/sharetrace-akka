@@ -12,9 +12,9 @@ abstract class BaseRiskScoreSampler extends AbstractSampler<RiskScore> {
     @Override
     public RiskScore sample() {
         return RiskScore.builder()
-                .value((float) normalizedSample(values(), RiskScore.RANGE))
-                .time(timeSampler().sample())
-                .build();
+            .value((float) normalizedSample(values(), RiskScore.RANGE))
+            .time(timeSampler().sample())
+            .build();
     }
 
     protected abstract RealDistribution values();

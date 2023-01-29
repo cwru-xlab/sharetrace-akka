@@ -15,11 +15,11 @@ abstract class BaseSampledDataset extends AbstractDataset {
     @Override
     public SampledDataset withNewContactNetwork() {
         return SampledDataset.builder()
-                .graphGeneratorFactory(graphGeneratorFactory())
-                .numNodes(numNodes())
-                .scoreFactory(scoreFactory())
-                .contactTimeFactory(contactTimeFactory())
-                .build();
+            .graphGeneratorFactory(graphGeneratorFactory())
+            .numNodes(numNodes())
+            .scoreFactory(scoreFactory())
+            .contactTimeFactory(contactTimeFactory())
+            .build();
     }
 
     protected abstract GraphGeneratorFactory graphGeneratorFactory();
@@ -32,9 +32,9 @@ abstract class BaseSampledDataset extends AbstractDataset {
     @Value.Default // Allows the contact network to be passed on to a copied instance.
     public ContactNetwork contactNetwork() {
         return SampledContactNetwork.builder()
-                .graphGenerator(graphGenerator())
-                .contactTimeFactory(contactTimeFactory())
-                .build();
+            .graphGenerator(graphGenerator())
+            .contactTimeFactory(contactTimeFactory())
+            .build();
     }
 
     @Value.Lazy

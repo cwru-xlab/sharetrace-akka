@@ -32,8 +32,8 @@ public final class FileExperiment extends Experiment<FileExperimentConfig> {
         GraphType graphType = getProperty(config.graphType(), "graphType");
         Path path = getProperty(config.path(), "path");
         return State.builder(ctx)
-                .graphType(graphType)
-                .dataset(context -> Defaults.fileDataset(context, path))
-                .build();
+            .graphType(graphType)
+            .dataset(context -> Defaults.fileDataset(context, path))
+            .build();
     }
 }

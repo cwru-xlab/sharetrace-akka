@@ -27,11 +27,6 @@ public final class Algorithm implements Runnable {
         return new Algorithm(behavior, name, props);
     }
 
-    @Override
-    public void run() {
-        waitUntilDone(ActorSystem.create(newInstance(), name));
-    }
-
     private static void waitUntilDone(ActorSystem<Void> running) {
         try {
             running.getWhenTerminated().toCompletableFuture().get();
@@ -40,15 +35,20 @@ public final class Algorithm implements Runnable {
         }
     }
 
+    @Override
+    public void run() {
+        waitUntilDone(ActorSystem.create(newInstance(), name));
+    }
+
     private Behavior<Void> newInstance() {
         return Behaviors.setup(
-                ctx -> {
-                    ActorRef<AlgorithmMsg> instance = ctx.spawn(behavior, name, props);
-                    ctx.watch(instance);
-                    instance.tell(RunMsg.INSTANCE);
-                    return Behaviors.receive(Void.class)
-                            .onSignal(Terminated.class, x -> Behaviors.stopped())
-                            .build();
-                });
+            ctx -> {
+                ActorRef<AlgorithmMsg> instance = ctx.spawn(behavior, name, props);
+                ctx.watch(instance);
+                instance.tell(RunMsg.INSTANCE);
+                return Behaviors.receive(Void.class)
+                    .onSignal(Terminated.class, x -> Behaviors.stopped())
+                    .build();
+            });
     }
 }

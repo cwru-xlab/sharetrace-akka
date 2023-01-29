@@ -83,8 +83,8 @@ abstract class BaseStats {
     @Value.Derived
     public List<Float> outliers() {
         return Arrays.stream(statistics().getValues())
-                .mapToObj(v -> (float) v)
-                .filter(v -> v < lowerWhisker() || v > upperWhisker())
-                .collect(Collecting.toImmutableFloatList());
+            .mapToObj(v -> (float) v)
+            .filter(v -> v < lowerWhisker() || v > upperWhisker())
+            .collect(Collecting.toImmutableFloatList());
     }
 }

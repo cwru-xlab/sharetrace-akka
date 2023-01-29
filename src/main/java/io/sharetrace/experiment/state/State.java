@@ -84,24 +84,24 @@ public final class State implements Runnable, Identifiable {
 
     private void runAlgorithm() {
         RiskPropagationBuilder.create()
-                .dataset(dataset)
-                .userParams(userParams)
-                .clock(ctx.clock())
-                .cacheFactory(() -> IntervalCache.create(cacheParams))
-                .build()
-                .run();
+            .dataset(dataset)
+            .userParams(userParams)
+            .clock(ctx.clock())
+            .cacheFactory(() -> IntervalCache.create(cacheParams))
+            .build()
+            .run();
     }
 
     private ExperimentSettings settings() {
         return ExperimentSettings.builder()
-                .graphType(graphType.toString())
-                .networkId(dataset.contactNetwork().id())
-                .datasetId(dataset.id())
-                .stateId(id)
-                .seed(ctx.seed())
-                .userParams(userParams)
-                .cacheParams(cacheParams)
-                .build();
+            .graphType(graphType.toString())
+            .networkId(dataset.contactNetwork().id())
+            .datasetId(dataset.id())
+            .stateId(id)
+            .seed(ctx.seed())
+            .userParams(userParams)
+            .cacheParams(cacheParams)
+            .build();
     }
 
     @Override
@@ -130,12 +130,12 @@ public final class State implements Runnable, Identifiable {
     }
 
     public static class Builder
-            implements GraphTypeContext,
-            IdContext,
-            CacheParamsContext,
-            DistributionFactoryContext,
-            UserParamsContext,
-            DatasetContext {
+        implements GraphTypeContext,
+        IdContext,
+        CacheParamsContext,
+        DistributionFactoryContext,
+        UserParamsContext,
+        DatasetContext {
 
         private final Context ctx;
         private final Map<Setter, Function<? super Builder, ?>> setters;
@@ -166,12 +166,32 @@ public final class State implements Runnable, Identifiable {
 
         private static Builder withDefaults(Context context) {
             return new Builder(context)
-                    .id(ctx -> newId())
-                    .cacheParams(ctx -> Defaults.cacheParams())
-                    .scoreTimesFactory(defaultFactory())
-                    .scoreValuesFactory(defaultFactory())
-                    .contactTimesFactory(defaultFactory())
-                    .userParams(ctx -> Defaults.userParams());
+                .id(ctx -> newId())
+                .cacheParams(ctx -> Defaults.cacheParams())
+                .scoreTimesFactory(defaultFactory())
+                .scoreValuesFactory(defaultFactory())
+                .contactTimesFactory(defaultFactory())
+                .userParams(ctx -> Defaults.userParams());
+        }
+
+        private static String newId() {
+            return Uid.ofIntString();
+        }
+
+        private static Function<DistributionFactoryContext, DistributionFactory> defaultFactory() {
+            return ctx -> seed -> new UniformRealDistribution(Defaults.rng(seed), 0d, 1d);
+        }
+
+        private static Builder from(State state) {
+            return new Builder(state.ctx)
+                .graphType(state.graphType)
+                .id(ctx -> newId())
+                .cacheParams(state.cacheParams)
+                .scoreValuesFactory(state.scoreValuesFactory)
+                .scoreTimesFactory(state.scoreTimesFactory)
+                .contactTimesFactory(state.contactTimesFactory)
+                .userParams(state.userParams)
+                .dataset(state.dataset);
         }
 
         public Builder userParams(Function<UserParamsContext, UserParams> factory) {
@@ -179,20 +199,17 @@ public final class State implements Runnable, Identifiable {
             return this;
         }
 
-        public Builder contactTimesFactory(
-                Function<DistributionFactoryContext, DistributionFactory> factory) {
+        public Builder contactTimesFactory(Function<DistributionFactoryContext, DistributionFactory> factory) {
             setters.put(Setter.CONTACT_TIMES, factory.andThen(this::contactTimesFactory));
             return this;
         }
 
-        public Builder scoreValuesFactory(
-                Function<DistributionFactoryContext, DistributionFactory> factory) {
+        public Builder scoreValuesFactory(Function<DistributionFactoryContext, DistributionFactory> factory) {
             setters.put(Setter.SCORE_VALUES, factory.andThen(this::scoreValuesFactory));
             return this;
         }
 
-        public Builder scoreTimesFactory(
-                Function<DistributionFactoryContext, DistributionFactory> factory) {
+        public Builder scoreTimesFactory(Function<DistributionFactoryContext, DistributionFactory> factory) {
             setters.put(Setter.SCORE_TIMES, factory.andThen(this::scoreTimesFactory));
             return this;
         }
@@ -205,14 +222,6 @@ public final class State implements Runnable, Identifiable {
         public Builder id(Function<IdContext, String> factory) {
             setters.put(Setter.ID, factory.andThen(this::id));
             return this;
-        }
-
-        private static String newId() {
-            return Uid.ofIntString();
-        }
-
-        private static Function<DistributionFactoryContext, DistributionFactory> defaultFactory() {
-            return ctx -> seed -> new UniformRealDistribution(Defaults.rng(seed), 0d, 1d);
         }
 
         public Builder userParams(UserParams params) {
@@ -249,18 +258,6 @@ public final class State implements Runnable, Identifiable {
             this.id = id;
             setters.remove(Setter.ID);
             return this;
-        }
-
-        private static Builder from(State state) {
-            return new Builder(state.ctx)
-                    .graphType(state.graphType)
-                    .id(ctx -> newId())
-                    .cacheParams(state.cacheParams)
-                    .scoreValuesFactory(state.scoreValuesFactory)
-                    .scoreTimesFactory(state.scoreTimesFactory)
-                    .contactTimesFactory(state.contactTimesFactory)
-                    .userParams(state.userParams)
-                    .dataset(state.dataset);
         }
 
         public Builder dataset(Dataset dataset) {

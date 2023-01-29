@@ -26,6 +26,10 @@ abstract class AbstractContactNetwork implements ContactNetwork {
 
     private static final Logger LOGGER = Logging.metricsLogger();
 
+    private static <T extends LoggableMetric> boolean logMetric(Class<T> type, Supplier<T> metric) {
+        return LOGGER.log(LoggableMetric.KEY, type, metric);
+    }
+
     @Override
     @Value.Derived
     public Set<Integer> users() {
@@ -49,10 +53,6 @@ abstract class AbstractContactNetwork implements ContactNetwork {
         if (logMetric(GraphTopology.class, this::graphTopology)) {
             Exporter.export(graph(), id());
         }
-    }
-
-    private static <T extends LoggableMetric> boolean logMetric(Class<T> type, Supplier<T> metric) {
-        return LOGGER.log(LoggableMetric.KEY, type, metric);
     }
 
     private GraphTopology graphTopology() {

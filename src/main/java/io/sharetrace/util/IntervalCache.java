@@ -133,9 +133,9 @@ public final class IntervalCache<T extends Comparable<T>> {
     public Optional<T> max(Temporal temporal) {
         refresh();
         return cache.entrySet().stream()
-                .filter(isNotAfter(temporal))
-                .map(Map.Entry::getValue)
-                .max(Comparator.naturalOrder());
+            .filter(isNotAfter(temporal))
+            .map(Map.Entry::getValue)
+            .max(Comparator.naturalOrder());
     }
 
     private Predicate<Map.Entry<Long, ?>> isNotAfter(Temporal temporal) {

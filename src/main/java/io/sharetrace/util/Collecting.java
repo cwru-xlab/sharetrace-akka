@@ -77,24 +77,24 @@ public final class Collecting {
 
     public static <T> Collector<T, ?, List<T>> toImmutableList(int size) {
         return Collectors.collectingAndThen(
-                ObjectArrayList.toListWithExpectedSize(size), ObjectLists::unmodifiable);
+            ObjectArrayList.toListWithExpectedSize(size), ObjectLists::unmodifiable);
     }
 
     public static <T> Collector<T, ?, Set<T>> toImmutableSet(int size) {
         return Collectors.collectingAndThen(
-                ObjectOpenHashSet.toSetWithExpectedSize(size), ObjectSets::unmodifiable);
+            ObjectOpenHashSet.toSetWithExpectedSize(size), ObjectSets::unmodifiable);
     }
 
     public static Collector<Integer, ?, List<Integer>> toImmutableIntList(int size) {
         return Collectors.collectingAndThen(
-                Collector.of(
-                        () -> new IntArrayList(size),
-                        List::add,
-                        (left, right) -> {
-                            left.addAll(right);
-                            return left;
-                        }),
-                IntLists::unmodifiable);
+            Collector.of(
+                () -> new IntArrayList(size),
+                List::add,
+                (left, right) -> {
+                    left.addAll(right);
+                    return left;
+                }),
+            IntLists::unmodifiable);
     }
 
     public static Collector<Float, ?, List<Float>> toImmutableFloatList() {
@@ -103,13 +103,13 @@ public final class Collecting {
 
     public static Collector<Float, ?, List<Float>> toImmutableFloatList(int size) {
         return Collectors.collectingAndThen(
-                Collector.of(
-                        () -> new FloatArrayList(size),
-                        List::add,
-                        (left, right) -> {
-                            left.addAll(right);
-                            return left;
-                        }),
-                FloatLists::unmodifiable);
+            Collector.of(
+                () -> new FloatArrayList(size),
+                List::add,
+                (left, right) -> {
+                    left.addAll(right);
+                    return left;
+                }),
+            FloatLists::unmodifiable);
     }
 }

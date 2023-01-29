@@ -41,7 +41,7 @@ public final class Graphs {
 
     private static Graph<Integer, DefaultEdge> newGraph(GraphType graphType) {
         return new FastutilMapIntVertexGraph<>(
-                SupplierUtil.createIntegerSupplier(), DefaultEdge::new, graphType, false);
+            SupplierUtil.createIntegerSupplier(), DefaultEdge::new, graphType, false);
     }
 
     public static Graph<Integer, DefaultEdge> asDirected(Graph<Integer, DefaultEdge> graph) {
@@ -63,7 +63,7 @@ public final class Graphs {
     }
 
     public static Graph<Integer, DefaultEdge> newUndirectedGraph(
-            GraphGenerator<Integer, DefaultEdge, ?> generator) {
+        GraphGenerator<Integer, DefaultEdge, ?> generator) {
         Graph<Integer, DefaultEdge> graph = newUndirectedGraph();
         generator.generateGraph(graph);
         return graph;

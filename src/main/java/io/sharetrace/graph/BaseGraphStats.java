@@ -28,9 +28,9 @@ abstract class BaseGraphStats<V, E> {
     @Value.Lazy
     public GraphSize graphSize() {
         return GraphSize.builder()
-                .numNodes(graph().vertexSet().size())
-                .numEdges(graph().edgeSet().size())
-                .build();
+            .numNodes(graph().vertexSet().size())
+            .numEdges(graph().edgeSet().size())
+            .build();
     }
 
     @Value.Parameter
@@ -39,32 +39,32 @@ abstract class BaseGraphStats<V, E> {
     @Value.Lazy
     public GraphCycles graphCycles() {
         return GraphCycles.builder()
-                .numTriangles(GraphMetrics.getNumberOfTriangles(graph()))
-                .girth(GraphMetrics.getGirth(graph()))
-                .build();
+            .numTriangles(GraphMetrics.getNumberOfTriangles(graph()))
+            .girth(GraphMetrics.getGirth(graph()))
+            .build();
     }
 
     @Value.Lazy
     public GraphEccentricity graphEccentricity() {
         GraphMeasurer<?, ?> measurer = new GraphMeasurer<>(graph(), shortestPath());
         return GraphEccentricity.builder()
-                .radius((int) measurer.getRadius())
-                .diameter((int) measurer.getDiameter())
-                .center(measurer.getGraphCenter().size())
-                .periphery(measurer.getGraphPeriphery().size())
-                .build();
+            .radius((int) measurer.getRadius())
+            .diameter((int) measurer.getDiameter())
+            .center(measurer.getGraphCenter().size())
+            .periphery(measurer.getGraphPeriphery().size())
+            .build();
     }
 
     @Value.Lazy
     public GraphScores graphScores() {
         return GraphScores.builder()
-                .degeneracy(degeneracy())
-                .globalClusteringCoefficient(globalClusteringCoefficient())
-                .localClusteringCoefficient(localClusteringCoefficients())
-                .harmonicCentrality(harmonicCentralities())
-                .katzCentrality(katzCentralities())
-                .eigenvectorCentrality(eigenvectorCentralities())
-                .build();
+            .degeneracy(degeneracy())
+            .globalClusteringCoefficient(globalClusteringCoefficient())
+            .localClusteringCoefficient(localClusteringCoefficients())
+            .harmonicCentrality(harmonicCentralities())
+            .katzCentrality(katzCentralities())
+            .eigenvectorCentrality(eigenvectorCentralities())
+            .build();
     }
 
     private int degeneracy() {

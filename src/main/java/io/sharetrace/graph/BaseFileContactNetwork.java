@@ -27,6 +27,10 @@ abstract class BaseFileContactNetwork extends AbstractContactNetwork implements 
 
     private static final BinaryOperator<Instant> NEWER = BinaryOperator.maxBy(Instant::compareTo);
 
+    private static Set<Integer> key(int user1, int user2) {
+        return Collecting.ofInts(user1, user2);
+    }
+
     @Override
     protected ContactTimeFactory contactTimeFactory() {
         return (user1, user2) -> contactMap().get(key(user1, user2));
@@ -39,8 +43,8 @@ abstract class BaseFileContactNetwork extends AbstractContactNetwork implements 
 
     private void generate(Graph<Integer, DefaultEdge> target) {
         contactMap().keySet().stream()
-                .map(List::copyOf)
-                .forEach(users -> Graphs.addEdgeWithVertices(target, users.get(0), users.get(1)));
+            .map(List::copyOf)
+            .forEach(users -> Graphs.addEdgeWithVertices(target, users.get(0), users.get(1)));
     }
 
     @Value.Lazy
@@ -50,10 +54,6 @@ abstract class BaseFileContactNetwork extends AbstractContactNetwork implements 
         } catch (IOException exception) {
             throw new UncheckedIOException(exception);
         }
-    }
-
-    private static Set<Integer> key(int user1, int user2) {
-        return Collecting.ofInts(user1, user2);
     }
 
     protected abstract Path path();

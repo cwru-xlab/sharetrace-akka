@@ -20,10 +20,10 @@ public enum GraphType {
     THIERS12("Thiers12");
 
     private static final Set<GraphType> SYNTHETIC =
-            EnumSet.of(BARABASI_ALBERT, GNM_RANDOM, RANDOM_REGULAR, SCALE_FREE, WATTS_STROGATZ);
+        EnumSet.of(BARABASI_ALBERT, GNM_RANDOM, RANDOM_REGULAR, SCALE_FREE, WATTS_STROGATZ);
 
     private static final Set<GraphType> SOCIO_PATTERNS =
-            EnumSet.of(INVS13, INVS15, LH10, LYON_SCHOOL, SFHH, THIERS11, THIERS12);
+        EnumSet.of(INVS13, INVS15, LH10, LYON_SCHOOL, SFHH, THIERS11, THIERS12);
 
     private final String name;
 

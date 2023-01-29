@@ -56,13 +56,13 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
     private RiskScoreMsg transmitted;
 
     private UserActor(
-            ActorContext<UserMsg> ctx,
-            ActorRef<AlgorithmMsg> riskProp,
-            int timeoutId,
-            TimerScheduler<UserMsg> timers,
-            UserParams userParams,
-            Clock clock,
-            IntervalCache<RiskScoreMsg> cache) {
+        ActorContext<UserMsg> ctx,
+        ActorRef<AlgorithmMsg> riskProp,
+        int timeoutId,
+        TimerScheduler<UserMsg> timers,
+        UserParams userParams,
+        Clock clock,
+        IntervalCache<RiskScoreMsg> cache) {
         super(ctx);
         this.riskProp = riskProp;
         this.timedOutMsg = TimedOutMsg.of(timeoutId);
@@ -78,31 +78,31 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
 
     @Builder.Factory
     static Behavior<UserMsg> user(
-            ActorRef<AlgorithmMsg> riskProp,
-            int timeoutId,
-            UserParams userParams,
-            Clock clock,
-            IntervalCache<RiskScoreMsg> cache) {
+        ActorRef<AlgorithmMsg> riskProp,
+        int timeoutId,
+        UserParams userParams,
+        Clock clock,
+        IntervalCache<RiskScoreMsg> cache) {
         return Behaviors.setup(
-                ctx -> {
-                    Behavior<UserMsg> user =
-                            Behaviors.withTimers(
-                                    timers ->
-                                            new UserActor(ctx, riskProp, timeoutId, timers, userParams, clock, cache));
-                    return Behaviors.withMdc(UserMsg.class, Logging.getMdc(), user);
-                });
+            ctx -> {
+                Behavior<UserMsg> user =
+                    Behaviors.withTimers(
+                        timers ->
+                            new UserActor(ctx, riskProp, timeoutId, timers, userParams, clock, cache));
+                return Behaviors.withMdc(UserMsg.class, Logging.getMdc(), user);
+            });
     }
 
     @Override
     public Receive<UserMsg> createReceive() {
         return newReceiveBuilder()
-                .onMessage(ContactMsg.class, this::handle)
-                .onMessage(RiskScoreMsg.class, this::handle)
-                .onMessage(CurrentRefreshMsg.class, this::handle)
-                .onMessage(ContactsRefreshMsg.class, this::handle)
-                .onMessage(ThresholdMsg.class, this::handle)
-                .onMessage(TimedOutMsg.class, this::handle)
-                .build();
+            .onMessage(ContactMsg.class, this::handle)
+            .onMessage(RiskScoreMsg.class, this::handle)
+            .onMessage(CurrentRefreshMsg.class, this::handle)
+            .onMessage(ContactsRefreshMsg.class, this::handle)
+            .onMessage(ThresholdMsg.class, this::handle)
+            .onMessage(TimedOutMsg.class, this::handle)
+            .build();
     }
 
     private Behavior<UserMsg> handle(ContactMsg msg) {
@@ -174,9 +174,9 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
     message. While this timer is based on the minimum contact TTL, the delay to refresh contacts
     may be such that all contacts expire. Thus, a new refresh timer may not always be started. */
         contacts.values().stream()
-                .min(Comparator.naturalOrder())
-                .map(ContactActor::ttl)
-                .ifPresent(minTtl -> timers.startSingleTimer(ContactsRefreshMsg.INSTANCE, minTtl));
+            .min(Comparator.naturalOrder())
+            .map(ContactActor::ttl)
+            .ifPresent(minTtl -> timers.startSingleTimer(ContactsRefreshMsg.INSTANCE, minTtl));
     }
 
     private void sendCurrentOrCached(ContactActor contact) {
@@ -204,8 +204,8 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
 
     private void propagate(RiskScoreMsg msg) {
         contacts.values().stream()
-                .filter(contact -> contact.shouldReceive(msg))
-                .forEach(contact -> contact.tell(msg, logger::logPropagate));
+            .filter(contact -> contact.shouldReceive(msg))
+            .forEach(contact -> contact.tell(msg, logger::logPropagate));
     }
 
     private void resetTimeout() {
@@ -222,10 +222,10 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
 
     private void sendCached(ContactActor contact) {
         cache
-                .max(contact.bufferedContactTime())
-                .filter(msgUtil::isScoreAlive)
-                .map(msgUtil::transmitted)
-                .ifPresent(cached -> contact.tell(cached, logger::logSendCached));
+            .max(contact.bufferedContactTime())
+            .filter(msgUtil::isScoreAlive)
+            .map(msgUtil::transmitted)
+            .ifPresent(cached -> contact.tell(cached, logger::logSendCached));
     }
 
     private RiskScoreMsg updateCurrent(RiskScoreMsg msg) {

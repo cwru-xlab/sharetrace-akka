@@ -19,15 +19,6 @@ import java.time.Instant;
 
 public final class LoggingDecorator implements JsonFactoryDecorator {
 
-    @Override
-    public JsonFactory decorate(JsonFactory factory) {
-        ObjectMapper codec = (ObjectMapper) factory.getCodec();
-        registerJdk8(codec);
-        registerJavaTime(codec);
-        registerBlackbird(codec);
-        return factory;
-    }
-
     private static void registerJdk8(ObjectMapper mapper) {
         mapper.registerModule(new Jdk8Module());
     }
@@ -43,11 +34,20 @@ public final class LoggingDecorator implements JsonFactoryDecorator {
         mapper.registerModule(new BlackbirdModule());
     }
 
+    @Override
+    public JsonFactory decorate(JsonFactory factory) {
+        ObjectMapper codec = (ObjectMapper) factory.getCodec();
+        registerJdk8(codec);
+        registerJavaTime(codec);
+        registerBlackbird(codec);
+        return factory;
+    }
+
     private static final class SecondsInstantSerializer extends InstantSerializer {
 
         @Override
         public void serialize(Instant value, JsonGenerator generator, SerializerProvider provider)
-                throws IOException {
+            throws IOException {
             generator.writeNumber(value.getEpochSecond());
         }
 
@@ -66,7 +66,7 @@ public final class LoggingDecorator implements JsonFactoryDecorator {
 
         @Override
         public void serialize(Duration duration, JsonGenerator generator, SerializerProvider provider)
-                throws IOException {
+            throws IOException {
             generator.writeNumber(duration.getSeconds());
         }
     }

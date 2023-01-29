@@ -31,14 +31,14 @@ public final class RuntimeExperiment extends Experiment<RuntimeExperimentConfig>
 
     private static Context newDefaultContext() {
         return Defaults.context()
-                .withLoggable(
-                        GraphSize.class,
-                        CreateUsersRuntime.class,
-                        SendScoresRuntime.class,
-                        SendContactsRuntime.class,
-                        RiskPropRuntime.class,
-                        MsgPassingRuntime.class,
-                        ExperimentSettings.class);
+            .withLoggable(
+                GraphSize.class,
+                CreateUsersRuntime.class,
+                SendScoresRuntime.class,
+                SendContactsRuntime.class,
+                RiskPropRuntime.class,
+                MsgPassingRuntime.class,
+                ExperimentSettings.class);
     }
 
     /**
@@ -51,9 +51,9 @@ public final class RuntimeExperiment extends Experiment<RuntimeExperimentConfig>
             Dataset dataset = ((SampledDataset) state.dataset()).withNumNodes(n);
             for (int iNetwork = 0; iNetwork < config.numNetworks(); iNetwork++) {
                 state.toBuilder()
-                        .dataset(dataset.withNewContactNetwork())
-                        .build()
-                        .run(config.numIterations());
+                    .dataset(dataset.withNewContactNetwork())
+                    .build()
+                    .run(config.numIterations());
             }
         }
     }
@@ -66,8 +66,8 @@ public final class RuntimeExperiment extends Experiment<RuntimeExperimentConfig>
     @Override
     public State newDefaultState(Context ctx, RuntimeExperimentConfig config) {
         return State.builder(ctx)
-                .graphType(getProperty(config.graphType(), "graphType"))
-                .dataset(context -> Defaults.sampledDataset(context, IGNORED))
-                .build();
+            .graphType(getProperty(config.graphType(), "graphType"))
+            .dataset(context -> Defaults.sampledDataset(context, IGNORED))
+            .build();
     }
 }

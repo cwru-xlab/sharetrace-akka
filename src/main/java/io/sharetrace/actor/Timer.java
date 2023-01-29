@@ -12,6 +12,10 @@ final class Timer<K> extends StopWatch {
 
     private final Map<K, Long> runtimes = Collecting.newLongValuedHashMap();
 
+    public static long millis(long nanos) {
+        return TimeUnit.NANOSECONDS.toMillis(nanos);
+    }
+
     public void time(Runnable task, K key) {
         time(Executors.callable(task), key);
     }
@@ -30,10 +34,6 @@ final class Timer<K> extends StopWatch {
 
     public long millis(K key) {
         return millis(nanos(key));
-    }
-
-    public static long millis(long nanos) {
-        return TimeUnit.NANOSECONDS.toMillis(nanos);
     }
 
     public long nanos(K key) {

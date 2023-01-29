@@ -35,12 +35,20 @@ public final class VertexIndependentPaths {
     }
 
     public VertexIndependentPaths(
-            Graph<Integer, DefaultEdge> graph, ExecutorService executorService) {
+        Graph<Integer, DefaultEdge> graph, ExecutorService executorService) {
         this.graph = graph;
         this.executorService = executorService;
         this.isDirected = graph.getType().isDirected();
         this.numVertices = graph.vertexSet().size();
         this.numPairs = numVertices * (numVertices - 1) / (isDirected ? 1 : 2);
+    }
+
+    private static int getResult(Future<Integer> result) {
+        try {
+            return result.get();
+        } catch (InterruptedException | ExecutionException exception) {
+            throw new RuntimeException(exception);
+        }
     }
 
     public int compute(int source, int target) {
@@ -56,14 +64,6 @@ public final class VertexIndependentPaths {
         return new Task(graph, isDirected, source, target, maxFind);
     }
 
-    private static int getResult(Future<Integer> result) {
-        try {
-            return result.get();
-        } catch (InterruptedException | ExecutionException exception) {
-            throw new RuntimeException(exception);
-        }
-    }
-
     public List<Integer> computeForSource(int source) {
         return computeForSource(source, Integer.MAX_VALUE);
     }
@@ -75,8 +75,8 @@ public final class VertexIndependentPaths {
     private List<Integer> getResult(List<Callable<Integer>> tasks) {
         try {
             return executorService.invokeAll(tasks).stream()
-                    .map(VertexIndependentPaths::getResult)
-                    .collect(Collecting.toImmutableIntList(tasks.size()));
+                .map(VertexIndependentPaths::getResult)
+                .collect(Collecting.toImmutableIntList(tasks.size()));
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
@@ -84,9 +84,9 @@ public final class VertexIndependentPaths {
 
     private List<Callable<Integer>> newTasks(int source, int maxFind) {
         return graph.vertexSet().stream()
-                .filter(target -> source != target)
-                .map(target -> newTask(source, target, maxFind))
-                .collect(Collecting.toImmutableList(numVertices));
+            .filter(target -> source != target)
+            .map(target -> newTask(source, target, maxFind))
+            .collect(Collecting.toImmutableList(numVertices));
     }
 
     public List<Integer> computeForAll() {
@@ -120,16 +120,26 @@ public final class VertexIndependentPaths {
         private final int maxFind;
 
         public Task(
-                Graph<Integer, DefaultEdge> graph,
-                boolean isDirected,
-                int source,
-                int target,
-                int maxFind) {
+            Graph<Integer, DefaultEdge> graph,
+            boolean isDirected,
+            int source,
+            int target,
+            int maxFind) {
             this.graph = graph;
             this.isDirected = isDirected;
             this.source = source;
             this.target = target;
             this.maxFind = maxFind;
+        }
+
+        private static <V> List<V> withoutEndpoints(GraphPath<V, ?> path) {
+            List<V> vertices = path.getVertexList();
+            return (vertices.size() < 3) ? List.of() : vertices.subList(1, vertices.size() - 1);
+        }
+
+        private static <V, E> ShortestPathAlgorithm<V, E> newShortestPaths(Graph<V, E> graph) {
+            // Fibonacci heap provides O(1) insert vs. pairing heap O(log n).
+            return new BidirectionalDijkstraShortestPath<>(graph, FibonacciHeap::new);
         }
 
         @Override
@@ -192,16 +202,6 @@ public final class VertexIndependentPaths {
             // Suurballe provides a simpler implementation since it ensures no loops.
             // Suurballe copies internally, so we must pass in the graph on every call.
             return new SuurballeKDisjointShortestPaths<>(graph).getPaths(source, target, ADJACENT_PATHS);
-        }
-
-        private static <V> List<V> withoutEndpoints(GraphPath<V, ?> path) {
-            List<V> vertices = path.getVertexList();
-            return (vertices.size() < 3) ? List.of() : vertices.subList(1, vertices.size() - 1);
-        }
-
-        private static <V, E> ShortestPathAlgorithm<V, E> newShortestPaths(Graph<V, E> graph) {
-            // Fibonacci heap provides O(1) insert vs. pairing heap O(log n).
-            return new BidirectionalDijkstraShortestPath<>(graph, FibonacciHeap::new);
         }
     }
 }

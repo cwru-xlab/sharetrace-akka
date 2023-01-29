@@ -25,10 +25,10 @@ final class ContactActor implements Comparable<ContactActor> {
     private float sendThreshold;
 
     public ContactActor(
-            ContactMsg msg,
-            TimerScheduler<UserMsg> timers,
-            MsgUtil msgUtil,
-            IntervalCache<RiskScoreMsg> cache) {
+        ContactMsg msg,
+        TimerScheduler<UserMsg> timers,
+        MsgUtil msgUtil,
+        IntervalCache<RiskScoreMsg> cache) {
         this.ref = msg.contact();
         this.contactTime = msg.contactTime();
         this.bufferedContactTime = msgUtil.buffered(contactTime);
@@ -84,9 +84,9 @@ final class ContactActor implements Comparable<ContactActor> {
 
     public void updateThreshold() {
         cache
-                .max(bufferedContactTime)
-                .filter(msgUtil::isScoreAlive)
-                .ifPresentOrElse(this::setThreshold, this::setThresholdAsDefault);
+            .max(bufferedContactTime)
+            .filter(msgUtil::isScoreAlive)
+            .ifPresentOrElse(this::setThreshold, this::setThresholdAsDefault);
     }
 
     private void setThreshold(RiskScoreMsg msg) {

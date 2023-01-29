@@ -28,7 +28,7 @@ public final class NoiseExperiment extends Experiment<NoiseExperimentConfig> {
 
     private static Context newDefaultContext() {
         return Defaults.context()
-                .withLoggable(UpdateEvent.class, GraphSize.class, ExperimentSettings.class);
+            .withLoggable(UpdateEvent.class, GraphSize.class, ExperimentSettings.class);
     }
 
     private static Dataset withNoisyScoreFactory(Dataset dataset, RealDistribution noise) {
@@ -50,9 +50,9 @@ public final class NoiseExperiment extends Experiment<NoiseExperimentConfig> {
             Dataset dataset = state.dataset().withNewContactNetwork();
             for (RealDistribution noise : config.noises()) {
                 state.toBuilder()
-                        .dataset(withNoisyScoreFactory(dataset, noise))
-                        .build()
-                        .run(config.numIterations());
+                    .dataset(withNoisyScoreFactory(dataset, noise))
+                    .build()
+                    .run(config.numIterations());
             }
         }
     }
@@ -65,8 +65,8 @@ public final class NoiseExperiment extends Experiment<NoiseExperimentConfig> {
     @Override
     public State newDefaultState(Context ctx, NoiseExperimentConfig config) {
         return State.builder(ctx)
-                .dataset(getProperty(config.datasetFactory(), "datasetFactory"))
-                .graphType(getProperty(config.graphType(), "graphType"))
-                .build();
+            .dataset(getProperty(config.datasetFactory(), "datasetFactory"))
+            .graphType(getProperty(config.graphType(), "graphType"))
+            .build();
     }
 }

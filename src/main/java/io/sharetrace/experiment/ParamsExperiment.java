@@ -51,10 +51,10 @@ public final class ParamsExperiment extends Experiment<ParamsExperimentConfig> {
             for (float tr : config.transRates()) {
                 for (float sc : config.sendCoeffs()) {
                     state.toBuilder()
-                            .userParams(state.userParams().withTransRate(tr).withSendCoeff(sc))
-                            .dataset(dataset)
-                            .build()
-                            .run(config.numIterations());
+                        .userParams(state.userParams().withTransRate(tr).withSendCoeff(sc))
+                        .dataset(dataset)
+                        .build()
+                        .run(config.numIterations());
                 }
             }
         }
@@ -70,8 +70,8 @@ public final class ParamsExperiment extends Experiment<ParamsExperimentConfig> {
         GraphType graphType = getProperty(config.graphType(), "graphType");
         int numNodes = getProperty(config.numNodes(), "numNodes");
         return State.builder(ctx)
-                .graphType(graphType)
-                .dataset(context -> Defaults.sampledDataset(context, numNodes))
-                .build();
+            .graphType(graphType)
+            .dataset(context -> Defaults.sampledDataset(context, numNodes))
+            .build();
     }
 }

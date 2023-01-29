@@ -74,25 +74,25 @@ public final class Defaults {
 
     public static Sampler<RiskScore> scoreSampler(DatasetContext ctx) {
         return RiskScoreSampler.builder()
-                .values(ctx.scoreValues())
-                .timeSampler(scoreTimeSampler(ctx))
-                .build();
+            .values(ctx.scoreValues())
+            .timeSampler(scoreTimeSampler(ctx))
+            .build();
     }
 
     public static Sampler<Instant> scoreTimeSampler(DatasetContext ctx) {
         return TimeSampler.builder()
-                .lookBacks(ctx.scoreTimes())
-                .maxLookBack(ctx.userParams().scoreTtl())
-                .refTime(ctx.refTime())
-                .build();
+            .lookBacks(ctx.scoreTimes())
+            .maxLookBack(ctx.userParams().scoreTtl())
+            .refTime(ctx.refTime())
+            .build();
     }
 
     public static Sampler<Instant> contactTimeSampler(DatasetContext ctx) {
         return TimeSampler.builder()
-                .lookBacks(ctx.contactTimes())
-                .maxLookBack(ctx.userParams().contactTtl())
-                .refTime(ctx.refTime())
-                .build();
+            .lookBacks(ctx.contactTimes())
+            .maxLookBack(ctx.userParams().contactTtl())
+            .refTime(ctx.refTime())
+            .build();
     }
 
     public static UserParams userParams() {
@@ -101,11 +101,11 @@ public final class Defaults {
 
     public static FileDataset fileDataset(DatasetContext ctx, Path path) {
         return FileDataset.builder()
-                .delimiter(WHITESPACE_DELIMITER)
-                .path(path)
-                .refTime(ctx.refTime())
-                .scoreFactory(scoreFactory(ctx))
-                .build();
+            .delimiter(WHITESPACE_DELIMITER)
+            .path(path)
+            .refTime(ctx.refTime())
+            .scoreFactory(scoreFactory(ctx))
+            .build();
     }
 
     public static RiskScoreFactory scoreFactory(DatasetContext ctx) {
@@ -114,11 +114,11 @@ public final class Defaults {
 
     public static SampledDataset sampledDataset(DatasetContext ctx, int numNodes) {
         return SampledDataset.builder()
-                .scoreFactory(scoreFactory(ctx))
-                .contactTimeFactory(contactTimeFactory(ctx))
-                .graphGeneratorFactory(graphGeneratorFactory(ctx))
-                .numNodes(numNodes)
-                .build();
+            .scoreFactory(scoreFactory(ctx))
+            .contactTimeFactory(contactTimeFactory(ctx))
+            .graphGeneratorFactory(graphGeneratorFactory(ctx))
+            .numNodes(numNodes)
+            .build();
     }
 
     public static ContactTimeFactory contactTimeFactory(DatasetContext ctx) {
@@ -127,45 +127,45 @@ public final class Defaults {
 
     public static GraphGeneratorFactory graphGeneratorFactory(DatasetContext ctx) {
         return numNodes ->
-                GraphGeneratorBuilder.create(ctx.graphType(), numNodes, ctx.seed())
-                        .numEdges(numNodes * 2)
-                        .degree(4)
-                        .numNearestNeighbors(2)
-                        .numInitialNodes(2)
-                        .numNewEdges(2)
-                        .rewiringProbability(0.3)
-                        .build();
+            GraphGeneratorBuilder.create(ctx.graphType(), numNodes, ctx.seed())
+                .numEdges(numNodes * 2)
+                .degree(4)
+                .numNearestNeighbors(2)
+                .numInitialNodes(2)
+                .numNewEdges(2)
+                .rewiringProbability(0.3)
+                .build();
     }
 
     private static UserParams newUserParams() {
         return UserParams.builder()
-                .transRate(0.8f)
-                .sendCoeff(1f)
-                .scoreTtl(TTL)
-                .contactTtl(TTL)
-                .tolerance(0.01f)
-                .timeBuffer(Duration.ofDays(2L))
-                .idleTimeout(Duration.ofSeconds(5L))
-                .build();
+            .transRate(0.8f)
+            .sendCoeff(1f)
+            .scoreTtl(TTL)
+            .contactTtl(TTL)
+            .tolerance(0.01f)
+            .timeBuffer(Duration.ofDays(2L))
+            .idleTimeout(Duration.ofSeconds(5L))
+            .build();
     }
 
     private static CacheParams<RiskScoreMsg> newCacheParams() {
         return CacheParams.<RiskScoreMsg>builder()
-                .interval(Duration.ofDays(1L))
-                .numIntervals((int) (2 * TTL.toDays()))
-                .numLookAhead(1)
-                .refreshPeriod(Duration.ofHours(1L))
-                .mergeStrategy(Defaults::cacheMerge)
-                .clock(CLOCK)
-                .build();
+            .interval(Duration.ofDays(1L))
+            .numIntervals((int) (2 * TTL.toDays()))
+            .numLookAhead(1)
+            .refreshPeriod(Duration.ofHours(1L))
+            .mergeStrategy(Defaults::cacheMerge)
+            .clock(CLOCK)
+            .build();
     }
 
     public static RiskScoreMsg cacheMerge(RiskScoreMsg oldMsg, RiskScoreMsg newMsg) {
         // Simpler to check for higher value first.
         // Most will likely not be older, which avoids checking for approximate equality.
         return isHigher(newMsg, oldMsg) || (isOlder(newMsg, oldMsg) && isApproxEqual(newMsg, oldMsg))
-                ? newMsg
-                : oldMsg;
+            ? newMsg
+            : oldMsg;
     }
 
     private static boolean isHigher(RiskScoreMsg msg1, RiskScoreMsg msg2) {
@@ -182,32 +182,32 @@ public final class Defaults {
 
     private static Context newContext() {
         return Context.builder()
-                .clock(CLOCK)
-                .refTime(CLOCK.instant())
-                .seed(Uid.ofInt())
-                .addLoggable(
-                        // Events
-                        ContactEvent.class,
-                        ContactsRefreshEvent.class,
-                        CurrentRefreshEvent.class,
-                        ReceiveEvent.class,
-                        SendCachedEvent.class,
-                        SendCurrentEvent.class,
-                        UpdateEvent.class,
-                        // Graph metrics
-                        GraphCycles.class,
-                        GraphEccentricity.class,
-                        GraphScores.class,
-                        GraphSize.class,
-                        // Runtime metrics
-                        GraphTopology.class,
-                        CreateUsersRuntime.class,
-                        SendScoresRuntime.class,
-                        SendContactsRuntime.class,
-                        RiskPropRuntime.class,
-                        MsgPassingRuntime.class,
-                        // Settings
-                        ExperimentSettings.class)
-                .build();
+            .clock(CLOCK)
+            .refTime(CLOCK.instant())
+            .seed(Uid.ofInt())
+            .addLoggable(
+                // Events
+                ContactEvent.class,
+                ContactsRefreshEvent.class,
+                CurrentRefreshEvent.class,
+                ReceiveEvent.class,
+                SendCachedEvent.class,
+                SendCurrentEvent.class,
+                UpdateEvent.class,
+                // Graph metrics
+                GraphCycles.class,
+                GraphEccentricity.class,
+                GraphScores.class,
+                GraphSize.class,
+                // Runtime metrics
+                GraphTopology.class,
+                CreateUsersRuntime.class,
+                SendScoresRuntime.class,
+                SendContactsRuntime.class,
+                RiskPropRuntime.class,
+                MsgPassingRuntime.class,
+                // Settings
+                ExperimentSettings.class)
+            .build();
     }
 }

@@ -36,9 +36,9 @@ abstract class BaseRiskScore implements Comparable<RiskScore> {
     @Override
     public int compareTo(RiskScore score) {
         return ComparisonChain.start()
-                .compare(value(), score.value())
-                .compare(time(), score.time())
-                .result();
+            .compare(value(), score.value())
+            .compare(time(), score.time())
+            .result();
     }
 
     /**
