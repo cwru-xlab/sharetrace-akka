@@ -1,10 +1,6 @@
 package io.sharetrace.experiment.data.factory;
 
 import io.sharetrace.graph.GraphType;
-
-import java.util.OptionalDouble;
-import java.util.OptionalInt;
-
 import org.immutables.builder.Builder;
 import org.jgrapht.generate.BarabasiAlbertGraphGenerator;
 import org.jgrapht.generate.GnmRandomGraphGenerator;
@@ -13,6 +9,9 @@ import org.jgrapht.generate.RandomRegularGraphGenerator;
 import org.jgrapht.generate.ScaleFreeGraphGenerator;
 import org.jgrapht.generate.WattsStrogatzGraphGenerator;
 import org.jgrapht.graph.DefaultEdge;
+
+import java.util.OptionalDouble;
+import java.util.OptionalInt;
 
 final class GraphGenerators {
 

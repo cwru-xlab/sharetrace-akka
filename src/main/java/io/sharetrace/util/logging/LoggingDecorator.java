@@ -11,12 +11,11 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.datatype.jsr310.ser.DurationSerializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.InstantSerializer;
 import com.fasterxml.jackson.module.blackbird.BlackbirdModule;
+import net.logstash.logback.decorate.JsonFactoryDecorator;
 
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
-
-import net.logstash.logback.decorate.JsonFactoryDecorator;
 
 public final class LoggingDecorator implements JsonFactoryDecorator {
 

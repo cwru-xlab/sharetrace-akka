@@ -5,10 +5,9 @@ import io.sharetrace.actor.RiskPropagation;
 import io.sharetrace.actor.UserActor;
 import io.sharetrace.model.message.RiskScoreMsg;
 import io.sharetrace.util.Checks;
+import org.immutables.value.Value;
 
 import java.time.Duration;
-
-import org.immutables.value.Value;
 
 /**
  * Parameters that modify the behavior of a {@link UserActor}.

@@ -3,10 +3,9 @@ package io.sharetrace.experiment.config;
 import com.google.common.collect.Range;
 import io.sharetrace.graph.GraphType;
 import io.sharetrace.util.Checks;
+import org.immutables.value.Value;
 
 import java.util.Optional;
-
-import org.immutables.value.Value;
 
 abstract class ExperimentConfig {
 

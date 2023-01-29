@@ -32,14 +32,13 @@ import io.sharetrace.util.logging.metric.RiskPropRuntime;
 import io.sharetrace.util.logging.metric.SendContactsRuntime;
 import io.sharetrace.util.logging.metric.SendScoresRuntime;
 import io.sharetrace.util.logging.setting.ExperimentSettings;
+import org.apache.commons.math3.random.RandomGenerator;
+import org.apache.commons.math3.random.Well1024a;
 
 import java.nio.file.Path;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
-
-import org.apache.commons.math3.random.RandomGenerator;
-import org.apache.commons.math3.random.Well1024a;
 
 public final class Defaults {
 

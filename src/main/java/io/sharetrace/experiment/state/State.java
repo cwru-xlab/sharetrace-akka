@@ -7,7 +7,11 @@ import io.sharetrace.graph.GraphType;
 import io.sharetrace.model.Identifiable;
 import io.sharetrace.model.UserParams;
 import io.sharetrace.model.message.RiskScoreMsg;
-import io.sharetrace.util.*;
+import io.sharetrace.util.CacheParams;
+import io.sharetrace.util.Checks;
+import io.sharetrace.util.Collecting;
+import io.sharetrace.util.IntervalCache;
+import io.sharetrace.util.Uid;
 import io.sharetrace.util.logging.Loggable;
 import io.sharetrace.util.logging.Logger;
 import io.sharetrace.util.logging.Logging;
@@ -83,7 +87,7 @@ public final class State implements Runnable, Identifiable {
                 .dataset(dataset)
                 .userParams(userParams)
                 .clock(ctx.clock())
-                .cacheFactory(this::newCache)
+                .cacheFactory(() -> IntervalCache.create(cacheParams))
                 .build()
                 .run();
     }
@@ -98,10 +102,6 @@ public final class State implements Runnable, Identifiable {
                 .userParams(userParams)
                 .cacheParams(cacheParams)
                 .build();
-    }
-
-    private IntervalCache<RiskScoreMsg> newCache() {
-        return IntervalCache.create(cacheParams);
     }
 
     @Override

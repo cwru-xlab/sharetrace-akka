@@ -2,12 +2,11 @@ package io.sharetrace.util;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.Range;
+import org.immutables.value.Value;
 
 import java.time.Clock;
 import java.time.Duration;
 import java.util.function.BinaryOperator;
-
-import org.immutables.value.Value;
 
 @SuppressWarnings("DefaultAnnotationParam")
 @Value.Immutable(copy = true)

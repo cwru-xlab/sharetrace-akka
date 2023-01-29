@@ -2,10 +2,9 @@ package io.sharetrace.graph;
 
 import com.google.common.collect.Range;
 import io.sharetrace.util.Checks;
+import org.immutables.value.Value;
 
 import java.time.Instant;
-
-import org.immutables.value.Value;
 
 @Value.Immutable
 abstract class BaseContact {

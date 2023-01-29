@@ -33,10 +33,6 @@ final class UserLogger {
         logEvent(ContactEvent.class, () -> contactEvent(contact));
     }
 
-    private <T extends LoggableEvent> void logEvent(Class<T> type, Supplier<T> event) {
-        LOGGER.log(LoggableEvent.KEY, type, event);
-    }
-
     private ContactEvent contactEvent(ActorRef<?> contact) {
         return ContactEvent.builder().user(selfName).addUsers(selfName, name(contact)).build();
     }
@@ -45,7 +41,7 @@ final class UserLogger {
         logEvent(SendCachedEvent.class, () -> sendCachedEvent(contact, cached));
     }
 
-    private SendCachedEvent sendCachedEvent(ActorRef<?> contact, RiskScoreMsg cached) {
+    private static SendCachedEvent sendCachedEvent(ActorRef<?> contact, RiskScoreMsg cached) {
         return SendCachedEvent.builder()
                 .from(name(cached.sender()))
                 .to(name(contact))
@@ -58,7 +54,7 @@ final class UserLogger {
         logEvent(SendCurrentEvent.class, () -> sendCurrentEvent(contact, current));
     }
 
-    private SendCurrentEvent sendCurrentEvent(ActorRef<?> contact, RiskScoreMsg current) {
+    private static SendCurrentEvent sendCurrentEvent(ActorRef<?> contact, RiskScoreMsg current) {
         return SendCurrentEvent.builder()
                 .from(name(current.sender()))
                 .to(name(contact))
@@ -99,7 +95,7 @@ final class UserLogger {
         logEvent(PropagateEvent.class, () -> propagateEvent(contact, propagated));
     }
 
-    private PropagateEvent propagateEvent(ActorRef<?> contact, RiskScoreMsg propagated) {
+    private static PropagateEvent propagateEvent(ActorRef<?> contact, RiskScoreMsg propagated) {
         return PropagateEvent.builder()
                 .from(name(propagated.sender()))
                 .to(name(contact))
@@ -132,5 +128,9 @@ final class UserLogger {
                 .oldId(previous.id())
                 .newId(current.id())
                 .build();
+    }
+
+    private static <T extends LoggableEvent> void logEvent(Class<T> type, Supplier<T> event) {
+        LOGGER.log(LoggableEvent.KEY, type, event);
     }
 }

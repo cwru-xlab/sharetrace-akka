@@ -3,10 +3,9 @@ package io.sharetrace.experiment.data;
 import io.sharetrace.graph.ContactNetwork;
 import io.sharetrace.graph.FileContactNetwork;
 import io.sharetrace.model.TimeRef;
+import org.immutables.value.Value;
 
 import java.nio.file.Path;
-
-import org.immutables.value.Value;
 
 @SuppressWarnings("DefaultAnnotationParam")
 @Value.Immutable(copy = true)

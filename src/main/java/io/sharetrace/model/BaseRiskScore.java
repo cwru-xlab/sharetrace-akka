@@ -6,10 +6,9 @@ import io.sharetrace.actor.RiskPropagation;
 import io.sharetrace.actor.UserActor;
 import io.sharetrace.model.message.RiskScoreMsg;
 import io.sharetrace.util.Checks;
+import org.immutables.value.Value;
 
 import java.time.Instant;
-
-import org.immutables.value.Value;
 
 /**
  * A timestamped infection probability of a user. A risk score derived only from user symptoms, it

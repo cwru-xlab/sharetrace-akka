@@ -10,7 +10,11 @@ import org.jgrapht.Graph;
 import org.jgrapht.GraphMetrics;
 import org.jgrapht.alg.interfaces.ShortestPathAlgorithm;
 import org.jgrapht.alg.interfaces.VertexScoringAlgorithm;
-import org.jgrapht.alg.scoring.*;
+import org.jgrapht.alg.scoring.ClosenessCentrality;
+import org.jgrapht.alg.scoring.ClusteringCoefficient;
+import org.jgrapht.alg.scoring.Coreness;
+import org.jgrapht.alg.scoring.EigenvectorCentrality;
+import org.jgrapht.alg.scoring.KatzCentrality;
 import org.jgrapht.alg.shortestpath.FloydWarshallShortestPaths;
 import org.jgrapht.alg.shortestpath.GraphMeasurer;
 

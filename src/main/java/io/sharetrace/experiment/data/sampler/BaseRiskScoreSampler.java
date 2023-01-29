@@ -1,11 +1,10 @@
 package io.sharetrace.experiment.data.sampler;
 
 import io.sharetrace.model.RiskScore;
-
-import java.time.Instant;
-
 import org.apache.commons.math3.distribution.RealDistribution;
 import org.immutables.value.Value;
+
+import java.time.Instant;
 
 @Value.Immutable
 abstract class BaseRiskScoreSampler extends AbstractSampler<RiskScore> {

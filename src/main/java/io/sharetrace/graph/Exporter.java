@@ -1,16 +1,15 @@
 package io.sharetrace.graph;
 
 import io.sharetrace.util.logging.Logging;
+import org.jgrapht.Graph;
+import org.jgrapht.nio.GraphExporter;
+import org.jgrapht.nio.graphml.GraphMLExporter;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-
-import org.jgrapht.Graph;
-import org.jgrapht.nio.GraphExporter;
-import org.jgrapht.nio.graphml.GraphMLExporter;
 
 final class Exporter<V, E> {
 
