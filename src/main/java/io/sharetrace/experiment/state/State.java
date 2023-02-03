@@ -9,7 +9,6 @@ import io.sharetrace.model.UserParams;
 import io.sharetrace.model.message.RiskScoreMsg;
 import io.sharetrace.util.CacheParams;
 import io.sharetrace.util.Checks;
-import io.sharetrace.util.Collecting;
 import io.sharetrace.util.IntervalCache;
 import io.sharetrace.util.Uid;
 import io.sharetrace.util.logging.Loggable;
@@ -28,7 +27,15 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
-public final class State implements Runnable, Identifiable {
+public final class State
+    implements Runnable,
+    Identifiable,
+    GraphTypeContext,
+    IdContext,
+    CacheParamsContext,
+    DistributionFactoryContext,
+    UserParamsContext,
+    DatasetContext {
 
     private static final Logger LOGGER = Logging.settingsLogger();
     private final Context ctx;
@@ -51,6 +58,10 @@ public final class State implements Runnable, Identifiable {
         contactTimesFactory = builder.contactTimesFactory;
         userParams = builder.userParams;
         dataset = builder.dataset;
+    }
+
+    public static Builder builder() {
+        return builder(Defaults.context());
     }
 
     public static Builder builder(Context ctx) {
@@ -109,20 +120,60 @@ public final class State implements Runnable, Identifiable {
         return id;
     }
 
-    public Context context() {
-        return ctx;
+    @Override
+    public Instant refTime() {
+        return ctx.refTime();
     }
 
+    @Override
+    public Clock clock() {
+        return ctx.clock();
+    }
+
+    @Override
+    public long seed() {
+        return ctx.seed();
+    }
+
+    @Override
+    public Set<Class<? extends Loggable>> loggable() {
+        return ctx.loggable();
+    }
+
+
+    @Override
     public GraphType graphType() {
         return graphType;
     }
 
+    @Override
     public CacheParams<RiskScoreMsg> cacheParams() {
         return cacheParams;
     }
 
+    @Override
     public UserParams userParams() {
         return userParams;
+    }
+
+
+    @Override
+    public RealDistribution scoreValues() {
+        return scoreTimesFactory.get(seed());
+    }
+
+    @Override
+    public RealDistribution scoreTimes() {
+        return scoreTimesFactory.get(seed());
+    }
+
+    @Override
+    public RealDistribution contactTimes() {
+        return contactTimesFactory.get(seed());
+    }
+
+    public Context context() {
+        return ctx;
     }
 
     public Dataset dataset() {
@@ -319,7 +370,7 @@ public final class State implements Runnable, Identifiable {
 
         @Override
         public Set<Class<? extends Loggable>> loggable() {
-            return Collecting.immutable(ctx.loggable());
+            return ctx.loggable();
         }
 
         @Override
