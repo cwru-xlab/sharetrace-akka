@@ -29,6 +29,6 @@ abstract class BaseTimeSampler extends AbstractSampler<Instant> implements TimeR
 
     @Value.Check
     protected void check() {
-        Checks.inRange(maxLookBack(), MAX_LOOK_BACK_RANGE, "maxLookBack");
+        Checks.checkRange(maxLookBack(), MAX_LOOK_BACK_RANGE, "maxLookBack");
     }
 }

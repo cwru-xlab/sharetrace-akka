@@ -17,7 +17,7 @@ abstract class ExperimentConfig {
 
     @Value.Check
     protected void check() {
-        Checks.inRange(numIterations(), ITERATIONS_RANGE, "numIterations");
+        Checks.checkRange(numIterations(), ITERATIONS_RANGE, "numIterations");
     }
 
     @Value.Default

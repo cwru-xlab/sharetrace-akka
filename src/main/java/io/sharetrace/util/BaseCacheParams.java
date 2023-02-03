@@ -29,10 +29,10 @@ abstract class BaseCacheParams<T> {
 
     @Value.Check
     protected void checkFields() {
-        Checks.inRange(interval(), INTERVAL_RANGE, "interval");
-        Checks.inRange(numIntervals(), INTERVALS_RANGE, "numIntervals");
-        Checks.inRange(numLookAhead(), lookAheadRange(), "numLookAhead");
-        Checks.inRange(refreshPeriod(), REFRESH_PERIOD_RANGE, "refreshPeriod");
+        Checks.checkRange(interval(), INTERVAL_RANGE, "interval");
+        Checks.checkRange(numIntervals(), INTERVALS_RANGE, "numIntervals");
+        Checks.checkRange(numLookAhead(), lookAheadRange(), "numLookAhead");
+        Checks.checkRange(refreshPeriod(), REFRESH_PERIOD_RANGE, "refreshPeriod");
     }
 
     public abstract Duration interval();

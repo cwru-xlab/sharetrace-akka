@@ -37,13 +37,13 @@ abstract class BaseUserParams {
 
     @Value.Check
     protected void check() {
-        Checks.inRange(transRate(), TRANS_RATE_RANGE, "transRate");
-        Checks.inRange(sendCoeff(), SEND_COEFF_RANGE, "sendCoeff");
-        Checks.inRange(timeBuffer(), TIME_BUFFER_RANGE, "timeBuffer");
-        Checks.inRange(scoreTtl(), SCORE_TTL_RANGE, "scoreTtl");
-        Checks.inRange(contactTtl(), CONTACT_TTL_RANGE, "contactTtl");
-        Checks.inRange(tolerance(), TOLERANCE_RANGE, "tolerance");
-        Checks.inRange(idleTimeout(), IDLE_TIMEOUT_RANGE, "idleTimeout");
+        Checks.checkRange(transRate(), TRANS_RATE_RANGE, "transRate");
+        Checks.checkRange(sendCoeff(), SEND_COEFF_RANGE, "sendCoeff");
+        Checks.checkRange(timeBuffer(), TIME_BUFFER_RANGE, "timeBuffer");
+        Checks.checkRange(scoreTtl(), SCORE_TTL_RANGE, "scoreTtl");
+        Checks.checkRange(contactTtl(), CONTACT_TTL_RANGE, "contactTtl");
+        Checks.checkRange(tolerance(), TOLERANCE_RANGE, "tolerance");
+        Checks.checkRange(idleTimeout(), IDLE_TIMEOUT_RANGE, "idleTimeout");
     }
 
     /**

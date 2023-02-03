@@ -120,7 +120,7 @@ public final class IntervalCache<T extends Comparable<T>> {
     }
 
     private long checkedFloorKey(Temporal temporal) {
-        return floorKey(Checks.inRange(getLong(temporal), range, "temporal"));
+        return floorKey(Checks.checkRange(getLong(temporal), range, "temporal"));
     }
 
     /**

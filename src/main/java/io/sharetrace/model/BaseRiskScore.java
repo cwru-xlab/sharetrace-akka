@@ -55,7 +55,7 @@ abstract class BaseRiskScore implements Comparable<RiskScore> {
 
     @Value.Check
     protected void check() {
-        Checks.inRange(value(), VALUE_RANGE, "value");
-        Checks.inRange(time(), TIME_RANGE, "time");
+        Checks.checkRange(value(), VALUE_RANGE, "value");
+        Checks.checkRange(time(), TIME_RANGE, "time");
     }
 }

@@ -13,7 +13,7 @@ abstract class NetworkExperimentConfig extends ExperimentConfig {
     @Value.Check
     protected void check() {
         super.check();
-        Checks.inRange(numNetworks(), NETWORKS_RANGE, "numNetworks");
+        Checks.checkRange(numNetworks(), NETWORKS_RANGE, "numNetworks");
     }
 
     @Value.Default

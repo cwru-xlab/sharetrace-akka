@@ -30,7 +30,7 @@ abstract class BaseContactMsg implements UserMsg {
 
     @Value.Check
     protected void check() {
-        Checks.inRange(contactTime(), TIME_RANGE, "contactTime");
+        Checks.checkRange(contactTime(), TIME_RANGE, "contactTime");
     }
 
     /**

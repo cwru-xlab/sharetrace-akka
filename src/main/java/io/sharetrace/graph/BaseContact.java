@@ -15,8 +15,8 @@ abstract class BaseContact {
 
     @Value.Check
     protected void check() {
-        Checks.inRange(time(), TIME_RANGE, "time");
-        Checks.isTrue(user1() != user2(), "Users must be distinct; got %s == %s", user1(), user2());
+        Checks.checkRange(time(), TIME_RANGE, "time");
+        Checks.checkState(user1() != user2(), "Users must be distinct; got %s == %s", user1(), user2());
     }
 
     public abstract Instant time();

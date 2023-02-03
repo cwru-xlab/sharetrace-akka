@@ -336,7 +336,7 @@ public final class State
         public State build() {
             setters.put(Setter.DISTRIBUTIONS, x -> setDistributions());
             setters.values().forEach(setter -> setter.apply(this));
-            Checks.isTrue(setters.isEmpty(), "Not all attributes have been set: %s", setters.keySet());
+            Checks.checkState(setters.isEmpty(), "Not all attributes have been set: %s", setters.keySet());
             return new State(this);
         }
 
