@@ -98,14 +98,14 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
         UserParams userParams,
         Clock clock,
         CacheFactory<RiskScoreMsg> cacheFactory) {
-        Behavior<AlgorithmMsg> behavior =
-            Behaviors.setup(
-                ctx ->
-                    Behaviors.withMdc(
+        return Algorithm.builder()
+                .name(NAME)
+                .props(PROPS)
+                .behavior(Behaviors.setup(ctx -> Behaviors.withMdc(
                         AlgorithmMsg.class,
                         Logging.getMdc(),
-                        new RiskPropagation(ctx, dataset, userParams, clock, cacheFactory)));
-        return Algorithm.of(behavior, NAME, PROPS);
+                        new RiskPropagation(ctx, dataset, userParams, clock, cacheFactory))))
+                .build();
     }
 
     @Override
