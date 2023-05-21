@@ -9,7 +9,6 @@ version "0.1.0"
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(11)
-        vendor = JvmVendorSpec.ADOPTIUM
     }
 }
 
@@ -22,23 +21,23 @@ dependencies {
     implementation "ch.qos.logback:logback-classic:1.2.11"
     implementation "net.logstash.logback:logstash-logback-encoder:7.2"
     // Jackson
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.14.1'
-    implementation "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.14.1"
-    implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.14.1"
-    implementation "com.fasterxml.jackson.module:jackson-module-blackbird:2.14.1"
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.1'
+    implementation "com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.15.1"
+    implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.1"
+    implementation "com.fasterxml.jackson.module:jackson-module-blackbird:2.15.1"
     // Immutables
-    annotationProcessor "org.immutables:value:2.9.2"
-    implementation "org.immutables:value:2.9.2"
-    implementation "org.immutables:builder:2.9.2"
+    annotationProcessor "org.immutables:value:2.9.3"
+    implementation "org.immutables:value:2.9.3"
+    implementation "org.immutables:builder:2.9.3"
     // Data structures and utilities
     implementation "com.google.guava:guava:31.1-jre"
     implementation "it.unimi.dsi:fastutil:8.5.8"
     implementation "org.apache.commons:commons-math3:3.6.1"
-    implementation "org.jgrapht:jgrapht-core:1.5.1"
-    implementation "org.jgrapht:jgrapht-io:1.5.1"
-    implementation "org.jgrapht:jgrapht-opt:1.5.1"
+    implementation "org.jgrapht:jgrapht-core:1.5.2"
+    implementation "org.jgrapht:jgrapht-io:1.5.2"
+    implementation "org.jgrapht:jgrapht-opt:1.5.2"
     // Akka
-    implementation "com.typesafe.akka:akka-actor-typed_3:2.7.0"
+    implementation "com.typesafe.akka:akka-actor-typed_3:2.8.2"
     // Testing
     testImplementation "org.junit.jupiter:junit-jupiter:5.9.0"
     testImplementation "org.junit.jupiter:junit-jupiter-params:5.9.0"
