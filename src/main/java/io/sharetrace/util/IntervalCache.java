@@ -139,6 +139,6 @@ public final class IntervalCache<T extends Comparable<T>> {
 
   private Predicate<Map.Entry<Long, ?>> isNotAfter(Temporal temporal) {
     long key = floorKey(temporal);
-    return entry -> entry.getKey() < key;
+    return entry -> entry.getKey() <= key;
   }
 }
