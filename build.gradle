@@ -31,7 +31,7 @@ dependencies {
     implementation "org.immutables:builder:2.9.3"
     // Data structures and utilities
     implementation "com.google.guava:guava:31.1-jre"
-    implementation "it.unimi.dsi:fastutil:8.5.8"
+    implementation "it.unimi.dsi:fastutil:8.5.12"
     implementation "org.apache.commons:commons-math3:3.6.1"
     implementation "org.jgrapht:jgrapht-core:1.5.2"
     implementation "org.jgrapht:jgrapht-io:1.5.2"
