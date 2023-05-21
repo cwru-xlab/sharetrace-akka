@@ -2,40 +2,18 @@ package io.sharetrace.util;
 
 import com.google.common.collect.Range;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
-import java.time.temporal.ChronoField;
-import java.time.temporal.ChronoUnit;
-import java.time.temporal.Temporal;
-import java.time.temporal.TemporalAmount;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
 import java.util.function.Predicate;
-import org.apache.commons.math3.util.FastMath;
 
-/**
- * A cache that lazily maintains a finite number of contiguous, half-closed (start-inclusive) time
- * intervals in which values are cached. The timespan of the cache is defined as {@code nIntervals *
- * intervalDuration}. This implementation differs from a standard cache in that the time-to-live of
- * a value is based on its specified timestamp, and not how long it has existed in the cache.
- *
- * <p>Upon request to retrieve a value, the cache checks to see if it should synchronously refresh
- * itself by shifting forward its time horizon and removing expired values (based on their
- * timestamp). The frequency with which this refresh operation occurs is based on the specified
- * {@code refreshPeriod} and {@code clock}. Note that if all values have expired, the cache is
- * reinitialized based on the current time, according to the {@code clock}.
- *
- * <p>A user-defined strategy can be provided that determines how values in a given time interval
- * are merged. By default, the new value unconditionally replaces the old value.
- *
- * @param <T> The type of the cached values.
- */
-public final class IntervalCache<T extends Comparable<T>> {
+public final class IntervalCache<V extends Comparable<? super V>> {
 
-  private final Map<Long, T> cache;
-  private final BinaryOperator<T> mergeStrategy;
+  private final Map<Long, V> cache;
+  private final BinaryOperator<V> mergeStrategy;
   private final Clock clock;
   private final long interval;
   private final long lookBack;
@@ -43,102 +21,83 @@ public final class IntervalCache<T extends Comparable<T>> {
   private final long refreshPeriod;
   private long lastRefresh;
   private long rangeStart;
-  private Range<Long> range;
+  private Range<Instant> range;
 
-  private IntervalCache(CacheParams<T> params) {
+  private IntervalCache(CacheParams<V> parameters) {
     cache = Collecting.newLongKeyedHashMap();
-    mergeStrategy = params.mergeStrategy();
-    clock = params.clock();
-    interval = getLong(params.interval());
-    lookBack = interval * (params.numIntervals() - params.numLookAhead());
-    lookAhead = interval * params.numLookAhead();
-    refreshPeriod = getLong(params.refreshPeriod());
-    lastRefresh = getLong(Instant.MIN);
+    mergeStrategy = parameters.mergeStrategy();
+    clock = parameters.clock();
+    interval = toLong(parameters.interval());
+    lookBack = interval * (parameters.numIntervals() - parameters.numLookAhead());
+    lookAhead = interval * parameters.numLookAhead();
+    refreshPeriod = toLong(parameters.refreshPeriod());
+    lastRefresh = toLong(Instant.MIN);
   }
 
-  private static long getLong(TemporalAmount temporalAmount) {
-    return temporalAmount.get(ChronoUnit.SECONDS);
+  public static <V extends Comparable<? super V>> IntervalCache<V> create(
+          CacheParams<V> parameters) {
+    return new IntervalCache<>(parameters);
   }
 
-  private static long getLong(Temporal temporal) {
-    return temporal.getLong(ChronoField.INSTANT_SECONDS);
-  }
-
-  public static <T extends Comparable<T>> IntervalCache<T> create(CacheParams<T> params) {
-    return new IntervalCache<>(params);
-  }
-
-  /**
-   * Returns an {@link Optional} containing the cached value associated with the time interval that
-   * contains the specified timestamp. If no value has been cached in the time interval or the
-   * timestamp falls outside the timespan of the cache an empty {@link Optional} is returned. Prior
-   * to retrieving the value, the cache is possibly refreshed if it has been sufficiently long since
-   * its previous refresh.
-   */
-  public Optional<T> get(Temporal temporal) {
+  public Optional<V> get(Instant key) {
     refresh();
-    long key = floorKey(temporal);
-    return Optional.ofNullable(cache.get(key));
+    return Optional.ofNullable(cache.get(floorKey(key)));
+  }
+
+  public void put(Instant key, V value) {
+    refresh();
+    cache.merge(checkedFloorKey(key), value, mergeStrategy);
+  }
+
+  public Optional<V> max(Instant key) {
+    refresh();
+    return cache.entrySet().stream()
+            .filter(isNotAfter(key))
+            .map(Map.Entry::getValue)
+            .max(Comparator.naturalOrder());
   }
 
   private void refresh() {
-    long now = getLong(clock.instant());
+    long now = toLong(clock.instant());
     if (now - lastRefresh > refreshPeriod) {
       rangeStart = now - lookBack;
       long rangeEnd = now + lookAhead;
-      range = Range.closedOpen(rangeStart, rangeEnd);
+      range = Range.closedOpen(toInstant(rangeStart), toInstant(rangeEnd));
       cache.entrySet().removeIf(isExpired());
       lastRefresh = now;
     }
-  }
-
-  private long floorKey(Temporal temporal) {
-    return floorKey(getLong(temporal));
   }
 
   private Predicate<Map.Entry<Long, ?>> isExpired() {
     return entry -> entry.getKey() < rangeStart;
   }
 
-  private long floorKey(long temporal) {
-    return rangeStart + interval * FastMath.floorDiv(temporal - rangeStart, interval);
-  }
-
-  /**
-   * Adds the specified value to the time interval that contains the specified timestamp according
-   * merge strategy of this instance. Prior to adding the value, the cache is possibly refreshed if
-   * it has been sufficiently long since its previous refresh. This method follows {@link
-   * Map#merge(Object, Object, BiFunction)} with the exception that null values are not permitted.
-   *
-   * @throws IllegalArgumentException if the timespan does not contain the specified timestamp.
-   */
-  public void put(Temporal temporal, T value) {
-    refresh();
-    long key = checkedFloorKey(temporal);
-    cache.merge(key, value, mergeStrategy);
-  }
-
-  private long checkedFloorKey(Temporal temporal) {
-    return floorKey(Checks.checkRange(getLong(temporal), range, "temporal"));
-  }
-
-  /**
-   * Returns an {@link Optional} containing the maximum value, according to the specified
-   * comparator, whose time interval contains specified timestamp. If no values have been cached in
-   * the time intervals that end prior to the timestamp, an empty {@link Optional} is returned.
-   * Prior to retrieving the value, the cache is possibly refreshed if it has been sufficiently long
-   * since its previous refresh.
-   */
-  public Optional<T> max(Temporal temporal) {
-    refresh();
-    return cache.entrySet().stream()
-        .filter(isNotAfter(temporal))
-        .map(Map.Entry::getValue)
-        .max(Comparator.naturalOrder());
-  }
-
-  private Predicate<Map.Entry<Long, ?>> isNotAfter(Temporal temporal) {
-    long key = floorKey(temporal);
+  private Predicate<Map.Entry<Long, ?>> isNotAfter(Instant instant) {
+    long key = floorKey(instant);
     return entry -> entry.getKey() <= key;
+  }
+
+  private long checkedFloorKey(Instant key) {
+    return floorKey(Checks.checkRange(key, range, "key"));
+  }
+
+  private long floorKey(Instant key) {
+    return floorKey(toLong(key));
+  }
+
+  private long floorKey(long key) {
+    return rangeStart + interval * Math.floorDiv(key - rangeStart, interval);
+  }
+
+  private static long toLong(Duration duration) {
+    return duration.getSeconds();
+  }
+
+  private static long toLong(Instant instant) {
+    return instant.getEpochSecond();
+  }
+
+  private static Instant toInstant(long epochSeconds) {
+    return Instant.ofEpochSecond(epochSeconds);
   }
 }
