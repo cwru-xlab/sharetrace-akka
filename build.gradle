@@ -1,6 +1,7 @@
 plugins {
     id "java"
     id "java-test-fixtures"
+    id "com.diffplug.spotless" version "6.18.0"
 }
 
 group "io.sharetrace"
@@ -9,6 +10,17 @@ version "0.1.0"
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(11)
+    }
+}
+
+spotless {
+    java {
+        target "src/*/java/**/*.java"
+        importOrder()
+        removeUnusedImports()
+        cleanthat()
+        googleJavaFormat()
+        formatAnnotations()
     }
 }
 

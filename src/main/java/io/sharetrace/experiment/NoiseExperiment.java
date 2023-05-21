@@ -17,56 +17,55 @@ import org.apache.commons.math3.distribution.RealDistribution;
 
 public final class NoiseExperiment extends Experiment<NoiseExperimentConfig> {
 
-    private static final Context DEFAULT_CTX = newDefaultContext();
+  private static final Context DEFAULT_CTX = newDefaultContext();
 
-    private NoiseExperiment() {
-    }
+  private NoiseExperiment() {}
 
-    public static NoiseExperiment create() {
-        return new NoiseExperiment();
-    }
+  public static NoiseExperiment create() {
+    return new NoiseExperiment();
+  }
 
-    private static Context newDefaultContext() {
-        return Defaults.context()
-            .withLoggable(UpdateEvent.class, GraphSize.class, ExperimentSettings.class);
-    }
+  private static Context newDefaultContext() {
+    return Defaults.context()
+        .withLoggable(UpdateEvent.class, GraphSize.class, ExperimentSettings.class);
+  }
 
-    private static Dataset withNoisyScoreFactory(Dataset dataset, RealDistribution noise) {
-        RiskScoreFactory cached = CachedRiskScoreFactory.of(dataset.scoreFactory());
-        RiskScoreFactory noisy = NoisyRiskScoreFactory.of(cached, noise);
-        return dataset.withScoreFactory(noisy);
-    }
+  private static Dataset withNoisyScoreFactory(Dataset dataset, RealDistribution noise) {
+    RiskScoreFactory cached = CachedRiskScoreFactory.of(dataset.scoreFactory());
+    RiskScoreFactory noisy = NoisyRiskScoreFactory.of(cached, noise);
+    return dataset.withScoreFactory(noisy);
+  }
 
-    /**
-     * Evaluates the accuracy of {@link RiskPropagation} when noise is added to the user symptom
-     * scores. For a given noise distribution, each {@link ContactNetwork} is 1 or more times. The
-     * risk scores of the initial {@link Dataset} are used for all noise distributions to allow for
-     * comparison. Each noise distribution is evaluated 1 or more times to allow for an average
-     * accuracy to be measured.
-     */
-    @Override
-    public void run(NoiseExperimentConfig config, State state) {
-        for (int iNetwork = 0; iNetwork < config.numNetworks(); iNetwork++) {
-            Dataset dataset = state.dataset().withNewContactNetwork();
-            for (RealDistribution noise : config.noises()) {
-                state.toBuilder()
-                    .dataset(withNoisyScoreFactory(dataset, noise))
-                    .build()
-                    .run(config.numIterations());
-            }
-        }
+  /**
+   * Evaluates the accuracy of {@link RiskPropagation} when noise is added to the user symptom
+   * scores. For a given noise distribution, each {@link ContactNetwork} is 1 or more times. The
+   * risk scores of the initial {@link Dataset} are used for all noise distributions to allow for
+   * comparison. Each noise distribution is evaluated 1 or more times to allow for an average
+   * accuracy to be measured.
+   */
+  @Override
+  public void run(NoiseExperimentConfig config, State state) {
+    for (int iNetwork = 0; iNetwork < config.numNetworks(); iNetwork++) {
+      Dataset dataset = state.dataset().withNewContactNetwork();
+      for (RealDistribution noise : config.noises()) {
+        state.toBuilder()
+            .dataset(withNoisyScoreFactory(dataset, noise))
+            .build()
+            .run(config.numIterations());
+      }
     }
+  }
 
-    @Override
-    public Context defaultContext() {
-        return DEFAULT_CTX;
-    }
+  @Override
+  public Context defaultContext() {
+    return DEFAULT_CTX;
+  }
 
-    @Override
-    public State newDefaultState(Context ctx, NoiseExperimentConfig config) {
-        return State.builder(ctx)
-            .dataset(getProperty(config.datasetFactory(), "datasetFactory"))
-            .graphType(getProperty(config.graphType(), "graphType"))
-            .build();
-    }
+  @Override
+  public State newDefaultState(Context ctx, NoiseExperimentConfig config) {
+    return State.builder(ctx)
+        .dataset(getProperty(config.datasetFactory(), "datasetFactory"))
+        .graphType(getProperty(config.graphType(), "graphType"))
+        .build();
+  }
 }

@@ -4,11 +4,11 @@ import io.sharetrace.model.RiskScore;
 
 interface ScoreChangeEvent extends LoggableEvent {
 
-    RiskScore oldScore();
+  RiskScore oldScore();
 
-    RiskScore newScore();
+  RiskScore newScore();
 
-    String oldId();
+  String oldId();
 
-    String newId();
+  String newId();
 }

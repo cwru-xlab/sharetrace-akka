@@ -5,7 +5,7 @@ import org.immutables.value.Value;
 @Value.Immutable
 interface BaseUpdateEvent extends ScoreChangeEvent {
 
-    String from();
+  String from();
 
-    String to();
+  String to();
 }

@@ -5,7 +5,7 @@ import org.immutables.value.Value;
 @Value.Immutable
 interface BaseGraphCycles extends LoggableMetric {
 
-    int girth();
+  int girth();
 
-    long numTriangles();
+  long numTriangles();
 }

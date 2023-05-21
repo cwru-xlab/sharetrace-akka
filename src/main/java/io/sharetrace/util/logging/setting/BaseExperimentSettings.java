@@ -8,17 +8,17 @@ import org.immutables.value.Value;
 @Value.Immutable
 interface BaseExperimentSettings extends LoggableSetting {
 
-    UserParams userParams();
+  UserParams userParams();
 
-    CacheParams<RiskScoreMsg> cacheParams();
+  CacheParams<RiskScoreMsg> cacheParams();
 
-    long seed();
+  long seed();
 
-    String stateId();
+  String stateId();
 
-    String networkId();
+  String networkId();
 
-    String graphType();
+  String graphType();
 
-    String datasetId();
+  String datasetId();
 }

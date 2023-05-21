@@ -4,5 +4,5 @@ import io.sharetrace.graph.GraphType;
 
 public interface IdContext extends GraphTypeContext {
 
-    GraphType graphType();
+  GraphType graphType();
 }

@@ -4,9 +4,9 @@ import org.apache.commons.math3.distribution.RealDistribution;
 
 public interface UserParamsContext extends DistributionFactoryContext {
 
-    RealDistribution scoreValues();
+  RealDistribution scoreValues();
 
-    RealDistribution scoreTimes();
+  RealDistribution scoreTimes();
 
-    RealDistribution contactTimes();
+  RealDistribution contactTimes();
 }

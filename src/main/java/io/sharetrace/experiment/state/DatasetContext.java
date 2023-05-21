@@ -4,5 +4,5 @@ import io.sharetrace.model.UserParams;
 
 public interface DatasetContext extends UserParamsContext {
 
-    UserParams userParams();
+  UserParams userParams();
 }

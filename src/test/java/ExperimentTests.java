@@ -5,11 +5,10 @@ import io.sharetrace.experiment.config.FileExperimentConfig;
 import io.sharetrace.experiment.config.ParamsExperimentConfig;
 import io.sharetrace.experiment.config.RuntimeExperimentConfig;
 import io.sharetrace.graph.GraphType;
+import java.nio.file.Path;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
-
-import java.nio.file.Path;
 
 public class ExperimentTests {
 

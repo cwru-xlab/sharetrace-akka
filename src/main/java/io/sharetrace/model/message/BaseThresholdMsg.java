@@ -6,6 +6,6 @@ import org.immutables.value.Value;
 @Value.Immutable
 interface BaseThresholdMsg extends UserMsg {
 
-    @Value.Parameter
-    ActorRef<UserMsg> contact();
+  @Value.Parameter
+  ActorRef<UserMsg> contact();
 }

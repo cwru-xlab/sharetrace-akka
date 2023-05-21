@@ -7,5 +7,4 @@ import io.sharetrace.actor.UserActor;
  *
  * @see UserActor
  */
-public interface UserMsg {
-}
+public interface UserMsg {}

@@ -5,5 +5,5 @@ import org.immutables.value.Value;
 @Value.Immutable
 interface BaseCurrentRefreshEvent extends ScoreChangeEvent {
 
-    String user();
+  String user();
 }

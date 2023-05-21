@@ -4,22 +4,21 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public final class Uid {
 
-    private Uid() {
-    }
+  private Uid() {}
 
-    public static String ofIntString() {
-        return String.valueOf(ofInt());
-    }
+  public static String ofIntString() {
+    return String.valueOf(ofInt());
+  }
 
-    public static int ofInt() {
-        return ThreadLocalRandom.current().nextInt(Integer.MAX_VALUE);
-    }
+  public static int ofInt() {
+    return ThreadLocalRandom.current().nextInt(Integer.MAX_VALUE);
+  }
 
-    public static String ofLongString() {
-        return String.valueOf(ofLong());
-    }
+  public static String ofLongString() {
+    return String.valueOf(ofLong());
+  }
 
-    public static long ofLong() {
-        return ThreadLocalRandom.current().nextLong(Long.MAX_VALUE);
-    }
+  public static long ofLong() {
+    return ThreadLocalRandom.current().nextLong(Long.MAX_VALUE);
+  }
 }

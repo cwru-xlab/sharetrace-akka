@@ -4,11 +4,11 @@ import io.sharetrace.model.RiskScore;
 
 interface MessageEvent extends LoggableEvent {
 
-    String from();
+  String from();
 
-    String to();
+  String to();
 
-    RiskScore score();
+  RiskScore score();
 
-    String id();
+  String id();
 }
