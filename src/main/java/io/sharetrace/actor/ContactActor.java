@@ -7,7 +7,7 @@ import io.sharetrace.model.message.ContactMsg;
 import io.sharetrace.model.message.RiskScoreMsg;
 import io.sharetrace.model.message.ThresholdMsg;
 import io.sharetrace.model.message.UserMsg;
-import io.sharetrace.util.IntervalCache;
+import io.sharetrace.util.cache.IntervalCache;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.function.BiConsumer;

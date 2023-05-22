@@ -1,6 +1,7 @@
 package io.sharetrace.util;
 
 import io.sharetrace.util.Clocks.MutableClock;
+import io.sharetrace.util.cache.IntervalCache;
 import java.util.Optional;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;

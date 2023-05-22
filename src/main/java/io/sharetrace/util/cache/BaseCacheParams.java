@@ -1,7 +1,8 @@
-package io.sharetrace.util;
+package io.sharetrace.util.cache;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.Range;
+import io.sharetrace.util.Checks;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.function.BinaryOperator;

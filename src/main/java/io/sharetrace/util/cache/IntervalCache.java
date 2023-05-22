@@ -1,6 +1,8 @@
-package io.sharetrace.util;
+package io.sharetrace.util.cache;
 
 import com.google.common.collect.Range;
+import io.sharetrace.util.Checks;
+import io.sharetrace.util.Collecting;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -35,7 +37,7 @@ public final class IntervalCache<V extends Comparable<? super V>> {
   }
 
   public static <V extends Comparable<? super V>> IntervalCache<V> create(
-          CacheParams<V> parameters) {
+      CacheParams<V> parameters) {
     return new IntervalCache<>(parameters);
   }
 
@@ -52,9 +54,9 @@ public final class IntervalCache<V extends Comparable<? super V>> {
   public Optional<V> max(Instant key) {
     refresh();
     return cache.entrySet().stream()
-            .filter(isNotAfter(key))
-            .map(Map.Entry::getValue)
-            .max(Comparator.naturalOrder());
+        .filter(isNotAfter(key))
+        .map(Map.Entry::getValue)
+        .max(Comparator.naturalOrder());
   }
 
   private void refresh() {

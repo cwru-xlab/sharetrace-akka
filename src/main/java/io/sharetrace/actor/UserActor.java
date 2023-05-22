@@ -18,7 +18,7 @@ import io.sharetrace.model.message.ThresholdMsg;
 import io.sharetrace.model.message.TimedOutMsg;
 import io.sharetrace.model.message.UserMsg;
 import io.sharetrace.util.Collecting;
-import io.sharetrace.util.IntervalCache;
+import io.sharetrace.util.cache.IntervalCache;
 import io.sharetrace.util.logging.Logging;
 import java.time.Clock;
 import java.util.Comparator;

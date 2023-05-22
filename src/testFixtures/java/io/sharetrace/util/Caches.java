@@ -1,5 +1,7 @@
 package io.sharetrace.util;
 
+import io.sharetrace.util.cache.CacheParams;
+import io.sharetrace.util.cache.IntervalCache;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
