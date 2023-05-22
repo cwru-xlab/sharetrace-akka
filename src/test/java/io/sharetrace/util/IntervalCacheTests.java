@@ -5,6 +5,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+// TODO Fix when isNotAfter uses strict less than
 public class IntervalCacheTests {
 
   @Test
@@ -47,19 +48,19 @@ public class IntervalCacheTests {
   }
 
   @Test
-  public void putAtUpperBoundThrowsException() {
+  public void putEntryAtUpperBoundThrowsException() {
     Assertions.assertThrows(
         IllegalArgumentException.class,
         () -> Caches.empty().put(Caches.atUpperBound(), Caches.cached()));
   }
 
   @Test
-  public void putAtLowBoundDoesNotThrowException() {
+  public void putEntryAtLowerBoundDoesNotThrowException() {
     Assertions.assertDoesNotThrow(() -> Caches.empty().put(Caches.atLowerBound(), Caches.cached()));
   }
 
   @Test
-  public void putBelowLowBoundDoesNotThrowException() {
+  public void putEntryBelowLowerBoundThrowsException() {
     Assertions.assertThrows(
         IllegalArgumentException.class,
         () -> Caches.empty().put(Caches.belowLowerBound(), Caches.cached()));
