@@ -1,19 +1,14 @@
 package io.sharetrace.util;
 
-import com.google.common.base.MoreObjects;
 import java.util.Map;
 
-public final class Indexer<T> {
+public final class Indexer<V> {
 
-  private final Map<T, Integer> index = Collecting.newIntValuedHashMap();
+  private final Map<V, Integer> index = Collecting.newIntValuedHashMap();
+
   private int value = 0;
 
-  public int index(T value) {
+  public int index(V value) {
     return index.computeIfAbsent(value, x -> this.value++);
-  }
-
-  @Override
-  public String toString() {
-    return MoreObjects.toStringHelper(this).add("value", value).toString();
   }
 }
