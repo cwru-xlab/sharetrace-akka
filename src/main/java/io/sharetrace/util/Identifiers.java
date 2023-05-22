@@ -2,9 +2,9 @@ package io.sharetrace.util;
 
 import java.util.concurrent.ThreadLocalRandom;
 
-public final class Uid {
+public final class Identifiers {
 
-  private Uid() {}
+  private Identifiers() {}
 
   public static String ofIntString() {
     return String.valueOf(ofInt());

@@ -3,7 +3,7 @@ package io.sharetrace.graph;
 import com.fasterxml.jackson.annotation.JsonIgnoreType;
 import io.sharetrace.experiment.data.factory.ContactTimeFactory;
 import io.sharetrace.util.Collecting;
-import io.sharetrace.util.Uid;
+import io.sharetrace.util.Identifiers;
 import io.sharetrace.util.logging.Logger;
 import io.sharetrace.util.logging.Logging;
 import io.sharetrace.util.logging.metric.GraphCycles;
@@ -60,7 +60,7 @@ abstract class AbstractContactNetwork implements ContactNetwork {
 
   @Value.Lazy
   public String id() {
-    return Uid.ofIntString();
+    return Identifiers.ofIntString();
   }
 
   private Contact newContact(DefaultEdge edge) {

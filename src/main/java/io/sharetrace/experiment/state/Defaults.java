@@ -12,7 +12,7 @@ import io.sharetrace.experiment.data.sampler.TimeSampler;
 import io.sharetrace.model.RiskScore;
 import io.sharetrace.model.UserParams;
 import io.sharetrace.model.message.RiskScoreMsg;
-import io.sharetrace.util.Uid;
+import io.sharetrace.util.Identifiers;
 import io.sharetrace.util.cache.CacheParams;
 import io.sharetrace.util.logging.event.ContactEvent;
 import io.sharetrace.util.logging.event.ContactsRefreshEvent;
@@ -182,7 +182,7 @@ public final class Defaults {
     return Context.builder()
         .clock(CLOCK)
         .refTime(CLOCK.instant())
-        .seed(Uid.ofInt())
+        .seed(Identifiers.ofInt())
         .addLoggable(
             // Events
             ContactEvent.class,

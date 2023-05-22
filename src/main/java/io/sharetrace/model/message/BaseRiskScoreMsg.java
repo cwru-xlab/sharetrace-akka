@@ -5,7 +5,7 @@ import io.sharetrace.actor.RiskPropagation;
 import io.sharetrace.actor.UserActor;
 import io.sharetrace.model.Identifiable;
 import io.sharetrace.model.RiskScore;
-import io.sharetrace.util.Uid;
+import io.sharetrace.util.Identifiers;
 import org.immutables.value.Value;
 
 /**
@@ -37,6 +37,6 @@ abstract class BaseRiskScoreMsg implements UserMsg, Identifiable, Comparable<Ris
   /** Returns a unique identifier to track this message during {@link RiskPropagation}. */
   @Value.Default
   public String id() {
-    return Uid.ofLongString();
+    return Identifiers.ofLongString();
   }
 }

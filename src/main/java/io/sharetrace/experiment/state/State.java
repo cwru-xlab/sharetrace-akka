@@ -8,7 +8,7 @@ import io.sharetrace.model.Identifiable;
 import io.sharetrace.model.UserParams;
 import io.sharetrace.model.message.RiskScoreMsg;
 import io.sharetrace.util.Checks;
-import io.sharetrace.util.Uid;
+import io.sharetrace.util.Identifiers;
 import io.sharetrace.util.cache.CacheParams;
 import io.sharetrace.util.cache.IntervalCache;
 import io.sharetrace.util.logging.Loggable;
@@ -223,7 +223,7 @@ public final class State
     }
 
     private static String newId() {
-      return Uid.ofIntString();
+      return Identifiers.ofIntString();
     }
 
     private static Function<DistributionFactoryContext, DistributionFactory> defaultFactory() {
