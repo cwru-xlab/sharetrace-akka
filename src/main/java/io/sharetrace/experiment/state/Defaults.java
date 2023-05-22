@@ -14,6 +14,7 @@ import io.sharetrace.model.UserParams;
 import io.sharetrace.model.message.RiskScoreMsg;
 import io.sharetrace.util.Identifiers;
 import io.sharetrace.util.cache.CacheParams;
+import io.sharetrace.util.cache.DefaultCacheMergeStrategy;
 import io.sharetrace.util.logging.event.ContactEvent;
 import io.sharetrace.util.logging.event.ContactsRefreshEvent;
 import io.sharetrace.util.logging.event.CurrentRefreshEvent;
@@ -153,29 +154,9 @@ public final class Defaults {
         .numIntervals((int) (2 * TTL.toDays()))
         .numLookAhead(1)
         .refreshPeriod(Duration.ofHours(1L))
-        .mergeStrategy(Defaults::cacheMerge)
+        .mergeStrategy(new DefaultCacheMergeStrategy(USER_PARAMS))
         .clock(CLOCK)
         .build();
-  }
-
-  public static RiskScoreMsg cacheMerge(RiskScoreMsg oldMsg, RiskScoreMsg newMsg) {
-    // Simpler to check for higher value first.
-    // Most will likely not be older, which avoids checking for approximate equality.
-    return isHigher(newMsg, oldMsg) || (isOlder(newMsg, oldMsg) && isApproxEqual(newMsg, oldMsg))
-        ? newMsg
-        : oldMsg;
-  }
-
-  private static boolean isHigher(RiskScoreMsg msg1, RiskScoreMsg msg2) {
-    return msg1.score().value() > msg2.score().value();
-  }
-
-  private static boolean isOlder(RiskScoreMsg msg1, RiskScoreMsg msg2) {
-    return msg1.score().time().isBefore(msg2.score().time());
-  }
-
-  private static boolean isApproxEqual(RiskScoreMsg msg1, RiskScoreMsg msg2) {
-    return Math.abs(msg1.score().value() - msg2.score().value()) < USER_PARAMS.tolerance();
   }
 
   private static Context newContext() {
