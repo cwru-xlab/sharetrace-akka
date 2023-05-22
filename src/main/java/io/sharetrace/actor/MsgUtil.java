@@ -2,6 +2,7 @@ package io.sharetrace.actor;
 
 import akka.actor.typed.ActorRef;
 import io.sharetrace.model.RiskScore;
+import io.sharetrace.model.TemporalProbability;
 import io.sharetrace.model.UserParams;
 import io.sharetrace.model.message.ContactMsg;
 import io.sharetrace.model.message.RiskScoreMsg;
@@ -23,12 +24,12 @@ final class MsgUtil {
     this.params = params;
   }
 
-  public boolean isNotAfter(RiskScoreMsg msg, Instant time) {
-    return !msg.score().time().isAfter(time);
+  public boolean isNotAfter(TemporalProbability msg, Instant time) {
+    return !msg.time().isAfter(time);
   }
 
-  public float computeThreshold(RiskScoreMsg msg) {
-    return msg.score().value() * params.sendCoeff();
+  public float computeThreshold(TemporalProbability msg) {
+    return msg.value() * params.sendCoeff();
   }
 
   public Instant buffered(Instant instant) {
@@ -36,8 +37,7 @@ final class MsgUtil {
   }
 
   public RiskScoreMsg transmitted(RiskScoreMsg msg) {
-    RiskScore original = msg.score();
-    RiskScore transmitted = original.withValue(original.value() * params.transRate());
+    RiskScore transmitted = msg.score().withValue(msg.value() * params.transRate());
     return RiskScoreMsg.builder().sender(self).score(transmitted).id(msg.id()).build();
   }
 
@@ -45,16 +45,16 @@ final class MsgUtil {
     return RiskScoreMsg.builder().score(RiskScore.MIN).sender(self).build();
   }
 
-  public boolean isGreaterThan(RiskScoreMsg msg1, RiskScoreMsg msg2) {
-    return isGreaterThan(msg1, msg2.score().value());
+  public boolean isGreaterThan(TemporalProbability msg1, TemporalProbability msg2) {
+    return isGreaterThan(msg1, msg2.value());
   }
 
-  public boolean isGreaterThan(RiskScoreMsg msg, float value) {
-    return msg.score().value() > value;
+  public boolean isGreaterThan(TemporalProbability msg, float value) {
+    return msg.value() > value;
   }
 
-  public Duration computeScoreTtl(RiskScoreMsg msg) {
-    return computeTtl(msg.score().time(), params.scoreTtl());
+  public Duration computeScoreTtl(TemporalProbability msg) {
+    return computeTtl(msg.time(), params.scoreTtl());
   }
 
   private Duration computeTtl(Temporal temporal, Duration ttl) {
@@ -69,8 +69,8 @@ final class MsgUtil {
     return computeTtl(contactTime, params.contactTtl());
   }
 
-  public boolean isScoreAlive(RiskScoreMsg msg) {
-    return isAlive(msg.score().time(), params.scoreTtl());
+  public boolean isScoreAlive(TemporalProbability msg) {
+    return isAlive(msg.time(), params.scoreTtl());
   }
 
   private boolean isAlive(Temporal temporal, Duration ttl) {

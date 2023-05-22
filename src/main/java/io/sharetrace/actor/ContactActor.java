@@ -3,6 +3,7 @@ package io.sharetrace.actor;
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.javadsl.TimerScheduler;
 import io.sharetrace.model.RiskScore;
+import io.sharetrace.model.TemporalProbability;
 import io.sharetrace.model.message.ContactMsg;
 import io.sharetrace.model.message.RiskScoreMsg;
 import io.sharetrace.model.message.ThresholdMsg;
@@ -18,7 +19,7 @@ final class ContactActor implements Comparable<ContactActor> {
   private final Instant contactTime;
   private final Instant bufferedContactTime;
   private final ThresholdMsg thresholdMsg;
-  private final IntervalCache<RiskScoreMsg> cache;
+  private final IntervalCache<? extends TemporalProbability> cache;
   private final MsgUtil msgUtil;
   private final TimerScheduler<UserMsg> timers;
   private float sendThreshold;
@@ -27,7 +28,7 @@ final class ContactActor implements Comparable<ContactActor> {
       ContactMsg msg,
       TimerScheduler<UserMsg> timers,
       MsgUtil msgUtil,
-      IntervalCache<RiskScoreMsg> cache) {
+      IntervalCache<? extends TemporalProbability> cache) {
     this.ref = msg.contact();
     this.contactTime = msg.contactTime();
     this.bufferedContactTime = msgUtil.buffered(contactTime);
@@ -50,11 +51,11 @@ final class ContactActor implements Comparable<ContactActor> {
         && isNotSender(msg);
   }
 
-  private boolean isAboveThreshold(RiskScoreMsg msg) {
+  private boolean isAboveThreshold(TemporalProbability msg) {
     return msgUtil.isGreaterThan(msg, sendThreshold);
   }
 
-  private boolean isRelevant(RiskScoreMsg msg) {
+  private boolean isRelevant(TemporalProbability msg) {
     return msgUtil.isNotAfter(msg, bufferedContactTime);
   }
 
@@ -72,7 +73,7 @@ final class ContactActor implements Comparable<ContactActor> {
     updateThreshold(msg);
   }
 
-  private void updateThreshold(RiskScoreMsg msg) {
+  private void updateThreshold(TemporalProbability msg) {
     float threshold = msgUtil.computeThreshold(msg);
     if (threshold > sendThreshold) {
       sendThreshold = threshold;
@@ -80,7 +81,7 @@ final class ContactActor implements Comparable<ContactActor> {
     }
   }
 
-  private void startThresholdTimer(RiskScoreMsg msg) {
+  private void startThresholdTimer(TemporalProbability msg) {
     timers.startSingleTimer(thresholdMsg, msgUtil.computeScoreTtl(msg));
   }
 
@@ -91,7 +92,7 @@ final class ContactActor implements Comparable<ContactActor> {
         .ifPresentOrElse(this::setThreshold, this::setThresholdAsDefault);
   }
 
-  private void setThreshold(RiskScoreMsg msg) {
+  private void setThreshold(TemporalProbability msg) {
     sendThreshold = msgUtil.computeThreshold(msg);
     startThresholdTimer(msg);
   }

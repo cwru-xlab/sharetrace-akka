@@ -1,6 +1,5 @@
 package io.sharetrace.model;
 
-import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Range;
 import io.sharetrace.actor.RiskPropagation;
 import io.sharetrace.actor.UserActor;
@@ -20,7 +19,7 @@ import org.immutables.value.Value;
  */
 @SuppressWarnings({"DefaultAnnotationParam", "StaticInitializerReferencesSubClass"})
 @Value.Immutable(copy = true)
-abstract class BaseRiskScore implements Comparable<RiskScore> {
+abstract class BaseRiskScore implements TemporalProbability {
 
   public static final float MIN_VALUE = 0f;
   public static final float MAX_VALUE = 1f;
@@ -32,19 +31,13 @@ abstract class BaseRiskScore implements Comparable<RiskScore> {
 
   public static final RiskScore MIN = RiskScore.of(MIN_VALUE, MIN_TIME);
 
-  @Override
-  public int compareTo(RiskScore score) {
-    return ComparisonChain.start()
-        .compare(value(), score.value())
-        .compare(time(), score.time())
-        .result();
-  }
-
   /** Returns the probability of infection. */
+  @Override
   @Value.Parameter
   public abstract float value();
 
   /** Returns when this probability was first computed. */
+  @Override
   @Value.Parameter
   public abstract Instant time();
 

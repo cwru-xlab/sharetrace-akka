@@ -5,6 +5,7 @@ import io.sharetrace.actor.RiskPropagation;
 import io.sharetrace.actor.UserActor;
 import io.sharetrace.model.Identifiable;
 import io.sharetrace.model.RiskScore;
+import io.sharetrace.model.TemporalProbability;
 import io.sharetrace.util.Identifiers;
 import org.immutables.value.Value;
 
@@ -15,15 +16,10 @@ import org.immutables.value.Value;
  * @see RiskPropagation
  */
 @Value.Immutable
-abstract class BaseRiskScoreMsg implements UserMsg, Identifiable, Comparable<RiskScoreMsg> {
+abstract class BaseRiskScoreMsg implements UserMsg, Identifiable, TemporalProbability {
 
   public static RiskScoreMsg of(RiskScore score, ActorRef<UserMsg> sender, String id) {
     return RiskScoreMsg.builder().score(score).sender(sender).id(id).build();
-  }
-
-  @Override
-  public int compareTo(RiskScoreMsg msg) {
-    return score().compareTo(msg.score());
   }
 
   /** Returns the risk score contained in this message. */
