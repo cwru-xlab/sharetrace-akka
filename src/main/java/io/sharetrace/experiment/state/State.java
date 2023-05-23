@@ -12,8 +12,8 @@ import io.sharetrace.util.Identifiers;
 import io.sharetrace.util.cache.CacheParams;
 import io.sharetrace.util.cache.IntervalCache;
 import io.sharetrace.util.logging.Loggable;
-import io.sharetrace.util.logging.Logger;
 import io.sharetrace.util.logging.Logging;
+import io.sharetrace.util.logging.TypedLogger;
 import io.sharetrace.util.logging.setting.ExperimentSettings;
 import io.sharetrace.util.logging.setting.LoggableSetting;
 import java.time.Clock;
@@ -36,7 +36,7 @@ public final class State
         UserParamsContext,
         DatasetContext {
 
-  private static final Logger LOGGER = Logging.settingsLogger();
+  private static final TypedLogger<LoggableSetting> LOGGER = Logging.settingsLogger();
   private final Context ctx;
   private final GraphType graphType;
   private final String id;
@@ -84,7 +84,7 @@ public final class State
 
   private void setUpLogging() {
     Logging.setMdc(id);
-    Logging.setLoggable(ctx.loggable());
+    Logging.enable(ctx.loggable());
   }
 
   private void logMetricsAndSettings() {
@@ -109,8 +109,8 @@ public final class State
         .datasetId(dataset.id())
         .stateId(id)
         .seed(ctx.seed())
-        .userParams(userParams)
-        .cacheParams(cacheParams)
+        .userParameters(userParams)
+        .cacheParameters(cacheParams)
         .build();
   }
 

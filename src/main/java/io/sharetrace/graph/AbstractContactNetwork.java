@@ -4,8 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreType;
 import io.sharetrace.experiment.data.factory.ContactTimeFactory;
 import io.sharetrace.util.Collecting;
 import io.sharetrace.util.Identifiers;
-import io.sharetrace.util.logging.Logger;
 import io.sharetrace.util.logging.Logging;
+import io.sharetrace.util.logging.TypedLogger;
 import io.sharetrace.util.logging.metric.GraphCycles;
 import io.sharetrace.util.logging.metric.GraphEccentricity;
 import io.sharetrace.util.logging.metric.GraphScores;
@@ -23,7 +23,7 @@ import org.jgrapht.graph.DefaultEdge;
 @JsonIgnoreType
 abstract class AbstractContactNetwork implements ContactNetwork {
 
-  private static final Logger LOGGER = Logging.metricsLogger();
+  private static final TypedLogger<LoggableMetric> LOGGER = Logging.metricsLogger();
 
   private static <T extends LoggableMetric> boolean logMetric(Class<T> type, Supplier<T> metric) {
     return LOGGER.log(LoggableMetric.KEY, type, metric);

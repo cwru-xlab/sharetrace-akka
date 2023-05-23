@@ -1,19 +1,15 @@
 package io.sharetrace.actor;
 
 import io.sharetrace.util.Collecting;
+import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang3.time.StopWatch;
 
 final class Timer<K> extends StopWatch {
 
   private final Map<K, Long> runtimes = Collecting.newLongValuedHashMap();
-
-  public static long millis(long nanos) {
-    return TimeUnit.NANOSECONDS.toMillis(nanos);
-  }
 
   public void time(Runnable task, K key) {
     time(Executors.callable(task), key);
@@ -31,11 +27,7 @@ final class Timer<K> extends StopWatch {
     }
   }
 
-  public long millis(K key) {
-    return millis(nanos(key));
-  }
-
-  public long nanos(K key) {
-    return runtimes.computeIfAbsent(key, x -> getNanoTime());
+  public Duration duration(K key) {
+    return Duration.ofNanos(runtimes.getOrDefault(key, getNanoTime()));
   }
 }

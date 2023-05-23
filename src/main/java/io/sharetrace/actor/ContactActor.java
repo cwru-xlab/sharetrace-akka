@@ -52,11 +52,11 @@ final class ContactActor implements Comparable<ContactActor> {
   }
 
   private boolean isAboveThreshold(TemporalProbability msg) {
-    return msgUtil.isGreaterThan(msg, sendThreshold);
+    return msg.value() > sendThreshold;
   }
 
   private boolean isRelevant(TemporalProbability msg) {
-    return msgUtil.isNotAfter(msg, bufferedContactTime);
+    return !msg.time().isAfter(bufferedContactTime);
   }
 
   private boolean isNotSender(RiskScoreMsg msg) {

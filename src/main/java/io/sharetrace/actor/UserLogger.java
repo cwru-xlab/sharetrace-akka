@@ -2,8 +2,8 @@ package io.sharetrace.actor;
 
 import akka.actor.typed.ActorRef;
 import io.sharetrace.model.message.RiskScoreMsg;
-import io.sharetrace.util.logging.Logger;
 import io.sharetrace.util.logging.Logging;
+import io.sharetrace.util.logging.TypedLogger;
 import io.sharetrace.util.logging.event.ContactEvent;
 import io.sharetrace.util.logging.event.ContactsRefreshEvent;
 import io.sharetrace.util.logging.event.CurrentRefreshEvent;
@@ -13,123 +13,129 @@ import io.sharetrace.util.logging.event.ReceiveEvent;
 import io.sharetrace.util.logging.event.SendCachedEvent;
 import io.sharetrace.util.logging.event.SendCurrentEvent;
 import io.sharetrace.util.logging.event.UpdateEvent;
+import java.time.Clock;
+import java.time.Instant;
 import java.util.function.Supplier;
 
 final class UserLogger {
 
-  private static final Logger LOGGER = Logging.eventsLogger();
-  private final String selfName;
+  private static final TypedLogger<LoggableEvent> LOGGER = Logging.eventsLogger();
+  private final String self;
+  private final Clock clock;
 
-  public UserLogger(ActorRef<?> self) {
-    this.selfName = name(self);
+  public UserLogger(ActorRef<?> self, Clock clock) {
+    this.self = name(self);
+    this.clock = clock;
   }
 
   private static String name(ActorRef<?> user) {
     return user.path().name();
   }
 
-  private static SendCachedEvent sendCachedEvent(ActorRef<?> contact, RiskScoreMsg cached) {
-    return SendCachedEvent.builder()
-        .from(name(cached.sender()))
-        .to(name(contact))
-        .score(cached.score())
-        .id(cached.id())
-        .build();
-  }
-
-  private static SendCurrentEvent sendCurrentEvent(ActorRef<?> contact, RiskScoreMsg current) {
-    return SendCurrentEvent.builder()
-        .from(name(current.sender()))
-        .to(name(contact))
-        .score(current.score())
-        .id(current.id())
-        .build();
-  }
-
-  private static PropagateEvent propagateEvent(ActorRef<?> contact, RiskScoreMsg propagated) {
-    return PropagateEvent.builder()
-        .from(name(propagated.sender()))
-        .to(name(contact))
-        .score(propagated.score())
-        .id(propagated.id())
-        .build();
-  }
-
   private static <T extends LoggableEvent> void logEvent(Class<T> type, Supplier<T> event) {
     LOGGER.log(LoggableEvent.KEY, type, event);
   }
 
-  public void logContact(ActorRef<?> contact) {
+  public void logContactEvent(ActorRef<?> contact) {
     logEvent(ContactEvent.class, () -> contactEvent(contact));
   }
 
   private ContactEvent contactEvent(ActorRef<?> contact) {
-    return ContactEvent.builder().user(selfName).addUsers(selfName, name(contact)).build();
+    return ContactEvent.builder().self(self).contact(name(contact)).timestamp(timestamp()).build();
   }
 
-  public void logSendCached(ActorRef<?> contact, RiskScoreMsg cached) {
-    logEvent(SendCachedEvent.class, () -> sendCachedEvent(contact, cached));
+  public void logSendCachedEvent(ActorRef<?> receiver, RiskScoreMsg cached) {
+    logEvent(SendCachedEvent.class, () -> sendCachedEvent(receiver, cached));
   }
 
-  public void logSendCurrent(ActorRef<?> contact, RiskScoreMsg current) {
-    logEvent(SendCurrentEvent.class, () -> sendCurrentEvent(contact, current));
+  private SendCachedEvent sendCachedEvent(ActorRef<?> receiver, RiskScoreMsg cached) {
+    return SendCachedEvent.builder()
+        .self(self)
+        .message(cached)
+        .receiver(name(receiver))
+        .timestamp(timestamp())
+        .build();
   }
 
-  public void logReceive(RiskScoreMsg received) {
+  public void logSendCurrentEvent(ActorRef<?> receiver, RiskScoreMsg riskScore) {
+    logEvent(SendCurrentEvent.class, () -> sendCurrentEvent(receiver, riskScore));
+  }
+
+  private SendCurrentEvent sendCurrentEvent(ActorRef<?> receiver, RiskScoreMsg current) {
+    return SendCurrentEvent.builder()
+        .self(self)
+        .message(current)
+        .receiver(name(receiver))
+        .timestamp(timestamp())
+        .build();
+  }
+
+  public void logReceiveEvent(RiskScoreMsg received) {
     logEvent(ReceiveEvent.class, () -> receiveEvent(received));
   }
 
   private ReceiveEvent receiveEvent(RiskScoreMsg received) {
     return ReceiveEvent.builder()
-        .from(name(received.sender()))
-        .to(selfName)
-        .score(received.score())
-        .id(received.id())
+        .self(self)
+        .sender(name(received.sender()))
+        .message(received)
+        .timestamp(timestamp())
         .build();
   }
 
-  public void logUpdate(RiskScoreMsg previous, RiskScoreMsg current) {
+  public void logUpdateEvent(RiskScoreMsg previous, RiskScoreMsg current) {
     logEvent(UpdateEvent.class, () -> updateEvent(previous, current));
   }
 
   private UpdateEvent updateEvent(RiskScoreMsg previous, RiskScoreMsg current) {
     return UpdateEvent.builder()
-        .from(name(current.sender()))
-        .to(selfName)
-        .oldScore(previous.score())
-        .newScore(current.score())
-        .oldId(previous.id())
-        .newId(current.id())
+        .self(self)
+        .previous(previous)
+        .current(current)
+        .timestamp(timestamp())
         .build();
   }
 
-  public void logPropagate(ActorRef<?> contact, RiskScoreMsg propagated) {
-    logEvent(PropagateEvent.class, () -> propagateEvent(contact, propagated));
+  public void logPropagateEvent(ActorRef<?> receiver, RiskScoreMsg propagated) {
+    logEvent(PropagateEvent.class, () -> propagateEvent(receiver, propagated));
   }
 
-  public void logContactsRefresh(int numRemaining, int numExpired) {
-    logEvent(ContactsRefreshEvent.class, () -> contactsRefreshEvent(numRemaining, numExpired));
+  private PropagateEvent propagateEvent(ActorRef<?> receiver, RiskScoreMsg propagated) {
+    return PropagateEvent.builder()
+        .self(self)
+        .message(propagated)
+        .receiver(name(receiver))
+        .timestamp(timestamp())
+        .build();
   }
 
-  private ContactsRefreshEvent contactsRefreshEvent(int numRemaining, int numExpired) {
+  public void logContactsRefreshEvent(int remaining, int expired) {
+    logEvent(ContactsRefreshEvent.class, () -> contactsRefreshEvent(remaining, expired));
+  }
+
+  private ContactsRefreshEvent contactsRefreshEvent(int remaining, int expired) {
     return ContactsRefreshEvent.builder()
-        .user(selfName)
-        .numRemaining(numRemaining)
-        .numExpired(numExpired)
+        .self(self)
+        .remaining(remaining)
+        .expired(expired)
+        .timestamp(timestamp())
         .build();
   }
 
-  public void logCurrentRefresh(RiskScoreMsg previous, RiskScoreMsg current) {
+  public void logCurrentRefreshEvent(RiskScoreMsg previous, RiskScoreMsg current) {
     logEvent(CurrentRefreshEvent.class, () -> currentRefreshEvent(previous, current));
   }
 
   private CurrentRefreshEvent currentRefreshEvent(RiskScoreMsg previous, RiskScoreMsg current) {
     return CurrentRefreshEvent.builder()
-        .user(selfName)
-        .oldScore(previous.score())
-        .newScore(current.score())
-        .oldId(previous.id())
-        .newId(current.id())
+        .self(self)
+        .previous(previous)
+        .current(current)
+        .timestamp(timestamp())
         .build();
+  }
+
+  private Instant timestamp() {
+    return clock.instant();
   }
 }

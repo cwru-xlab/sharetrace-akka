@@ -22,15 +22,16 @@ import io.sharetrace.model.message.TimedOutMsg;
 import io.sharetrace.model.message.UserMsg;
 import io.sharetrace.util.Collecting;
 import io.sharetrace.util.cache.CacheParams;
-import io.sharetrace.util.logging.Logger;
 import io.sharetrace.util.logging.Logging;
+import io.sharetrace.util.logging.TypedLogger;
 import io.sharetrace.util.logging.metric.CreateUsersRuntime;
 import io.sharetrace.util.logging.metric.LoggableMetric;
-import io.sharetrace.util.logging.metric.MsgPassingRuntime;
-import io.sharetrace.util.logging.metric.RiskPropRuntime;
+import io.sharetrace.util.logging.metric.MessagePassingRuntime;
+import io.sharetrace.util.logging.metric.RiskPropagationRuntime;
 import io.sharetrace.util.logging.metric.SendContactsRuntime;
-import io.sharetrace.util.logging.metric.SendScoresRuntime;
+import io.sharetrace.util.logging.metric.SendRiskScoresRuntime;
 import java.time.Clock;
+import java.time.Duration;
 import java.util.BitSet;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -62,10 +63,12 @@ import org.immutables.builder.Builder;
  */
 public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
 
-  private static final Logger LOGGER = Logging.metricsLogger();
+  private static final TypedLogger<LoggableMetric> LOGGER = Logging.metricsLogger();
   private static final String NAME = RiskPropagation.class.getSimpleName();
-  private static final Props PROPS = DispatcherSelector.fromConfig("algorithm-dispatcher");
-  private static final Props USER_PROPS = DispatcherSelector.fromConfig("user-dispatcher");
+  private static final Props PROPS =
+      DispatcherSelector.fromConfig("sharetrace.risk-propagation.dispatcher");
+  private static final Props USER_PROPS =
+      DispatcherSelector.fromConfig("sharetrace.user.dispatcher");
 
   private final UserParams userParams;
   private final Dataset dataset;
@@ -110,6 +113,10 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
         .build();
   }
 
+  private static <T extends LoggableMetric> void logMetric(Class<T> type, Supplier<T> metric) {
+    LOGGER.log(LoggableMetric.KEY, type, metric);
+  }
+
   @Override
   public Receive<AlgorithmMsg> createReceive() {
     return newReceiveBuilder()
@@ -123,7 +130,7 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
     if (numUsers > 0) {
       timer.start();
       Map<Integer, ActorRef<UserMsg>> users = timer.time(this::newUsers, CreateUsersRuntime.class);
-      timer.time(() -> sendSymptomScores(users), SendScoresRuntime.class);
+      timer.time(() -> sendSymptomScores(users), SendRiskScoresRuntime.class);
       timer.time(() -> sendContacts(users), SendContactsRuntime.class);
     } else {
       behavior = Behaviors.stopped();
@@ -175,11 +182,11 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
   }
 
   private void logMetrics() {
-    logMetric(CreateUsersRuntime.class, this::createRuntime);
-    logMetric(SendScoresRuntime.class, this::scoresRuntime);
-    logMetric(SendContactsRuntime.class, this::contactsRuntime);
-    logMetric(RiskPropRuntime.class, this::riskPropRuntime);
-    logMetric(MsgPassingRuntime.class, this::msgPassingRuntime);
+    logMetric(CreateUsersRuntime.class, this::createUsersRuntime);
+    logMetric(SendRiskScoresRuntime.class, this::sendRiskScoresRuntime);
+    logMetric(SendContactsRuntime.class, this::sendContactsRuntime);
+    logMetric(RiskPropagationRuntime.class, this::riskPropagationRuntime);
+    logMetric(MessagePassingRuntime.class, this::messagePassingRuntime);
   }
 
   private Behavior<UserMsg> newUser(int timeoutId) {
@@ -192,29 +199,27 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMsg> {
         .build();
   }
 
-  private <T extends LoggableMetric> void logMetric(Class<T> type, Supplier<T> metric) {
-    LOGGER.log(LoggableMetric.KEY, type, metric);
+  private CreateUsersRuntime createUsersRuntime() {
+    return CreateUsersRuntime.of(timer.duration(CreateUsersRuntime.class));
   }
 
-  private CreateUsersRuntime createRuntime() {
-    return CreateUsersRuntime.of(timer.millis(CreateUsersRuntime.class));
+  private SendRiskScoresRuntime sendRiskScoresRuntime() {
+    return SendRiskScoresRuntime.of(timer.duration(SendRiskScoresRuntime.class));
   }
 
-  private SendScoresRuntime scoresRuntime() {
-    return SendScoresRuntime.of(timer.millis(SendScoresRuntime.class));
+  private SendContactsRuntime sendContactsRuntime() {
+    return SendContactsRuntime.of(timer.duration(SendContactsRuntime.class));
   }
 
-  private SendContactsRuntime contactsRuntime() {
-    return SendContactsRuntime.of(timer.millis(SendContactsRuntime.class));
+  private RiskPropagationRuntime riskPropagationRuntime() {
+    return RiskPropagationRuntime.of(timer.duration(RiskPropagationRuntime.class));
   }
 
-  private RiskPropRuntime riskPropRuntime() {
-    return RiskPropRuntime.of(timer.millis(RiskPropRuntime.class));
-  }
-
-  private MsgPassingRuntime msgPassingRuntime() {
-    long total = timer.nanos(RiskPropRuntime.class);
-    long exclude = timer.nanos(SendScoresRuntime.class) + timer.nanos(CreateUsersRuntime.class);
-    return MsgPassingRuntime.of(Timer.millis(total - exclude));
+  private MessagePassingRuntime messagePassingRuntime() {
+    Duration total = timer.duration(RiskPropagationRuntime.class);
+    Duration sendRiskScoresRuntime = timer.duration(SendRiskScoresRuntime.class);
+    Duration createUsersRuntime = timer.duration(CreateUsersRuntime.class);
+    Duration exclude = sendRiskScoresRuntime.plus(createUsersRuntime);
+    return MessagePassingRuntime.of(total.minus(exclude));
   }
 }

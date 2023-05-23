@@ -8,9 +8,9 @@ import org.immutables.value.Value;
 @Value.Immutable
 interface BaseExperimentSettings extends LoggableSetting {
 
-  UserParams userParams();
+  UserParams userParameters();
 
-  CacheParams<RiskScoreMsg> cacheParams();
+  CacheParams<RiskScoreMsg> cacheParameters();
 
   long seed();
 

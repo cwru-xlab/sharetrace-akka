@@ -2,12 +2,16 @@ package io.sharetrace.util.logging;
 
 import ch.qos.logback.core.spi.PropertyContainer;
 import io.sharetrace.util.Collecting;
+import io.sharetrace.util.logging.event.LoggableEvent;
+import io.sharetrace.util.logging.metric.LoggableMetric;
+import io.sharetrace.util.logging.setting.LoggableSetting;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 import net.logstash.logback.argument.StructuredArguments;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
@@ -18,19 +22,19 @@ public final class Logging {
 
   private Logging() {}
 
-  public static Logger metricsLogger() {
+  public static TypedLogger<LoggableMetric> metricsLogger() {
     return newLogger("MetricsLogger");
   }
 
-  private static Logger newLogger(String name) {
-    return new DefaultLogger(LoggerFactory.getLogger(name));
+  private static <T extends Loggable> TypedLogger<T> newLogger(String name) {
+    return new DefaultLogger<>(LoggerFactory.getLogger(name));
   }
 
-  public static Logger eventsLogger() {
+  public static TypedLogger<LoggableEvent> eventsLogger() {
     return newLogger("EventsLogger");
   }
 
-  public static Logger settingsLogger() {
+  public static TypedLogger<LoggableSetting> settingsLogger() {
     return newLogger("SettingsLogger");
   }
 
@@ -48,21 +52,21 @@ public final class Logging {
     MDC.setContextMap(mdc); // Still set MDC for calling/main thread.
   }
 
-  public static synchronized void setLoggable(Collection<Class<? extends Loggable>> loggable) {
+  public static synchronized void enable(Collection<Class<? extends Loggable>> types) {
     enabled.clear();
-    enabled.addAll(loggable);
+    enabled.addAll(types);
   }
 
-  private static final class DefaultLogger implements Logger {
+  private static final class DefaultLogger<T extends Loggable> implements TypedLogger<T> {
 
-    private final org.slf4j.Logger delegate;
+    private final Logger delegate;
 
-    public DefaultLogger(org.slf4j.Logger delegate) {
+    public DefaultLogger(Logger delegate) {
       this.delegate = delegate;
     }
 
     @Override
-    public <T extends Loggable> boolean log(String key, Class<T> type, Supplier<T> loggable) {
+    public <R extends T> boolean log(String key, Class<R> type, Supplier<R> loggable) {
       boolean logged = delegate.isInfoEnabled() && enabled.contains(type);
       if (logged) {
         delegate.info(key, StructuredArguments.value(key, loggable.get()));

@@ -24,10 +24,6 @@ final class MsgUtil {
     this.params = params;
   }
 
-  public boolean isNotAfter(TemporalProbability msg, Instant time) {
-    return !msg.time().isAfter(time);
-  }
-
   public float computeThreshold(TemporalProbability msg) {
     return msg.value() * params.sendCoeff();
   }
@@ -43,14 +39,6 @@ final class MsgUtil {
 
   public RiskScoreMsg defaultMsg() {
     return RiskScoreMsg.builder().score(RiskScore.MIN).sender(self).build();
-  }
-
-  public boolean isGreaterThan(TemporalProbability msg1, TemporalProbability msg2) {
-    return isGreaterThan(msg1, msg2.value());
-  }
-
-  public boolean isGreaterThan(TemporalProbability msg, float value) {
-    return msg.value() > value;
   }
 
   public Duration computeScoreTtl(TemporalProbability msg) {

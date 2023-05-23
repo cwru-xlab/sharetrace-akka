@@ -28,10 +28,10 @@ import io.sharetrace.util.logging.metric.GraphEccentricity;
 import io.sharetrace.util.logging.metric.GraphScores;
 import io.sharetrace.util.logging.metric.GraphSize;
 import io.sharetrace.util.logging.metric.GraphTopology;
-import io.sharetrace.util.logging.metric.MsgPassingRuntime;
-import io.sharetrace.util.logging.metric.RiskPropRuntime;
+import io.sharetrace.util.logging.metric.MessagePassingRuntime;
+import io.sharetrace.util.logging.metric.RiskPropagationRuntime;
 import io.sharetrace.util.logging.metric.SendContactsRuntime;
-import io.sharetrace.util.logging.metric.SendScoresRuntime;
+import io.sharetrace.util.logging.metric.SendRiskScoresRuntime;
 import io.sharetrace.util.logging.setting.ExperimentSettings;
 import java.nio.file.Path;
 import java.time.Clock;
@@ -154,7 +154,7 @@ public final class Defaults {
         .numIntervals((int) (2 * TTL.toDays()))
         .numLookAhead(1)
         .refreshPeriod(Duration.ofHours(1L))
-        .mergeStrategy(new DefaultCacheMergeStrategy(USER_PARAMS))
+        .mergeStrategy(new DefaultCacheMergeStrategy<>(USER_PARAMS))
         .clock(CLOCK)
         .build();
   }
@@ -181,10 +181,10 @@ public final class Defaults {
             // Runtime metrics
             GraphTopology.class,
             CreateUsersRuntime.class,
-            SendScoresRuntime.class,
+            SendRiskScoresRuntime.class,
             SendContactsRuntime.class,
-            RiskPropRuntime.class,
-            MsgPassingRuntime.class,
+            RiskPropagationRuntime.class,
+            MessagePassingRuntime.class,
             // Settings
             ExperimentSettings.class)
         .build();

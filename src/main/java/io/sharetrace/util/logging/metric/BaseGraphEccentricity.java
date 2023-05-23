@@ -5,9 +5,9 @@ import org.immutables.value.Value;
 @Value.Immutable
 interface BaseGraphEccentricity extends LoggableMetric {
 
-  int radius();
+  long radius();
 
-  int diameter();
+  long diameter();
 
   long center();
 

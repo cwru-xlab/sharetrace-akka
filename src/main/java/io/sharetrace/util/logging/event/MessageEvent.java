@@ -1,14 +1,8 @@
 package io.sharetrace.util.logging.event;
 
-import io.sharetrace.model.RiskScore;
+import io.sharetrace.model.message.RiskScoreMsg;
 
 interface MessageEvent extends LoggableEvent {
 
-  String from();
-
-  String to();
-
-  RiskScore score();
-
-  String id();
+  RiskScoreMsg message();
 }

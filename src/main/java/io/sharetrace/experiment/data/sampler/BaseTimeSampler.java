@@ -5,7 +5,6 @@ import io.sharetrace.model.TimeRef;
 import io.sharetrace.util.Checks;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import org.apache.commons.math3.distribution.RealDistribution;
 import org.immutables.value.Value;
 
@@ -18,8 +17,8 @@ abstract class BaseTimeSampler extends AbstractSampler<Instant> implements TimeR
 
   @Override
   public Instant sample() {
-    double lookBack = normalizedSample(lookBacks(), maxLookBack().toNanos());
-    return refTime().minusNanos((long) lookBack).truncatedTo(ChronoUnit.SECONDS);
+    long lookBack = (long) normalizedSample(lookBacks(), maxLookBack().toNanos());
+    return refTime().minusNanos(lookBack);
   }
 
   protected abstract RealDistribution lookBacks();

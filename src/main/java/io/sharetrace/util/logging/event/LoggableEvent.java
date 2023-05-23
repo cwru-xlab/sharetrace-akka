@@ -1,14 +1,13 @@
 package io.sharetrace.util.logging.event;
 
 import io.sharetrace.util.logging.Loggable;
-import org.immutables.value.Value;
+import java.time.Instant;
 
 public interface LoggableEvent extends Loggable {
 
   String KEY = "event";
 
-  @Value.Default
-  default long timestamp() {
-    return System.currentTimeMillis();
-  }
+  String self();
+
+  Instant timestamp();
 }

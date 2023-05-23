@@ -11,10 +11,10 @@ import io.sharetrace.graph.ContactNetwork;
 import io.sharetrace.graph.GraphType;
 import io.sharetrace.util.logging.metric.CreateUsersRuntime;
 import io.sharetrace.util.logging.metric.GraphSize;
-import io.sharetrace.util.logging.metric.MsgPassingRuntime;
-import io.sharetrace.util.logging.metric.RiskPropRuntime;
+import io.sharetrace.util.logging.metric.MessagePassingRuntime;
+import io.sharetrace.util.logging.metric.RiskPropagationRuntime;
 import io.sharetrace.util.logging.metric.SendContactsRuntime;
-import io.sharetrace.util.logging.metric.SendScoresRuntime;
+import io.sharetrace.util.logging.metric.SendRiskScoresRuntime;
 import io.sharetrace.util.logging.setting.ExperimentSettings;
 
 public final class RuntimeExperiment extends Experiment<RuntimeExperimentConfig> {
@@ -33,10 +33,10 @@ public final class RuntimeExperiment extends Experiment<RuntimeExperimentConfig>
         .withLoggable(
             GraphSize.class,
             CreateUsersRuntime.class,
-            SendScoresRuntime.class,
+            SendRiskScoresRuntime.class,
             SendContactsRuntime.class,
-            RiskPropRuntime.class,
-            MsgPassingRuntime.class,
+            RiskPropagationRuntime.class,
+            MessagePassingRuntime.class,
             ExperimentSettings.class);
   }
 

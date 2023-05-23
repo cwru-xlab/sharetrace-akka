@@ -28,8 +28,8 @@ abstract class BaseGraphStats<V, E> {
   @Value.Lazy
   public GraphSize graphSize() {
     return GraphSize.builder()
-        .numNodes(graph().vertexSet().size())
-        .numEdges(graph().edgeSet().size())
+        .vertices(graph().vertexSet().size())
+        .edges(graph().edgeSet().size())
         .build();
   }
 
@@ -39,7 +39,7 @@ abstract class BaseGraphStats<V, E> {
   @Value.Lazy
   public GraphCycles graphCycles() {
     return GraphCycles.builder()
-        .numTriangles(GraphMetrics.getNumberOfTriangles(graph()))
+        .triangles(GraphMetrics.getNumberOfTriangles(graph()))
         .girth(GraphMetrics.getGirth(graph()))
         .build();
   }
@@ -48,8 +48,8 @@ abstract class BaseGraphStats<V, E> {
   public GraphEccentricity graphEccentricity() {
     GraphMeasurer<?, ?> measurer = new GraphMeasurer<>(graph(), shortestPath());
     return GraphEccentricity.builder()
-        .radius((int) measurer.getRadius())
-        .diameter((int) measurer.getDiameter())
+        .radius((long) measurer.getRadius())
+        .diameter((long) measurer.getDiameter())
         .center(measurer.getGraphCenter().size())
         .periphery(measurer.getGraphPeriphery().size())
         .build();
@@ -61,9 +61,9 @@ abstract class BaseGraphStats<V, E> {
         .degeneracy(degeneracy())
         .globalClusteringCoefficient(globalClusteringCoefficient())
         .localClusteringCoefficient(localClusteringCoefficients())
-        .harmonicCentrality(harmonicCentralities())
-        .katzCentrality(katzCentralities())
-        .eigenvectorCentrality(eigenvectorCentralities())
+        .harmonicCentrality(harmonicCentrality())
+        .katzCentrality(katzCentrality())
+        .eigenvectorCentrality(eigenvectorCentrality())
         .build();
   }
 
@@ -79,15 +79,15 @@ abstract class BaseGraphStats<V, E> {
     return computeScoreStats(new ClusteringCoefficient<>(graph()));
   }
 
-  private Stats harmonicCentralities() {
+  private Stats harmonicCentrality() {
     return computeScoreStats(new HarmonicCentrality<>(graph(), shortestPath()));
   }
 
-  private Stats katzCentralities() {
+  private Stats katzCentrality() {
     return computeScoreStats(new KatzCentrality<>(graph()));
   }
 
-  private Stats eigenvectorCentralities() {
+  private Stats eigenvectorCentrality() {
     return computeScoreStats(new EigenvectorCentrality<>(graph()));
   }
 

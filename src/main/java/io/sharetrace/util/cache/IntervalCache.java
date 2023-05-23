@@ -41,6 +41,18 @@ public final class IntervalCache<V extends Comparable<? super V>> {
     return new IntervalCache<>(parameters);
   }
 
+  private static long toLong(Duration duration) {
+    return duration.getSeconds();
+  }
+
+  private static long toLong(Instant instant) {
+    return instant.getEpochSecond();
+  }
+
+  private static Instant toInstant(long epochSeconds) {
+    return Instant.ofEpochSecond(epochSeconds);
+  }
+
   public Optional<V> get(Instant key) {
     refresh();
     return Optional.ofNullable(cache.get(floorKey(key)));
@@ -89,17 +101,5 @@ public final class IntervalCache<V extends Comparable<? super V>> {
 
   private long floorKey(long key) {
     return rangeStart + interval * Math.floorDiv(key - rangeStart, interval);
-  }
-
-  private static long toLong(Duration duration) {
-    return duration.getSeconds();
-  }
-
-  private static long toLong(Instant instant) {
-    return instant.getEpochSecond();
-  }
-
-  private static Instant toInstant(long epochSeconds) {
-    return Instant.ofEpochSecond(epochSeconds);
   }
 }

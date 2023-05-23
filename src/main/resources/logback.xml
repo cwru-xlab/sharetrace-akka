@@ -20,8 +20,6 @@
         </fieldNames>
         <includeContext>false</includeContext>
         <includeMdcKeyName>sid</includeMdcKeyName>
-        <findAndRegisterJacksonModules>false</findAndRegisterJacksonModules>
-        <jsonFactoryDecorator class="io.sharetrace.util.logging.LoggingDecorator"/>
       </encoder>
     </appender>
   </appender>
@@ -40,8 +38,6 @@
         </fieldNames>
         <includeContext>false</includeContext>
         <includeMdcKeyName>sid</includeMdcKeyName>
-        <findAndRegisterJacksonModules>false</findAndRegisterJacksonModules>
-        <jsonFactoryDecorator class="io.sharetrace.util.logging.LoggingDecorator"/>
       </encoder>
       <immediateFlush>false</immediateFlush>
       <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
@@ -67,8 +63,6 @@
         </fieldNames>
         <includeContext>false</includeContext>
         <includeMdcKeyName>sid</includeMdcKeyName>
-        <findAndRegisterJacksonModules>false</findAndRegisterJacksonModules>
-        <jsonFactoryDecorator class="io.sharetrace.util.logging.LoggingDecorator"/>
       </encoder>
       <file>${log.dir}/metrics.log</file>
       <immediateFlush>false</immediateFlush>
@@ -90,8 +84,6 @@
         </fieldNames>
         <includeContext>false</includeContext>
         <includeMdcKeyName>sid</includeMdcKeyName>
-        <findAndRegisterJacksonModules>false</findAndRegisterJacksonModules>
-        <jsonFactoryDecorator class="io.sharetrace.util.logging.LoggingDecorator"/>
       </encoder>
       <file>${log.dir}/settings.log</file>
       <immediateFlush>false</immediateFlush>

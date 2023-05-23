@@ -14,12 +14,6 @@ import org.immutables.value.Value;
 @Value.Immutable
 abstract class BaseAlgorithm implements Runnable {
 
-  protected abstract Behavior<AlgorithmMsg> behavior();
-
-  protected abstract String name();
-
-  protected abstract Props props();
-
   private static void waitUntilDone(ActorSystem<Void> running) {
     try {
       running.getWhenTerminated().toCompletableFuture().get();
@@ -27,6 +21,12 @@ abstract class BaseAlgorithm implements Runnable {
       throw new RuntimeException(exception);
     }
   }
+
+  protected abstract Behavior<AlgorithmMsg> behavior();
+
+  protected abstract String name();
+
+  protected abstract Props props();
 
   @Override
   public void run() {

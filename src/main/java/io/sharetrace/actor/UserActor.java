@@ -66,7 +66,7 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
     this.riskProp = riskProp;
     this.timedOutMsg = TimedOutMsg.of(timeoutId);
     this.timers = timers;
-    this.logger = new UserLogger(getContext().getSelf());
+    this.logger = new UserLogger(getContext().getSelf(), clock);
     this.userParams = userParams;
     this.clock = clock;
     this.cache = cache;
@@ -108,14 +108,14 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
     if (msgUtil.isContactAlive(msg)) {
       ContactActor contact = addNewContact(msg);
       startContactsRefreshTimer();
-      logger.logContact(contact.ref());
+      logger.logContactEvent(contact.ref());
       sendCurrentOrCached(contact);
     }
     return this;
   }
 
   private Behavior<UserMsg> handle(RiskScoreMsg msg) {
-    logger.logReceive(msg);
+    logger.logReceiveEvent(msg);
     cache.put(msg.score().time(), msg);
     RiskScoreMsg transmit = updateIfAboveCurrent(msg);
     propagate(transmit);
@@ -127,7 +127,7 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
   private Behavior<UserMsg> handle(CurrentRefreshMsg msg) {
     RiskScoreMsg cachedOrDefault = cache.max(clock.instant()).orElse(defaultCurrent);
     RiskScoreMsg previous = updateCurrent(cachedOrDefault);
-    logger.logCurrentRefresh(previous, current);
+    logger.logCurrentRefreshEvent(previous, current);
     if (current != defaultCurrent) {
       startCurrentRefreshTimer();
     }
@@ -140,7 +140,7 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
     contacts.values().removeIf(Predicate.not(ContactActor::isAlive));
     int numRemaining = contacts.size();
     int numExpired = numContacts - numRemaining;
-    logger.logContactsRefresh(numRemaining, numExpired);
+    logger.logContactsRefreshEvent(numRemaining, numExpired);
     startContactsRefreshTimer();
     return this;
   }
@@ -188,9 +188,9 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
 
   private RiskScoreMsg updateIfAboveCurrent(RiskScoreMsg msg) {
     RiskScoreMsg transmit;
-    if (!isInitialized() || msgUtil.isGreaterThan(msg, current)) {
+    if (!isInitialized() || msg.value() > current.value()) {
       RiskScoreMsg previous = updateCurrent(msg);
-      logger.logUpdate(previous, current);
+      logger.logUpdateEvent(previous, current);
       transmit = transmitted;
       if (previous != defaultCurrent) {
         startCurrentRefreshTimer();
@@ -204,7 +204,7 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
   private void propagate(RiskScoreMsg msg) {
     contacts.values().stream()
         .filter(contact -> contact.shouldReceive(msg))
-        .forEach(contact -> contact.tell(msg, logger::logPropagate));
+        .forEach(contact -> contact.tell(msg, logger::logPropagateEvent));
   }
 
   private void resetTimeout() {
@@ -216,7 +216,7 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
   }
 
   private void sendCurrent(ContactActor contact) {
-    contact.tell(transmitted, logger::logSendCurrent);
+    contact.tell(transmitted, logger::logSendCurrentEvent);
   }
 
   private void sendCached(ContactActor contact) {
@@ -224,7 +224,7 @@ public final class UserActor extends AbstractBehavior<UserMsg> {
         .max(contact.bufferedContactTime())
         .filter(msgUtil::isScoreAlive)
         .map(msgUtil::transmitted)
-        .ifPresent(cached -> contact.tell(cached, logger::logSendCached));
+        .ifPresent(cached -> contact.tell(cached, logger::logSendCachedEvent));
   }
 
   private RiskScoreMsg updateCurrent(RiskScoreMsg msg) {
