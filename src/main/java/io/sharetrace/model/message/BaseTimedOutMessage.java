@@ -9,7 +9,7 @@ import org.immutables.value.Value;
  * @see UserActor
  */
 @Value.Immutable
-interface BaseTimedOutMsg extends UserMsg, AlgorithmMsg {
+interface BaseTimedOutMessage extends UserMessage, AlgorithmMessage {
 
   @Value.Parameter
   int user();

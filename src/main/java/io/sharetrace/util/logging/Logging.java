@@ -44,7 +44,7 @@ public final class Logging {
   }
 
   public static Map<String, String> getMdc() {
-    return Collecting.immutable(mdc);
+    return Collecting.unmodifiable(mdc);
   }
 
   public static synchronized void setMdc(String stateId) {

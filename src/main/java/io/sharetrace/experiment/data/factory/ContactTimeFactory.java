@@ -10,5 +10,5 @@ public interface ContactTimeFactory {
     return (x, xx) -> supplier.get();
   }
 
-  Instant get(int user1, int user2);
+  Instant get(int self, int contact);
 }

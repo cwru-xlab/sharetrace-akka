@@ -6,7 +6,7 @@ import org.immutables.value.Value;
 
 @SuppressWarnings("DefaultAnnotationParam")
 @Value.Immutable(copy = true)
-abstract class BaseNoisyRiskScoreFactory implements RiskScoreFactory {
+abstract class BaseNoisyScoreFactory implements ScoreFactory {
 
   private static float constrain(float value) {
     return Math.max(RiskScore.MIN_VALUE, Math.min(RiskScore.MAX_VALUE, value));
@@ -14,13 +14,13 @@ abstract class BaseNoisyRiskScoreFactory implements RiskScoreFactory {
 
   @Override
   public RiskScore get(int user) {
-    RiskScore score = scoreFactory().get(user);
+    RiskScore score = cached().get(user);
     float noisy = constrain(score.value() + (float) noise().sample());
     return score.withValue(noisy);
   }
 
   @Value.Parameter
-  protected abstract RiskScoreFactory scoreFactory();
+  protected abstract ScoreFactory scoreFactory();
 
   @Value.Parameter
   protected abstract RealDistribution noise();

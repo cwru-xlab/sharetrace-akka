@@ -1,16 +1,15 @@
 package io.sharetrace.util.logging.setting;
 
-import io.sharetrace.model.UserParams;
-import io.sharetrace.model.message.RiskScoreMsg;
-import io.sharetrace.util.cache.CacheParams;
+import io.sharetrace.model.UserParameters;
+import io.sharetrace.util.cache.CacheParameters;
 import org.immutables.value.Value;
 
 @Value.Immutable
 interface BaseExperimentSettings extends LoggableSetting {
 
-  UserParams userParameters();
+  UserParameters userParameters();
 
-  CacheParams<RiskScoreMsg> cacheParameters();
+  CacheParameters<?> cacheParameters();
 
   long seed();
 
@@ -18,7 +17,7 @@ interface BaseExperimentSettings extends LoggableSetting {
 
   String networkId();
 
-  String graphType();
-
   String datasetId();
+
+  String graphType();
 }

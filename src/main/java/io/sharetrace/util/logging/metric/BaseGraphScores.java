@@ -1,20 +1,20 @@
 package io.sharetrace.util.logging.metric;
 
-import io.sharetrace.util.Stats;
+import io.sharetrace.util.Statistics;
 import org.immutables.value.Value;
 
 @Value.Immutable
 interface BaseGraphScores extends LoggableMetric {
 
-  Stats harmonicCentrality();
+  Statistics harmonicCentrality();
 
-  Stats katzCentrality();
+  Statistics katzCentrality();
 
-  Stats eigenvectorCentrality();
+  Statistics eigenvectorCentrality();
 
   double degeneracy();
 
   double globalClusteringCoefficient();
 
-  Stats localClusteringCoefficient();
+  Statistics localClusteringCoefficient();
 }

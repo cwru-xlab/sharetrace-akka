@@ -1,10 +1,10 @@
 package io.sharetrace.util.logging.event;
 
-import io.sharetrace.model.message.RiskScoreMsg;
+import io.sharetrace.model.message.RiskScoreMessage;
 
 interface ChangeEvent extends LoggableEvent {
 
-  RiskScoreMsg previous();
+  RiskScoreMessage previous();
 
-  RiskScoreMsg current();
+  RiskScoreMessage current();
 }

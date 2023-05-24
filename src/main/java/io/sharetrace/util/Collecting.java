@@ -1,7 +1,7 @@
 package io.sharetrace.util;
 
-import it.unimi.dsi.fastutil.floats.FloatArrayList;
-import it.unimi.dsi.fastutil.floats.FloatLists;
+import it.unimi.dsi.fastutil.doubles.DoubleArrayList;
+import it.unimi.dsi.fastutil.doubles.DoubleLists;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntLists;
@@ -29,15 +29,15 @@ public final class Collecting {
     return IntSet.of(elements);
   }
 
-  public static <T> List<T> newArrayList(int size) {
+  public static <E> List<E> newArrayList(int size) {
     return new ObjectArrayList<>(size);
   }
 
-  public static <T> Set<T> newHashSet(Set<T> set) {
+  public static <E> Set<E> newHashSet(Set<E> set) {
     return new ObjectOpenHashSet<>(set);
   }
 
-  public static <T> Set<T> newHashSet() {
+  public static <E> Set<E> newHashSet() {
     return new ObjectOpenHashSet<>();
   }
 
@@ -65,25 +65,25 @@ public final class Collecting {
     return new Object2LongOpenHashMap<>();
   }
 
-  public static <T> Set<T> immutable(Set<? extends T> set) {
+  public static <E> Set<E> unmodifiable(Set<? extends E> set) {
     return Collections.unmodifiableSet(set);
   }
 
-  public static <K, V> Map<K, V> immutable(Map<? extends K, ? extends V> map) {
+  public static <K, V> Map<K, V> unmodifiable(Map<? extends K, ? extends V> map) {
     return Collections.unmodifiableMap(map);
   }
 
-  public static <T> Collector<T, ?, List<T>> toImmutableList(int size) {
+  public static <E> Collector<E, ?, List<E>> toUnmodifiableList(int size) {
     return Collectors.collectingAndThen(
         ObjectArrayList.toListWithExpectedSize(size), ObjectLists::unmodifiable);
   }
 
-  public static <T> Collector<T, ?, Set<T>> toImmutableSet(int size) {
+  public static <E> Collector<E, ?, Set<E>> toUnmodifiableSet(int size) {
     return Collectors.collectingAndThen(
         ObjectOpenHashSet.toSetWithExpectedSize(size), ObjectSets::unmodifiable);
   }
 
-  public static Collector<Integer, ?, List<Integer>> toImmutableIntList(int size) {
+  public static Collector<Integer, ?, List<Integer>> toUnmodifiableIntList(int size) {
     return Collectors.collectingAndThen(
         Collector.of(
             () -> new IntArrayList(size),
@@ -95,19 +95,19 @@ public final class Collecting {
         IntLists::unmodifiable);
   }
 
-  public static Collector<Float, ?, List<Float>> toImmutableFloatList() {
-    return toImmutableFloatList(FloatArrayList.DEFAULT_INITIAL_CAPACITY);
+  public static Collector<Double, ?, List<Double>> toUnmodifiableDoubleList() {
+    return toUnmodifiableDoubleList(DoubleArrayList.DEFAULT_INITIAL_CAPACITY);
   }
 
-  public static Collector<Float, ?, List<Float>> toImmutableFloatList(int size) {
+  public static Collector<Double, ?, List<Double>> toUnmodifiableDoubleList(int size) {
     return Collectors.collectingAndThen(
         Collector.of(
-            () -> new FloatArrayList(size),
+            () -> new DoubleArrayList(size),
             List::add,
             (left, right) -> {
               left.addAll(right);
               return left;
             }),
-        FloatLists::unmodifiable);
+        DoubleLists::unmodifiable);
   }
 }

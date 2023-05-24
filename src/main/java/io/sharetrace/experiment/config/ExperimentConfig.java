@@ -16,11 +16,11 @@ abstract class ExperimentConfig {
 
   @Value.Check
   protected void check() {
-    Checks.checkRange(numIterations(), ITERATIONS_RANGE, "numIterations");
+    Checks.checkRange(iterations(), ITERATIONS_RANGE, "iterations");
   }
 
   @Value.Default
-  public int numIterations() {
+  public int iterations() {
     return MIN_ITERATIONS;
   }
 }

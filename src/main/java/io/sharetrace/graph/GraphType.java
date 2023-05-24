@@ -19,12 +19,6 @@ public enum GraphType {
   THIERS11("Thiers11"),
   THIERS12("Thiers12");
 
-  private static final Set<GraphType> SYNTHETIC =
-      EnumSet.of(BARABASI_ALBERT, GNM_RANDOM, RANDOM_REGULAR, SCALE_FREE, WATTS_STROGATZ);
-
-  private static final Set<GraphType> SOCIO_PATTERNS =
-      EnumSet.of(INVS13, INVS15, LH10, LYON_SCHOOL, SFHH, THIERS11, THIERS12);
-
   private final String name;
 
   GraphType(String name) {
@@ -32,11 +26,11 @@ public enum GraphType {
   }
 
   public static Set<GraphType> synthetic() {
-    return SYNTHETIC;
+    return EnumSet.of(BARABASI_ALBERT, GNM_RANDOM, RANDOM_REGULAR, SCALE_FREE, WATTS_STROGATZ);
   }
 
   public static Set<GraphType> socioPatterns() {
-    return SOCIO_PATTERNS;
+    return EnumSet.of(INVS13, INVS15, LH10, LYON_SCHOOL, SFHH, THIERS11, THIERS12);
   }
 
   public String toString() {

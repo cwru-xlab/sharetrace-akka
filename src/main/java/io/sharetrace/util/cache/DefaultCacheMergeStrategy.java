@@ -1,23 +1,22 @@
 package io.sharetrace.util.cache;
 
-import io.sharetrace.model.TemporalProbability;
-import io.sharetrace.model.UserParams;
+import io.sharetrace.model.TemporalScore;
+import io.sharetrace.model.UserParameters;
 import java.util.function.BinaryOperator;
 
-public final class DefaultCacheMergeStrategy<T extends TemporalProbability>
-    implements BinaryOperator<T> {
+public final class DefaultCacheMergeStrategy<T extends TemporalScore> implements BinaryOperator<T> {
 
-  private final UserParams params;
+  private final UserParameters parameters;
 
-  public DefaultCacheMergeStrategy(UserParams params) {
-    this.params = params;
+  public DefaultCacheMergeStrategy(UserParameters parameters) {
+    this.parameters = parameters;
   }
 
   @Override
   public T apply(T oldValue, T newValue) {
     if (isHigher(newValue, oldValue)) {
       return newValue;
-    } else if (isOlder(newValue, oldValue) && isApproxEqual(newValue, oldValue)) {
+    } else if (isOlder(newValue, oldValue) && isApproximatelyEqual(newValue, oldValue)) {
       return newValue;
     } else {
       return oldValue;
@@ -29,10 +28,10 @@ public final class DefaultCacheMergeStrategy<T extends TemporalProbability>
   }
 
   private boolean isOlder(T left, T right) {
-    return left.time().isBefore(right.time());
+    return left.timestamp().isBefore(right.timestamp());
   }
 
-  private boolean isApproxEqual(T left, T right) {
-    return Math.abs(left.value() - right.value()) < params.tolerance();
+  private boolean isApproximatelyEqual(T left, T right) {
+    return Math.abs(left.value() - right.value()) < parameters.tolerance();
   }
 }

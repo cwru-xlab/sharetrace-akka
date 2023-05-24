@@ -3,4 +3,4 @@ package io.sharetrace.util.logging.event;
 import org.immutables.value.Value;
 
 @Value.Immutable
-interface BaseSendCurrentEvent extends OutgoingMessageEvent {}
+interface BaseSendCurrentEvent extends MessageEvent {}

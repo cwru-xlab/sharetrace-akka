@@ -24,7 +24,7 @@ public class ExperimentTests {
             .graphType(graphType)
             .path(Path.of(String.format(GRAPH_PATH_TEMPLATE, graphType)))
             .build();
-    Assertions.assertDoesNotThrow(() -> FileExperiment.create().runWithDefaults(config));
+    Assertions.assertDoesNotThrow(() -> new FileExperiment().runWithDefaults(config));
   }
 
   @ParameterizedTest
@@ -34,12 +34,12 @@ public class ExperimentTests {
   public void testParamsExperiment(GraphType graphType) {
     ParamsExperimentConfig config =
         ParamsExperimentConfig.builder()
-            .addTransRates(0.8f)
-            .addSendCoeffs(0.6f)
+            .addTransmissionRate(0.8f)
+            .addSendCoefficient(0.6f)
             .graphType(graphType)
-            .numNodes(1000)
+            .users(1000)
             .build();
-    Assertions.assertDoesNotThrow(() -> ParamsExperiment.create().runWithDefaults(config));
+    Assertions.assertDoesNotThrow(() -> new ParamsExperiment().runWithDefaults(config));
   }
 
   @ParameterizedTest
@@ -48,7 +48,7 @@ public class ExperimentTests {
       names = {"BARABASI_ALBERT", "GNM_RANDOM", "RANDOM_REGULAR", "SCALE_FREE", "WATTS_STROGATZ"})
   public void testRuntimeExperiment(GraphType graphType) {
     RuntimeExperimentConfig config =
-        RuntimeExperimentConfig.builder().graphType(graphType).addNumNodes(1000).build();
-    Assertions.assertDoesNotThrow(() -> RuntimeExperiment.create().runWithDefaults(config));
+        RuntimeExperimentConfig.builder().graphType(graphType).addUsers(1000).build();
+    Assertions.assertDoesNotThrow(() -> new RuntimeExperiment().runWithDefaults(config));
   }
 }

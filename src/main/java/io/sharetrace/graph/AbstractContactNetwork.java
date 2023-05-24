@@ -32,23 +32,23 @@ abstract class AbstractContactNetwork implements ContactNetwork {
   @Override
   @Value.Derived
   public Set<Integer> users() {
-    return Collecting.immutable(graph().vertexSet());
+    return Collecting.unmodifiable(graph().vertexSet());
   }
 
   @Override
   @Value.Derived
   public Set<Contact> contacts() {
     Set<DefaultEdge> edges = graph().edgeSet();
-    return edges.stream().map(this::newContact).collect(Collecting.toImmutableSet(edges.size()));
+    return edges.stream().map(this::newContact).collect(Collecting.toUnmodifiableSet(edges.size()));
   }
 
   @Override
   public void logMetrics() {
-    GraphStats<?, ?> stats = GraphStats.of(graph());
-    logMetric(GraphSize.class, stats::graphSize);
-    logMetric(GraphCycles.class, stats::graphCycles);
-    logMetric(GraphEccentricity.class, stats::graphEccentricity);
-    logMetric(GraphScores.class, stats::graphScores);
+    GraphStatistics<?, ?> statistics = GraphStatistics.of(graph());
+    logMetric(GraphSize.class, statistics::graphSize);
+    logMetric(GraphCycles.class, statistics::graphCycles);
+    logMetric(GraphEccentricity.class, statistics::graphEccentricity);
+    logMetric(GraphScores.class, statistics::graphScores);
     if (logMetric(GraphTopology.class, this::graphTopology)) {
       Exporter.export(graph(), id());
     }

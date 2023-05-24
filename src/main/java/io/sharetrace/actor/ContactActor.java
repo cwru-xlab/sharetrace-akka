@@ -3,11 +3,11 @@ package io.sharetrace.actor;
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.javadsl.TimerScheduler;
 import io.sharetrace.model.RiskScore;
-import io.sharetrace.model.TemporalProbability;
-import io.sharetrace.model.message.ContactMsg;
-import io.sharetrace.model.message.RiskScoreMsg;
-import io.sharetrace.model.message.ThresholdMsg;
-import io.sharetrace.model.message.UserMsg;
+import io.sharetrace.model.TemporalScore;
+import io.sharetrace.model.message.ContactMessage;
+import io.sharetrace.model.message.RiskScoreMessage;
+import io.sharetrace.model.message.ThresholdMessage;
+import io.sharetrace.model.message.UserMessage;
 import io.sharetrace.util.cache.IntervalCache;
 import java.time.Duration;
 import java.time.Instant;
@@ -15,24 +15,24 @@ import java.util.function.BiConsumer;
 
 final class ContactActor implements Comparable<ContactActor> {
 
-  private final ActorRef<UserMsg> ref;
+  private final ActorRef<UserMessage> ref;
   private final Instant contactTime;
   private final Instant bufferedContactTime;
-  private final ThresholdMsg thresholdMsg;
-  private final IntervalCache<? extends TemporalProbability> cache;
+  private final ThresholdMessage thresholdMessage;
+  private final IntervalCache<? extends TemporalScore> cache;
   private final MsgUtil msgUtil;
-  private final TimerScheduler<UserMsg> timers;
+  private final TimerScheduler<UserMessage> timers;
   private float sendThreshold;
 
   public ContactActor(
-      ContactMsg msg,
-      TimerScheduler<UserMsg> timers,
+      ContactMessage message,
+      TimerScheduler<UserMessage> timers,
       MsgUtil msgUtil,
-      IntervalCache<? extends TemporalProbability> cache) {
-    this.ref = msg.contact();
-    this.contactTime = msg.contactTime();
+      IntervalCache<? extends TemporalScore> cache) {
+    this.ref = message.contact();
+    this.contactTime = message.contactTime();
     this.bufferedContactTime = msgUtil.buffered(contactTime);
-    this.thresholdMsg = ThresholdMsg.of(ref);
+    this.thresholdMessage = ThresholdMessage.of(ref);
     this.cache = cache;
     this.msgUtil = msgUtil;
     this.timers = timers;
@@ -43,46 +43,45 @@ final class ContactActor implements Comparable<ContactActor> {
     sendThreshold = RiskScore.MIN_VALUE;
   }
 
-  public boolean shouldReceive(RiskScoreMsg msg) {
-    // Evaluated in ascending order of likelihood that they are true to possibly short circuit.
-    return isAboveThreshold(msg)
-        && isRelevant(msg)
-        && msgUtil.isScoreAlive(msg)
-        && isNotSender(msg);
+  public boolean shouldReceive(RiskScoreMessage message) {
+    return isAboveThreshold(message)
+        && isRelevant(message)
+        && msgUtil.isScoreAlive(message)
+        && isNotSender(message);
   }
 
-  private boolean isAboveThreshold(TemporalProbability msg) {
-    return msg.value() > sendThreshold;
+  private boolean isAboveThreshold(TemporalScore score) {
+    return score.value() > sendThreshold;
   }
 
-  private boolean isRelevant(TemporalProbability msg) {
-    return !msg.time().isAfter(bufferedContactTime);
+  private boolean isRelevant(TemporalScore score) {
+    return !score.timestamp().isAfter(bufferedContactTime);
   }
 
-  private boolean isNotSender(RiskScoreMsg msg) {
-    return !ref.equals(msg.sender());
+  private boolean isNotSender(RiskScoreMessage message) {
+    return !ref.equals(message.sender());
   }
 
   public Instant bufferedContactTime() {
     return bufferedContactTime;
   }
 
-  public void tell(RiskScoreMsg msg, BiConsumer<ActorRef<?>, RiskScoreMsg> logEvent) {
-    ref.tell(msg);
-    logEvent.accept(ref, msg);
-    updateThreshold(msg);
+  public void tell(RiskScoreMessage message, BiConsumer<ActorRef<?>, RiskScoreMessage> logEvent) {
+    ref.tell(message);
+    logEvent.accept(ref, message);
+    updateThreshold(message);
   }
 
-  private void updateThreshold(TemporalProbability msg) {
-    float threshold = msgUtil.computeThreshold(msg);
+  private void updateThreshold(TemporalScore score) {
+    float threshold = msgUtil.threshold(score);
     if (threshold > sendThreshold) {
       sendThreshold = threshold;
-      startThresholdTimer(msg);
+      startThresholdTimer(score);
     }
   }
 
-  private void startThresholdTimer(TemporalProbability msg) {
-    timers.startSingleTimer(thresholdMsg, msgUtil.computeScoreTtl(msg));
+  private void startThresholdTimer(TemporalScore score) {
+    timers.startSingleTimer(thresholdMessage, msgUtil.scoreTimeToLive(score));
   }
 
   public void updateThreshold() {
@@ -92,12 +91,12 @@ final class ContactActor implements Comparable<ContactActor> {
         .ifPresentOrElse(this::setThreshold, this::setThresholdAsDefault);
   }
 
-  private void setThreshold(TemporalProbability msg) {
-    sendThreshold = msgUtil.computeThreshold(msg);
-    startThresholdTimer(msg);
+  private void setThreshold(TemporalScore score) {
+    sendThreshold = msgUtil.threshold(score);
+    startThresholdTimer(score);
   }
 
-  public ActorRef<UserMsg> ref() {
+  public ActorRef<UserMessage> ref() {
     return ref;
   }
 
@@ -106,8 +105,8 @@ final class ContactActor implements Comparable<ContactActor> {
     return contactTime.compareTo(contact.contactTime);
   }
 
-  public Duration ttl() {
-    return msgUtil.computeContactTtl(contactTime);
+  public Duration timeToLive() {
+    return msgUtil.contactTimeToLive(contactTime);
   }
 
   public boolean isAlive() {

@@ -16,7 +16,7 @@ abstract class BaseSampledDataset extends AbstractDataset {
   public SampledDataset withNewContactNetwork() {
     return SampledDataset.builder()
         .graphGeneratorFactory(graphGeneratorFactory())
-        .numNodes(numNodes())
+        .users(users())
         .scoreFactory(scoreFactory())
         .contactTimeFactory(contactTimeFactory())
         .build();
@@ -24,7 +24,7 @@ abstract class BaseSampledDataset extends AbstractDataset {
 
   protected abstract GraphGeneratorFactory graphGeneratorFactory();
 
-  protected abstract int numNodes();
+  protected abstract int users();
 
   protected abstract ContactTimeFactory contactTimeFactory();
 
@@ -39,6 +39,6 @@ abstract class BaseSampledDataset extends AbstractDataset {
 
   @Value.Lazy
   protected GraphGenerator<Integer, DefaultEdge, ?> graphGenerator() {
-    return graphGeneratorFactory().get(numNodes());
+    return graphGeneratorFactory().get(users());
   }
 }

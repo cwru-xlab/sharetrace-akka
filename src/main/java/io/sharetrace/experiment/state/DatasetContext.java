@@ -1,8 +1,8 @@
 package io.sharetrace.experiment.state;
 
-import io.sharetrace.model.UserParams;
+import io.sharetrace.model.UserParameters;
 
-public interface DatasetContext extends UserParamsContext {
+public interface DatasetContext extends UserParametersContext {
 
-  UserParams userParams();
+  UserParameters userParameters();
 }

@@ -26,8 +26,8 @@ public final class VertexIndependentPaths {
   private final Graph<Integer, DefaultEdge> graph;
   private final ExecutorService executorService;
   private final boolean isDirected;
-  private final int numVertices;
-  private final int numPairs;
+  private final int vertices;
+  private final int pairs;
 
   public VertexIndependentPaths(Graph<Integer, DefaultEdge> graph) {
     this(graph, Executors.newWorkStealingPool());
@@ -38,8 +38,8 @@ public final class VertexIndependentPaths {
     this.graph = graph;
     this.executorService = executorService;
     this.isDirected = graph.getType().isDirected();
-    this.numVertices = graph.vertexSet().size();
-    this.numPairs = numVertices * (numVertices - 1) / (isDirected ? 1 : 2);
+    this.vertices = graph.vertexSet().size();
+    this.pairs = vertices * (vertices - 1) / (isDirected ? 1 : 2);
   }
 
   private static int getResult(Future<Integer> result) {
@@ -75,7 +75,7 @@ public final class VertexIndependentPaths {
     try {
       return executorService.invokeAll(tasks).stream()
           .map(VertexIndependentPaths::getResult)
-          .collect(Collecting.toImmutableIntList(tasks.size()));
+          .collect(Collecting.toUnmodifiableIntList(tasks.size()));
     } catch (InterruptedException e) {
       throw new RuntimeException(e);
     }
@@ -85,7 +85,7 @@ public final class VertexIndependentPaths {
     return graph.vertexSet().stream()
         .filter(target -> source != target)
         .map(target -> newTask(source, target, maxFind))
-        .collect(Collecting.toImmutableList(numVertices));
+        .collect(Collecting.toUnmodifiableList(vertices));
   }
 
   public List<Integer> computeForAll() {
@@ -97,7 +97,7 @@ public final class VertexIndependentPaths {
   }
 
   private List<Callable<Integer>> newTasks(int maxFind) {
-    List<Callable<Integer>> tasks = Collecting.newArrayList(numPairs);
+    List<Callable<Integer>> tasks = Collecting.newArrayList(pairs);
     for (int source : graph.vertexSet()) {
       for (int target : graph.vertexSet()) {
         if ((isDirected && source != target) || (!isDirected && source < target)) {
@@ -148,15 +148,13 @@ public final class VertexIndependentPaths {
     }
 
     private int maxPaths() {
-      int numPaths;
       if (source == target) {
-        numPaths = 0;
+        return 0;
       } else if (isDirected) {
-        numPaths = Math.min(graph.outDegreeOf(source), graph.inDegreeOf(target));
+        return Math.min(graph.outDegreeOf(source), graph.inDegreeOf(target));
       } else {
-        numPaths = Math.min(graph.degreeOf(source), graph.degreeOf(target));
+        return Math.min(graph.degreeOf(source), graph.degreeOf(target));
       }
-      return numPaths;
     }
 
     private int compute(int maxFind) {

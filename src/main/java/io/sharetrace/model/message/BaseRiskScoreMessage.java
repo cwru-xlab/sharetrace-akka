@@ -7,7 +7,7 @@ import io.sharetrace.actor.RiskPropagation;
 import io.sharetrace.actor.UserActor;
 import io.sharetrace.model.Identifiable;
 import io.sharetrace.model.RiskScore;
-import io.sharetrace.model.TemporalProbability;
+import io.sharetrace.model.TemporalScore;
 import io.sharetrace.util.Identifiers;
 import java.time.Instant;
 import org.immutables.value.Value;
@@ -19,10 +19,10 @@ import org.immutables.value.Value;
  * @see RiskPropagation
  */
 @Value.Immutable
-abstract class BaseRiskScoreMsg implements UserMsg, Identifiable, TemporalProbability {
+abstract class BaseRiskScoreMessage implements UserMessage, Identifiable, TemporalScore {
 
-  public static RiskScoreMsg of(RiskScore score, ActorRef<UserMsg> sender, String id) {
-    return RiskScoreMsg.builder().score(score).sender(sender).id(id).build();
+  public static RiskScoreMessage of(RiskScore score, ActorRef<UserMessage> sender, String id) {
+    return RiskScoreMessage.builder().score(score).sender(sender).id(id).build();
   }
 
   /** Returns the risk score contained in this message. */
@@ -33,7 +33,7 @@ abstract class BaseRiskScoreMsg implements UserMsg, Identifiable, TemporalProbab
   /** Returns the actor reference associated with the {@link UserActor} that sent this message. */
   @Value.Parameter
   @JsonIgnore
-  public abstract ActorRef<UserMsg> sender();
+  public abstract ActorRef<UserMessage> sender();
 
   /** Returns a unique identifier to track this message during {@link RiskPropagation}. */
   @Value.Default
@@ -47,7 +47,7 @@ abstract class BaseRiskScoreMsg implements UserMsg, Identifiable, TemporalProbab
   }
 
   @Override
-  public Instant time() {
-    return score().time();
+  public Instant timestamp() {
+    return score().timestamp();
   }
 }

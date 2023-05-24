@@ -1,6 +1,6 @@
 package io.sharetrace.graph;
 
-import io.sharetrace.util.Stats;
+import io.sharetrace.util.Statistics;
 import io.sharetrace.util.logging.metric.GraphCycles;
 import io.sharetrace.util.logging.metric.GraphEccentricity;
 import io.sharetrace.util.logging.metric.GraphScores;
@@ -19,10 +19,11 @@ import org.jgrapht.alg.shortestpath.FloydWarshallShortestPaths;
 import org.jgrapht.alg.shortestpath.GraphMeasurer;
 
 @Value.Immutable
-abstract class BaseGraphStats<V, E> {
+abstract class BaseGraphStatistics<V, E> {
 
-  private static Stats computeScoreStats(VertexScoringAlgorithm<?, ? extends Number> algorithm) {
-    return Stats.of(algorithm.getScores().values());
+  private static Statistics computeScoreStatistics(
+      VertexScoringAlgorithm<?, ? extends Number> algorithm) {
+    return Statistics.of(algorithm.getScores().values());
   }
 
   @Value.Lazy
@@ -67,28 +68,28 @@ abstract class BaseGraphStats<V, E> {
         .build();
   }
 
-  private int degeneracy() {
+  private long degeneracy() {
     return new Coreness<>(graph()).getDegeneracy();
   }
 
-  private float globalClusteringCoefficient() {
-    return (float) new ClusteringCoefficient<>(graph()).getGlobalClusteringCoefficient();
+  private double globalClusteringCoefficient() {
+    return new ClusteringCoefficient<>(graph()).getGlobalClusteringCoefficient();
   }
 
-  private Stats localClusteringCoefficients() {
-    return computeScoreStats(new ClusteringCoefficient<>(graph()));
+  private Statistics localClusteringCoefficients() {
+    return computeScoreStatistics(new ClusteringCoefficient<>(graph()));
   }
 
-  private Stats harmonicCentrality() {
-    return computeScoreStats(new HarmonicCentrality<>(graph(), shortestPath()));
+  private Statistics harmonicCentrality() {
+    return computeScoreStatistics(new HarmonicCentrality<>(graph(), shortestPath()));
   }
 
-  private Stats katzCentrality() {
-    return computeScoreStats(new KatzCentrality<>(graph()));
+  private Statistics katzCentrality() {
+    return computeScoreStatistics(new KatzCentrality<>(graph()));
   }
 
-  private Stats eigenvectorCentrality() {
-    return computeScoreStats(new EigenvectorCentrality<>(graph()));
+  private Statistics eigenvectorCentrality() {
+    return computeScoreStatistics(new EigenvectorCentrality<>(graph()));
   }
 
   @Value.Lazy

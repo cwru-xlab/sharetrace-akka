@@ -25,32 +25,32 @@ public final class IntervalCache<V extends Comparable<? super V>> {
   private long rangeStart;
   private Range<Instant> range;
 
-  private IntervalCache(CacheParams<V> parameters) {
+  private IntervalCache(CacheParameters<V> parameters) {
     cache = Collecting.newLongKeyedHashMap();
     mergeStrategy = parameters.mergeStrategy();
     clock = parameters.clock();
     interval = toLong(parameters.interval());
-    lookBack = interval * (parameters.numIntervals() - parameters.numLookAhead());
-    lookAhead = interval * parameters.numLookAhead();
+    lookBack = interval * (parameters.intervals() - parameters.lookAhead());
+    lookAhead = interval * parameters.lookAhead();
     refreshPeriod = toLong(parameters.refreshPeriod());
     lastRefresh = toLong(Instant.MIN);
   }
 
   public static <V extends Comparable<? super V>> IntervalCache<V> create(
-      CacheParams<V> parameters) {
+      CacheParameters<V> parameters) {
     return new IntervalCache<>(parameters);
   }
 
   private static long toLong(Duration duration) {
-    return duration.getSeconds();
+    return duration.toMillis();
   }
 
   private static long toLong(Instant instant) {
-    return instant.getEpochSecond();
+    return instant.toEpochMilli();
   }
 
   private static Instant toInstant(long epochSeconds) {
-    return Instant.ofEpochSecond(epochSeconds);
+    return Instant.ofEpochMilli(epochSeconds);
   }
 
   public Optional<V> get(Instant key) {

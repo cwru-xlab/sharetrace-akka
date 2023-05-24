@@ -1,9 +1,9 @@
 package io.sharetrace.experiment.state;
 
-import io.sharetrace.model.message.RiskScoreMsg;
-import io.sharetrace.util.cache.CacheParams;
+import io.sharetrace.model.message.RiskScoreMessage;
+import io.sharetrace.util.cache.CacheParameters;
 
-public interface DistributionFactoryContext extends CacheParamsContext {
+public interface DistributionFactoryContext extends CacheParametersContext {
 
-  CacheParams<RiskScoreMsg> cacheParams();
+  CacheParameters<RiskScoreMessage> cacheParameters();
 }

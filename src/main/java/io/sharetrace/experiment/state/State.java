@@ -5,11 +5,11 @@ import io.sharetrace.experiment.data.Dataset;
 import io.sharetrace.experiment.data.factory.DistributionFactory;
 import io.sharetrace.graph.GraphType;
 import io.sharetrace.model.Identifiable;
-import io.sharetrace.model.UserParams;
-import io.sharetrace.model.message.RiskScoreMsg;
+import io.sharetrace.model.UserParameters;
+import io.sharetrace.model.message.RiskScoreMessage;
 import io.sharetrace.util.Checks;
 import io.sharetrace.util.Identifiers;
-import io.sharetrace.util.cache.CacheParams;
+import io.sharetrace.util.cache.CacheParameters;
 import io.sharetrace.util.cache.IntervalCache;
 import io.sharetrace.util.logging.Loggable;
 import io.sharetrace.util.logging.Logging;
@@ -31,31 +31,31 @@ public final class State
         Identifiable,
         GraphTypeContext,
         IdContext,
-        CacheParamsContext,
+        CacheParametersContext,
         DistributionFactoryContext,
-        UserParamsContext,
+        UserParametersContext,
         DatasetContext {
 
   private static final TypedLogger<LoggableSetting> LOGGER = Logging.settingsLogger();
-  private final Context ctx;
+  private final Context context;
   private final GraphType graphType;
   private final String id;
-  private final CacheParams<RiskScoreMsg> cacheParams;
+  private final CacheParameters<RiskScoreMessage> cacheParameters;
   private final DistributionFactory scoreValuesFactory;
   private final DistributionFactory scoreTimesFactory;
   private final DistributionFactory contactTimesFactory;
   private final Dataset dataset;
-  private final UserParams userParams;
+  private final UserParameters userParameters;
 
   private State(Builder builder) {
-    ctx = builder.ctx;
+    context = builder.context;
     graphType = builder.graphType;
     id = builder.id;
-    cacheParams = builder.cacheParams;
+    cacheParameters = builder.cacheParameters;
     scoreValuesFactory = builder.scoreValuesFactory;
     scoreTimesFactory = builder.scoreTimesFactory;
     contactTimesFactory = builder.contactTimesFactory;
-    userParams = builder.userParams;
+    userParameters = builder.userParameters;
     dataset = builder.dataset;
   }
 
@@ -84,7 +84,7 @@ public final class State
 
   private void setUpLogging() {
     Logging.setMdc(id);
-    Logging.enable(ctx.loggable());
+    Logging.enable(context.loggable());
   }
 
   private void logMetricsAndSettings() {
@@ -95,9 +95,9 @@ public final class State
   private void runAlgorithm() {
     RiskPropagationBuilder.create()
         .dataset(dataset)
-        .userParams(userParams)
-        .clock(ctx.clock())
-        .cacheFactory(() -> IntervalCache.create(cacheParams))
+        .userParameters(userParameters)
+        .clock(context.clock())
+        .cacheFactory(() -> IntervalCache.create(cacheParameters))
         .build()
         .run();
   }
@@ -108,9 +108,9 @@ public final class State
         .networkId(dataset.contactNetwork().id())
         .datasetId(dataset.id())
         .stateId(id)
-        .seed(ctx.seed())
-        .userParameters(userParams)
-        .cacheParameters(cacheParams)
+        .seed(context.seed())
+        .userParameters(userParameters)
+        .cacheParameters(cacheParameters)
         .build();
   }
 
@@ -121,22 +121,22 @@ public final class State
 
   @Override
   public Instant refTime() {
-    return ctx.refTime();
+    return context.refTime();
   }
 
   @Override
   public Clock clock() {
-    return ctx.clock();
+    return context.clock();
   }
 
   @Override
   public long seed() {
-    return ctx.seed();
+    return context.seed();
   }
 
   @Override
   public Set<Class<? extends Loggable>> loggable() {
-    return ctx.loggable();
+    return context.loggable();
   }
 
   @Override
@@ -145,13 +145,13 @@ public final class State
   }
 
   @Override
-  public CacheParams<RiskScoreMsg> cacheParams() {
-    return cacheParams;
+  public CacheParameters<RiskScoreMessage> cacheParameters() {
+    return cacheParameters;
   }
 
   @Override
-  public UserParams userParams() {
-    return userParams;
+  public UserParameters userParameters() {
+    return userParameters;
   }
 
   @Override
@@ -170,7 +170,7 @@ public final class State
   }
 
   public Context context() {
-    return ctx;
+    return context;
   }
 
   public Dataset dataset() {
@@ -180,27 +180,27 @@ public final class State
   public static class Builder
       implements GraphTypeContext,
           IdContext,
-          CacheParamsContext,
+          CacheParametersContext,
           DistributionFactoryContext,
-          UserParamsContext,
+          UserParametersContext,
           DatasetContext {
 
-    private final Context ctx;
+    private final Context context;
     private final Map<Setter, Function<? super Builder, ?>> setters;
     private GraphType graphType;
     private String id;
-    private CacheParams<RiskScoreMsg> cacheParams;
+    private CacheParameters<RiskScoreMessage> cacheParameters;
     private DistributionFactory scoreValuesFactory;
     private DistributionFactory scoreTimesFactory;
     private DistributionFactory contactTimesFactory;
     private RealDistribution scoreValues;
     private RealDistribution scoreTimes;
     private RealDistribution contactTimes;
-    private UserParams userParams;
+    private UserParameters userParameters;
     private Dataset dataset;
 
     private Builder(Context context) {
-      ctx = context;
+      this.context = context;
       setters = newSetters();
     }
 
@@ -215,11 +215,11 @@ public final class State
     private static Builder withDefaults(Context context) {
       return new Builder(context)
           .id(ctx -> newId())
-          .cacheParams(ctx -> Defaults.cacheParams())
+          .CacheParameters(ctx -> Defaults.cacheParameters())
           .scoreTimesFactory(defaultFactory())
           .scoreValuesFactory(defaultFactory())
           .contactTimesFactory(defaultFactory())
-          .userParams(ctx -> Defaults.userParams());
+          .userParameters(ctx -> Defaults.userParameters());
     }
 
     private static String newId() {
@@ -231,19 +231,19 @@ public final class State
     }
 
     private static Builder from(State state) {
-      return new Builder(state.ctx)
+      return new Builder(state.context)
           .graphType(state.graphType)
           .id(ctx -> newId())
-          .cacheParams(state.cacheParams)
+          .CacheParameters(state.cacheParameters)
           .scoreValuesFactory(state.scoreValuesFactory)
           .scoreTimesFactory(state.scoreTimesFactory)
           .contactTimesFactory(state.contactTimesFactory)
-          .userParams(state.userParams)
+          .userParameters(state.userParameters)
           .dataset(state.dataset);
     }
 
-    public Builder userParams(Function<UserParamsContext, UserParams> factory) {
-      setters.put(Setter.USER_PARAMS, factory.andThen(this::userParams));
+    public Builder userParameters(Function<UserParametersContext, UserParameters> factory) {
+      setters.put(Setter.USER_PARAMS, factory.andThen(this::userParameters));
       return this;
     }
 
@@ -265,8 +265,9 @@ public final class State
       return this;
     }
 
-    public Builder cacheParams(Function<CacheParamsContext, CacheParams<RiskScoreMsg>> factory) {
-      setters.put(Setter.CACHE_PARAMS, factory.andThen(this::cacheParams));
+    public Builder CacheParameters(
+        Function<CacheParametersContext, CacheParameters<RiskScoreMessage>> factory) {
+      setters.put(Setter.CACHE_PARAMS, factory.andThen(this::CacheParameters));
       return this;
     }
 
@@ -275,8 +276,8 @@ public final class State
       return this;
     }
 
-    public Builder userParams(UserParams params) {
-      userParams = params;
+    public Builder userParameters(UserParameters params) {
+      userParameters = params;
       setters.remove(Setter.USER_PARAMS);
       return this;
     }
@@ -299,8 +300,8 @@ public final class State
       return this;
     }
 
-    public Builder cacheParams(CacheParams<RiskScoreMsg> params) {
-      cacheParams = params;
+    public Builder CacheParameters(CacheParameters<RiskScoreMessage> params) {
+      cacheParameters = params;
       setters.remove(Setter.CACHE_PARAMS);
       return this;
     }
@@ -342,36 +343,36 @@ public final class State
     }
 
     private Builder setDistributions() {
-      scoreValues = scoreValuesFactory.get(ctx.seed());
-      scoreTimes = scoreTimesFactory.get(ctx.seed());
-      contactTimes = contactTimesFactory.get(ctx.seed());
+      scoreValues = scoreValuesFactory.get(context.seed());
+      scoreTimes = scoreTimesFactory.get(context.seed());
+      contactTimes = contactTimesFactory.get(context.seed());
       setters.remove(Setter.DISTRIBUTIONS);
       return this;
     }
 
     @Override
-    public UserParams userParams() {
-      return userParams;
+    public UserParameters userParameters() {
+      return userParameters;
     }
 
     @Override
     public Instant refTime() {
-      return ctx.refTime();
+      return context.refTime();
     }
 
     @Override
     public Clock clock() {
-      return ctx.clock();
+      return context.clock();
     }
 
     @Override
     public long seed() {
-      return ctx.seed();
+      return context.seed();
     }
 
     @Override
     public Set<Class<? extends Loggable>> loggable() {
-      return ctx.loggable();
+      return context.loggable();
     }
 
     @Override
@@ -385,8 +386,8 @@ public final class State
     }
 
     @Override
-    public CacheParams<RiskScoreMsg> cacheParams() {
-      return cacheParams;
+    public CacheParameters<RiskScoreMessage> cacheParameters() {
+      return cacheParameters;
     }
 
     @Override

@@ -12,7 +12,7 @@ abstract class BaseRiskScoreSampler extends AbstractSampler<RiskScore> {
   public RiskScore sample() {
     return RiskScore.builder()
         .value((float) normalizedSample(values(), RiskScore.RANGE))
-        .time(timeSampler().sample())
+        .timestamp(timeSampler().sample())
         .build();
   }
 

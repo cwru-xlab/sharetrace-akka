@@ -1,5 +1,7 @@
 package io.sharetrace.graph;
 
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 import org.jgrapht.Graph;
 import org.jgrapht.GraphTests;
 import org.jgrapht.GraphType;
@@ -7,7 +9,6 @@ import org.jgrapht.generate.GraphGenerator;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.DefaultGraphType;
 import org.jgrapht.opt.graph.fastutil.FastutilMapIntVertexGraph;
-import org.jgrapht.util.SupplierUtil;
 
 public final class Graphs {
 
@@ -25,9 +26,9 @@ public final class Graphs {
     return copy(GraphTests.requireUndirected(undirected), newUndirectedGraph());
   }
 
-  private static <V, E> Graph<V, E> copy(Graph<V, E> src, Graph<V, E> dst) {
-    org.jgrapht.Graphs.addGraph(dst, src);
-    return dst;
+  private static <V, E> Graph<V, E> copy(Graph<V, E> source, Graph<V, E> target) {
+    org.jgrapht.Graphs.addGraph(target, source);
+    return target;
   }
 
   public static Graph<Integer, DefaultEdge> newDirectedGraph() {
@@ -39,8 +40,8 @@ public final class Graphs {
   }
 
   private static Graph<Integer, DefaultEdge> newGraph(GraphType graphType) {
-    return new FastutilMapIntVertexGraph<>(
-        SupplierUtil.createIntegerSupplier(), DefaultEdge::new, graphType, false);
+    Supplier<Integer> vertexFactory = new AtomicInteger(0)::getAndIncrement;
+    return new FastutilMapIntVertexGraph<>(vertexFactory, DefaultEdge::new, graphType, false);
   }
 
   public static Graph<Integer, DefaultEdge> asDirected(Graph<Integer, DefaultEdge> graph) {

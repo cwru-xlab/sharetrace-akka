@@ -2,11 +2,11 @@ package io.sharetrace.actor;
 
 import akka.actor.typed.ActorRef;
 import io.sharetrace.model.RiskScore;
-import io.sharetrace.model.TemporalProbability;
-import io.sharetrace.model.UserParams;
-import io.sharetrace.model.message.ContactMsg;
-import io.sharetrace.model.message.RiskScoreMsg;
-import io.sharetrace.model.message.UserMsg;
+import io.sharetrace.model.TemporalScore;
+import io.sharetrace.model.UserParameters;
+import io.sharetrace.model.message.ContactMessage;
+import io.sharetrace.model.message.RiskScoreMessage;
+import io.sharetrace.model.message.UserMessage;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -14,62 +14,63 @@ import java.time.temporal.Temporal;
 
 final class MsgUtil {
 
-  private final ActorRef<UserMsg> self;
+  private final ActorRef<UserMessage> self;
   private final Clock clock;
-  private final UserParams params;
+  private final UserParameters parameters;
 
-  public MsgUtil(ActorRef<UserMsg> self, Clock clock, UserParams params) {
+  public MsgUtil(ActorRef<UserMessage> self, Clock clock, UserParameters parameters) {
     this.self = self;
     this.clock = clock;
-    this.params = params;
+    this.parameters = parameters;
   }
 
-  public float computeThreshold(TemporalProbability msg) {
-    return msg.value() * params.sendCoeff();
+  public float threshold(TemporalScore score) {
+    return score.value() * parameters.sendCoefficient();
   }
 
-  public Instant buffered(Instant instant) {
-    return instant.plus(params.timeBuffer());
+  public Instant buffered(Instant contactTime) {
+    return contactTime.plus(parameters.timeBuffer());
   }
 
-  public RiskScoreMsg transmitted(RiskScoreMsg msg) {
-    RiskScore transmitted = msg.score().withValue(msg.value() * params.transRate());
-    return RiskScoreMsg.builder().sender(self).score(transmitted).id(msg.id()).build();
+  public RiskScoreMessage transmitted(RiskScoreMessage message) {
+    float value = message.value() * parameters.transmissionRate();
+    RiskScore transmitted = message.score().withValue(value);
+    return RiskScoreMessage.builder().sender(self).score(transmitted).id(message.id()).build();
   }
 
-  public RiskScoreMsg defaultMsg() {
-    return RiskScoreMsg.builder().score(RiskScore.MIN).sender(self).build();
+  public RiskScoreMessage defaultMessage() {
+    return RiskScoreMessage.builder().score(RiskScore.MIN).sender(self).build();
   }
 
-  public Duration computeScoreTtl(TemporalProbability msg) {
-    return computeTtl(msg.time(), params.scoreTtl());
+  public Duration scoreTimeToLive(TemporalScore score) {
+    return remainingTimeToLive(score.timestamp(), parameters.scoreTimeToLive());
   }
 
-  private Duration computeTtl(Temporal temporal, Duration ttl) {
-    return ttl.minus(since(temporal));
+  private Duration remainingTimeToLive(Temporal temporal, Duration timeToLive) {
+    return timeToLive.minus(since(temporal));
   }
 
   private Duration since(Temporal temporal) {
     return Duration.between(temporal, clock.instant());
   }
 
-  public Duration computeContactTtl(Temporal contactTime) {
-    return computeTtl(contactTime, params.contactTtl());
+  public Duration contactTimeToLive(Temporal contactTime) {
+    return remainingTimeToLive(contactTime, parameters.contactTimeToLive());
   }
 
-  public boolean isScoreAlive(TemporalProbability msg) {
-    return isAlive(msg.time(), params.scoreTtl());
+  public boolean isScoreAlive(TemporalScore score) {
+    return isAlive(score.timestamp(), parameters.scoreTimeToLive());
   }
 
-  private boolean isAlive(Temporal temporal, Duration ttl) {
-    return since(temporal).compareTo(ttl) < 0;
+  private boolean isAlive(Temporal temporal, Duration timeToLive) {
+    return since(temporal).compareTo(timeToLive) < 0;
   }
 
-  public boolean isContactAlive(ContactMsg msg) {
-    return isContactAlive(msg.contactTime());
+  public boolean isContactAlive(ContactMessage message) {
+    return isContactAlive(message.contactTime());
   }
 
   public boolean isContactAlive(Temporal contactTime) {
-    return isAlive(contactTime, params.contactTtl());
+    return isAlive(contactTime, parameters.contactTimeToLive());
   }
 }

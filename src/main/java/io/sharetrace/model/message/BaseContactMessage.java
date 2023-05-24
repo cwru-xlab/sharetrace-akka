@@ -17,13 +17,13 @@ import org.immutables.value.Value;
  * @see Contact
  */
 @Value.Immutable
-abstract class BaseContactMsg implements UserMsg {
+abstract class BaseContactMessage implements UserMessage {
 
   private static final Range<Instant> TIME_RANGE = Range.atLeast(Contact.MIN_TIME);
 
   /** Returns the actor reference of the contacted user. */
   @Value.Parameter
-  public abstract ActorRef<UserMsg> contact();
+  public abstract ActorRef<UserMessage> contact();
 
   @Value.Check
   protected void check() {

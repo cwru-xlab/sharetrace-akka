@@ -2,7 +2,7 @@ package io.sharetrace.experiment.state;
 
 import org.apache.commons.math3.distribution.RealDistribution;
 
-public interface UserParamsContext extends DistributionFactoryContext {
+public interface UserParametersContext extends DistributionFactoryContext {
 
   RealDistribution scoreValues();
 

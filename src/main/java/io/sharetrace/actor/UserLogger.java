@@ -1,7 +1,7 @@
 package io.sharetrace.actor;
 
 import akka.actor.typed.ActorRef;
-import io.sharetrace.model.message.RiskScoreMsg;
+import io.sharetrace.model.message.RiskScoreMessage;
 import io.sharetrace.util.logging.Logging;
 import io.sharetrace.util.logging.TypedLogger;
 import io.sharetrace.util.logging.event.ContactEvent;
@@ -44,50 +44,50 @@ final class UserLogger {
     return ContactEvent.builder().self(self).contact(name(contact)).timestamp(timestamp()).build();
   }
 
-  public void logSendCachedEvent(ActorRef<?> receiver, RiskScoreMsg cached) {
-    logEvent(SendCachedEvent.class, () -> sendCachedEvent(receiver, cached));
+  public void logSendCachedEvent(ActorRef<?> contact, RiskScoreMessage cached) {
+    logEvent(SendCachedEvent.class, () -> sendCachedEvent(contact, cached));
   }
 
-  private SendCachedEvent sendCachedEvent(ActorRef<?> receiver, RiskScoreMsg cached) {
+  private SendCachedEvent sendCachedEvent(ActorRef<?> contact, RiskScoreMessage cached) {
     return SendCachedEvent.builder()
         .self(self)
         .message(cached)
-        .receiver(name(receiver))
+        .contact(name(contact))
         .timestamp(timestamp())
         .build();
   }
 
-  public void logSendCurrentEvent(ActorRef<?> receiver, RiskScoreMsg riskScore) {
-    logEvent(SendCurrentEvent.class, () -> sendCurrentEvent(receiver, riskScore));
+  public void logSendCurrentEvent(ActorRef<?> contact, RiskScoreMessage current) {
+    logEvent(SendCurrentEvent.class, () -> sendCurrentEvent(contact, current));
   }
 
-  private SendCurrentEvent sendCurrentEvent(ActorRef<?> receiver, RiskScoreMsg current) {
+  private SendCurrentEvent sendCurrentEvent(ActorRef<?> contact, RiskScoreMessage current) {
     return SendCurrentEvent.builder()
         .self(self)
         .message(current)
-        .receiver(name(receiver))
+        .contact(name(contact))
         .timestamp(timestamp())
         .build();
   }
 
-  public void logReceiveEvent(RiskScoreMsg received) {
+  public void logReceiveEvent(RiskScoreMessage received) {
     logEvent(ReceiveEvent.class, () -> receiveEvent(received));
   }
 
-  private ReceiveEvent receiveEvent(RiskScoreMsg received) {
+  private ReceiveEvent receiveEvent(RiskScoreMessage received) {
     return ReceiveEvent.builder()
         .self(self)
-        .sender(name(received.sender()))
+        .contact(name(received.sender()))
         .message(received)
         .timestamp(timestamp())
         .build();
   }
 
-  public void logUpdateEvent(RiskScoreMsg previous, RiskScoreMsg current) {
+  public void logUpdateEvent(RiskScoreMessage previous, RiskScoreMessage current) {
     logEvent(UpdateEvent.class, () -> updateEvent(previous, current));
   }
 
-  private UpdateEvent updateEvent(RiskScoreMsg previous, RiskScoreMsg current) {
+  private UpdateEvent updateEvent(RiskScoreMessage previous, RiskScoreMessage current) {
     return UpdateEvent.builder()
         .self(self)
         .previous(previous)
@@ -96,15 +96,15 @@ final class UserLogger {
         .build();
   }
 
-  public void logPropagateEvent(ActorRef<?> receiver, RiskScoreMsg propagated) {
-    logEvent(PropagateEvent.class, () -> propagateEvent(receiver, propagated));
+  public void logPropagateEvent(ActorRef<?> contact, RiskScoreMessage propagated) {
+    logEvent(PropagateEvent.class, () -> propagateEvent(contact, propagated));
   }
 
-  private PropagateEvent propagateEvent(ActorRef<?> receiver, RiskScoreMsg propagated) {
+  private PropagateEvent propagateEvent(ActorRef<?> contact, RiskScoreMessage propagated) {
     return PropagateEvent.builder()
         .self(self)
         .message(propagated)
-        .receiver(name(receiver))
+        .contact(name(contact))
         .timestamp(timestamp())
         .build();
   }
@@ -122,11 +122,12 @@ final class UserLogger {
         .build();
   }
 
-  public void logCurrentRefreshEvent(RiskScoreMsg previous, RiskScoreMsg current) {
+  public void logCurrentRefreshEvent(RiskScoreMessage previous, RiskScoreMessage current) {
     logEvent(CurrentRefreshEvent.class, () -> currentRefreshEvent(previous, current));
   }
 
-  private CurrentRefreshEvent currentRefreshEvent(RiskScoreMsg previous, RiskScoreMsg current) {
+  private CurrentRefreshEvent currentRefreshEvent(
+      RiskScoreMessage previous, RiskScoreMessage current) {
     return CurrentRefreshEvent.builder()
         .self(self)
         .previous(previous)

@@ -1,6 +1,6 @@
 package io.sharetrace.util;
 
-import io.sharetrace.util.cache.CacheParams;
+import io.sharetrace.util.cache.CacheParameters;
 import io.sharetrace.util.cache.IntervalCache;
 import java.time.Clock;
 import java.time.Duration;
@@ -19,12 +19,12 @@ public final class Caches {
 
   public static IntervalCache<Integer> empty(Clock clock) {
     return IntervalCache.create(
-        CacheParams.<Integer>builder()
+        CacheParameters.<Integer>builder()
             .clock(clock)
             .interval(INTERVAL)
-            .numIntervals(1)
+            .intervals(1)
             .refreshPeriod(Duration.ofMinutes(1L))
-            .numLookAhead(0)
+            .lookAhead(0)
             .mergeStrategy(Integer::max)
             .build());
   }

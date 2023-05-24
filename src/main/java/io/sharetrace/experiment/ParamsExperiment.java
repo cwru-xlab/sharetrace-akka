@@ -1,14 +1,10 @@
 package io.sharetrace.experiment;
 
-import io.sharetrace.actor.RiskPropagation;
 import io.sharetrace.experiment.config.ParamsExperimentConfig;
 import io.sharetrace.experiment.data.Dataset;
-import io.sharetrace.experiment.data.factory.CachedRiskScoreFactory;
-import io.sharetrace.experiment.data.factory.RiskScoreFactory;
 import io.sharetrace.experiment.state.Context;
 import io.sharetrace.experiment.state.Defaults;
 import io.sharetrace.experiment.state.State;
-import io.sharetrace.graph.ContactNetwork;
 import io.sharetrace.graph.GraphType;
 import io.sharetrace.util.Collecting;
 import io.sharetrace.util.logging.Loggable;
@@ -17,42 +13,22 @@ import java.util.Set;
 
 public final class ParamsExperiment extends Experiment<ParamsExperimentConfig> {
 
-  private static final Context DEFAULT_CTX = newDefaultContext();
-
-  private ParamsExperiment() {}
-
-  public static ParamsExperiment create() {
-    return new ParamsExperiment();
-  }
-
-  private static Context newDefaultContext() {
-    Context ctx = Defaults.context();
-    Set<Class<? extends Loggable>> loggable = Collecting.newHashSet(ctx.loggable());
-    loggable.remove(GraphTopology.class);
-    return ctx.withLoggable(loggable);
-  }
-
-  private static Dataset cacheScores(Dataset dataset) {
-    RiskScoreFactory cachedScoreFactory = CachedRiskScoreFactory.of(dataset.scoreFactory());
-    return dataset.withScoreFactory(cachedScoreFactory);
-  }
-
-  /**
-   * Evaluates the effects of the transmission rate and the send coefficient on the accuracy and
-   * efficiency of {@link RiskPropagation}. Risk scores are cached across parameter values for a
-   * given {@link ContactNetwork} so that cross-parameter comparisons are possible.
-   */
   @Override
   public void run(ParamsExperimentConfig config, State state) {
-    for (int iNetwork = 0; iNetwork < config.numNetworks(); iNetwork++) {
-      Dataset dataset = cacheScores(state.dataset().withNewContactNetwork());
-      for (float tr : config.transRates()) {
-        for (float sc : config.sendCoeffs()) {
+    for (int i = 0; i < config.networks(); i++) {
+      Dataset dataset = state.dataset();
+      dataset = dataset.withNewContactNetwork().withScoreFactory(dataset.scoreFactory().cached());
+      for (float transmissionRate : config.transmissionRates()) {
+        for (float sendCoefficient : config.sendCoefficients()) {
           state.toBuilder()
-              .userParams(state.userParams().withTransRate(tr).withSendCoeff(sc))
+              .userParameters(
+                  state
+                      .userParameters()
+                      .withTransmissionRate(transmissionRate)
+                      .withSendCoefficient(sendCoefficient))
               .dataset(dataset)
               .build()
-              .run(config.numIterations());
+              .run(config.iterations());
         }
       }
     }
@@ -60,16 +36,19 @@ public final class ParamsExperiment extends Experiment<ParamsExperimentConfig> {
 
   @Override
   public Context defaultContext() {
-    return DEFAULT_CTX;
+    Context context = Defaults.context();
+    Set<Class<? extends Loggable>> loggable = Collecting.newHashSet(context.loggable());
+    loggable.remove(GraphTopology.class);
+    return context.withLoggable(loggable);
   }
 
   @Override
-  public State newDefaultState(Context ctx, ParamsExperimentConfig config) {
+  public State newDefaultState(Context context, ParamsExperimentConfig config) {
     GraphType graphType = getProperty(config.graphType(), "graphType");
-    int numNodes = getProperty(config.numNodes(), "numNodes");
-    return State.builder(ctx)
+    int numNodes = getProperty(config.users(), "users");
+    return State.builder(context)
         .graphType(graphType)
-        .dataset(context -> Defaults.sampledDataset(context, numNodes))
+        .dataset(ctx -> Defaults.sampledDataset(ctx, numNodes))
         .build();
   }
 }

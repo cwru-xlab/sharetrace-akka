@@ -7,9 +7,9 @@ import org.immutables.value.Value;
 @Value.Immutable
 abstract class BaseParamsExperimentConfig extends NetworkExperimentConfig {
 
-  public abstract OptionalInt numNodes();
+  public abstract OptionalInt users();
 
-  public abstract List<Float> transRates();
+  public abstract List<Float> transmissionRates();
 
-  public abstract List<Float> sendCoeffs();
+  public abstract List<Float> sendCoefficients();
 }

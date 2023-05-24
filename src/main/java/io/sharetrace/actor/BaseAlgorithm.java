@@ -6,8 +6,8 @@ import akka.actor.typed.Behavior;
 import akka.actor.typed.Props;
 import akka.actor.typed.Terminated;
 import akka.actor.typed.javadsl.Behaviors;
-import io.sharetrace.model.message.AlgorithmMsg;
-import io.sharetrace.model.message.RunMsg;
+import io.sharetrace.model.message.AlgorithmMessage;
+import io.sharetrace.model.message.RunMessage;
 import java.util.concurrent.ExecutionException;
 import org.immutables.value.Value;
 
@@ -22,7 +22,7 @@ abstract class BaseAlgorithm implements Runnable {
     }
   }
 
-  protected abstract Behavior<AlgorithmMsg> behavior();
+  protected abstract Behavior<AlgorithmMessage> behavior();
 
   protected abstract String name();
 
@@ -35,10 +35,10 @@ abstract class BaseAlgorithm implements Runnable {
 
   private Behavior<Void> newInstance() {
     return Behaviors.setup(
-        ctx -> {
-          ActorRef<AlgorithmMsg> instance = ctx.spawn(behavior(), name(), props());
-          ctx.watch(instance);
-          instance.tell(RunMsg.INSTANCE);
+        context -> {
+          ActorRef<AlgorithmMessage> instance = context.spawn(behavior(), name(), props());
+          context.watch(instance);
+          instance.tell(RunMessage.INSTANCE);
           return Behaviors.receive(Void.class)
               .onSignal(Terminated.class, x -> Behaviors.stopped())
               .build();

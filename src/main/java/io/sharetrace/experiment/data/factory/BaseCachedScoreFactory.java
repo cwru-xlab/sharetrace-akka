@@ -6,11 +6,11 @@ import java.util.Map;
 import org.immutables.value.Value;
 
 @Value.Immutable
-abstract class BaseCachedRiskScoreFactory implements RiskScoreFactory {
+abstract class BaseCachedScoreFactory implements ScoreFactory {
 
   @Override
   public RiskScore get(int user) {
-    return cache().computeIfAbsent(user, cached()::get);
+    return cache().computeIfAbsent(user, scoreFactory()::get);
   }
 
   @Value.Lazy
@@ -19,5 +19,5 @@ abstract class BaseCachedRiskScoreFactory implements RiskScoreFactory {
   }
 
   @Value.Parameter
-  protected abstract RiskScoreFactory cached();
+  protected abstract ScoreFactory scoreFactory();
 }

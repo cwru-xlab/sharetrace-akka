@@ -26,7 +26,7 @@ public abstract class Experiment<Config> {
     return newDefaultState(defaultContext(), config);
   }
 
-  public abstract State newDefaultState(Context ctx, Config config);
+  public abstract State newDefaultState(Context context, Config config);
 
   public Context defaultContext() {
     return Defaults.context();

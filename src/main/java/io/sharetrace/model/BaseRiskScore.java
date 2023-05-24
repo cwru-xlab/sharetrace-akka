@@ -3,7 +3,7 @@ package io.sharetrace.model;
 import com.google.common.collect.Range;
 import io.sharetrace.actor.RiskPropagation;
 import io.sharetrace.actor.UserActor;
-import io.sharetrace.model.message.RiskScoreMsg;
+import io.sharetrace.model.message.RiskScoreMessage;
 import io.sharetrace.util.Checks;
 import java.time.Instant;
 import org.immutables.value.Value;
@@ -13,13 +13,13 @@ import org.immutables.value.Value;
  * is called a <i>symptom score</i>. A risk score that also accounts for direct or indirect contact
  * that a user had with others is called an <i>exposure score</i>.
  *
- * @see RiskScoreMsg
+ * @see RiskScoreMessage
  * @see UserActor
  * @see RiskPropagation
  */
 @SuppressWarnings({"DefaultAnnotationParam", "StaticInitializerReferencesSubClass"})
 @Value.Immutable(copy = true)
-abstract class BaseRiskScore implements TemporalProbability {
+abstract class BaseRiskScore implements TemporalScore {
 
   public static final float MIN_VALUE = 0f;
   public static final float MAX_VALUE = 1f;
@@ -39,11 +39,11 @@ abstract class BaseRiskScore implements TemporalProbability {
   /** Returns when this probability was first computed. */
   @Override
   @Value.Parameter
-  public abstract Instant time();
+  public abstract Instant timestamp();
 
   @Value.Check
   protected void check() {
     Checks.checkRange(value(), VALUE_RANGE, "value");
-    Checks.checkRange(time(), TIME_RANGE, "time");
+    Checks.checkRange(timestamp(), TIME_RANGE, "time");
   }
 }

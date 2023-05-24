@@ -7,6 +7,6 @@ import io.sharetrace.actor.RiskPropagation;
  *
  * @see RiskPropagation
  */
-public enum RunMsg implements AlgorithmMsg {
+public enum RunMessage implements AlgorithmMessage {
   INSTANCE
 }
