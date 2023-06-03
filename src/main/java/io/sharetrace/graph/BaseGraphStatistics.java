@@ -21,8 +21,7 @@ import org.jgrapht.alg.shortestpath.GraphMeasurer;
 @Value.Immutable
 abstract class BaseGraphStatistics<V, E> {
 
-  private static Statistics computeScoreStatistics(
-      VertexScoringAlgorithm<?, ? extends Number> algorithm) {
+  private static Statistics scoreStatistics(VertexScoringAlgorithm<?, Double> algorithm) {
     return Statistics.of(algorithm.getScores().values());
   }
 
@@ -33,9 +32,6 @@ abstract class BaseGraphStatistics<V, E> {
         .edges(graph().edgeSet().size())
         .build();
   }
-
-  @Value.Parameter
-  protected abstract Graph<V, E> graph();
 
   @Value.Lazy
   public GraphCycles graphCycles() {
@@ -68,6 +64,14 @@ abstract class BaseGraphStatistics<V, E> {
         .build();
   }
 
+  @Value.Parameter
+  protected abstract Graph<V, E> graph();
+
+  @Value.Lazy
+  protected ShortestPathAlgorithm<V, E> shortestPath() {
+    return new FloydWarshallShortestPaths<>(graph());
+  }
+
   private long degeneracy() {
     return new Coreness<>(graph()).getDegeneracy();
   }
@@ -77,24 +81,19 @@ abstract class BaseGraphStatistics<V, E> {
   }
 
   private Statistics localClusteringCoefficients() {
-    return computeScoreStatistics(new ClusteringCoefficient<>(graph()));
+    return scoreStatistics(new ClusteringCoefficient<>(graph()));
   }
 
   private Statistics harmonicCentrality() {
-    return computeScoreStatistics(new HarmonicCentrality<>(graph(), shortestPath()));
+    return scoreStatistics(new HarmonicCentrality<>(graph(), shortestPath()));
   }
 
   private Statistics katzCentrality() {
-    return computeScoreStatistics(new KatzCentrality<>(graph()));
+    return scoreStatistics(new KatzCentrality<>(graph()));
   }
 
   private Statistics eigenvectorCentrality() {
-    return computeScoreStatistics(new EigenvectorCentrality<>(graph()));
-  }
-
-  @Value.Lazy
-  protected ShortestPathAlgorithm<V, E> shortestPath() {
-    return new FloydWarshallShortestPaths<>(graph());
+    return scoreStatistics(new EigenvectorCentrality<>(graph()));
   }
 
   private static final class HarmonicCentrality<V, E> extends ClosenessCentrality<V, E> {

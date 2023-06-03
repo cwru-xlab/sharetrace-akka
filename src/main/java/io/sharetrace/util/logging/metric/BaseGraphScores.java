@@ -4,7 +4,7 @@ import io.sharetrace.util.Statistics;
 import org.immutables.value.Value;
 
 @Value.Immutable
-interface BaseGraphScores extends LoggableMetric {
+interface BaseGraphScores extends MetricRecord {
 
   Statistics harmonicCentrality();
 

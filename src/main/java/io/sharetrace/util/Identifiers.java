@@ -6,19 +6,19 @@ public final class Identifiers {
 
   private Identifiers() {}
 
-  public static String ofIntString() {
-    return String.valueOf(ofInt());
+  public static String newIntString() {
+    return String.valueOf(newInt());
   }
 
-  public static int ofInt() {
+  public static int newInt() {
     return ThreadLocalRandom.current().nextInt(Integer.MAX_VALUE);
   }
 
-  public static String ofLongString() {
-    return String.valueOf(ofLong());
+  public static String newLongString() {
+    return String.valueOf(newLong());
   }
 
-  public static long ofLong() {
+  public static long newLong() {
     return ThreadLocalRandom.current().nextLong(Long.MAX_VALUE);
   }
 }

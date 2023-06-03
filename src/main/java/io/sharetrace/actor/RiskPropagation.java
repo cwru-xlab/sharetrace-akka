@@ -8,10 +8,9 @@ import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
-import io.sharetrace.experiment.data.Dataset;
-import io.sharetrace.experiment.data.factory.CacheFactory;
-import io.sharetrace.graph.Contact;
-import io.sharetrace.graph.ContactNetwork;
+import io.sharetrace.experiment.data.IntervalCacheFactory;
+import io.sharetrace.experiment.data.RiskScoreFactory;
+import io.sharetrace.graph.TemporalEdge;
 import io.sharetrace.model.RiskScore;
 import io.sharetrace.model.UserParameters;
 import io.sharetrace.model.message.AlgorithmMessage;
@@ -21,12 +20,12 @@ import io.sharetrace.model.message.RunMessage;
 import io.sharetrace.model.message.TimedOutMessage;
 import io.sharetrace.model.message.UserMessage;
 import io.sharetrace.util.Collecting;
-import io.sharetrace.util.cache.CacheParameters;
+import io.sharetrace.util.Indexer;
 import io.sharetrace.util.logging.Logging;
-import io.sharetrace.util.logging.TypedLogger;
+import io.sharetrace.util.logging.RecordLogger;
 import io.sharetrace.util.logging.metric.CreateUsersRuntime;
-import io.sharetrace.util.logging.metric.LoggableMetric;
 import io.sharetrace.util.logging.metric.MessagePassingRuntime;
+import io.sharetrace.util.logging.metric.MetricRecord;
 import io.sharetrace.util.logging.metric.RiskPropagationRuntime;
 import io.sharetrace.util.logging.metric.SendContactsRuntime;
 import io.sharetrace.util.logging.metric.SendRiskScoresRuntime;
@@ -36,85 +35,68 @@ import java.util.BitSet;
 import java.util.Map;
 import java.util.function.Supplier;
 import org.immutables.builder.Builder;
+import org.jgrapht.Graph;
 
-/**
- * A non-iterative, asynchronous, concurrent implementation of the ShareTrace algorithm. The
- * objective is to estimate the marginal posterior infection probability (MPIP) for all users. The
- * main steps of the algorithm are as follows:
- *
- * <ol>
- *   <li>For each vertex in the {@link ContactNetwork}, create a {@link UserActor} actor.
- *   <li>Send each {@link UserActor} their symptom score in a {@link RiskScoreMessage}.
- *   <li>For each {@link Contact} in the {@link ContactNetwork}, send a {@link ContactMsg} to each
- *       {@link UserActor} that contains the {@link ActorRef} of the other {@link UserActor}.
- *   <li>Terminate once all {@link UserActor}s have stopped passing messages.
- * </ol>
- *
- * <p>In practice, this implementation is distributed or decentralized. The usage of the {@link
- * ContactNetwork} is only for proof-of-concept and experimentation purposes.
- *
- * @see UserActor
- * @see UserParameters
- * @see CacheParameters
- * @see ContactNetwork
- * @see Contact
- * @see RiskScoreMessage
- * @see ContactMsg
- */
-public final class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
+// TODO Add support to initialize all contacts up front
+public final class RiskPropagation<T> extends AbstractBehavior<AlgorithmMessage> {
 
-  private static final TypedLogger<LoggableMetric> LOGGER = Logging.metricsLogger();
-  private static final String NAME = RiskPropagation.class.getSimpleName();
-  private static final Props PROPS =
-      DispatcherSelector.fromConfig("sharetrace.risk-propagation.dispatcher");
-  private static final Props USER_PROPS =
-      DispatcherSelector.fromConfig("sharetrace.user.dispatcher");
+  private static final RecordLogger<MetricRecord> LOGGER = Logging.metricsLogger();
 
   private final UserParameters userParameters;
-  private final Dataset dataset;
-  private final int numUsers;
+  private final IntervalCacheFactory<RiskScoreMessage> cacheFactory;
+  private final RiskScoreFactory<T> scoreFactory;
+  private final Graph<T, TemporalEdge> contactNetwork;
+  private final int userCount;
   private final Clock clock;
-  private final CacheFactory<RiskScoreMessage> cacheFactory;
-  private final Timer<Class<? extends LoggableMetric>> timer;
-  private final BitSet stopped;
+  private final Timer<Class<? extends MetricRecord>> timer;
+  private final BitSet timeouts;
 
   private RiskPropagation(
-      ActorContext<AlgorithmMessage> ctx,
-      Dataset dataset,
+      ActorContext<AlgorithmMessage> context,
+      RiskScoreFactory<T> scoreFactory,
+      Graph<T, TemporalEdge> contactNetwork,
       UserParameters userParameters,
-      Clock clock,
-      CacheFactory<RiskScoreMessage> cacheFactory) {
-    super(ctx);
-    this.dataset = dataset;
-    this.numUsers = dataset.contactNetwork().users().size();
+      IntervalCacheFactory<RiskScoreMessage> cacheFactory,
+      Clock clock) {
+    super(context);
+    this.scoreFactory = scoreFactory;
+    this.contactNetwork = contactNetwork;
+    this.userCount = contactNetwork.vertexSet().size();
     this.userParameters = userParameters;
-    this.clock = clock;
     this.cacheFactory = cacheFactory;
+    this.clock = clock;
     this.timer = new Timer<>();
-    this.stopped = new BitSet(numUsers);
+    this.timeouts = new BitSet(userCount);
+  }
+
+  private static <T extends MetricRecord> void logMetric(Class<T> type, Supplier<T> metric) {
+    LOGGER.log(MetricRecord.KEY, type, metric);
   }
 
   @Builder.Factory
-  static Algorithm riskPropagation(
-      Dataset dataset,
+  static <T> Algorithm riskPropagation(
+      RiskScoreFactory<T> scoreFactory,
+      Graph<T, TemporalEdge> contactNetwork,
       UserParameters userParameters,
-      Clock clock,
-      CacheFactory<RiskScoreMessage> cacheFactory) {
+      IntervalCacheFactory<RiskScoreMessage> cacheFactory,
+      Clock clock) {
     return Algorithm.builder()
-        .name(NAME)
-        .props(PROPS)
+        .name(RiskPropagation.class.getSimpleName())
+        .properties(DispatcherSelector.fromConfig("sharetrace.risk-propagation.dispatcher"))
         .behavior(
             Behaviors.setup(
-                ctx ->
+                context ->
                     Behaviors.withMdc(
                         AlgorithmMessage.class,
                         Logging.getMdc(),
-                        new RiskPropagation(ctx, dataset, userParameters, clock, cacheFactory))))
+                        new RiskPropagation<>(
+                            context,
+                            scoreFactory,
+                            contactNetwork,
+                            userParameters,
+                            cacheFactory,
+                            clock))))
         .build();
-  }
-
-  private static <T extends LoggableMetric> void logMetric(Class<T> type, Supplier<T> metric) {
-    LOGGER.log(LoggableMetric.KEY, type, metric);
   }
 
   @Override
@@ -125,13 +107,12 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
         .build();
   }
 
-  private Behavior<AlgorithmMessage> handle(RunMessage msg) {
+  private Behavior<AlgorithmMessage> handle(RunMessage message) {
     Behavior<AlgorithmMessage> behavior = this;
-    if (numUsers > 0) {
+    if (userCount > 0) {
       timer.start();
-      Map<Integer, ActorRef<UserMessage>> users =
-          timer.time(this::newUsers, CreateUsersRuntime.class);
-      timer.time(() -> sendSymptomScores(users), SendRiskScoresRuntime.class);
+      Map<T, ActorRef<UserMessage>> users = timer.time(this::newUsers, CreateUsersRuntime.class);
+      timer.time(() -> sendRiskScores(users), SendRiskScoresRuntime.class);
       timer.time(() -> sendContacts(users), SendContactsRuntime.class);
     } else {
       behavior = Behaviors.stopped();
@@ -139,11 +120,10 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
     return behavior;
   }
 
-  private Behavior<AlgorithmMessage> handle(TimedOutMessage msg) {
+  private Behavior<AlgorithmMessage> handle(TimedOutMessage message) {
     Behavior<AlgorithmMessage> behavior = this;
-    // Assumes at-least-once message delivery from the user actors.
-    stopped.set(msg.user());
-    if (stopped.cardinality() == numUsers) {
+    timeouts.set(message.timeoutId());
+    if (timeouts.cardinality() == userCount) {
       timer.stop();
       logMetrics();
       behavior = Behaviors.stopped();
@@ -151,44 +131,21 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
     return behavior;
   }
 
-  private Map<Integer, ActorRef<UserMessage>> newUsers() {
-    Map<Integer, ActorRef<UserMessage>> users = Collecting.newIntKeyedHashMap(numUsers);
-    for (int name : dataset.contactNetwork().users()) {
-      // Timeout IDs must be 0-based contiguous to use with 'stopped' BitSet.
-      ActorRef<UserMessage> user =
-          getContext().spawn(newUser(name), String.valueOf(name), USER_PROPS);
+  private Map<T, ActorRef<UserMessage>> newUsers() {
+    Map<T, ActorRef<UserMessage>> users = Collecting.newHashMap(userCount);
+    Props properties = DispatcherSelector.fromConfig("sharetrace.user.dispatcher");
+    Indexer<T> indexer = new Indexer<>();
+    for (T key : contactNetwork.vertexSet()) {
+      int timeoutId = indexer.index(key);
+      ActorRef<UserMessage> user = newUser(timeoutId, key, properties);
       getContext().watch(user);
-      users.put(name, user);
+      users.put(key, user);
     }
     return users;
   }
 
-  private void sendSymptomScores(Map<Integer, ActorRef<UserMessage>> users) {
-    // Assumes at-least-once message delivery to the user actors.
-    for (Map.Entry<Integer, ActorRef<UserMessage>> entry : users.entrySet()) {
-      int name = entry.getKey();
-      ActorRef<UserMessage> user = entry.getValue();
-      RiskScore symptomScore = dataset.scoreFactory().get(name);
-      user.tell(RiskScoreMessage.of(symptomScore, user));
-    }
-  }
-
-  private void sendContacts(Map<Integer, ActorRef<UserMessage>> users) {
-    // Assumes at-least-once message delivery to the user actors.
-    for (Contact contact : dataset.contactNetwork().contacts()) {
-      ActorRef<UserMessage> user1 = users.get(contact.user1());
-      ActorRef<UserMessage> user2 = users.get(contact.user2());
-      user1.tell(ContactMessage.of(user2, contact.time()));
-      user2.tell(ContactMessage.of(user1, contact.time()));
-    }
-  }
-
-  private void logMetrics() {
-    logMetric(CreateUsersRuntime.class, this::createUsersRuntime);
-    logMetric(SendRiskScoresRuntime.class, this::sendRiskScoresRuntime);
-    logMetric(SendContactsRuntime.class, this::sendContactsRuntime);
-    logMetric(RiskPropagationRuntime.class, this::riskPropagationRuntime);
-    logMetric(MessagePassingRuntime.class, this::messagePassingRuntime);
+  private ActorRef<UserMessage> newUser(int timeoutId, T key, Props properties) {
+    return getContext().spawn(newUser(timeoutId), String.valueOf(key), properties);
   }
 
   private Behavior<UserMessage> newUser(int timeoutId) {
@@ -199,6 +156,32 @@ public final class RiskPropagation extends AbstractBehavior<AlgorithmMessage> {
         .clock(clock)
         .cache(cacheFactory.newCache())
         .build();
+  }
+
+  private void sendRiskScores(Map<T, ActorRef<UserMessage>> users) {
+    for (Map.Entry<T, ActorRef<UserMessage>> entry : users.entrySet()) {
+      T key = entry.getKey();
+      ActorRef<UserMessage> user = entry.getValue();
+      RiskScore score = scoreFactory.getScore(key);
+      user.tell(RiskScoreMessage.of(score, user));
+    }
+  }
+
+  private void sendContacts(Map<T, ActorRef<UserMessage>> users) {
+    for (TemporalEdge edge : contactNetwork.edgeSet()) {
+      ActorRef<UserMessage> user1 = users.get(contactNetwork.getEdgeSource(edge));
+      ActorRef<UserMessage> user2 = users.get(contactNetwork.getEdgeTarget(edge));
+      user1.tell(ContactMessage.of(user2, edge.getTimestamp()));
+      user2.tell(ContactMessage.of(user1, edge.getTimestamp()));
+    }
+  }
+
+  private void logMetrics() {
+    logMetric(CreateUsersRuntime.class, this::createUsersRuntime);
+    logMetric(SendRiskScoresRuntime.class, this::sendRiskScoresRuntime);
+    logMetric(SendContactsRuntime.class, this::sendContactsRuntime);
+    logMetric(RiskPropagationRuntime.class, this::riskPropagationRuntime);
+    logMetric(MessagePassingRuntime.class, this::messagePassingRuntime);
   }
 
   private CreateUsersRuntime createUsersRuntime() {

@@ -20,6 +20,10 @@ final class Exporter<V, E> {
     exporter = new GraphMLExporter<>(String::valueOf);
   }
 
+  public static <V, E> void export(Graph<V, E> graph, String filename) {
+    new Exporter<V, E>(filename).export(graph);
+  }
+
   private static File newFile(String filename) {
     String directory = ensureExists(Logging.graphsPath()).toString();
     return Path.of(directory, filename + ".graphml").toFile();
@@ -34,10 +38,6 @@ final class Exporter<V, E> {
       }
     }
     return path;
-  }
-
-  public static <V, E> void export(Graph<V, E> graph, String filename) {
-    new Exporter<V, E>(filename).export(graph);
   }
 
   public void export(Graph<V, E> graph) {

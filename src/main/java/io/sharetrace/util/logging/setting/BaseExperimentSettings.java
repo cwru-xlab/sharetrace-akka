@@ -1,23 +1,23 @@
 package io.sharetrace.util.logging.setting;
 
+import io.sharetrace.experiment.Context;
 import io.sharetrace.model.UserParameters;
 import io.sharetrace.util.cache.CacheParameters;
 import org.immutables.value.Value;
 
 @Value.Immutable
-interface BaseExperimentSettings extends LoggableSetting {
+@SuppressWarnings({"immutables", "immutables:from"})
+interface BaseExperimentSettings extends SettingsRecord {
 
   UserParameters userParameters();
 
   CacheParameters<?> cacheParameters();
 
-  long seed();
+  Context context();
 
   String stateId();
 
   String networkId();
 
-  String datasetId();
-
-  String graphType();
+  String networkType();
 }

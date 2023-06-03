@@ -7,11 +7,11 @@ public class IdentifiersTests {
 
   @Test
   public void ofIntStringReturnsIntAsString() {
-    Assertions.assertDoesNotThrow(() -> Integer.parseInt(Identifiers.ofIntString()));
+    Assertions.assertDoesNotThrow(() -> Integer.parseInt(Identifiers.newIntString()));
   }
 
   @Test
   public void ofLongStringReturnsLongAsString() {
-    Assertions.assertDoesNotThrow(() -> Long.parseLong(Identifiers.ofLongString()));
+    Assertions.assertDoesNotThrow(() -> Long.parseLong(Identifiers.newLongString()));
   }
 }

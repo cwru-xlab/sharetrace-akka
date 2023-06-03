@@ -24,7 +24,7 @@ public final class Caches {
             .interval(INTERVAL)
             .intervals(1)
             .refreshPeriod(Duration.ofMinutes(1L))
-            .lookAhead(0)
+            .forwardIntervals(0)
             .mergeStrategy(Integer::max)
             .build());
   }

@@ -13,11 +13,11 @@ import org.immutables.value.Value.Style.ImplementationVisibility;
 @JsonSerialize
 @Value.Style(
     get = {"is*", "has*", "get*", "*"},
-    strictBuilder = true,
     depluralize = true,
     visibility = ImplementationVisibility.PUBLIC,
     newBuilder = "create",
     typeAbstract = "Base*",
     typeImmutable = "*",
-    defaults = @Value.Immutable(copy = false, lazyhash = true))
+    withUnaryOperator = "map*",
+    defaults = @Value.Immutable(lazyhash = true))
 @interface ImmutableStyle {}

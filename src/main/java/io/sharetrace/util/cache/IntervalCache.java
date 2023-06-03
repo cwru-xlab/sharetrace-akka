@@ -18,8 +18,8 @@ public final class IntervalCache<V extends Comparable<? super V>> {
   private final BinaryOperator<V> mergeStrategy;
   private final Clock clock;
   private final long interval;
-  private final long lookBack;
-  private final long lookAhead;
+  private final long backwardRange;
+  private final long forwardRange;
   private final long refreshPeriod;
   private long lastRefresh;
   private long rangeStart;
@@ -30,10 +30,10 @@ public final class IntervalCache<V extends Comparable<? super V>> {
     mergeStrategy = parameters.mergeStrategy();
     clock = parameters.clock();
     interval = toLong(parameters.interval());
-    lookBack = interval * (parameters.intervals() - parameters.lookAhead());
-    lookAhead = interval * parameters.lookAhead();
+    backwardRange = interval * (parameters.intervals() - parameters.forwardIntervals());
+    forwardRange = interval * parameters.forwardIntervals();
     refreshPeriod = toLong(parameters.refreshPeriod());
-    lastRefresh = toLong(Instant.MIN);
+    lastRefresh = -1;
   }
 
   public static <V extends Comparable<? super V>> IntervalCache<V> create(
@@ -42,15 +42,15 @@ public final class IntervalCache<V extends Comparable<? super V>> {
   }
 
   private static long toLong(Duration duration) {
-    return duration.toMillis();
+    return duration.getSeconds();
   }
 
   private static long toLong(Instant instant) {
-    return instant.toEpochMilli();
+    return instant.getEpochSecond();
   }
 
   private static Instant toInstant(long epochSeconds) {
-    return Instant.ofEpochMilli(epochSeconds);
+    return Instant.ofEpochSecond(epochSeconds);
   }
 
   public Optional<V> get(Instant key) {
@@ -66,19 +66,19 @@ public final class IntervalCache<V extends Comparable<? super V>> {
   public Optional<V> max(Instant key) {
     refresh();
     return cache.entrySet().stream()
-        .filter(isNotAfter(key))
+        .filter(isBefore(key))
         .map(Map.Entry::getValue)
         .max(Comparator.naturalOrder());
   }
 
   private void refresh() {
-    long now = toLong(clock.instant());
+    long now = now();
     if (now - lastRefresh > refreshPeriod) {
-      rangeStart = now - lookBack;
-      long rangeEnd = now + lookAhead;
+      rangeStart = now - backwardRange;
+      long rangeEnd = now + forwardRange;
       range = Range.closedOpen(toInstant(rangeStart), toInstant(rangeEnd));
       cache.entrySet().removeIf(isExpired());
-      lastRefresh = now;
+      lastRefresh = now();
     }
   }
 
@@ -86,9 +86,13 @@ public final class IntervalCache<V extends Comparable<? super V>> {
     return entry -> entry.getKey() < rangeStart;
   }
 
-  private Predicate<Map.Entry<Long, ?>> isNotAfter(Instant instant) {
+  private long now() {
+    return toLong(clock.instant());
+  }
+
+  private Predicate<Map.Entry<Long, ?>> isBefore(Instant instant) {
     long key = floorKey(instant);
-    return entry -> entry.getKey() <= key;
+    return entry -> entry.getKey() < key;
   }
 
   private long checkedFloorKey(Instant key) {

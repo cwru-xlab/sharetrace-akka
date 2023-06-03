@@ -3,8 +3,7 @@
 
 <configuration debug="true">
   <timestamp key="bySecond" datePattern="yyyyMMddHHmmss"/>
-  <property name="log.dir" value="logs/${bySecond}"/>
-  <property name="graphs.log.dir" value="${log.dir}/graphs" scope="context"/>
+  <property name="logDirectory" value="logs/${bySecond}" scope="context"/>
 
   <appender
     class="net.logstash.logback.appender.LoggingEventAsyncDisruptorAppender" name="ConsoleAppender">
@@ -41,10 +40,9 @@
       </encoder>
       <immediateFlush>false</immediateFlush>
       <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-        <fileNamePattern>${log.dir}/events/%d{yyyyMMdd}-%i.log.gz</fileNamePattern>
-        <maxFileSize>1GB</maxFileSize>
-        <maxHistory>100</maxHistory>
-        <totalSizeCap>100GB</totalSizeCap>
+        <fileNamePattern>${logDirectory}/events-%i.log.gz</fileNamePattern>
+        <maxFileSize>100mb</maxFileSize>
+        <totalSizeCap>100gb</totalSizeCap>
       </rollingPolicy>
     </appender>
   </appender>
@@ -64,7 +62,7 @@
         <includeContext>false</includeContext>
         <includeMdcKeyName>sid</includeMdcKeyName>
       </encoder>
-      <file>${log.dir}/metrics.log</file>
+      <file>${logDirectory}/metrics.log</file>
       <immediateFlush>false</immediateFlush>
     </appender>
   </appender>
@@ -85,7 +83,7 @@
         <includeContext>false</includeContext>
         <includeMdcKeyName>sid</includeMdcKeyName>
       </encoder>
-      <file>${log.dir}/settings.log</file>
+      <file>${logDirectory}/settings.log</file>
       <immediateFlush>false</immediateFlush>
     </appender>
   </appender>

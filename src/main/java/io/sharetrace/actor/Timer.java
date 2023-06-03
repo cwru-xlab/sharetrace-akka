@@ -11,20 +11,24 @@ final class Timer<K> extends StopWatch {
 
   private final Map<K, Long> runtimes = Collecting.newLongValuedHashMap();
 
-  public void time(Runnable task, K key) {
-    time(Executors.callable(task), key);
-  }
-
-  public <R> R time(Callable<R> task, K key) {
+  private static <R> R call(Callable<R> callable) {
     try {
-      long start = getNanoTime();
-      R result = task.call();
-      long stop = getNanoTime();
-      runtimes.put(key, stop - start);
-      return result;
+      return callable.call();
     } catch (Exception exception) {
       throw new RuntimeException(exception);
     }
+  }
+
+  public void time(Runnable runnable, K key) {
+    time(Executors.callable(runnable), key);
+  }
+
+  public <R> R time(Callable<R> callable, K key) {
+    long start = getNanoTime();
+    R result = call(callable);
+    long stop = getNanoTime();
+    runtimes.put(key, stop - start);
+    return result;
   }
 
   public Duration duration(K key) {

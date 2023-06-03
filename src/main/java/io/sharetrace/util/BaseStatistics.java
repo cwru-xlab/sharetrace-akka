@@ -16,9 +16,6 @@ abstract class BaseStatistics {
     return Statistics.builder().statistics(statistics).build();
   }
 
-  @JsonIgnore
-  protected abstract DescriptiveStatistics statistics();
-
   @Value.Derived
   public double mean() {
     return statistics().getMean();
@@ -66,11 +63,11 @@ abstract class BaseStatistics {
 
   @Value.Derived
   public double upperWhisker() {
-    return (upperQuartile() + 1.5 * interQuartileRange());
+    return upperQuartile() + 1.5 * interQuartileRange();
   }
 
   @Value.Derived
-  public long size() {
+  public long count() {
     return statistics().getN();
   }
 
@@ -86,4 +83,8 @@ abstract class BaseStatistics {
         .boxed()
         .collect(Collecting.toUnmodifiableDoubleList());
   }
+
+  @JsonIgnore
+  @Value.Redacted
+  protected abstract DescriptiveStatistics statistics();
 }

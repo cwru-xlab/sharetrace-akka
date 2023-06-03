@@ -2,7 +2,6 @@ package io.sharetrace.model;
 
 import java.time.Instant;
 import java.util.Comparator;
-import javax.annotation.Nonnull;
 
 public interface TemporalScore extends Comparable<TemporalScore> {
 
@@ -14,7 +13,8 @@ public interface TemporalScore extends Comparable<TemporalScore> {
   Instant timestamp();
 
   @Override
-  default int compareTo(@Nonnull TemporalScore score) {
+  @SuppressWarnings("NullableProblems")
+  default int compareTo(TemporalScore score) {
     return COMPARATOR.compare(this, score);
   }
 }
