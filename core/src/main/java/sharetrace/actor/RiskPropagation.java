@@ -20,11 +20,21 @@ import sharetrace.graph.TemporalEdge;
 import sharetrace.graph.TemporalNetwork;
 import sharetrace.model.RiskScore;
 import sharetrace.model.UserParameters;
-import sharetrace.model.message.*;
+import sharetrace.model.message.AlgorithmMessage;
+import sharetrace.model.message.ContactMessage;
+import sharetrace.model.message.RiskScoreMessage;
+import sharetrace.model.message.RunMessage;
+import sharetrace.model.message.TimedOutMessage;
+import sharetrace.model.message.UserMessage;
 import sharetrace.util.Collecting;
 import sharetrace.util.logging.Logging;
 import sharetrace.util.logging.RecordLogger;
-import sharetrace.util.logging.metric.*;
+import sharetrace.util.logging.metric.CreateUsersRuntime;
+import sharetrace.util.logging.metric.MessagePassingRuntime;
+import sharetrace.util.logging.metric.MetricRecord;
+import sharetrace.util.logging.metric.RiskPropagationRuntime;
+import sharetrace.util.logging.metric.SendContactsRuntime;
+import sharetrace.util.logging.metric.SendRiskScoresRuntime;
 
 // TODO Add support to initialize all contacts up front
 final class RiskPropagation<K> extends AbstractBehavior<AlgorithmMessage> {

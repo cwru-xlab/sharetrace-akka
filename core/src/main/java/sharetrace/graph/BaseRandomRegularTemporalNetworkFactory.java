@@ -5,17 +5,15 @@ import java.util.Random;
 import org.apache.commons.math3.random.RandomAdaptor;
 import org.immutables.value.Value;
 import org.jgrapht.Graph;
-import org.jgrapht.generate.BarabasiAlbertGraphGenerator;
 import org.jgrapht.generate.GraphGenerator;
+import org.jgrapht.generate.RandomRegularGraphGenerator;
 import sharetrace.util.Identifiers;
 
 @Value.Immutable
-abstract class BaseBarabasiAlbertTemporalNetworkFactory
+abstract class BaseRandomRegularTemporalNetworkFactory
     extends GeneratedTemporalNetworkFactory<Integer> {
 
-  public abstract int initialVertices();
-
-  public abstract int newEdges();
+  public abstract int degree();
 
   @Override
   protected Graph<Integer, TemporalEdge> newTarget() {
@@ -25,19 +23,16 @@ abstract class BaseBarabasiAlbertTemporalNetworkFactory
   @Override
   protected GraphGenerator<Integer, TemporalEdge, Integer> graphGenerator() {
     Random random = RandomAdaptor.createAdaptor(random());
-    return new BarabasiAlbertGraphGenerator<>(initialVertices(), newEdges(), vertices(), random);
+    return new RandomRegularGraphGenerator<>(vertices(), degree(), random);
   }
 
   @Override
   protected TemporalNetwork<Integer> newNetwork(Graph<Integer, TemporalEdge> target) {
     return new SimpleTemporalNetwork<>(
-        target, Identifiers.newIntString(), "BarabasiAlbert", properties());
+        target, Identifiers.newIntString(), "RandomRegular", properties());
   }
 
   private Map<String, ?> properties() {
-    return Map.ofEntries(
-        Map.entry("vertices", vertices()),
-        Map.entry("initialVertices", initialVertices()),
-        Map.entry("newEdges", newEdges()));
+    return Map.of("vertices", vertices(), "degree", degree());
   }
 }

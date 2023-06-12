@@ -1,21 +1,24 @@
 package sharetrace;
 
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-import org.apache.commons.math3.distribution.BinomialDistribution;
-import sharetrace.util.DistributedRandom;
-import sharetrace.util.Statistics;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.time.Instant;
+import sharetrace.graph.FileTemporalNetworkFactory;
+import sharetrace.graph.TemporalNetwork;
 
 public class Sandbox {
 
-  public static void main(String[] args) {
-
-    DistributedRandom random = DistributedRandom.from(new BinomialDistribution(100, 0.5));
-    Statistics statistics =
-        IntStream.range(0, 10000)
-            .mapToDouble(x -> random.nextDouble())
-            .boxed()
-            .collect(Collectors.collectingAndThen(Collectors.toList(), Statistics::of));
-    System.out.println(statistics);
+  public static void main(String[] args) throws IOException {
+    TemporalNetwork<Integer> network =
+        FileTemporalNetworkFactory.<Integer>builder()
+            .delimiter("\\s+")
+            .path(Path.of("core/src/main/resources/datasets/InVS13.txt"))
+            .referenceTimestamp(Instant.now())
+            .vertexParser(Integer::valueOf)
+            .build()
+            .getNetwork();
+    ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
+    objectMapper.writeValue(System.out, network);
   }
 }

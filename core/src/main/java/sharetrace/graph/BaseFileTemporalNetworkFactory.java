@@ -14,16 +14,28 @@ import org.immutables.value.Value;
 import org.jgrapht.Graph;
 import org.jgrapht.generate.GraphGenerator;
 import sharetrace.model.TimestampReference;
+import sharetrace.util.Identifiers;
 
 @Value.Immutable
-abstract class BaseFileTemporalNetworkGenerator<V>
-    implements GraphGenerator<V, TemporalEdge, V>, TimestampReference {
+abstract class BaseFileTemporalNetworkFactory<V> extends AbstractTemporalNetworkFactory<V>
+    implements TimestampReference {
 
   public abstract Path path();
 
   public abstract String delimiter();
 
   public abstract Function<String, V> vertexParser();
+
+  @Override
+  protected Graph<V, TemporalEdge> newTarget() {
+    return TemporalNetworkFactoryHelper.newTarget();
+  }
+
+  @Override
+  protected TemporalNetwork<V> newNetwork(Graph<V, TemporalEdge> target) {
+    return new SimpleTemporalNetwork<>(
+        target, Identifiers.newIntString(), path().getFileName().toString());
+  }
 
   @Value.Default
   public Function<String, Instant> timestampParser() {
@@ -36,7 +48,11 @@ abstract class BaseFileTemporalNetworkGenerator<V>
   }
 
   @Override
-  public void generateGraph(Graph<V, TemporalEdge> target, Map<String, V> resultMap) {
+  protected GraphGenerator<V, TemporalEdge, V> graphGenerator() {
+    return this::generateGraph;
+  }
+
+  private void generateGraph(Graph<V, TemporalEdge> target, Map<String, V> resultMap) {
     Instant extremum = parseNetwork(target);
     adjustTimestamps(target, extremum);
   }

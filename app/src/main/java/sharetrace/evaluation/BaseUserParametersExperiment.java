@@ -9,14 +9,14 @@ import sharetrace.experiment.data.RiskScoreFactory;
 import sharetrace.model.UserParameters;
 
 @Value.Immutable
-abstract class BaseUserParametersExperiment<T> extends AbstractExperiment<T> {
+abstract class BaseUserParametersExperiment<K> extends AbstractExperiment<K> {
 
   public abstract List<Float> transmissionRates();
 
   public abstract List<Float> sendCoefficients();
 
   @Override
-  public void run(ExperimentState<T> state) {
+  public void run(ExperimentState<K> state) {
     for (int i = 0; i < networks(); i++) {
       state = state.mapScoreFactory(RiskScoreFactory::cached).withNewNetwork();
       for (float tr : transmissionRates()) {

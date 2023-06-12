@@ -6,28 +6,27 @@ import java.nio.file.Path;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
-import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Supplier;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.stream.Stream;
 import org.apache.commons.math3.distribution.BetaDistribution;
 import org.apache.commons.math3.distribution.NormalDistribution;
 import org.apache.commons.math3.distribution.UniformRealDistribution;
 import org.apache.commons.math3.random.RandomGenerator;
-import org.jgrapht.generate.BarabasiAlbertGraphGenerator;
-import org.jgrapht.generate.GnmRandomGraphGenerator;
-import org.jgrapht.generate.GraphGenerator;
-import org.jgrapht.generate.RandomRegularGraphGenerator;
-import org.jgrapht.generate.ScaleFreeGraphGenerator;
-import org.jgrapht.generate.WattsStrogatzGraphGenerator;
-import sharetrace.experiment.data.*;
 import sharetrace.experiment.data.RandomGeneratorFactory;
+import sharetrace.experiment.data.RandomRiskScoreFactory;
+import sharetrace.experiment.data.RandomTimestampFactory;
 import sharetrace.experiment.data.RiskScoreFactory;
 import sharetrace.experiment.data.TimestampFactory;
-import sharetrace.graph.FileTemporalNetworkGenerator;
+import sharetrace.graph.BarabasiAlbertTemporalNetworkFactory;
+import sharetrace.graph.FileTemporalNetworkFactory;
+import sharetrace.graph.GnmRandomTemporalNetworkFactory;
+import sharetrace.graph.RandomRegularTemporalNetworkFactory;
 import sharetrace.graph.ScaleFreeTemporalNetworkFactory;
-import sharetrace.graph.TemporalEdge;
 import sharetrace.graph.TemporalNetworkFactory;
+import sharetrace.graph.WattsStrogatzTemporalNetworkFactory;
 import sharetrace.model.UserParameters;
 import sharetrace.model.message.RiskScoreMessage;
 import sharetrace.util.DistributedRandom;
@@ -47,26 +46,22 @@ public final class ExperimentFactory {
     create();
   }
 
+  @SuppressWarnings("unchecked")
   public static ExperimentState<?> create(Config config) {
     Context context = parseContext(config.getConfig("context"));
     UserParameters userParams = parseParameters(config.getConfig("user"));
-    TemporalNetworkFactory<?> networkFactory =
-        parseNetworkFactory(config.getConfig("experiment.data.network"), context);
     return ExperimentState.builder()
         .context(context)
         .userParameters(userParams)
         .cacheParameters(parseParameters(config.getConfig("user.cache"), context, userParams))
-        //        .networkFactory(parseNetworkFactory(config.getConfig("experiment.data.network"),
-        // context))
-        //        .scoreFactory(parseScoreFactory(config.getConfig("experiment.data.risk-scores"),
-        // context))
+        .networkFactory(
+            (TemporalNetworkFactory<Object>)
+                parseNetworkFactory(config.getConfig("experiment.data.network"), context))
+        .scoreFactory(
+            (RiskScoreFactory<Object>)
+                parseScoreFactory(config.getConfig("experiment.data.risk-scores"), context))
         .addAllLoggable(parseLoggable(config.getConfig("experiment")))
         .build();
-  }
-
-  private static Supplier<String> vertexFactory() {
-    AtomicInteger counter = new AtomicInteger(0);
-    return () -> String.valueOf(counter.getAndIncrement());
   }
 
   private static Set<Class<? extends LogRecord>> parseLoggable(final Config config) {
@@ -113,8 +108,8 @@ public final class ExperimentFactory {
   }
 
   private static RandomGenerator parseRandom(Config config, long seed) {
-    return ((RandomGeneratorFactory) newInstance(config, "random-generator-factory"))
-        .getRandom(seed);
+    Object factory = newInstance(config, "random-generator-factory");
+    return ((RandomGeneratorFactory) factory).getRandom(seed);
   }
 
   private static UserParameters parseParameters(Config config) {
@@ -142,57 +137,46 @@ public final class ExperimentFactory {
   }
 
   private static TemporalNetworkFactory<?> parseNetworkFactory(Config config, Context context) {
-    //    GraphGenerator<String, TemporalEdge, String> generator = parseGraphGenerator(config,
-    // context);
-    //    if (generator instanceof FileTemporalNetworkGenerator) {
-    //      return (TemporalNetworkFactory<String>) generator;
-    //    } else {
-    //      TimeFactory timeFactory = parseTimeFactory(config, context);
-    //      return ForwardingTemporalNetworkGenerator.<String>builder()
-    //          .delegate(generator)
-    //          .timeFactory((v1, v2) -> timeFactory.get())
-    //          .build();
-    //    }
-    return ScaleFreeTemporalNetworkFactory.builder().random(context.random()).vertices(100).build();
-  }
-
-  private static GraphGenerator<String, TemporalEdge, String> parseGraphGenerator(
-      Config config, Context context) {
     switch (config.getString("type")) {
       case ("gnm-random"):
-        config = config.getConfig("gnm-random");
-        boolean allowLoops = false;
-        boolean multipleEdges = false;
-        return new GnmRandomGraphGenerator<>(
-            config.getInt("vertices"),
-            config.getInt("edges"),
-            context.seed(),
-            allowLoops,
-            multipleEdges);
+        return GnmRandomTemporalNetworkFactory.builder()
+            .vertices(config.getInt("gnm-random.vertices"))
+            .edges(config.getInt("gnm-random.edges"))
+            .timestampFactory(parseTimestampFactory(config, context))
+            .random(context.random())
+            .build();
       case ("random-regular"):
-        config = config.getConfig("random-regular");
-        return new RandomRegularGraphGenerator<>(
-            config.getInt("vertices"), config.getInt("degree"), context.seed());
+        return RandomRegularTemporalNetworkFactory.builder()
+            .vertices(config.getInt("random-regular.vertices"))
+            .degree(config.getInt("random-regular.degree"))
+            .timestampFactory(parseTimestampFactory(config, context))
+            .random(context.random())
+            .build();
       case ("barabasi-albert"):
-        config = config.getConfig("barabasi-albert");
-        return new BarabasiAlbertGraphGenerator<>(
-            config.getInt("initial-vertices"),
-            config.getInt("new-edges"),
-            config.getInt("vertices"),
-            context.seed());
+        return BarabasiAlbertTemporalNetworkFactory.builder()
+            .initialVertices(config.getInt("barabasi-albert.initial-vertices"))
+            .newEdges(config.getInt("barabasi-albert.new-edges"))
+            .vertices(config.getInt("barabasi-albert.vertices"))
+            .timestampFactory(parseTimestampFactory(config, context))
+            .random(context.random())
+            .build();
       case ("watts-strogatz"):
-        config = config.getConfig("watts-strogatz");
-        return new WattsStrogatzGraphGenerator<>(
-            config.getInt("vertices"),
-            config.getInt("nearest-neighbors"),
-            config.getDouble("rewiring-probability"),
-            context.seed());
+        return WattsStrogatzTemporalNetworkFactory.builder()
+            .vertices(config.getInt("watts-strogatz.vertices"))
+            .nearestNeighbors(config.getInt("watts-strogatz.nearest-neighbors"))
+            .rewiringProbability(config.getDouble("watts-strogatz.rewiring-probability"))
+            .timestampFactory(parseTimestampFactory(config, context))
+            .random(context.random())
+            .build();
       case ("scale-free"):
         config = config.getConfig("scale-free");
-        return new ScaleFreeGraphGenerator<>(config.getInt("vertices"), context.seed());
+        return ScaleFreeTemporalNetworkFactory.builder()
+            .vertices(config.getInt("scale-free.vertices"))
+            .timestampFactory(parseTimestampFactory(config, context))
+            .random(context.random())
+            .build();
       case ("file"):
-        config = config.getConfig("file");
-        return FileTemporalNetworkGenerator.<String>builder()
+        return FileTemporalNetworkFactory.<String>builder()
             .path(Path.of(config.getString("file.path")))
             .delimiter(config.getString("file.delimiter"))
             .referenceTimestamp(context.referenceTimestamp())
@@ -207,11 +191,11 @@ public final class ExperimentFactory {
     Config distributionConfig = config.getConfig("value-distribution");
     return RandomRiskScoreFactory.<String>builder()
         .random(parseRandom(distributionConfig, context.random()))
-        .timestampFactory(parseTimeFactory(config, context))
+        .timestampFactory(parseTimestampFactory(config, context))
         .build();
   }
 
-  private static TimestampFactory parseTimeFactory(Config config, Context context) {
+  private static TimestampFactory parseTimestampFactory(Config config, Context context) {
     Config distributionConfig = config.getConfig("look-back-distribution");
     return RandomTimestampFactory.builder()
         .referenceTimestamp(context.referenceTimestamp())

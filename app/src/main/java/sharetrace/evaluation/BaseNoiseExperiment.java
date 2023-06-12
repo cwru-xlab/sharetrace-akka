@@ -7,12 +7,12 @@ import sharetrace.experiment.ExperimentState;
 import sharetrace.util.DistributedRandom;
 
 @Value.Immutable
-abstract class BaseNoiseExperiment<T> extends AbstractExperiment<T> {
+abstract class BaseNoiseExperiment<K> extends AbstractExperiment<K> {
 
   public abstract List<DistributedRandom> noises();
 
   @Override
-  public void run(ExperimentState<T> state) {
+  public void run(ExperimentState<K> state) {
     for (int i = 0; i < networks(); i++) {
       state = state.withNewNetwork();
       for (DistributedRandom noise : noises()) {

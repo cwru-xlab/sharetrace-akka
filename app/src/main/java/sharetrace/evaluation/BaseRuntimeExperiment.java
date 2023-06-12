@@ -7,13 +7,13 @@ import sharetrace.experiment.ExperimentState;
 import sharetrace.graph.TemporalNetworkFactory;
 
 @Value.Immutable
-abstract class BaseRuntimeExperiment<T> extends AbstractExperiment<T> {
+abstract class BaseRuntimeExperiment<K> extends AbstractExperiment<K> {
 
-  public abstract List<TemporalNetworkFactory<T>> networkFactories();
+  public abstract List<TemporalNetworkFactory<K>> networkFactories();
 
   @Override
-  public void run(ExperimentState<T> state) {
-    for (TemporalNetworkFactory<T> networkFactory : networkFactories()) {
+  public void run(ExperimentState<K> state) {
+    for (TemporalNetworkFactory<K> networkFactory : networkFactories()) {
       for (int i = 0; i < networks(); i++) {
         state.withNetworkFactory(networkFactory).run(iterations());
       }

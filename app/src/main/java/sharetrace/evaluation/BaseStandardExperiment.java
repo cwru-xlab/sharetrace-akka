@@ -5,10 +5,10 @@ import sharetrace.experiment.AbstractExperiment;
 import sharetrace.experiment.ExperimentState;
 
 @Value.Immutable
-abstract class BaseStandardExperiment<T> extends AbstractExperiment<T> {
+abstract class BaseStandardExperiment<K> extends AbstractExperiment<K> {
 
   @Override
-  public void run(ExperimentState<T> state) {
+  public void run(ExperimentState<K> state) {
     state.run(iterations());
   }
 }

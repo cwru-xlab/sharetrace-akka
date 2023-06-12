@@ -14,7 +14,7 @@ public abstract class AbstractTemporalNetworkFactory<V> implements TemporalNetwo
 
   protected abstract Graph<V, TemporalEdge> newTarget();
 
-  protected abstract GraphGenerator<V, TemporalEdge, V> graphGenerator();
+  protected abstract GraphGenerator<V, TemporalEdge, ?> graphGenerator();
 
   protected abstract TemporalNetwork<V> newNetwork(Graph<V, TemporalEdge> target);
 }

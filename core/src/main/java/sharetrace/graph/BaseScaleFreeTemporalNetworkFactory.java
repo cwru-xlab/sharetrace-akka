@@ -1,5 +1,6 @@
 package sharetrace.graph;
 
+import java.util.Map;
 import java.util.Random;
 import org.apache.commons.math3.random.RandomAdaptor;
 import org.immutables.value.Value;
@@ -9,7 +10,8 @@ import org.jgrapht.generate.ScaleFreeGraphGenerator;
 import sharetrace.util.Identifiers;
 
 @Value.Immutable
-abstract class BaseScaleFreeTemporalNetworkFactory extends GeneratedTemporalNetworkFactory {
+abstract class BaseScaleFreeTemporalNetworkFactory
+    extends GeneratedTemporalNetworkFactory<Integer> {
 
   protected Graph<Integer, TemporalEdge> newTarget() {
     return TemporalNetworkFactoryHelper.newIntTarget();
@@ -21,6 +23,11 @@ abstract class BaseScaleFreeTemporalNetworkFactory extends GeneratedTemporalNetw
   }
 
   protected TemporalNetwork<Integer> newNetwork(Graph<Integer, TemporalEdge> target) {
-    return new ForwardingTemporalNetwork<>(target, Identifiers.newIntString(), "ScaleFree");
+    return new SimpleTemporalNetwork<>(
+        target, Identifiers.newIntString(), "ScaleFree", properties());
+  }
+
+  private Map<String, ?> properties() {
+    return Map.of("vertices", vertices());
   }
 }

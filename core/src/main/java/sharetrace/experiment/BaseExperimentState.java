@@ -2,12 +2,14 @@ package sharetrace.experiment;
 
 import java.util.Set;
 import java.util.stream.IntStream;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.immutables.value.Value;
 import sharetrace.actor.RiskPropagationBuilder;
 import sharetrace.experiment.data.RiskScoreFactory;
-import sharetrace.graph.NetworkLogger;
 import sharetrace.graph.TemporalNetwork;
 import sharetrace.graph.TemporalNetworkFactory;
+import sharetrace.graph.TemporalNetworkLogger;
 import sharetrace.model.Identifiable;
 import sharetrace.model.UserParameters;
 import sharetrace.model.message.RiskScoreMessage;
@@ -29,8 +31,10 @@ abstract class BaseExperimentState<K> implements Runnable, Identifiable {
 
   public abstract UserParameters userParameters();
 
+  @JsonIgnore
   public abstract TemporalNetworkFactory<K> networkFactory();
 
+  @JsonIgnore
   public abstract RiskScoreFactory<K> scoreFactory();
 
   public abstract Set<Class<? extends LogRecord>> loggable();
@@ -47,6 +51,7 @@ abstract class BaseExperimentState<K> implements Runnable, Identifiable {
     return Identifiers.newIntString();
   }
 
+  @JsonIgnore
   public ExperimentState<K> withNewNetwork() {
     return ExperimentState.copyOf(this);
   }
@@ -68,7 +73,7 @@ abstract class BaseExperimentState<K> implements Runnable, Identifiable {
   }
 
   private void logMetricsAndSettings() {
-    NetworkLogger.logMetrics(contactNetwork());
+    TemporalNetworkLogger.logMetrics(contactNetwork());
     LOGGER.log(SettingsRecord.KEY, ExperimentSettings.class, this::settings);
   }
 

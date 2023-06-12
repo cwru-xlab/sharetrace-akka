@@ -10,11 +10,11 @@ import sharetrace.util.logging.metric.GraphSize;
 import sharetrace.util.logging.metric.GraphTopology;
 import sharetrace.util.logging.metric.MetricRecord;
 
-public final class NetworkLogger {
+public final class TemporalNetworkLogger {
 
   private static final RecordLogger<MetricRecord> LOGGER = Logging.metricsLogger();
 
-  private NetworkLogger() {}
+  private TemporalNetworkLogger() {}
 
   public static void logMetrics(TemporalNetwork<?> network) {
     GraphStatistics<?, ?> statistics = GraphStatistics.of(network);
@@ -23,7 +23,7 @@ public final class NetworkLogger {
     logMetric(GraphEccentricity.class, statistics::graphEccentricity);
     logMetric(GraphScores.class, statistics::graphScores);
     if (logMetric(GraphTopology.class, graphTopology(network))) {
-      Exporter.export(network, "network-" + network.id());
+      Exporter.export(network, network.id());
     }
   }
 
