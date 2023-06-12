@@ -1,9 +1,8 @@
 package sharetrace.experiment;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.Set;
 import java.util.stream.IntStream;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.immutables.value.Value;
 import sharetrace.actor.RiskPropagationBuilder;
 import sharetrace.experiment.data.RiskScoreFactory;
@@ -13,7 +12,7 @@ import sharetrace.graph.TemporalNetworkLogger;
 import sharetrace.model.Identifiable;
 import sharetrace.model.UserParameters;
 import sharetrace.model.message.RiskScoreMessage;
-import sharetrace.util.Identifiers;
+import sharetrace.util.IdFactory;
 import sharetrace.util.cache.CacheParameters;
 import sharetrace.util.cache.IntervalCache;
 import sharetrace.util.logging.LogRecord;
@@ -41,19 +40,19 @@ abstract class BaseExperimentState<K> implements Runnable, Identifiable {
 
   public abstract Context context();
 
-  @Value.Lazy
+  @Value.Default
   public TemporalNetwork<K> contactNetwork() {
     return networkFactory().getNetwork();
   }
 
   @Value.Derived
   public String id() {
-    return Identifiers.newIntString();
+    return IdFactory.newIntString();
   }
 
   @JsonIgnore
   public ExperimentState<K> withNewNetwork() {
-    return ExperimentState.copyOf(this);
+    return ExperimentState.copyOf(this).withContactNetwork(contactNetwork());
   }
 
   public void run(int iterations) {

@@ -7,7 +7,7 @@ import org.immutables.value.Value;
 import org.jgrapht.Graph;
 import org.jgrapht.generate.GnmRandomGraphGenerator;
 import org.jgrapht.generate.GraphGenerator;
-import sharetrace.util.Identifiers;
+import sharetrace.util.IdFactory;
 
 @Value.Immutable
 abstract class BaseGnmRandomTemporalNetworkFactory
@@ -20,25 +20,24 @@ abstract class BaseGnmRandomTemporalNetworkFactory
 
   @Override
   protected Graph<Integer, TemporalEdge> newTarget() {
-    return TemporalNetworkFactoryHelper.newIntTarget();
+    return GraphFactory.newIntGraph();
   }
 
   @Override
   protected GraphGenerator<Integer, TemporalEdge, Integer> graphGenerator() {
     Random random = RandomAdaptor.createAdaptor(random());
     return new GnmRandomGraphGenerator<>(
-        vertices(), edges(), random, ALLOW_LOOPS, ALLOW_MULTIPLE_EDGES);
+        nodes(), edges(), random, ALLOW_LOOPS, ALLOW_MULTIPLE_EDGES);
   }
 
   @Override
   protected TemporalNetwork<Integer> newNetwork(Graph<Integer, TemporalEdge> target) {
-    return new SimpleTemporalNetwork<>(
-        target, Identifiers.newIntString(), "GnmRandom", properties());
+    return new SimpleTemporalNetwork<>(target, IdFactory.newIntString(), "GnmRandom", properties());
   }
 
   private Map<String, ?> properties() {
     return Map.ofEntries(
-        Map.entry("vertices", vertices()),
+        Map.entry("nodes", nodes()),
         Map.entry("edges", edges()),
         Map.entry("allowLoops", ALLOW_LOOPS),
         Map.entry("allowMultipleEdges", ALLOW_MULTIPLE_EDGES));

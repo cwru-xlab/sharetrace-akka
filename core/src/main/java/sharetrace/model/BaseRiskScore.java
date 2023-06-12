@@ -13,9 +13,10 @@ abstract class BaseRiskScore implements TemporalScore {
   public static final float MAX_VALUE = 1;
   public static final float RANGE = MAX_VALUE - MIN_VALUE;
   public static final Instant MIN_TIMESTAMP = Instant.EPOCH;
+  public static final RiskScore MIN = RiskScore.of(MIN_VALUE, MIN_TIMESTAMP);
+
   private static final Range<Float> VALUE_RANGE = Range.closed(MIN_VALUE, MAX_VALUE);
   private static final Range<Instant> TIMESTAMP_RANGE = Range.atLeast(MIN_TIMESTAMP);
-  public static final RiskScore MIN = RiskScore.of(MIN_VALUE, MIN_TIMESTAMP);
 
   @Override
   @Value.Parameter

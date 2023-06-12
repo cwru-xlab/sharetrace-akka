@@ -13,11 +13,11 @@ abstract class BaseCachedRiskScoreFactory<K> implements RiskScoreFactory<K> {
     return cache().computeIfAbsent(key, scoreFactory()::getScore);
   }
 
+  @Value.Parameter
+  protected abstract RiskScoreFactory<K> scoreFactory();
+
   @Value.Default
   protected Map<K, RiskScore> cache() {
     return Collecting.newHashMap();
   }
-
-  @Value.Parameter
-  protected abstract RiskScoreFactory<K> scoreFactory();
 }

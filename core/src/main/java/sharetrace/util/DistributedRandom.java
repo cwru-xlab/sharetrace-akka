@@ -6,27 +6,28 @@ import org.apache.commons.math3.distribution.RealDistribution;
 @FunctionalInterface
 public interface DistributedRandom {
 
-  double MIN_FINITE = Math.nextUp(Double.NEGATIVE_INFINITY);
-  double MAX_FINITE = Math.nextDown(Double.POSITIVE_INFINITY);
-
   static DistributedRandom from(RealDistribution distribution) {
-    double min = finite(distribution.getSupportLowerBound());
-    double max = finite(distribution.getSupportUpperBound());
-    return () -> normalized(finite(distribution.sample()), min, max);
+    double min = distribution.getSupportLowerBound();
+    double max = distribution.getSupportUpperBound();
+    return () -> normalized(distribution.sample(), min, max);
   }
 
   static DistributedRandom from(IntegerDistribution distribution) {
-    double min = finite(distribution.getSupportLowerBound());
-    double max = finite(distribution.getSupportUpperBound());
-    return () -> normalized(finite(distribution.sample()), min, max);
-  }
-
-  private static double finite(double value) {
-    return Math.max(MIN_FINITE, Math.min(MAX_FINITE, value));
+    double min = distribution.getSupportLowerBound();
+    double max = distribution.getSupportUpperBound();
+    return () -> normalized(distribution.sample(), min, max);
   }
 
   private static double normalized(double value, double min, double max) {
-    return (value - min) / (max - min);
+    return finite(value - min) / finite(max - min);
+  }
+
+  private static double finite(double value) {
+    return bound(value, -Double.MAX_VALUE, Double.MAX_VALUE);
+  }
+
+  private static double bound(double value, double min, double max) {
+    return Math.max(min, Math.min(max, value));
   }
 
   double nextDouble();
@@ -36,7 +37,7 @@ public interface DistributedRandom {
   }
 
   default float nextFloat(float scale) {
-    return (float) nextDouble(scale);
+    return (float) bound(nextDouble(scale), -Float.MAX_VALUE, Float.MAX_VALUE);
   }
 
   default long nextLong(double scale) {

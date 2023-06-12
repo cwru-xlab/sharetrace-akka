@@ -14,28 +14,19 @@ import org.immutables.value.Value;
 import org.jgrapht.Graph;
 import org.jgrapht.generate.GraphGenerator;
 import sharetrace.model.TimestampReference;
-import sharetrace.util.Identifiers;
+import sharetrace.util.IdFactory;
 
 @Value.Immutable
 abstract class BaseFileTemporalNetworkFactory<V> extends AbstractTemporalNetworkFactory<V>
     implements TimestampReference {
 
+  private static final String TEST_INT = "1";
+
   public abstract Path path();
 
   public abstract String delimiter();
 
-  public abstract Function<String, V> vertexParser();
-
-  @Override
-  protected Graph<V, TemporalEdge> newTarget() {
-    return TemporalNetworkFactoryHelper.newTarget();
-  }
-
-  @Override
-  protected TemporalNetwork<V> newNetwork(Graph<V, TemporalEdge> target) {
-    return new SimpleTemporalNetwork<>(
-        target, Identifiers.newIntString(), path().getFileName().toString());
-  }
+  public abstract Function<String, V> nodeParser();
 
   @Value.Default
   public Function<String, Instant> timestampParser() {
@@ -45,6 +36,17 @@ abstract class BaseFileTemporalNetworkFactory<V> extends AbstractTemporalNetwork
   @Value.Default
   public BinaryOperator<Instant> mergeStrategy() {
     return BinaryOperator.maxBy(Instant::compareTo);
+  }
+
+  @Override
+  protected Graph<V, TemporalEdge> newTarget() {
+    return GraphFactory.newGraph(nodeParser().apply(TEST_INT));
+  }
+
+  @Override
+  protected TemporalNetwork<V> newNetwork(Graph<V, TemporalEdge> target) {
+    String type = path().getFileName().toString();
+    return new SimpleTemporalNetwork<>(target, IdFactory.newIntString(), type);
   }
 
   @Override
@@ -63,11 +65,11 @@ abstract class BaseFileTemporalNetworkFactory<V> extends AbstractTemporalNetwork
       Instant extremum = Instant.MIN;
       for (String edge : edges) {
         String[] args = edge.split(delimiter());
-        V v1 = vertexParser().apply(args[1]);
-        V v2 = vertexParser().apply(args[2]);
+        V v1 = nodeParser().apply(args[1]);
+        V v2 = nodeParser().apply(args[2]);
         if (!v1.equals(v2)) {
           Instant timestamp = timestampParser().apply(args[2]);
-          mergeEdgeWithVertices(target, v1, v2, timestamp);
+          mergeWithNodes(target, v1, v2, timestamp);
           extremum = mergeStrategy().apply(extremum, timestamp);
         }
       }
@@ -77,13 +79,12 @@ abstract class BaseFileTemporalNetworkFactory<V> extends AbstractTemporalNetwork
     }
   }
 
-  private void mergeEdgeWithVertices(Graph<V, TemporalEdge> target, V v1, V v2, Instant timestamp) {
+  private void mergeWithNodes(Graph<V, TemporalEdge> target, V v1, V v2, Instant timestamp) {
     target.addVertex(v1);
     target.addVertex(v2);
     TemporalEdge edge = target.getEdge(v1, v2);
     if (edge != null) {
-      Instant newTimestamp = mergeStrategy().apply(edge.getTimestamp(), timestamp);
-      edge.setTimestamp(newTimestamp);
+      edge.mergeTimestamp(timestamp, mergeStrategy());
     } else {
       target.addEdge(v1, v2).setTimestamp(timestamp);
     }
@@ -91,9 +92,6 @@ abstract class BaseFileTemporalNetworkFactory<V> extends AbstractTemporalNetwork
 
   private void adjustTimestamps(Graph<V, TemporalEdge> target, Instant extremum) {
     Duration offset = Duration.between(extremum, referenceTimestamp());
-    for (TemporalEdge edge : target.edgeSet()) {
-      Instant newTimestamp = edge.getTimestamp().plus(offset);
-      edge.setTimestamp(newTimestamp);
-    }
+    target.edgeSet().forEach(edge -> edge.mapTimestamp(t -> t.plus(offset)));
   }
 }

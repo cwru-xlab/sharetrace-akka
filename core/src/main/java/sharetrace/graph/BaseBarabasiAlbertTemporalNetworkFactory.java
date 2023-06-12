@@ -7,37 +7,37 @@ import org.immutables.value.Value;
 import org.jgrapht.Graph;
 import org.jgrapht.generate.BarabasiAlbertGraphGenerator;
 import org.jgrapht.generate.GraphGenerator;
-import sharetrace.util.Identifiers;
+import sharetrace.util.IdFactory;
 
 @Value.Immutable
 abstract class BaseBarabasiAlbertTemporalNetworkFactory
     extends GeneratedTemporalNetworkFactory<Integer> {
 
-  public abstract int initialVertices();
+  public abstract int initialNodes();
 
   public abstract int newEdges();
 
   @Override
   protected Graph<Integer, TemporalEdge> newTarget() {
-    return TemporalNetworkFactoryHelper.newIntTarget();
+    return GraphFactory.newIntGraph();
   }
 
   @Override
   protected GraphGenerator<Integer, TemporalEdge, Integer> graphGenerator() {
     Random random = RandomAdaptor.createAdaptor(random());
-    return new BarabasiAlbertGraphGenerator<>(initialVertices(), newEdges(), vertices(), random);
+    return new BarabasiAlbertGraphGenerator<>(initialNodes(), newEdges(), nodes(), random);
   }
 
   @Override
   protected TemporalNetwork<Integer> newNetwork(Graph<Integer, TemporalEdge> target) {
     return new SimpleTemporalNetwork<>(
-        target, Identifiers.newIntString(), "BarabasiAlbert", properties());
+        target, IdFactory.newIntString(), "BarabasiAlbert", properties());
   }
 
   private Map<String, ?> properties() {
     return Map.ofEntries(
-        Map.entry("vertices", vertices()),
-        Map.entry("initialVertices", initialVertices()),
+        Map.entry("nodes", nodes()),
+        Map.entry("initialNodes", initialNodes()),
         Map.entry("newEdges", newEdges()));
   }
 }

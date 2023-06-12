@@ -30,7 +30,7 @@ import sharetrace.graph.WattsStrogatzTemporalNetworkFactory;
 import sharetrace.model.UserParameters;
 import sharetrace.model.message.RiskScoreMessage;
 import sharetrace.util.DistributedRandom;
-import sharetrace.util.Identifiers;
+import sharetrace.util.IdFactory;
 import sharetrace.util.cache.CacheParameters;
 import sharetrace.util.logging.LogRecord;
 
@@ -104,7 +104,7 @@ public final class ExperimentFactory {
 
   private static long parseSeed(Config config) {
     String seed = config.getString("seed");
-    return seed.equals("any") ? Identifiers.newLong() : Long.parseLong(seed);
+    return seed.equals("any") ? IdFactory.newLong() : Long.parseLong(seed);
   }
 
   private static RandomGenerator parseRandom(Config config, long seed) {
@@ -140,29 +140,29 @@ public final class ExperimentFactory {
     switch (config.getString("type")) {
       case ("gnm-random"):
         return GnmRandomTemporalNetworkFactory.builder()
-            .vertices(config.getInt("gnm-random.vertices"))
+            .nodes(config.getInt("gnm-random.nodes"))
             .edges(config.getInt("gnm-random.edges"))
             .timestampFactory(parseTimestampFactory(config, context))
             .random(context.random())
             .build();
       case ("random-regular"):
         return RandomRegularTemporalNetworkFactory.builder()
-            .vertices(config.getInt("random-regular.vertices"))
+            .nodes(config.getInt("random-regular.nodes"))
             .degree(config.getInt("random-regular.degree"))
             .timestampFactory(parseTimestampFactory(config, context))
             .random(context.random())
             .build();
       case ("barabasi-albert"):
         return BarabasiAlbertTemporalNetworkFactory.builder()
-            .initialVertices(config.getInt("barabasi-albert.initial-vertices"))
+            .initialNodes(config.getInt("barabasi-albert.initial-nodes"))
             .newEdges(config.getInt("barabasi-albert.new-edges"))
-            .vertices(config.getInt("barabasi-albert.vertices"))
+            .nodes(config.getInt("barabasi-albert.nodes"))
             .timestampFactory(parseTimestampFactory(config, context))
             .random(context.random())
             .build();
       case ("watts-strogatz"):
         return WattsStrogatzTemporalNetworkFactory.builder()
-            .vertices(config.getInt("watts-strogatz.vertices"))
+            .nodes(config.getInt("watts-strogatz.nodes"))
             .nearestNeighbors(config.getInt("watts-strogatz.nearest-neighbors"))
             .rewiringProbability(config.getDouble("watts-strogatz.rewiring-probability"))
             .timestampFactory(parseTimestampFactory(config, context))
@@ -171,7 +171,7 @@ public final class ExperimentFactory {
       case ("scale-free"):
         config = config.getConfig("scale-free");
         return ScaleFreeTemporalNetworkFactory.builder()
-            .vertices(config.getInt("scale-free.vertices"))
+            .nodes(config.getInt("scale-free.nodes"))
             .timestampFactory(parseTimestampFactory(config, context))
             .random(context.random())
             .build();
@@ -180,7 +180,7 @@ public final class ExperimentFactory {
             .path(Path.of(config.getString("file.path")))
             .delimiter(config.getString("file.delimiter"))
             .referenceTimestamp(context.referenceTimestamp())
-            .vertexParser(String::valueOf)
+            .nodeParser(String::valueOf)
             .build();
       default:
         throw new NoSuchElementException();

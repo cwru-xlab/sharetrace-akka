@@ -2,9 +2,9 @@ package sharetrace.util;
 
 import java.util.concurrent.ThreadLocalRandom;
 
-public final class Identifiers {
+public final class IdFactory {
 
-  private Identifiers() {}
+  private IdFactory() {}
 
   public static String newIntString() {
     return String.valueOf(newInt());

@@ -64,7 +64,7 @@ public final class IntervalCache<V extends Comparable<? super V>> {
 
   public Optional<V> get(Instant key) {
     refresh();
-    return Optional.ofNullable(cache.get(floorKey(key)));
+    return Optional.of(key).map(this::floorKey).map(cache::get);
   }
 
   public void put(Instant key, V value) {
@@ -75,7 +75,7 @@ public final class IntervalCache<V extends Comparable<? super V>> {
   public Optional<V> max(Instant key) {
     refresh();
     return cache.entrySet().stream()
-        .filter(isBefore(key))
+        .filter(isNotAfter(key))
         .map(Map.Entry::getValue)
         .max(Comparator.naturalOrder());
   }
@@ -99,9 +99,9 @@ public final class IntervalCache<V extends Comparable<? super V>> {
     return toLong(clock.instant());
   }
 
-  private Predicate<Map.Entry<Long, ?>> isBefore(Instant instant) {
+  private Predicate<Map.Entry<Long, ?>> isNotAfter(Instant instant) {
     long key = floorKey(instant);
-    return entry -> entry.getKey() < key;
+    return entry -> entry.getKey() <= key;
   }
 
   private long checkedFloorKey(Instant key) {

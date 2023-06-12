@@ -24,7 +24,15 @@ final class UserHelper {
     this.parameters = parameters;
   }
 
-  public float threshold(TemporalScore score) {
+  public boolean isAbove(TemporalScore score, TemporalScore threshold) {
+    return isAbove(score, threshold.value());
+  }
+
+  public boolean isAbove(TemporalScore score, float threshold) {
+    return score.value() > threshold + parameters.tolerance();
+  }
+
+  public float sendThreshold(TemporalScore score) {
     return score.value() * parameters.sendCoefficient();
   }
 
@@ -36,10 +44,6 @@ final class UserHelper {
     return message.withSender(self).mapScore(this::transmitted);
   }
 
-  private RiskScore transmitted(RiskScore score) {
-    return score.mapValue(value -> value * parameters.transmissionRate());
-  }
-
   public RiskScoreMessage defaultMessage() {
     return RiskScoreMessage.of(RiskScore.MIN, self);
   }
@@ -48,8 +52,8 @@ final class UserHelper {
     return untilExpiry(score.timestamp(), parameters.scoreExpiry());
   }
 
-  public Duration untilExpiry(Temporal contactTime) {
-    return untilExpiry(contactTime, parameters.contactExpiry());
+  public Duration untilExpiry(Temporal contactTimestamp) {
+    return untilExpiry(contactTimestamp, parameters.contactExpiry());
   }
 
   public boolean isExpired(TemporalScore score) {
@@ -60,8 +64,12 @@ final class UserHelper {
     return isExpired(message.timestamp());
   }
 
-  public boolean isExpired(Temporal contactTime) {
-    return isExpired(contactTime, parameters.contactExpiry());
+  public boolean isExpired(Temporal contactTimestamp) {
+    return isExpired(contactTimestamp, parameters.contactExpiry());
+  }
+
+  private RiskScore transmitted(RiskScore score) {
+    return score.mapValue(value -> value * parameters.transmissionRate());
   }
 
   private Duration untilExpiry(Temporal temporal, Duration expiry) {

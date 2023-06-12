@@ -28,7 +28,7 @@ abstract class BaseGraphStatistics<V, E> {
   @Value.Lazy
   public GraphSize graphSize() {
     return GraphSize.builder()
-        .vertices(graph().vertexSet().size())
+        .nodes(graph().vertexSet().size())
         .edges(graph().edgeSet().size())
         .build();
   }

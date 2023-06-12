@@ -7,7 +7,7 @@ import org.immutables.value.Value;
 import org.jgrapht.Graph;
 import org.jgrapht.generate.GraphGenerator;
 import org.jgrapht.generate.RandomRegularGraphGenerator;
-import sharetrace.util.Identifiers;
+import sharetrace.util.IdFactory;
 
 @Value.Immutable
 abstract class BaseRandomRegularTemporalNetworkFactory
@@ -17,22 +17,22 @@ abstract class BaseRandomRegularTemporalNetworkFactory
 
   @Override
   protected Graph<Integer, TemporalEdge> newTarget() {
-    return TemporalNetworkFactoryHelper.newIntTarget();
+    return GraphFactory.newIntGraph();
   }
 
   @Override
   protected GraphGenerator<Integer, TemporalEdge, Integer> graphGenerator() {
     Random random = RandomAdaptor.createAdaptor(random());
-    return new RandomRegularGraphGenerator<>(vertices(), degree(), random);
+    return new RandomRegularGraphGenerator<>(nodes(), degree(), random);
   }
 
   @Override
   protected TemporalNetwork<Integer> newNetwork(Graph<Integer, TemporalEdge> target) {
     return new SimpleTemporalNetwork<>(
-        target, Identifiers.newIntString(), "RandomRegular", properties());
+        target, IdFactory.newIntString(), "RandomRegular", properties());
   }
 
   private Map<String, ?> properties() {
-    return Map.of("vertices", vertices(), "degree", degree());
+    return Map.of("nodes", nodes(), "degree", degree());
   }
 }

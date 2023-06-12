@@ -7,7 +7,7 @@ import org.immutables.value.Value;
 import org.jgrapht.Graph;
 import org.jgrapht.generate.GraphGenerator;
 import org.jgrapht.generate.WattsStrogatzGraphGenerator;
-import sharetrace.util.Identifiers;
+import sharetrace.util.IdFactory;
 
 @Value.Immutable
 abstract class BaseWattsStrogatzTemporalNetworkFactory
@@ -19,7 +19,7 @@ abstract class BaseWattsStrogatzTemporalNetworkFactory
 
   @Override
   protected Graph<Integer, TemporalEdge> newTarget() {
-    return TemporalNetworkFactoryHelper.newIntTarget();
+    return GraphFactory.newIntGraph();
   }
 
   @Override
@@ -27,18 +27,18 @@ abstract class BaseWattsStrogatzTemporalNetworkFactory
     Random random = RandomAdaptor.createAdaptor(random());
     boolean addInsteadOfRewire = false;
     return new WattsStrogatzGraphGenerator<>(
-        vertices(), nearestNeighbors(), rewiringProbability(), addInsteadOfRewire, random);
+        nodes(), nearestNeighbors(), rewiringProbability(), addInsteadOfRewire, random);
   }
 
   @Override
   protected TemporalNetwork<Integer> newNetwork(Graph<Integer, TemporalEdge> target) {
     return new SimpleTemporalNetwork<>(
-        target, Identifiers.newIntString(), "WattsStrogatz", properties());
+        target, IdFactory.newIntString(), "WattsStrogatz", properties());
   }
 
   private Map<String, ?> properties() {
     return Map.ofEntries(
-        Map.entry("vertices", vertices()),
+        Map.entry("nodes", nodes()),
         Map.entry("nearestNeighbors", nearestNeighbors()),
         Map.entry("rewiringProbability", rewiringProbability()));
   }

@@ -8,7 +8,7 @@ import org.immutables.value.Value;
 import sharetrace.model.Identifiable;
 import sharetrace.model.RiskScore;
 import sharetrace.model.TemporalScore;
-import sharetrace.util.Identifiers;
+import sharetrace.util.IdFactory;
 
 @Value.Immutable
 abstract class BaseRiskScoreMessage implements UserMessage, Identifiable, TemporalScore {
@@ -24,7 +24,7 @@ abstract class BaseRiskScoreMessage implements UserMessage, Identifiable, Tempor
   @Override
   @Value.Default
   public String id() {
-    return Identifiers.newLongString();
+    return IdFactory.newLongString();
   }
 
   @Override

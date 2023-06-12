@@ -7,27 +7,26 @@ import org.immutables.value.Value;
 import org.jgrapht.Graph;
 import org.jgrapht.generate.GraphGenerator;
 import org.jgrapht.generate.ScaleFreeGraphGenerator;
-import sharetrace.util.Identifiers;
+import sharetrace.util.IdFactory;
 
 @Value.Immutable
 abstract class BaseScaleFreeTemporalNetworkFactory
     extends GeneratedTemporalNetworkFactory<Integer> {
 
   protected Graph<Integer, TemporalEdge> newTarget() {
-    return TemporalNetworkFactoryHelper.newIntTarget();
+    return GraphFactory.newIntGraph();
   }
 
   protected GraphGenerator<Integer, TemporalEdge, Integer> graphGenerator() {
     Random random = RandomAdaptor.createAdaptor(random());
-    return new ScaleFreeGraphGenerator<>(vertices(), random);
+    return new ScaleFreeGraphGenerator<>(nodes(), random);
   }
 
   protected TemporalNetwork<Integer> newNetwork(Graph<Integer, TemporalEdge> target) {
-    return new SimpleTemporalNetwork<>(
-        target, Identifiers.newIntString(), "ScaleFree", properties());
+    return new SimpleTemporalNetwork<>(target, IdFactory.newIntString(), "ScaleFree", properties());
   }
 
   private Map<String, ?> properties() {
-    return Map.of("vertices", vertices());
+    return Map.of("nodes", nodes());
   }
 }
