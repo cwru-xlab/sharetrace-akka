@@ -1,0 +1,19 @@
+plugins {
+    id 'java'
+}
+
+group = 'sharetrace'
+version = '0.1.0'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    annotationProcessor "org.immutables:value:2.9.3"
+    implementation project(":core")
+}
+
+test {
+    useJUnitPlatform()
+}

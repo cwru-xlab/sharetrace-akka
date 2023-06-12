@@ -1,5 +1,5 @@
 plugins {
-    id "java"
+    id "java-library"
     id "java-test-fixtures"
     id "com.diffplug.spotless" version "6.18.0"
 }
@@ -39,7 +39,7 @@ dependencies {
     implementation "com.fasterxml.jackson.module:jackson-module-blackbird:2.15.1"
     // Immutables
     annotationProcessor "org.immutables:value:2.9.3"
-    implementation "org.immutables:value:2.9.3"
+    api "org.immutables:value:2.9.3"
     implementation "org.immutables:builder:2.9.3"
     // Data structures and utilities
     implementation "com.google.guava:guava:31.1-jre"
