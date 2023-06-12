@@ -31,18 +31,18 @@ final class Contact implements Comparable<Contact> {
       TimerScheduler<UserMessage> timers,
       UserHelper helper,
       IntervalCache<? extends TemporalScore> cache) {
+    this.cache = cache;
+    this.helper = helper;
+    this.timers = timers;
     this.self = message.contact();
     this.timestamp = message.timestamp();
     this.bufferedTimestamp = helper.buffered(timestamp);
     this.thresholdMessage = ThresholdMessage.of(self);
-    this.cache = cache;
-    this.helper = helper;
-    this.timers = timers;
-    setThresholdAsDefault();
+    resetThreshold();
   }
 
   public boolean shouldReceive(RiskScoreMessage message) {
-    return message.value() > sendThreshold
+    return helper.isAbove(message, sendThreshold)
         && message.timestamp().isBefore(bufferedTimestamp)
         && !helper.isExpired(message)
         && !self.equals(message.sender());
@@ -51,14 +51,14 @@ final class Contact implements Comparable<Contact> {
   public void tell(RiskScoreMessage message, BiConsumer<ActorRef<?>, RiskScoreMessage> logEvent) {
     self.tell(message);
     logEvent.accept(self, message);
-    updateThresholdAndStartTimer(message);
+    setThresholdAndStartTimer(message);
   }
 
-  public void updateThresholdAndStartTimer() {
+  public void updateThreshold() {
     cache
         .max(bufferedTimestamp)
         .filter(Predicate.not(helper::isExpired))
-        .ifPresentOrElse(this::setThresholdAndStartTimer, this::setThresholdAsDefault);
+        .ifPresentOrElse(this::setThresholdAndStartTimer, this::resetThreshold);
   }
 
   public Duration untilExpiry() {
@@ -73,7 +73,7 @@ final class Contact implements Comparable<Contact> {
     return self;
   }
 
-  public Instant bufferedContactTime() {
+  public Instant bufferedTimestamp() {
     return bufferedTimestamp;
   }
 
@@ -82,24 +82,12 @@ final class Contact implements Comparable<Contact> {
     return timestamp.compareTo(contact.timestamp);
   }
 
-  private void updateThresholdAndStartTimer(TemporalScore score) {
-    float threshold = helper.threshold(score);
-    if (threshold > sendThreshold) {
-      sendThreshold = threshold;
-      startThresholdTimer(score);
-    }
-  }
-
   private void setThresholdAndStartTimer(TemporalScore score) {
     sendThreshold = helper.threshold(score);
-    startThresholdTimer(score);
-  }
-
-  private void startThresholdTimer(TemporalScore score) {
     timers.startSingleTimer(thresholdMessage, helper.untilExpiry(score));
   }
 
-  private void setThresholdAsDefault() {
+  private void resetThreshold() {
     sendThreshold = RiskScore.MIN_VALUE;
   }
 }

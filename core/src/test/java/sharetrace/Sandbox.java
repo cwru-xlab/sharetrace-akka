@@ -15,7 +15,7 @@ public class Sandbox {
             .delimiter("\\s+")
             .path(Path.of("core/src/main/resources/datasets/InVS13.txt"))
             .referenceTimestamp(Instant.now())
-            .vertexParser(Integer::valueOf)
+            .nodeParser(Integer::valueOf)
             .build()
             .getNetwork();
     ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();

@@ -1,5 +1,6 @@
 package sharetrace.experiment;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.Set;
 import java.util.stream.IntStream;
 
@@ -41,7 +42,7 @@ abstract class BaseExperimentState<K> implements Runnable, Identifiable {
 
   public abstract Context context();
 
-  @Value.Lazy
+  @Value.Default
   public TemporalNetwork<K> contactNetwork() {
     return networkFactory().getNetwork();
   }
@@ -53,7 +54,7 @@ abstract class BaseExperimentState<K> implements Runnable, Identifiable {
 
   @JsonIgnore
   public ExperimentState<K> withNewNetwork() {
-    return ExperimentState.copyOf(this);
+    return ExperimentState.copyOf(this).withContactNetwork(contactNetwork());
   }
 
   public void run(int iterations) {

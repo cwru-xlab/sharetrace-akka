@@ -23,7 +23,7 @@ abstract class BaseRandomRegularTemporalNetworkFactory
   @Override
   protected GraphGenerator<Integer, TemporalEdge, Integer> graphGenerator() {
     Random random = RandomAdaptor.createAdaptor(random());
-    return new RandomRegularGraphGenerator<>(vertices(), degree(), random);
+    return new RandomRegularGraphGenerator<>(nodes(), degree(), random);
   }
 
   @Override
@@ -33,6 +33,6 @@ abstract class BaseRandomRegularTemporalNetworkFactory
   }
 
   private Map<String, ?> properties() {
-    return Map.of("vertices", vertices(), "degree", degree());
+    return Map.of("nodes", nodes(), "degree", degree());
   }
 }

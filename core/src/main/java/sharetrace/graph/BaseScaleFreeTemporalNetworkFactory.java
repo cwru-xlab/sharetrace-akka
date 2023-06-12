@@ -19,7 +19,7 @@ abstract class BaseScaleFreeTemporalNetworkFactory
 
   protected GraphGenerator<Integer, TemporalEdge, Integer> graphGenerator() {
     Random random = RandomAdaptor.createAdaptor(random());
-    return new ScaleFreeGraphGenerator<>(vertices(), random);
+    return new ScaleFreeGraphGenerator<>(nodes(), random);
   }
 
   protected TemporalNetwork<Integer> newNetwork(Graph<Integer, TemporalEdge> target) {
@@ -28,6 +28,6 @@ abstract class BaseScaleFreeTemporalNetworkFactory
   }
 
   private Map<String, ?> properties() {
-    return Map.of("vertices", vertices());
+    return Map.of("nodes", nodes());
   }
 }

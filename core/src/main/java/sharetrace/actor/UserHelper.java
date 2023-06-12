@@ -24,6 +24,14 @@ final class UserHelper {
     this.parameters = parameters;
   }
 
+  public boolean isAbove(TemporalScore score, TemporalScore threshold) {
+    return isAbove(score, threshold.value());
+  }
+
+  public boolean isAbove(TemporalScore score, float threshold) {
+    return score.value() > threshold + parameters.tolerance();
+  }
+
   public float threshold(TemporalScore score) {
     return score.value() * parameters.sendCoefficient();
   }

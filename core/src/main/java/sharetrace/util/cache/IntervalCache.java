@@ -64,7 +64,7 @@ public final class IntervalCache<V extends Comparable<? super V>> {
 
   public Optional<V> get(Instant key) {
     refresh();
-    return Optional.ofNullable(cache.get(floorKey(key)));
+    return Optional.of(key).map(this::floorKey).map(cache::get);
   }
 
   public void put(Instant key, V value) {

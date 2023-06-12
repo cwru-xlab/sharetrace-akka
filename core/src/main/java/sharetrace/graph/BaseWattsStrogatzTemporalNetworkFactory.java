@@ -27,7 +27,7 @@ abstract class BaseWattsStrogatzTemporalNetworkFactory
     Random random = RandomAdaptor.createAdaptor(random());
     boolean addInsteadOfRewire = false;
     return new WattsStrogatzGraphGenerator<>(
-        vertices(), nearestNeighbors(), rewiringProbability(), addInsteadOfRewire, random);
+        nodes(), nearestNeighbors(), rewiringProbability(), addInsteadOfRewire, random);
   }
 
   @Override
@@ -38,7 +38,7 @@ abstract class BaseWattsStrogatzTemporalNetworkFactory
 
   private Map<String, ?> properties() {
     return Map.ofEntries(
-        Map.entry("vertices", vertices()),
+        Map.entry("nodes", nodes()),
         Map.entry("nearestNeighbors", nearestNeighbors()),
         Map.entry("rewiringProbability", rewiringProbability()));
   }

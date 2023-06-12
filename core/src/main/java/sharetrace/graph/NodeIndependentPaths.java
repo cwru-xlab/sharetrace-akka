@@ -1,6 +1,5 @@
 // package sharetrace.graph;
 //
-// import sharetrace.util.Collecting;
 // import java.util.List;
 // import java.util.concurrent.Callable;
 // import java.util.concurrent.ExecutionException;
@@ -12,32 +11,58 @@
 // import org.jgrapht.alg.interfaces.ShortestPathAlgorithm;
 // import org.jgrapht.alg.shortestpath.BidirectionalDijkstraShortestPath;
 // import org.jgrapht.alg.shortestpath.SuurballeKDisjointShortestPaths;
+// import org.jgrapht.graph.DefaultEdge;
+// import org.jgrapht.opt.graph.fastutil.FastutilMapIntVertexGraph;
 // import org.jheaps.tree.FibonacciHeap;
+// import sharetrace.util.Collecting;
 //
 /// **
-// * Computes the approximate number of vertex-independent paths (<a
-// * href=https://dx.doi.org/10.2139/ssrn.1831790>White and Newman 2011</a>). The API allows for
-// * serial or parallel (default) execution when finding the paths between a single source and
-// * multiple target vertices or when finding the paths between all pairs of vertices.
+// * Computes the approximate number of node-independent paths (<a
+// * href=https://dx.doi.org/10.2139/ssrn.1831790>White and Newman 2011</a>).
 // */
-// public final class VertexIndependentPaths<V> {
+// public final class NodeIndependentPaths<V> {
 //
 //  private final Graph<V, ?> graph;
 //  private final ExecutorService executorService;
 //  private final boolean isDirected;
-//  private final int vertices;
-//  private final int pairs;
+//  private final int nodeCount;
+//  private final int pairCount;
 //
-//  public VertexIndependentPaths(Graph<V, ?> graph) {
+//  public NodeIndependentPaths(Graph<V, ?> graph) {
 //    this(graph, Executors.newWorkStealingPool());
 //  }
 //
-//  public VertexIndependentPaths(Graph<V, ?> graph, ExecutorService executorService) {
+//  public NodeIndependentPaths(Graph<V, ?> graph, ExecutorService executorService) {
 //    this.graph = graph;
 //    this.executorService = executorService;
 //    this.isDirected = graph.getType().isDirected();
-//    this.vertices = graph.vertexSet().size();
-//    this.pairs = vertices * (vertices - 1) / (isDirected ? 1 : 2);
+//    this.nodeCount = graph.vertexSet().size();
+//    this.pairCount = nodeCount * (nodeCount - 1) / (isDirected ? 1 : 2);
+//  }
+//
+//  public int compute(V source, V target, int maxFind) {
+//    Callable<Integer> task = newTask(source, target, maxFind);
+//    return getResult(executorService.submit(task));
+//  }
+//
+//  public int compute(V source, V target) {
+//    return compute(source, target, Integer.MAX_VALUE);
+//  }
+//
+//  public List<Integer> computeForSource(V source) {
+//    return computeForSource(source, Integer.MAX_VALUE);
+//  }
+//
+//  public List<Integer> computeForSource(V source, int maxFind) {
+//    return getResult(newTasks(source, maxFind));
+//  }
+//
+//  public List<Integer> computeForAll() {
+//    return computeForAll(Integer.MAX_VALUE);
+//  }
+//
+//  public List<Integer> computeForAll(int maxFind) {
+//    return getResult(newTasks(maxFind));
 //  }
 //
 //  private static int getResult(Future<Integer> result) {
@@ -51,31 +76,14 @@
 //    }
 //  }
 //
-//  public int compute(V source, V target) {
-//    return compute(source, target, Integer.MAX_VALUE);
-//  }
-//
-//  public int compute(V source, V target, int maxFind) {
-//    Callable<Integer> task = newTask(source, target, maxFind);
-//    return getResult(executorService.submit(task));
-//  }
-//
 //  private Callable<Integer> newTask(V source, V target, int maxFind) {
 //    return new Task<>(graph, isDirected, source, target, maxFind);
-//  }
-//
-//  public List<Integer> computeForSource(V source) {
-//    return computeForSource(source, Integer.MAX_VALUE);
-//  }
-//
-//  public List<Integer> computeForSource(V source, int maxFind) {
-//    return getResult(newTasks(source, maxFind));
 //  }
 //
 //  private List<Integer> getResult(List<Callable<Integer>> tasks) {
 //    try {
 //      return executorService.invokeAll(tasks).stream()
-//          .map(VertexIndependentPaths::getResult)
+//          .map(NodeIndependentPaths::getResult)
 //          .collect(Collecting.toUnmodifiableIntList(tasks.size()));
 //    } catch (InterruptedException exception) {
 //      Thread.currentThread().interrupt();
@@ -87,24 +95,17 @@
 //    return graph.vertexSet().stream()
 //        .filter(target -> !source.equals(target))
 //        .map(target -> newTask(source, target, maxFind))
-//        .collect(Collecting.toUnmodifiableList(vertices));
+//        .collect(Collecting.toUnmodifiableList(nodeCount));
 //  }
 //
-//  public List<Integer> computeForAll() {
-//    return computeForAll(Integer.MAX_VALUE);
-//  }
-//
-//  public List<Integer> computeForAll(int maxFind) {
-//    return getResult(newTasks(maxFind));
-//  }
-//
+//  @SuppressWarnings("unchecked")
 //  private List<Callable<Integer>> newTasks(int maxFind) {
-//    List<V> vertices = Collecting.asList(graph.vertexSet());
-//    List<Callable<Integer>> tasks = Collecting.newArrayList(pairs);
-//    for (int source = 0; source < vertices.size(); source++) {
-//      for (int target = 0; target < vertices.size(); target++) {
+//    V[] nodes = (V[]) graph.vertexSet().toArray();
+//    List<Callable<Integer>> tasks = Collecting.newArrayList(pairCount);
+//    for (int source = 0; source < nodes.length; source++) {
+//      for (int target = 0; target < nodes.length; target++) {
 //        if ((isDirected && source != target) || (!isDirected && source < target)) {
-//          tasks.add(newTask(vertices.get(source), vertices.get(target), maxFind));
+//          tasks.add(newTask(nodes[source], nodes[target], maxFind));
 //        }
 //      }
 //    }
@@ -127,20 +128,20 @@
 //      this.maxFind = maxFind;
 //    }
 //
+//    @Override
+//    public Integer call() {
+//      int stopAt = Math.min(maxFind, maxPaths());
+//      return stopAt > 0 ? compute(stopAt) : 0;
+//    }
+//
 //    private static <V> List<V> withoutEndpoints(GraphPath<V, ?> path) {
-//      List<V> vertices = path.getVertexList();
-//      return vertices.size() < 3 ? List.of() : vertices.subList(1, vertices.size() - 1);
+//      List<V> nodes = path.getVertexList();
+//      return nodes.size() < 3 ? List.of() : nodes.subList(1, nodes.size() - 1);
 //    }
 //
 //    private static <V, E> ShortestPathAlgorithm<V, E> newShortestPaths(Graph<V, E> graph) {
 //      // Fibonacci heap provides O(1) insert vs. pairing heap O(log n).
 //      return new BidirectionalDijkstraShortestPath<>(graph, FibonacciHeap::new);
-//    }
-//
-//    @Override
-//    public Integer call() {
-//      int stopAt = Math.min(maxFind, maxPaths());
-//      return stopAt > 0 ? compute(stopAt) : 0;
 //    }
 //
 //    private int maxPaths() {
@@ -175,7 +176,7 @@
 //    }
 //
 //    private int computeNonadjacent(int maxFind) {
-//      Graph<V, ?> graph = Graphs.copy(this.graph);
+//      Graph<Integer, DefaultEdge> graph = Graphs.copy(this.graph);
 //      ShortestPathAlgorithm<V, ?> shortestPaths = newShortestPaths(graph);
 //      GraphPath<V, ?> path = shortestPaths.getPath(source, target);
 //      int found = 0;

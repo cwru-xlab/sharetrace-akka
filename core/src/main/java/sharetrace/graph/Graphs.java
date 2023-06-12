@@ -13,20 +13,20 @@
 //
 //  private Graphs() {}
 //
-//  public static Graph<Integer, DefaultEdge> copy(Graph<Integer, DefaultEdge> graph) {
+//  public static <V, E> Graph<Integer, DefaultEdge> copy(Graph<V, E> graph) {
 //    return graph.getType().isDirected() ? copyDirected(graph) : copyUndirected(graph);
 //  }
 //
-//  public static Graph<Integer, DefaultEdge> copyDirected(Graph<Integer, DefaultEdge> directed) {
+//  public static <V, E> Graph<Integer, DefaultEdge> copyDirected(Graph<V, E> directed) {
 //    return copy(GraphTests.requireDirected(directed), newDirectedGraph());
 //  }
 //
-//  public static Graph<Integer, DefaultEdge> copyUndirected(Graph<Integer, DefaultEdge> undirected)
-// {
+//  public static <V, E> Graph<Integer, DefaultEdge> copyUndirected(Graph<V, E> undirected) {
 //    return copy(GraphTests.requireUndirected(undirected), newUndirectedGraph());
 //  }
 //
-//  private static <V, E> Graph<V, E> copy(Graph<V, E> source, Graph<V, E> target) {
+//  private static <V, E> Graph<Integer, DefaultEdge> copy(Graph<V, E> source, Graph<Integer,
+// DefaultEdge> target) {
 //    org.jgrapht.Graphs.addGraph(target, source);
 //    return target;
 //  }

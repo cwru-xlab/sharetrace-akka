@@ -13,7 +13,7 @@ import sharetrace.util.Identifiers;
 abstract class BaseBarabasiAlbertTemporalNetworkFactory
     extends GeneratedTemporalNetworkFactory<Integer> {
 
-  public abstract int initialVertices();
+  public abstract int initialNodes();
 
   public abstract int newEdges();
 
@@ -25,7 +25,7 @@ abstract class BaseBarabasiAlbertTemporalNetworkFactory
   @Override
   protected GraphGenerator<Integer, TemporalEdge, Integer> graphGenerator() {
     Random random = RandomAdaptor.createAdaptor(random());
-    return new BarabasiAlbertGraphGenerator<>(initialVertices(), newEdges(), vertices(), random);
+    return new BarabasiAlbertGraphGenerator<>(initialNodes(), newEdges(), nodes(), random);
   }
 
   @Override
@@ -36,8 +36,8 @@ abstract class BaseBarabasiAlbertTemporalNetworkFactory
 
   private Map<String, ?> properties() {
     return Map.ofEntries(
-        Map.entry("vertices", vertices()),
-        Map.entry("initialVertices", initialVertices()),
+        Map.entry("nodes", nodes()),
+        Map.entry("initialNodes", initialNodes()),
         Map.entry("newEdges", newEdges()));
   }
 }

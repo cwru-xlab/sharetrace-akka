@@ -9,7 +9,7 @@ public abstract class GeneratedTemporalNetworkFactory<V> extends AbstractTempora
 
   public abstract TimestampFactory timestampFactory();
 
-  public abstract int vertices();
+  public abstract int nodes();
 
   @Override
   public TemporalNetwork<V> getNetwork() {

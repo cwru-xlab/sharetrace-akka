@@ -10,6 +10,8 @@ import akka.actor.typed.javadsl.TimerScheduler;
 import java.time.Clock;
 import java.util.Comparator;
 import java.util.Map;
+import java.util.Optional;
+import java.util.function.Predicate;
 import org.immutables.builder.Builder;
 import sharetrace.model.UserParameters;
 import sharetrace.model.message.AlgorithmMessage;
@@ -20,12 +22,13 @@ import sharetrace.model.message.RiskScoreMessage;
 import sharetrace.model.message.ThresholdMessage;
 import sharetrace.model.message.TimedOutMessage;
 import sharetrace.model.message.UserMessage;
+import sharetrace.util.Collecting;
 import sharetrace.util.cache.IntervalCache;
 import sharetrace.util.logging.Logging;
 
 final class User extends AbstractBehavior<UserMessage> {
 
-  private final ActorRef<AlgorithmMessage> riskPropagation;
+  private final ActorRef<AlgorithmMessage> coordinator;
   private final TimedOutMessage timedOutMessage;
   private final TimerScheduler<UserMessage> timers;
   private final UserLogger logger;
@@ -41,48 +44,41 @@ final class User extends AbstractBehavior<UserMessage> {
 
   private User(
       ActorContext<UserMessage> context,
-      ActorRef<AlgorithmMessage> riskPropagation,
+      ActorRef<AlgorithmMessage> coordinator,
       int timeoutId,
       TimerScheduler<UserMessage> timers,
       UserParameters userParameters,
       Clock clock,
-      IntervalCache<RiskScoreMessage> cache,
-      Map<ActorRef<?>, Contact> contacts) {
+      IntervalCache<RiskScoreMessage> cache) {
     super(context);
-    this.riskPropagation = riskPropagation;
-    this.timedOutMessage = TimedOutMessage.of(timeoutId);
+    this.coordinator = coordinator;
     this.timers = timers;
-    this.logger = new UserLogger(getContext().getSelf(), clock);
     this.userParameters = userParameters;
     this.clock = clock;
     this.cache = cache;
-    this.contacts = contacts;
+    this.contacts = Collecting.newHashMap();
+    this.timedOutMessage = TimedOutMessage.of(timeoutId);
+    this.logger = new UserLogger(getContext().getSelf(), clock);
     this.helper = new UserHelper(getContext().getSelf(), clock, userParameters);
     this.defaultCurrent = helper.defaultMessage();
+    this.current = defaultCurrent;
+    this.transmitted = defaultCurrent;
   }
 
   @Builder.Factory
   static Behavior<UserMessage> user(
-      ActorRef<AlgorithmMessage> riskPropagation,
+      ActorRef<AlgorithmMessage> coordinator,
       int timeoutId,
       UserParameters userParameters,
       Clock clock,
-      IntervalCache<RiskScoreMessage> cache,
-      Map<ActorRef<?>, Contact> contacts) {
+      IntervalCache<RiskScoreMessage> cache) {
     return Behaviors.setup(
         context -> {
           Behavior<UserMessage> user =
               Behaviors.withTimers(
                   timers ->
                       new User(
-                          context,
-                          riskPropagation,
-                          timeoutId,
-                          timers,
-                          userParameters,
-                          clock,
-                          cache,
-                          contacts));
+                          context, coordinator, timeoutId, timers, userParameters, clock, cache));
           return Behaviors.withMdc(UserMessage.class, Logging.getMdc(), user);
         });
   }
@@ -102,8 +98,8 @@ final class User extends AbstractBehavior<UserMessage> {
   private Behavior<UserMessage> handle(ContactMessage message) {
     if (!helper.isExpired(message)) {
       Contact contact = addContact(message);
-      startContactsRefreshTimer();
       logger.logContactEvent(contact.reference());
+      startContactsRefreshTimer();
       sendCurrentOrCached(contact);
     }
     return this;
@@ -112,8 +108,8 @@ final class User extends AbstractBehavior<UserMessage> {
   private Behavior<UserMessage> handle(RiskScoreMessage message) {
     logger.logReceiveEvent(message);
     cache.put(message.timestamp(), message);
-    RiskScoreMessage transmit = updateIfAboveCurrent(message);
-    propagate(transmit);
+    RiskScoreMessage transmitted = updateIfAboveCurrent(message);
+    propagate(transmitted);
     resetTimeout();
     return this;
   }
@@ -144,16 +140,15 @@ final class User extends AbstractBehavior<UserMessage> {
     /* There may be a delay between when the contact actor sets the timer and when this actor
     processes the message. It is possible that this actor refreshes its contacts, removing the
     contact that set the threshold timer. So we need to check that the contact still exists. */
-    Contact contact = contacts.get(message.contact());
-    boolean hasNotExpired = contact != null;
-    if (hasNotExpired) {
-      contact.updateThresholdAndStartTimer();
-    }
+    Optional.of(message)
+        .map(ThresholdMessage::contact)
+        .map(contacts::get)
+        .ifPresent(Contact::updateThreshold);
     return this;
   }
 
   private Behavior<UserMessage> handle(TimedOutMessage message) {
-    riskPropagation.tell(message);
+    coordinator.tell(message);
     return this;
   }
 
@@ -182,16 +177,13 @@ final class User extends AbstractBehavior<UserMessage> {
   }
 
   private RiskScoreMessage updateIfAboveCurrent(RiskScoreMessage message) {
-    RiskScoreMessage transmitted;
-    if (!isInitialized() || message.value() > current.value()) {
-      RiskScoreMessage previous = updateCurrent(message);
-      logger.logUpdateEvent(previous, current);
-      transmitted = this.transmitted;
-      if (previous != defaultCurrent) {
-        startCurrentRefreshTimer();
-      }
-    } else {
-      transmitted = helper.transmitted(message);
+    if (!helper.isAbove(message, current)) {
+      return helper.transmitted(message);
+    }
+    RiskScoreMessage previous = updateCurrent(message);
+    logger.logUpdateEvent(previous, current);
+    if (previous != defaultCurrent) {
+      startCurrentRefreshTimer();
     }
     return transmitted;
   }
@@ -216,22 +208,16 @@ final class User extends AbstractBehavior<UserMessage> {
 
   private void sendCached(Contact contact) {
     cache
-        .max(contact.bufferedContactTime())
-        .filter(helper::isExpired)
+        .max(contact.bufferedTimestamp())
+        .filter(Predicate.not(helper::isExpired))
         .map(helper::transmitted)
         .ifPresent(cached -> contact.tell(cached, logger::logSendCachedEvent));
   }
 
   private RiskScoreMessage updateCurrent(RiskScoreMessage message) {
-    RiskScoreMessage previous = isInitialized() ? current : defaultCurrent;
+    RiskScoreMessage previous = current;
     current = message;
     transmitted = helper.transmitted(current);
     return previous;
-  }
-
-  /* This is a hack to ensure the symptom score is always logged for analysis. This covers the
-  edge case where the symptom score has a value of 0, which would not otherwise be logged. */
-  private boolean isInitialized() {
-    return current != null;
   }
 }

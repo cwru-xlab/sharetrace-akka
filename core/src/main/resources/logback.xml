@@ -23,10 +23,10 @@
     </appender>
   </appender>
 
-  <appender
-    class="net.logstash.logback.appender.LoggingEventAsyncDisruptorAppender" name="EventsAppender">
+  <appender class="net.logstash.logback.appender.LoggingEventAsyncDisruptorAppender" name="EventsAppender">
     <appendTimeout>-1</appendTimeout>
     <appender class="ch.qos.logback.core.rolling.RollingFileAppender">
+      <file>${logDirectory}/events.log</file>
       <encoder class="net.logstash.logback.encoder.LogstashEncoder">
         <fieldNames class="net.logstash.logback.fieldnames.ShortenedFieldNames">
           <levelValue>[ignore]</levelValue>
@@ -39,11 +39,14 @@
         <includeMdcKeyName>sid</includeMdcKeyName>
       </encoder>
       <immediateFlush>false</immediateFlush>
-      <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+      <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
         <fileNamePattern>${logDirectory}/events-%i.log.gz</fileNamePattern>
-        <maxFileSize>100mb</maxFileSize>
-        <totalSizeCap>100gb</totalSizeCap>
+        <minIndex>1</minIndex>
+        <maxIndex>20</maxIndex>
       </rollingPolicy>
+      <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+        <maxFileSize>1GB</maxFileSize>
+      </triggeringPolicy>
     </appender>
   </appender>
 

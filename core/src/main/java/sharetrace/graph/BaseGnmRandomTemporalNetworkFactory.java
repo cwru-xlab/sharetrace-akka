@@ -27,7 +27,7 @@ abstract class BaseGnmRandomTemporalNetworkFactory
   protected GraphGenerator<Integer, TemporalEdge, Integer> graphGenerator() {
     Random random = RandomAdaptor.createAdaptor(random());
     return new GnmRandomGraphGenerator<>(
-        vertices(), edges(), random, ALLOW_LOOPS, ALLOW_MULTIPLE_EDGES);
+        nodes(), edges(), random, ALLOW_LOOPS, ALLOW_MULTIPLE_EDGES);
   }
 
   @Override
@@ -38,7 +38,7 @@ abstract class BaseGnmRandomTemporalNetworkFactory
 
   private Map<String, ?> properties() {
     return Map.ofEntries(
-        Map.entry("vertices", vertices()),
+        Map.entry("nodes", nodes()),
         Map.entry("edges", edges()),
         Map.entry("allowLoops", ALLOW_LOOPS),
         Map.entry("allowMultipleEdges", ALLOW_MULTIPLE_EDGES));
