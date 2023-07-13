@@ -6,10 +6,10 @@ import org.immutables.value.Value;
 import sharetrace.experiment.AbstractExperiment;
 import sharetrace.experiment.ExperimentState;
 import sharetrace.experiment.data.RiskScoreFactory;
-import sharetrace.model.UserParameters;
+import sharetrace.model.Parameters;
 
 @Value.Immutable
-abstract class BaseUserParametersExperiment<K> extends AbstractExperiment<K> {
+abstract class BaseParametersExperiment<K> extends AbstractExperiment<K> {
 
   public abstract List<Float> transmissionRates();
 
@@ -21,13 +21,13 @@ abstract class BaseUserParametersExperiment<K> extends AbstractExperiment<K> {
       state = state.mapScoreFactory(RiskScoreFactory::cached).withNewNetwork();
       for (float tr : transmissionRates()) {
         for (float sc : sendCoefficients()) {
-          state.mapUserParameters(mapParams(tr, sc)).run(iterations());
+          state.mapParameters(mapParams(tr, sc)).run(iterations());
         }
       }
     }
   }
 
-  private UnaryOperator<UserParameters> mapParams(float transmissionRate, float sendCoefficient) {
+  private UnaryOperator<Parameters> mapParams(float transmissionRate, float sendCoefficient) {
     return p -> p.withTransmissionRate(transmissionRate).withSendCoefficient(sendCoefficient);
   }
 }

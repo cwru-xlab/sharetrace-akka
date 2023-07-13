@@ -1,6 +1,9 @@
 package sharetrace.util.logging;
 
 import ch.qos.logback.core.spi.PropertyContainer;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Map;
@@ -10,15 +13,14 @@ import net.logstash.logback.argument.StructuredArguments;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
-import sharetrace.util.Collecting;
 import sharetrace.util.logging.event.EventRecord;
 import sharetrace.util.logging.metric.MetricRecord;
 import sharetrace.util.logging.setting.SettingsRecord;
 
 public final class Logging {
 
-  private static final Map<String, String> mdc = Collecting.newHashMap();
-  private static final Set<Class<? extends LogRecord>> enabled = Collecting.newHashSet();
+  private static final Map<String, String> mdc = Maps.newHashMap();
+  private static final Set<Class<? extends LogRecord>> enabled = Sets.newHashSet();
 
   private Logging() {}
 
@@ -40,7 +42,7 @@ public final class Logging {
   }
 
   public static Map<String, String> getMdc() {
-    return Collecting.unmodifiable(mdc);
+    return ImmutableMap.copyOf(mdc);
   }
 
   public static synchronized void setMdc(String stateId) {

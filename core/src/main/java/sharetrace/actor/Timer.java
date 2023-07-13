@@ -1,15 +1,15 @@
 package sharetrace.actor;
 
+import com.google.common.collect.Maps;
 import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 import org.apache.commons.lang3.time.StopWatch;
-import sharetrace.util.Collecting;
 
 final class Timer<K> extends StopWatch {
 
-  private final Map<K, Long> runtimes = Collecting.newLongValuedHashMap();
+  private final Map<K, Long> runtimes = Maps.newHashMap();
 
   private static <R> R call(Callable<R> callable) {
     try {

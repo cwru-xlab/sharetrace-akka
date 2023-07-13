@@ -1,13 +1,11 @@
 package sharetrace.util.logging.event;
 
-import java.time.Instant;
+import sharetrace.model.Timestamped;
 import sharetrace.util.logging.LogRecord;
 
-public interface EventRecord extends LogRecord {
+public interface EventRecord extends LogRecord, Timestamped {
 
   String KEY = "event";
 
   String self();
-
-  Instant timestamp();
 }
