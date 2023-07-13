@@ -10,7 +10,7 @@ import org.jgrapht.nio.GraphExporter;
 import org.jgrapht.nio.graphml.GraphMLExporter;
 import sharetrace.util.logging.Logging;
 
-final class Exporter<V, E> {
+public final class Exporter<V, E> {
 
   private final GraphExporter<V, E> exporter;
   private final File file;

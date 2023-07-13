@@ -1,5 +1,6 @@
 package sharetrace.experiment;
 
+import com.google.common.collect.ImmutableSet;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import java.nio.file.Path;
@@ -7,7 +8,6 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -27,11 +27,9 @@ import sharetrace.graph.RandomRegularTemporalNetworkFactory;
 import sharetrace.graph.ScaleFreeTemporalNetworkFactory;
 import sharetrace.graph.TemporalNetworkFactory;
 import sharetrace.graph.WattsStrogatzTemporalNetworkFactory;
-import sharetrace.model.UserParameters;
-import sharetrace.model.message.RiskScoreMessage;
+import sharetrace.model.Parameters;
 import sharetrace.util.DistributedRandom;
 import sharetrace.util.IdFactory;
-import sharetrace.util.cache.CacheParameters;
 import sharetrace.util.logging.LogRecord;
 
 public final class ExperimentFactory {
@@ -49,11 +47,10 @@ public final class ExperimentFactory {
   @SuppressWarnings("unchecked")
   public static ExperimentState<?> create(Config config) {
     Context context = parseContext(config.getConfig("context"));
-    UserParameters userParams = parseParameters(config.getConfig("user"));
+    Parameters parameters = parseParameters(config.getConfig("user"));
     return ExperimentState.builder()
         .context(context)
-        .userParameters(userParams)
-        .cacheParameters(parseParameters(config.getConfig("user.cache"), context, userParams))
+        .parameters(parameters)
         .networkFactory(
             (TemporalNetworkFactory<Object>)
                 parseNetworkFactory(config.getConfig("experiment.data.network"), context))
@@ -74,11 +71,11 @@ public final class ExperimentFactory {
   }
 
   private static Set<Class<? extends LogRecord>> loadLoggable(Config config) {
-    Set<Class<? extends LogRecord>> loggable = new HashSet<>();
+    ImmutableSet.Builder<Class<? extends LogRecord>> builder = ImmutableSet.builder();
     for (String className : config.getStringList("loggable")) {
-      loggable.add(loadClass(className));
+      builder.add(loadClass(className));
     }
-    return loggable;
+    return builder.build();
   }
 
   private static Context parseContext(Config config) {
@@ -112,27 +109,14 @@ public final class ExperimentFactory {
     return ((RandomGeneratorFactory) factory).getRandom(seed);
   }
 
-  private static UserParameters parseParameters(Config config) {
-    return UserParameters.builder()
+  private static Parameters parseParameters(Config config) {
+    return Parameters.builder()
         .contactExpiry(config.getDuration("contact-expiry"))
         .scoreExpiry(config.getDuration("score-expiry"))
         .idleTimeout(config.getDuration("idle-timeout"))
         .timeBuffer(config.getDuration("time-buffer"))
         .sendCoefficient((float) config.getDouble("send-coefficient"))
         .transmissionRate((float) config.getDouble("transmission-rate"))
-        .tolerance((float) config.getDouble("tolerance"))
-        .build();
-  }
-
-  private static CacheParameters<RiskScoreMessage> parseParameters(
-      Config config, Context context, UserParameters userParameters) {
-    return CacheParameters.<RiskScoreMessage>builder()
-        .interval(config.getDuration("interval"))
-        .intervals(config.getLong("intervals"))
-        .forwardIntervals(config.getLong("forward-intervals"))
-        .refreshPeriod(config.getDuration("refresh-period"))
-        .clock(context.clock())
-        .mergeStrategy(newInstance(config, "merge-strategy", userParameters))
         .build();
   }
 

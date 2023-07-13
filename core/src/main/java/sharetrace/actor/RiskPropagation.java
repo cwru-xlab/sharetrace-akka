@@ -8,25 +8,25 @@ import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
+import com.google.common.collect.ImmutableMap;
 import java.time.Clock;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.BitSet;
 import java.util.Map;
 import java.util.function.Supplier;
 import org.immutables.builder.Builder;
-import sharetrace.experiment.data.IntervalCacheFactory;
 import sharetrace.experiment.data.RiskScoreFactory;
 import sharetrace.graph.TemporalEdge;
 import sharetrace.graph.TemporalNetwork;
+import sharetrace.model.Parameters;
 import sharetrace.model.RiskScore;
-import sharetrace.model.UserParameters;
 import sharetrace.model.message.AlgorithmMessage;
 import sharetrace.model.message.ContactMessage;
 import sharetrace.model.message.RiskScoreMessage;
 import sharetrace.model.message.RunMessage;
 import sharetrace.model.message.TimedOutMessage;
 import sharetrace.model.message.UserMessage;
-import sharetrace.util.Collecting;
 import sharetrace.util.logging.Logging;
 import sharetrace.util.logging.RecordLogger;
 import sharetrace.util.logging.metric.CreateUsersRuntime;
@@ -36,12 +36,12 @@ import sharetrace.util.logging.metric.RiskPropagationRuntime;
 import sharetrace.util.logging.metric.SendContactsRuntime;
 import sharetrace.util.logging.metric.SendRiskScoresRuntime;
 
+@SuppressWarnings("UnstableApiUsage")
 final class RiskPropagation<K> extends AbstractBehavior<AlgorithmMessage> {
 
   private static final RecordLogger<MetricRecord> LOGGER = Logging.metricsLogger();
 
-  private final UserParameters userParameters;
-  private final IntervalCacheFactory<RiskScoreMessage> cacheFactory;
+  private final Parameters parameters;
   private final RiskScoreFactory<K> scoreFactory;
   private final TemporalNetwork<K> contactNetwork;
   private final int userCount;
@@ -53,15 +53,13 @@ final class RiskPropagation<K> extends AbstractBehavior<AlgorithmMessage> {
       ActorContext<AlgorithmMessage> context,
       RiskScoreFactory<K> scoreFactory,
       TemporalNetwork<K> contactNetwork,
-      UserParameters userParameters,
-      IntervalCacheFactory<RiskScoreMessage> cacheFactory,
+      Parameters parameters,
       Clock clock) {
     super(context);
     this.scoreFactory = scoreFactory;
     this.contactNetwork = contactNetwork;
     this.userCount = contactNetwork.nodeSet().size();
-    this.userParameters = userParameters;
-    this.cacheFactory = cacheFactory;
+    this.parameters = parameters;
     this.clock = clock;
     this.timer = new Timer<>();
     this.timeouts = new BitSet(userCount);
@@ -71,23 +69,17 @@ final class RiskPropagation<K> extends AbstractBehavior<AlgorithmMessage> {
   static <T> Algorithm riskPropagation(
       RiskScoreFactory<T> scoreFactory,
       TemporalNetwork<T> contactNetwork,
-      UserParameters userParameters,
-      IntervalCacheFactory<RiskScoreMessage> cacheFactory,
+      Parameters parameters,
       Clock clock) {
     Behavior<AlgorithmMessage> behavior =
         Behaviors.setup(
             context ->
-                new RiskPropagation<>(
-                    context, scoreFactory, contactNetwork, userParameters, cacheFactory, clock));
+                new RiskPropagation<>(context, scoreFactory, contactNetwork, parameters, clock));
     return Algorithm.builder()
         .name(RiskPropagation.class.getSimpleName())
         .properties(DispatcherSelector.fromConfig("sharetrace.coordinator.dispatcher"))
         .behavior(Behaviors.withMdc(AlgorithmMessage.class, Logging.getMdc(), behavior))
         .build();
-  }
-
-  private static <T extends MetricRecord> void logMetric(Class<T> type, Supplier<T> metric) {
-    LOGGER.log(MetricRecord.KEY, type, metric);
   }
 
   @Override
@@ -123,16 +115,20 @@ final class RiskPropagation<K> extends AbstractBehavior<AlgorithmMessage> {
   }
 
   private Map<K, ActorRef<UserMessage>> newUsers() {
-    Map<K, ActorRef<UserMessage>> users = Collecting.newHashMap(userCount);
+    ImmutableMap.Builder<K, ActorRef<UserMessage>> builder = newUserMapBuilder();
     Props properties = DispatcherSelector.fromConfig("sharetrace.user.dispatcher");
     int timeoutId = 0;
     for (K key : contactNetwork.nodeSet()) {
       ActorRef<UserMessage> user = newUser(timeoutId, key, properties);
       getContext().watch(user);
-      users.put(key, user);
+      builder.put(key, user);
       timeoutId++;
     }
-    return users;
+    return builder.build();
+  }
+
+  private ImmutableMap.Builder<K, ActorRef<UserMessage>> newUserMapBuilder() {
+    return ImmutableMap.builderWithExpectedSize(userCount);
   }
 
   private ActorRef<UserMessage> newUser(int timeoutId, K key, Props properties) {
@@ -141,11 +137,10 @@ final class RiskPropagation<K> extends AbstractBehavior<AlgorithmMessage> {
 
   private Behavior<UserMessage> newUser(int timeoutId) {
     return UserBuilder.create()
-        .coordinator(getContext().getSelf())
-        .timeoutId(timeoutId)
-        .parameters(userParameters)
+        .monitor(getContext().getSelf())
+        .timedOutMessage(TimedOutMessage.of(timeoutId))
+        .parameters(parameters)
         .clock(clock)
-        .cache(cacheFactory.newCache())
         .build();
   }
 
@@ -153,9 +148,17 @@ final class RiskPropagation<K> extends AbstractBehavior<AlgorithmMessage> {
     for (TemporalEdge edge : contactNetwork.edgeSet()) {
       ActorRef<UserMessage> user1 = users.get(contactNetwork.getEdgeSource(edge));
       ActorRef<UserMessage> user2 = users.get(contactNetwork.getEdgeTarget(edge));
-      user1.tell(ContactMessage.of(user2, edge.getTimestamp()));
-      user2.tell(ContactMessage.of(user1, edge.getTimestamp()));
+      user1.tell(newContactMessage(user2, edge.getTimestamp()));
+      user2.tell(newContactMessage(user1, edge.getTimestamp()));
     }
+  }
+
+  private ContactMessage newContactMessage(ActorRef<UserMessage> contact, Instant timestamp) {
+    return ContactMessage.builder()
+        .contact(contact)
+        .timestamp(timestamp)
+        .expiry(parameters.contactExpiry())
+        .build();
   }
 
   private void sendRiskScores(Map<K, ActorRef<UserMessage>> users) {
@@ -163,8 +166,16 @@ final class RiskPropagation<K> extends AbstractBehavior<AlgorithmMessage> {
       K key = entry.getKey();
       ActorRef<UserMessage> user = entry.getValue();
       RiskScore score = scoreFactory.getScore(key);
-      user.tell(RiskScoreMessage.of(score, user));
+      user.tell(newRiskScoreMessage(score, user));
     }
+  }
+
+  private RiskScoreMessage newRiskScoreMessage(RiskScore score, ActorRef<UserMessage> sender) {
+    return RiskScoreMessage.builder()
+        .score(score)
+        .sender(sender)
+        .expiry(parameters.scoreExpiry())
+        .build();
   }
 
   private void logMetrics() {
@@ -173,6 +184,10 @@ final class RiskPropagation<K> extends AbstractBehavior<AlgorithmMessage> {
     logMetric(SendRiskScoresRuntime.class, this::sendRiskScoresRuntime);
     logMetric(RiskPropagationRuntime.class, this::riskPropagationRuntime);
     logMetric(MessagePassingRuntime.class, this::messagePassingRuntime);
+  }
+
+  private <T extends MetricRecord> void logMetric(Class<T> type, Supplier<T> metric) {
+    LOGGER.log(MetricRecord.KEY, type, metric);
   }
 
   private CreateUsersRuntime createUsersRuntime() {

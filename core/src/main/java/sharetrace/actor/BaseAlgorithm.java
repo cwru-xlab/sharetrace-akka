@@ -14,17 +14,6 @@ import sharetrace.model.message.RunMessage;
 @Value.Immutable
 abstract class BaseAlgorithm implements Runnable {
 
-  private static void waitUntilDone(ActorSystem<Void> running) {
-    try {
-      running.getWhenTerminated().toCompletableFuture().get();
-    } catch (InterruptedException exception) {
-      Thread.currentThread().interrupt();
-      throw new RuntimeException(exception);
-    } catch (ExecutionException exception) {
-      throw new RuntimeException(exception);
-    }
-  }
-
   @Override
   public void run() {
     waitUntilDone(ActorSystem.create(newInstance(), name()));
@@ -35,6 +24,17 @@ abstract class BaseAlgorithm implements Runnable {
   protected abstract String name();
 
   protected abstract Props properties();
+
+  private void waitUntilDone(ActorSystem<Void> running) {
+    try {
+      running.getWhenTerminated().toCompletableFuture().get();
+    } catch (InterruptedException exception) {
+      Thread.currentThread().interrupt();
+      throw new RuntimeException(exception);
+    } catch (ExecutionException exception) {
+      throw new RuntimeException(exception);
+    }
+  }
 
   private Behavior<Void> newInstance() {
     return Behaviors.setup(

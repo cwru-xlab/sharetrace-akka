@@ -1,13 +1,15 @@
 package sharetrace.util.logging.event;
 
-import java.time.Instant;
+import akka.actor.typed.ActorRef;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import sharetrace.model.Timestamped;
+import sharetrace.util.logging.ActorRefSerializer;
 import sharetrace.util.logging.LogRecord;
 
-public interface EventRecord extends LogRecord {
+public interface EventRecord extends LogRecord, Timestamped {
 
   String KEY = "event";
 
-  String self();
-
-  Instant timestamp();
+  @JsonSerialize(using = ActorRefSerializer.class)
+  ActorRef<?> self();
 }

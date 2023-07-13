@@ -1,9 +1,9 @@
 package sharetrace.experiment.data;
 
+import com.google.common.collect.Maps;
 import java.util.Map;
 import org.immutables.value.Value;
 import sharetrace.model.RiskScore;
-import sharetrace.util.Collecting;
 
 @Value.Immutable
 abstract class BaseCachedRiskScoreFactory<K> implements RiskScoreFactory<K> {
@@ -18,6 +18,6 @@ abstract class BaseCachedRiskScoreFactory<K> implements RiskScoreFactory<K> {
 
   @Value.Default
   protected Map<K, RiskScore> cache() {
-    return Collecting.newHashMap();
+    return Maps.newHashMap();
   }
 }

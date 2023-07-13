@@ -1,6 +1,7 @@
 package sharetrace.util;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.google.common.collect.ImmutableList;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.DoubleStream;
@@ -81,7 +82,7 @@ abstract class BaseStatistics {
     return DoubleStream.of(statistics().getValues())
         .filter(v -> v < lowerWhisker() || v > upperWhisker())
         .boxed()
-        .collect(Collecting.toUnmodifiableDoubleList());
+        .collect(ImmutableList.toImmutableList());
   }
 
   @JsonIgnore

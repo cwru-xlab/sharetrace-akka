@@ -1,5 +1,5 @@
 // import sharetrace.experiment.BaseRuntimeExperiment;
-// import sharetrace.experiment.BaseUserParametersExperiment;
+// import sharetrace.experiment.BaseParametersExperiment;
 // import sharetrace.experiment.FileExperiment;
 // import sharetrace.experiment.config.FileExperimentConfig;
 // import sharetrace.experiment.config.ParamsExperimentConfig;
@@ -40,7 +40,7 @@
 //            .users(1000)
 //            .build();
 //    Assertions.assertDoesNotThrow(() -> new
-// BaseUserParametersExperiment().runWithDefaults(config));
+// BaseParametersExperiment().runWithDefaults(config));
 //  }
 //
 //  @ParameterizedTest

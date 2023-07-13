@@ -11,10 +11,6 @@ import sharetrace.util.DistributedRandom;
 @Value.Immutable
 abstract class BaseRandomTimestampFactory implements TimestampFactory, TimestampReference {
 
-  public static final Duration MIN_BACKWARD_RANGE = Duration.ZERO;
-
-  private static final Range<Duration> BACKWARD_RANGE = Range.greaterThan(MIN_BACKWARD_RANGE);
-
   @Override
   public Instant getTimestamp() {
     long backwardNanos = random().nextLong(backwardRange().toNanos());
@@ -27,6 +23,6 @@ abstract class BaseRandomTimestampFactory implements TimestampFactory, Timestamp
 
   @Value.Check
   protected void check() {
-    Checks.checkRange(backwardRange(), BACKWARD_RANGE, "backwardRange");
+    Checks.checkRange(backwardRange(), Range.greaterThan(Duration.ZERO), "backwardRange");
   }
 }

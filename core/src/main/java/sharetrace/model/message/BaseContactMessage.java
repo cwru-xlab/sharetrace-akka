@@ -1,15 +1,11 @@
 package sharetrace.model.message;
 
 import akka.actor.typed.ActorRef;
-import java.time.Instant;
 import org.immutables.value.Value;
+import sharetrace.model.Expirable;
 
 @Value.Immutable
-abstract class BaseContactMessage implements UserMessage {
+interface BaseContactMessage extends Expirable, UserMessage {
 
-  @Value.Parameter
-  public abstract ActorRef<UserMessage> contact();
-
-  @Value.Parameter
-  public abstract Instant timestamp();
+  ActorRef<UserMessage> contact();
 }

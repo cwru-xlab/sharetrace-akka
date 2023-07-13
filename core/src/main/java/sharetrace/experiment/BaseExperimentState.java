@@ -2,33 +2,37 @@ package sharetrace.experiment;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.stream.IntStream;
 import org.immutables.value.Value;
 import sharetrace.actor.RiskPropagationBuilder;
 import sharetrace.experiment.data.RiskScoreFactory;
+import sharetrace.graph.Exporter;
+import sharetrace.graph.GraphStatistics;
 import sharetrace.graph.TemporalNetwork;
 import sharetrace.graph.TemporalNetworkFactory;
-import sharetrace.graph.TemporalNetworkLogger;
 import sharetrace.model.Identifiable;
-import sharetrace.model.UserParameters;
-import sharetrace.model.message.RiskScoreMessage;
+import sharetrace.model.Parameters;
 import sharetrace.util.IdFactory;
-import sharetrace.util.cache.CacheParameters;
-import sharetrace.util.cache.IntervalCache;
 import sharetrace.util.logging.LogRecord;
 import sharetrace.util.logging.Logging;
 import sharetrace.util.logging.RecordLogger;
+import sharetrace.util.logging.metric.GraphCycles;
+import sharetrace.util.logging.metric.GraphEccentricity;
+import sharetrace.util.logging.metric.GraphScores;
+import sharetrace.util.logging.metric.GraphSize;
+import sharetrace.util.logging.metric.GraphTopology;
+import sharetrace.util.logging.metric.MetricRecord;
 import sharetrace.util.logging.setting.ExperimentSettings;
 import sharetrace.util.logging.setting.SettingsRecord;
 
 @Value.Immutable
 abstract class BaseExperimentState<K> implements Runnable, Identifiable {
 
-  private static final RecordLogger<SettingsRecord> LOGGER = Logging.settingsLogger();
+  private static final RecordLogger<SettingsRecord> SETTINGS_LOGGER = Logging.settingsLogger();
+  private static final RecordLogger<MetricRecord> METRICS_LOGGER = Logging.metricsLogger();
 
-  public abstract CacheParameters<RiskScoreMessage> cacheParameters();
-
-  public abstract UserParameters userParameters();
+  public abstract Parameters parameters();
 
   @JsonIgnore
   public abstract TemporalNetworkFactory<K> networkFactory();
@@ -72,16 +76,15 @@ abstract class BaseExperimentState<K> implements Runnable, Identifiable {
   }
 
   private void logMetricsAndSettings() {
-    TemporalNetworkLogger.logMetrics(contactNetwork());
-    LOGGER.log(SettingsRecord.KEY, ExperimentSettings.class, this::settings);
+    logMetrics();
+    SETTINGS_LOGGER.log(SettingsRecord.KEY, ExperimentSettings.class, this::settings);
   }
 
   private void runAlgorithm() {
     RiskPropagationBuilder.<K>create()
-        .userParameters(userParameters())
+        .parameters(parameters())
         .scoreFactory(scoreFactory())
         .contactNetwork(contactNetwork())
-        .cacheFactory(() -> IntervalCache.create(cacheParameters()))
         .clock(context().clock())
         .build()
         .run();
@@ -89,12 +92,30 @@ abstract class BaseExperimentState<K> implements Runnable, Identifiable {
 
   private ExperimentSettings settings() {
     return ExperimentSettings.builder()
-        .stateId(id())
+        .state(id())
         .context(context())
-        .userParameters(userParameters())
-        .cacheParameters(cacheParameters())
+        .parameters(parameters())
         .networkType(contactNetwork().type())
-        .networkId(contactNetwork().id())
+        .network(contactNetwork().id())
         .build();
+  }
+
+  public void logMetrics() {
+    GraphStatistics<?, ?> statistics = GraphStatistics.of(contactNetwork());
+    logMetric(GraphSize.class, statistics::graphSize);
+    logMetric(GraphCycles.class, statistics::graphCycles);
+    logMetric(GraphEccentricity.class, statistics::graphEccentricity);
+    logMetric(GraphScores.class, statistics::graphScores);
+    if (logMetric(GraphTopology.class, graphTopology(contactNetwork()))) {
+      Exporter.export(contactNetwork(), contactNetwork().id());
+    }
+  }
+
+  private static Supplier<GraphTopology> graphTopology(TemporalNetwork<?> network) {
+    return () -> GraphTopology.of(network.id());
+  }
+
+  private static <T extends MetricRecord> boolean logMetric(Class<T> type, Supplier<T> metric) {
+    return METRICS_LOGGER.log(MetricRecord.KEY, type, metric);
   }
 }
