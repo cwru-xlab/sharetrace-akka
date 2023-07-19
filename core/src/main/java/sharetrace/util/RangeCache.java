@@ -8,7 +8,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.BinaryOperator;
@@ -71,8 +70,8 @@ public final class RangeCache<V extends Expirable> implements Iterable<V> {
   }
 
   private void updateMinKey() {
-    Set<Map.Entry<Range<Instant>, V>> entries = cache.asMapOfRanges().entrySet();
-    minKey = entries.isEmpty() ? Range.all() : entries.iterator().next().getKey();
+    Set<Range<Instant>> keys = cache.asMapOfRanges().keySet();
+    minKey = keys.isEmpty() ? Range.all() : keys.iterator().next();
   }
 
   @Override
