@@ -7,9 +7,7 @@ import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import akka.actor.typed.javadsl.TimerScheduler;
-import com.google.common.collect.Sets;
 import java.time.Clock;
-import java.util.Set;
 import java.util.function.BinaryOperator;
 import java.util.function.Supplier;
 import org.immutables.builder.Builder;
@@ -41,8 +39,8 @@ final class User extends AbstractBehavior<UserMessage> {
   private final TimerScheduler<UserMessage> timers;
   private final Parameters parameters;
   private final Clock clock;
-  private final RangeCache<RiskScoreMessage> cache;
-  private final Set<Contact> contacts;
+  private final RangeCache<RiskScoreMessage> scores;
+  private final RangeCache<Contact> contacts;
 
   private RiskScoreMessage exposureScore;
 
@@ -59,17 +57,26 @@ final class User extends AbstractBehavior<UserMessage> {
     this.parameters = parameters;
     this.clock = clock;
     this.timedOutMessage = timedOutMessage;
-    this.cache = newCache(clock, parameters);
-    this.contacts = Sets.newHashSet();
+    this.scores = newScoreCache(clock, parameters);
+    this.contacts = newContactCache(clock, parameters);
     this.exposureScore = defaultExposureScore();
   }
 
-  private RangeCache<RiskScoreMessage> newCache(Clock clock, Parameters parameters) {
+  private RangeCache<RiskScoreMessage> newScoreCache(Clock clock, Parameters parameters) {
     return RangeCacheBuilder.<RiskScoreMessage>create()
         .clock(clock)
         .expiry(parameters.scoreExpiry())
         .comparator(TemporalScore.COMPARATOR)
         .merger(BinaryOperator.maxBy(TemporalScore.COMPARATOR))
+        .build();
+  }
+
+  private RangeCache<Contact> newContactCache(Clock clock, Parameters parameters) {
+    return RangeCacheBuilder.<Contact>create()
+        .clock(clock)
+        .expiry(parameters.contactExpiry())
+        .comparator(Contact::compareTo)
+        .merger(BinaryOperator.maxBy(Contact::compareTo))
         .build();
   }
 
@@ -102,7 +109,7 @@ final class User extends AbstractBehavior<UserMessage> {
     if (contact.isAlive(clock)) {
       contacts.add(contact);
       logContactEvent(contact);
-      sendCachedScore(contact);
+      sendCachedMessage(contact);
     }
     return this;
   }
@@ -111,23 +118,23 @@ final class User extends AbstractBehavior<UserMessage> {
     return ContactBuilder.create()
         .message(message)
         .parameters(parameters)
-        .cache(cache)
+        .cache(scores)
         .clock(clock)
         .build();
   }
 
-  private void sendCachedScore(Contact contact) {
-    cache.refresh();
-    cache
+  private void sendCachedMessage(Contact contact) {
+    scores
+        .refresh()
         .max(contact.bufferedTimestamp())
         .map(this::transmitted)
-        .ifPresent(cached -> contact.tell(cached, this::logSendEvent));
+        .ifPresent(message -> contact.tell(message, this::logSendEvent));
   }
 
   private Behavior<UserMessage> handle(RiskScoreMessage message) {
     logReceiveEvent(message);
     if (message.isAlive(clock)) {
-      cache.put(message);
+      scores.add(message);
       updateExposureScore();
       propagate(transmitted(message));
     }
@@ -145,15 +152,14 @@ final class User extends AbstractBehavior<UserMessage> {
 
   private void updateExposureScore() {
     RiskScoreMessage previous = exposureScore;
-    cache.refresh();
-    exposureScore = cache.max().orElseGet(this::defaultExposureScore);
+    exposureScore = scores.refresh().max().orElseGet(this::defaultExposureScore);
     if (!previous.equals(exposureScore)) {
       logUpdateEvent(previous, exposureScore);
     }
   }
 
   private void propagate(RiskScoreMessage message) {
-    contacts.forEach(contact -> contact.tell(message, this::logPropagateEvent));
+    contacts.refresh().forEach(contact -> contact.tell(message, this::logPropagateEvent));
   }
 
   private void resetTimeout() {

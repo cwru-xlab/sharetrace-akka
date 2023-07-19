@@ -7,13 +7,16 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Comparator;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.BinaryOperator;
 import org.immutables.builder.Builder;
 import sharetrace.model.Expirable;
 
-@SuppressWarnings({"UnstableApiUsage"})
-public final class RangeCache<V extends Expirable> {
+@SuppressWarnings({"UnstableApiUsage", "BooleanMethodIsAlwaysInverted", "NullableProblems"})
+public final class RangeCache<V extends Expirable> implements Iterable<V> {
 
   private final Clock clock;
   private final Duration expiry;
@@ -47,21 +50,18 @@ public final class RangeCache<V extends Expirable> {
     return subCache.asMapOfRanges().values().stream().max(comparator);
   }
 
-  public void refresh() {
-    if (!isEmpty()) {
-      Instant min = clock.instant().minus(expiry);
-      if (!minKey.contains(min)) {
-        cache.remove(Range.lessThan(min));
-        updateMinKey();
-      }
-    }
-  }
-
-  public void put(V value) {
-    if (value.isAlive(clock)) {
-      cache.merge(getKey(value), value, merger);
+  public RangeCache<V> refresh() {
+    Instant min = clock.instant().minus(expiry);
+    if (!minKey.contains(min)) {
+      cache.remove(Range.lessThan(min));
       updateMinKey();
     }
+    return this;
+  }
+
+  public void add(V value) {
+    cache.merge(getKey(value), value, merger);
+    updateMinKey();
   }
 
   private Range<Instant> getKey(V value) {
@@ -71,10 +71,12 @@ public final class RangeCache<V extends Expirable> {
   }
 
   private void updateMinKey() {
-    minKey = isEmpty() ? Range.all() : cache.asMapOfRanges().entrySet().iterator().next().getKey();
+    Set<Map.Entry<Range<Instant>, V>> entries = cache.asMapOfRanges().entrySet();
+    minKey = entries.isEmpty() ? Range.all() : entries.iterator().next().getKey();
   }
 
-  private boolean isEmpty() {
-    return cache.asMapOfRanges().isEmpty();
+  @Override
+  public Iterator<V> iterator() {
+    return cache.asMapOfRanges().values().iterator();
   }
 }

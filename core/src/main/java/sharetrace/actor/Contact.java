@@ -21,7 +21,7 @@ public final class Contact implements Expirable, Comparable<Contact> {
   private final Instant timestamp;
   private final Instant bufferedTimestamp;
   private final float sendCoefficient;
-  private final RangeCache<RiskScoreMessage> cache;
+  private final RangeCache<RiskScoreMessage> scores;
   private final Clock clock;
 
   private RiskScore sendThreshold;
@@ -32,14 +32,14 @@ public final class Contact implements Expirable, Comparable<Contact> {
       Instant timestamp,
       Instant bufferedTimestamp,
       float sendCoefficient,
-      RangeCache<RiskScoreMessage> cache,
+      RangeCache<RiskScoreMessage> scores,
       Clock clock) {
     this.self = self;
     this.expiry = expiry;
     this.timestamp = timestamp;
     this.bufferedTimestamp = bufferedTimestamp;
     this.sendCoefficient = sendCoefficient;
-    this.cache = cache;
+    this.scores = scores;
     this.clock = clock;
     resetThreshold();
   }
@@ -48,7 +48,7 @@ public final class Contact implements Expirable, Comparable<Contact> {
   static Contact contact(
       ContactMessage message,
       Parameters parameters,
-      RangeCache<RiskScoreMessage> cache,
+      RangeCache<RiskScoreMessage> scores,
       Clock clock) {
     return new Contact(
         message.contact(),
@@ -56,7 +56,7 @@ public final class Contact implements Expirable, Comparable<Contact> {
         message.timestamp(),
         message.timestamp().plus(parameters.timeBuffer()),
         parameters.sendCoefficient(),
-        cache,
+        scores,
         clock);
   }
 
@@ -71,8 +71,8 @@ public final class Contact implements Expirable, Comparable<Contact> {
 
   private void refreshThreshold() {
     if (sendThreshold.isExpired(clock)) {
-      cache.refresh();
-      cache
+      scores
+          .refresh()
           .max(bufferedTimestamp)
           .map(RiskScoreMessage::score)
           .ifPresentOrElse(this::setThreshold, this::resetThreshold);
@@ -119,9 +119,7 @@ public final class Contact implements Expirable, Comparable<Contact> {
   private boolean shouldReceive(RiskScoreMessage message) {
     return message.value() > sendThreshold.value()
         && message.timestamp().isBefore(bufferedTimestamp)
-        && !message.sender().equals(self)
-        && message.isAlive(clock)
-        && isAlive(clock);
+        && !message.sender().equals(self);
   }
 
   private void setThreshold(RiskScore score) {
