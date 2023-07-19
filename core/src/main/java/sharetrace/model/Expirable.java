@@ -12,7 +12,6 @@ public interface Expirable extends Timestamped {
   }
 
   default boolean isExpired(Clock clock) {
-    Duration elapsed = Duration.between(timestamp(), clock.instant());
-    return elapsed.compareTo(expiry()) > 0;
+    return Duration.between(timestamp(), clock.instant()).compareTo(expiry()) > 0;
   }
 }

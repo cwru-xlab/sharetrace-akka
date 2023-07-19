@@ -25,19 +25,14 @@ public final class RangeCache<V extends Expirable> implements Iterable<V> {
 
   private Range<Instant> minKey;
 
-  private RangeCache(
+  @Builder.Constructor
+  RangeCache(
       Clock clock, Duration expiry, Comparator<? super V> comparator, BinaryOperator<V> merger) {
     this.clock = clock;
     this.expiry = expiry;
     this.comparator = comparator;
     this.merger = merger;
     this.cache = TreeRangeMap.create();
-  }
-
-  @Builder.Factory
-  static <V extends Expirable> RangeCache<V> rangeCache(
-      Clock clock, Comparator<? super V> comparator, BinaryOperator<V> merger, Duration expiry) {
-    return new RangeCache<>(clock, expiry, comparator, merger);
   }
 
   public Optional<V> max() {

@@ -105,8 +105,8 @@ final class User extends AbstractBehavior<UserMessage> {
   }
 
   private Behavior<UserMessage> handle(ContactMessage message) {
-    Contact contact = newContact(message);
-    if (contact.isAlive(clock)) {
+    if (message.isAlive(clock)) {
+      Contact contact = newContact(message);
       contacts.add(contact);
       logContactEvent(contact);
       sendCachedMessage(contact);
@@ -118,7 +118,7 @@ final class User extends AbstractBehavior<UserMessage> {
     return ContactBuilder.create()
         .message(message)
         .parameters(parameters)
-        .cache(scores)
+        .scores(scores)
         .clock(clock)
         .build();
   }
@@ -127,16 +127,16 @@ final class User extends AbstractBehavior<UserMessage> {
     scores
         .refresh()
         .max(contact.bufferedTimestamp())
-        .map(this::transmitted)
         .ifPresent(message -> contact.tell(message, this::logSendEvent));
   }
 
   private Behavior<UserMessage> handle(RiskScoreMessage message) {
     logReceiveEvent(message);
     if (message.isAlive(clock)) {
-      scores.add(message);
-      updateExposureScore();
-      propagate(transmitted(message));
+      RiskScoreMessage transmitted = transmitted(message);
+      scores.add(transmitted);
+      updateExposureScore(message);
+      propagate(transmitted);
     }
     resetTimeout();
     return this;
@@ -150,9 +150,22 @@ final class User extends AbstractBehavior<UserMessage> {
     return score.mapValue(value -> value * parameters.transmissionRate());
   }
 
-  private void updateExposureScore() {
+  private RiskScoreMessage preTransmission(RiskScoreMessage message) {
+    return message.mapScore(this::preTransmission);
+  }
+
+  private RiskScore preTransmission(RiskScore score) {
+    return score.mapValue(value -> value / parameters.transmissionRate());
+  }
+
+  private void updateExposureScore(RiskScoreMessage message) {
     RiskScoreMessage previous = exposureScore;
-    exposureScore = scores.refresh().max().orElseGet(this::defaultExposureScore);
+    if (exposureScore.value() < message.value()) {
+      exposureScore = message;
+    } else if (exposureScore.isExpired(clock)) {
+      scores.refresh();
+      exposureScore = scores.max().map(this::preTransmission).orElseGet(this::defaultExposureScore);
+    }
     if (!previous.equals(exposureScore)) {
       logUpdateEvent(previous, exposureScore);
     }

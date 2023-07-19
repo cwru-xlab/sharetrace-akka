@@ -26,38 +26,20 @@ public final class Contact implements Expirable, Comparable<Contact> {
 
   private RiskScore sendThreshold;
 
-  private Contact(
-      ActorRef<UserMessage> self,
-      Duration expiry,
-      Instant timestamp,
-      Instant bufferedTimestamp,
-      float sendCoefficient,
-      RangeCache<RiskScoreMessage> scores,
-      Clock clock) {
-    this.self = self;
-    this.expiry = expiry;
-    this.timestamp = timestamp;
-    this.bufferedTimestamp = bufferedTimestamp;
-    this.sendCoefficient = sendCoefficient;
-    this.scores = scores;
-    this.clock = clock;
-    resetThreshold();
-  }
-
-  @Builder.Factory
-  static Contact contact(
+  @Builder.Constructor
+  Contact(
       ContactMessage message,
       Parameters parameters,
       RangeCache<RiskScoreMessage> scores,
       Clock clock) {
-    return new Contact(
-        message.contact(),
-        message.expiry(),
-        message.timestamp(),
-        message.timestamp().plus(parameters.timeBuffer()),
-        parameters.sendCoefficient(),
-        scores,
-        clock);
+    this.self = message.contact();
+    this.expiry = message.expiry();
+    this.timestamp = message.timestamp();
+    this.bufferedTimestamp = timestamp.plus(parameters.timeBuffer());
+    this.sendCoefficient = parameters.sendCoefficient();
+    this.scores = scores;
+    this.clock = clock;
+    resetThreshold();
   }
 
   public void tell(RiskScoreMessage message, BiConsumer<ActorRef<?>, RiskScoreMessage> logEvent) {
