@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import java.io.IOException;
 
+@SuppressWarnings("rawtypes")
 public final class ActorRefSerializer extends StdSerializer<ActorRef> {
 
   public ActorRefSerializer() {

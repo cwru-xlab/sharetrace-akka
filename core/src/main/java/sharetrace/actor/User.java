@@ -57,21 +57,21 @@ final class User extends AbstractBehavior<UserMessage> {
     this.parameters = parameters;
     this.clock = clock;
     this.timedOutMessage = timedOutMessage;
-    this.scores = newScoreCache(clock, parameters);
-    this.contacts = newContactCache(clock, parameters);
+    this.scores = newScoreCache();
+    this.contacts = newContactCache();
     this.exposureScore = defaultExposureScore();
   }
 
-  private RangeCache<RiskScoreMessage> newScoreCache(Clock clock, Parameters parameters) {
+  private RangeCache<RiskScoreMessage> newScoreCache() {
     return RangeCacheBuilder.<RiskScoreMessage>create()
         .clock(clock)
         .expiry(parameters.scoreExpiry())
-        .comparator(TemporalScore.COMPARATOR)
-        .merger(BinaryOperator.maxBy(TemporalScore.COMPARATOR))
+        .comparator(TemporalScore::compareTo)
+        .merger(BinaryOperator.maxBy(TemporalScore::compareTo))
         .build();
   }
 
-  private RangeCache<Contact> newContactCache(Clock clock, Parameters parameters) {
+  private RangeCache<Contact> newContactCache() {
     return RangeCacheBuilder.<Contact>create()
         .clock(clock)
         .expiry(parameters.contactExpiry())
@@ -131,14 +131,14 @@ final class User extends AbstractBehavior<UserMessage> {
   }
 
   private Behavior<UserMessage> handle(RiskScoreMessage message) {
-    logReceiveEvent(message);
     if (message.isAlive(clock)) {
+      logReceiveEvent(message);
       RiskScoreMessage transmitted = transmitted(message);
       scores.add(transmitted);
       updateExposureScore(message);
       propagate(transmitted);
+      resetTimeout();
     }
-    resetTimeout();
     return this;
   }
 
@@ -162,11 +162,10 @@ final class User extends AbstractBehavior<UserMessage> {
     RiskScoreMessage previous = exposureScore;
     if (exposureScore.value() < message.value()) {
       exposureScore = message;
+      logUpdateEvent(previous, exposureScore);
     } else if (exposureScore.isExpired(clock)) {
       scores.refresh();
       exposureScore = scores.max().map(this::preTransmission).orElseGet(this::defaultExposureScore);
-    }
-    if (!previous.equals(exposureScore)) {
       logUpdateEvent(previous, exposureScore);
     }
   }

@@ -14,7 +14,7 @@ import sharetrace.model.message.RiskScoreMessage;
 import sharetrace.model.message.UserMessage;
 import sharetrace.util.RangeCache;
 
-public final class Contact implements Expirable, Comparable<Contact> {
+final class Contact implements Expirable, Comparable<Contact> {
 
   private final ActorRef<UserMessage> self;
   private final Duration expiry;

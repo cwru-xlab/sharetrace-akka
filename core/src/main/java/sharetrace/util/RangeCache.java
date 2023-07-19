@@ -58,6 +58,11 @@ public final class RangeCache<V extends Expirable> implements Iterable<V> {
     updateMinKey();
   }
 
+  @Override
+  public Iterator<V> iterator() {
+    return cache.asMapOfRanges().values().iterator();
+  }
+
   private Range<Instant> getKey(V value) {
     Instant end = value.timestamp();
     Instant start = end.minus(value.expiry());
@@ -67,10 +72,5 @@ public final class RangeCache<V extends Expirable> implements Iterable<V> {
   private void updateMinKey() {
     Set<Range<Instant>> keys = cache.asMapOfRanges().keySet();
     minKey = keys.isEmpty() ? Range.all() : keys.iterator().next();
-  }
-
-  @Override
-  public Iterator<V> iterator() {
-    return cache.asMapOfRanges().values().iterator();
   }
 }
