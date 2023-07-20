@@ -2,6 +2,8 @@ package sharetrace.model.message;
 
 import akka.actor.typed.ActorRef;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
+import java.time.Duration;
 import java.time.Instant;
 import org.immutables.value.Value;
 import sharetrace.model.Identifiable;
@@ -15,8 +17,8 @@ abstract class BaseRiskScoreMessage implements UserMessage, Identifiable, Tempor
   @JsonIgnore
   public abstract ActorRef<UserMessage> sender();
 
-  @JsonIgnore
-  protected abstract RiskScore score();
+  @JsonUnwrapped
+  public abstract RiskScore score();
 
   @Override
   @Value.Default
@@ -32,5 +34,10 @@ abstract class BaseRiskScoreMessage implements UserMessage, Identifiable, Tempor
   @Override
   public Instant timestamp() {
     return score().timestamp();
+  }
+
+  @Override
+  public Duration expiry() {
+    return score().expiry();
   }
 }

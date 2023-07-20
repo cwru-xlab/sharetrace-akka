@@ -7,7 +7,6 @@ import java.nio.file.Path;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
-import java.util.Arrays;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -56,7 +55,8 @@ public final class ExperimentFactory {
                 parseNetworkFactory(config.getConfig("experiment.data.network"), context))
         .scoreFactory(
             (RiskScoreFactory<Object>)
-                parseScoreFactory(config.getConfig("experiment.data.risk-scores"), context))
+                parseScoreFactory(
+                    config.getConfig("experiment.data.risk-scores"), parameters, context))
         .addAllLoggable(parseLoggable(config.getConfig("experiment")))
         .build();
   }
@@ -153,7 +153,6 @@ public final class ExperimentFactory {
             .random(context.random())
             .build();
       case ("scale-free"):
-        config = config.getConfig("scale-free");
         return ScaleFreeTemporalNetworkFactory.builder()
             .nodes(config.getInt("scale-free.nodes"))
             .timestampFactory(parseTimestampFactory(config, context))
@@ -171,11 +170,13 @@ public final class ExperimentFactory {
     }
   }
 
-  private static RiskScoreFactory<?> parseScoreFactory(Config config, Context context) {
+  private static RiskScoreFactory<?> parseScoreFactory(
+      Config config, Parameters parameters, Context context) {
     Config distributionConfig = config.getConfig("value-distribution");
     return RandomRiskScoreFactory.<String>builder()
         .random(parseRandom(distributionConfig, context.random()))
         .timestampFactory(parseTimestampFactory(config, context))
+        .scoreExpiry(parameters.scoreExpiry())
         .build();
   }
 
@@ -212,11 +213,10 @@ public final class ExperimentFactory {
   }
 
   @SuppressWarnings("unchecked")
-  private static <T> T newInstance(Config config, String configPath, Object... parameters) {
-    Class<?>[] types = Arrays.stream(parameters).map(Object::getClass).toArray(Class<?>[]::new);
+  private static <T> T newInstance(Config config, String configPath) {
     String className = config.getString(configPath);
     try {
-      return (T) loadClass(className).getConstructor(types).newInstance(parameters);
+      return (T) loadClass(className).getConstructor().newInstance();
     } catch (Exception exception) {
       throw new RuntimeException(exception);
     }

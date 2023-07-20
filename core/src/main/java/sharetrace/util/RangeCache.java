@@ -33,6 +33,7 @@ public final class RangeCache<V extends Expirable> implements Iterable<V> {
     this.comparator = comparator;
     this.merger = merger;
     this.cache = TreeRangeMap.create();
+    updateMinKey();
   }
 
   public Optional<V> max() {

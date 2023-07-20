@@ -1,5 +1,6 @@
 package sharetrace.experiment.data;
 
+import java.time.Duration;
 import org.immutables.value.Value;
 import sharetrace.model.RiskScore;
 import sharetrace.util.DistributedRandom;
@@ -12,8 +13,11 @@ abstract class BaseRandomRiskScoreFactory<K> implements RiskScoreFactory<K> {
     return RiskScore.builder()
         .value(random().nextFloat(RiskScore.RANGE))
         .timestamp(timestampFactory().getTimestamp())
+        .expiry(scoreExpiry())
         .build();
   }
+
+  protected abstract Duration scoreExpiry();
 
   protected abstract DistributedRandom random();
 

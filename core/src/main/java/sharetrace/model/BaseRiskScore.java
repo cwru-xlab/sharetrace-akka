@@ -1,6 +1,8 @@
 package sharetrace.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.Range;
+import java.time.Duration;
 import java.time.Instant;
 import org.immutables.value.Value;
 import sharetrace.util.Checks;
@@ -13,10 +15,8 @@ abstract class BaseRiskScore implements TemporalScore {
   public static final float MAX_VALUE = 1;
   public static final float RANGE = MAX_VALUE - MIN_VALUE;
   public static final Instant MIN_TIMESTAMP = Instant.EPOCH;
-  public static final RiskScore MIN = RiskScore.of(MIN_VALUE, MIN_TIMESTAMP);
-
-  private static final Range<Float> VALUE_RANGE = Range.closed(MIN_VALUE, MAX_VALUE);
-  private static final Range<Instant> TIMESTAMP_RANGE = Range.atLeast(MIN_TIMESTAMP);
+  public static final Duration MIN_EXPIRY = Duration.ofNanos(1);
+  public static final RiskScore MIN = RiskScore.of(MIN_VALUE, MIN_TIMESTAMP, MIN_EXPIRY);
 
   @Override
   @Value.Parameter
@@ -26,9 +26,15 @@ abstract class BaseRiskScore implements TemporalScore {
   @Value.Parameter
   public abstract Instant timestamp();
 
+  @Override
+  @JsonIgnore
+  @Value.Parameter
+  public abstract Duration expiry();
+
   @Value.Check
   protected void check() {
-    Checks.checkRange(value(), VALUE_RANGE, "value");
-    Checks.checkRange(timestamp(), TIMESTAMP_RANGE, "timestamp");
+    Checks.checkRange(value(), Range.closed(MIN_VALUE, MAX_VALUE), "value");
+    Checks.checkRange(timestamp(), Range.atLeast(MIN_TIMESTAMP), "timestamp");
+    Checks.checkRange(expiry(), Range.atLeast(MIN_EXPIRY), "expiry");
   }
 }

@@ -77,7 +77,7 @@ final class RiskPropagation<K> extends AbstractBehavior<AlgorithmMessage> {
                 new RiskPropagation<>(context, scoreFactory, contactNetwork, parameters, clock));
     return Algorithm.builder()
         .name(RiskPropagation.class.getSimpleName())
-        .properties(DispatcherSelector.fromConfig("sharetrace.coordinator.dispatcher"))
+        .properties(DispatcherSelector.fromConfig("sharetrace.monitor.dispatcher"))
         .behavior(Behaviors.withMdc(AlgorithmMessage.class, Logging.getMdc(), behavior))
         .build();
   }
@@ -171,11 +171,7 @@ final class RiskPropagation<K> extends AbstractBehavior<AlgorithmMessage> {
   }
 
   private RiskScoreMessage newRiskScoreMessage(RiskScore score, ActorRef<UserMessage> sender) {
-    return RiskScoreMessage.builder()
-        .score(score)
-        .sender(sender)
-        .expiry(parameters.scoreExpiry())
-        .build();
+    return RiskScoreMessage.builder().score(score).sender(sender).build();
   }
 
   private void logMetrics() {

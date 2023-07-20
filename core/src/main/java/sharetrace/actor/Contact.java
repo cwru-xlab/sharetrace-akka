@@ -42,6 +42,10 @@ final class Contact implements Expirable, Comparable<Contact> {
     resetThreshold();
   }
 
+  public void tell(RiskScoreMessage message) {
+    tell(message, (self, msg) -> {});
+  }
+
   public void tell(RiskScoreMessage message, BiConsumer<ActorRef<?>, RiskScoreMessage> logEvent) {
     refreshThreshold();
     if (shouldReceive(message)) {

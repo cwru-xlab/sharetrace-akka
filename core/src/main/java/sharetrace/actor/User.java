@@ -25,7 +25,6 @@ import sharetrace.util.logging.Logging;
 import sharetrace.util.logging.RecordLogger;
 import sharetrace.util.logging.event.ContactEvent;
 import sharetrace.util.logging.event.EventRecord;
-import sharetrace.util.logging.event.PropagateEvent;
 import sharetrace.util.logging.event.ReceiveEvent;
 import sharetrace.util.logging.event.SendEvent;
 import sharetrace.util.logging.event.UpdateEvent;
@@ -131,14 +130,14 @@ final class User extends AbstractBehavior<UserMessage> {
   }
 
   private Behavior<UserMessage> handle(RiskScoreMessage message) {
+    logReceiveEvent(message);
     if (message.isAlive(clock)) {
-      logReceiveEvent(message);
       RiskScoreMessage transmitted = transmitted(message);
       scores.add(transmitted);
       updateExposureScore(message);
-      propagate(transmitted);
-      resetTimeout();
+      contacts.refresh().forEach(contact -> contact.tell(transmitted));
     }
+    timers.startSingleTimer(timedOutMessage, parameters.idleTimeout());
     return this;
   }
 
@@ -170,25 +169,13 @@ final class User extends AbstractBehavior<UserMessage> {
     }
   }
 
-  private void propagate(RiskScoreMessage message) {
-    contacts.refresh().forEach(contact -> contact.tell(message, this::logPropagateEvent));
-  }
-
-  private void resetTimeout() {
-    timers.startSingleTimer(timedOutMessage, parameters.idleTimeout());
-  }
-
   private Behavior<UserMessage> handle(TimedOutMessage message) {
     monitor.tell(message);
     return this;
   }
 
   private RiskScoreMessage defaultExposureScore() {
-    return RiskScoreMessage.builder()
-        .score(RiskScore.MIN)
-        .sender(getContext().getSelf())
-        .expiry(parameters.scoreExpiry())
-        .build();
+    return RiskScoreMessage.builder().score(RiskScore.MIN).sender(getContext().getSelf()).build();
   }
 
   private void logContactEvent(Contact contact) {
@@ -238,19 +225,6 @@ final class User extends AbstractBehavior<UserMessage> {
         .self(getContext().getSelf())
         .previous(previous)
         .current(current)
-        .timestamp(clock.instant())
-        .build();
-  }
-
-  private void logPropagateEvent(ActorRef<?> contact, RiskScoreMessage message) {
-    logEvent(PropagateEvent.class, () -> propagateEvent(contact, message));
-  }
-
-  private PropagateEvent propagateEvent(ActorRef<?> contact, RiskScoreMessage message) {
-    return PropagateEvent.builder()
-        .self(getContext().getSelf())
-        .message(message)
-        .contact(contact)
         .timestamp(clock.instant())
         .build();
   }
