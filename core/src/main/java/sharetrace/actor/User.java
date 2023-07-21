@@ -230,6 +230,6 @@ final class User extends AbstractBehavior<UserMessage> {
   }
 
   private <T extends EventRecord> void logEvent(Class<T> type, Supplier<T> event) {
-    LOGGER.log(EventRecord.KEY, type, event);
+    LOGGER.log(type, event);
   }
 }

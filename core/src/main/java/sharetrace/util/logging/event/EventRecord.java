@@ -8,8 +8,6 @@ import sharetrace.util.logging.LogRecord;
 
 public interface EventRecord extends LogRecord, Timestamped {
 
-  String KEY = "event";
-
   @JsonSerialize(using = ActorRefSerializer.class)
   ActorRef<?> self();
 }

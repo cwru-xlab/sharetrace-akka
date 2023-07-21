@@ -66,7 +66,8 @@ abstract class BaseExperimentState<K> implements Runnable, Identifiable {
   @Override
   public void run() {
     setUpLogging();
-    logMetricsAndSettings();
+    logMetrics();
+    logSettings();
     runAlgorithm();
   }
 
@@ -75,9 +76,30 @@ abstract class BaseExperimentState<K> implements Runnable, Identifiable {
     Logging.enable(loggable());
   }
 
-  private void logMetricsAndSettings() {
-    logMetrics();
-    SETTINGS_LOGGER.log(SettingsRecord.KEY, ExperimentSettings.class, this::settings);
+  private void logMetrics() {
+    GraphStatistics<?, ?> statistics = GraphStatistics.of(contactNetwork());
+    METRICS_LOGGER.log(GraphSize.class, statistics::graphSize);
+    METRICS_LOGGER.log(GraphCycles.class, statistics::graphCycles);
+    METRICS_LOGGER.log(GraphEccentricity.class, statistics::graphEccentricity);
+    METRICS_LOGGER.log(GraphScores.class, statistics::graphScores);
+    Supplier<GraphTopology> graphTopology = () -> GraphTopology.of(contactNetwork().id());
+    if (METRICS_LOGGER.log(GraphTopology.class, graphTopology)) {
+      Exporter.export(contactNetwork(), contactNetwork().id());
+    }
+  }
+
+  private void logSettings() {
+    SETTINGS_LOGGER.log(ExperimentSettings.class, this::settings);
+  }
+
+  private ExperimentSettings settings() {
+    return ExperimentSettings.builder()
+        .stateId(id())
+        .context(context())
+        .parameters(parameters())
+        .networkType(contactNetwork().type())
+        .networkId(contactNetwork().id())
+        .build();
   }
 
   private void runAlgorithm() {
@@ -88,34 +110,5 @@ abstract class BaseExperimentState<K> implements Runnable, Identifiable {
         .clock(context().clock())
         .build()
         .run();
-  }
-
-  private ExperimentSettings settings() {
-    return ExperimentSettings.builder()
-        .state(id())
-        .context(context())
-        .parameters(parameters())
-        .networkType(contactNetwork().type())
-        .network(contactNetwork().id())
-        .build();
-  }
-
-  public void logMetrics() {
-    GraphStatistics<?, ?> statistics = GraphStatistics.of(contactNetwork());
-    logMetric(GraphSize.class, statistics::graphSize);
-    logMetric(GraphCycles.class, statistics::graphCycles);
-    logMetric(GraphEccentricity.class, statistics::graphEccentricity);
-    logMetric(GraphScores.class, statistics::graphScores);
-    if (logMetric(GraphTopology.class, graphTopology(contactNetwork()))) {
-      Exporter.export(contactNetwork(), contactNetwork().id());
-    }
-  }
-
-  private static Supplier<GraphTopology> graphTopology(TemporalNetwork<?> network) {
-    return () -> GraphTopology.of(network.id());
-  }
-
-  private static <T extends MetricRecord> boolean logMetric(Class<T> type, Supplier<T> metric) {
-    return METRICS_LOGGER.log(MetricRecord.KEY, type, metric);
   }
 }

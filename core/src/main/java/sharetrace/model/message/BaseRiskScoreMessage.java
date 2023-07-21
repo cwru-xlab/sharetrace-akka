@@ -15,9 +15,11 @@ import sharetrace.util.IdFactory;
 abstract class BaseRiskScoreMessage implements UserMessage, Identifiable, TemporalScore {
 
   @JsonIgnore
+  @Value.Parameter
   public abstract ActorRef<UserMessage> sender();
 
   @JsonUnwrapped
+  @Value.Parameter
   public abstract RiskScore score();
 
   @Override

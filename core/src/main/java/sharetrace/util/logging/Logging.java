@@ -25,15 +25,15 @@ public final class Logging {
   private Logging() {}
 
   public static RecordLogger<MetricRecord> metricsLogger() {
-    return newLogger("MetricsLogger");
+    return newLogger("MetricsLogger", "metric");
   }
 
   public static RecordLogger<EventRecord> eventsLogger() {
-    return newLogger("EventsLogger");
+    return newLogger("EventsLogger", "event");
   }
 
   public static RecordLogger<SettingsRecord> settingsLogger() {
-    return newLogger("SettingsLogger");
+    return newLogger("SettingsLogger", "setting");
   }
 
   public static Path logDirectory() {
@@ -55,20 +55,22 @@ public final class Logging {
     enabled.addAll(types);
   }
 
-  private static <T extends LogRecord> RecordLogger<T> newLogger(String name) {
-    return new DefaultLogger<>(LoggerFactory.getLogger(name));
+  private static <T extends LogRecord> RecordLogger<T> newLogger(String name, String key) {
+    return new DefaultLogger<>(LoggerFactory.getLogger(name), key);
   }
 
   private static final class DefaultLogger<T extends LogRecord> implements RecordLogger<T> {
 
     private final Logger delegate;
+    private final String key;
 
-    public DefaultLogger(Logger delegate) {
+    public DefaultLogger(Logger delegate, String key) {
       this.delegate = delegate;
+      this.key = key;
     }
 
     @Override
-    public <R extends T> boolean log(String key, Class<R> type, Supplier<R> record) {
+    public <R extends T> boolean log(Class<R> type, Supplier<R> record) {
       boolean logged = delegate.isInfoEnabled() && enabled.contains(type);
       if (logged) {
         delegate.info(key, StructuredArguments.value(key, record.get()));

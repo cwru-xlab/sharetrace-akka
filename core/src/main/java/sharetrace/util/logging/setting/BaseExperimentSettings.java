@@ -12,9 +12,9 @@ interface BaseExperimentSettings extends SettingsRecord {
 
   Context context();
 
-  String state();
+  String stateId();
 
-  String network();
+  String networkId();
 
   String networkType();
 }

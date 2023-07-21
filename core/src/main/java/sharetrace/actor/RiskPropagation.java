@@ -14,7 +14,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.BitSet;
 import java.util.Map;
-import java.util.function.Supplier;
 import org.immutables.builder.Builder;
 import sharetrace.experiment.data.RiskScoreFactory;
 import sharetrace.graph.TemporalEdge;
@@ -166,24 +165,16 @@ final class RiskPropagation<K> extends AbstractBehavior<AlgorithmMessage> {
       K key = entry.getKey();
       ActorRef<UserMessage> user = entry.getValue();
       RiskScore score = scoreFactory.getScore(key);
-      user.tell(newRiskScoreMessage(score, user));
+      user.tell(RiskScoreMessage.of(user, score));
     }
   }
 
-  private RiskScoreMessage newRiskScoreMessage(RiskScore score, ActorRef<UserMessage> sender) {
-    return RiskScoreMessage.builder().score(score).sender(sender).build();
-  }
-
   private void logMetrics() {
-    logMetric(CreateUsersRuntime.class, this::createUsersRuntime);
-    logMetric(SendContactsRuntime.class, this::sendContactsRuntime);
-    logMetric(SendRiskScoresRuntime.class, this::sendRiskScoresRuntime);
-    logMetric(RiskPropagationRuntime.class, this::riskPropagationRuntime);
-    logMetric(MessagePassingRuntime.class, this::messagePassingRuntime);
-  }
-
-  private <T extends MetricRecord> void logMetric(Class<T> type, Supplier<T> metric) {
-    LOGGER.log(MetricRecord.KEY, type, metric);
+    LOGGER.log(CreateUsersRuntime.class, this::createUsersRuntime);
+    LOGGER.log(SendContactsRuntime.class, this::sendContactsRuntime);
+    LOGGER.log(SendRiskScoresRuntime.class, this::sendRiskScoresRuntime);
+    LOGGER.log(RiskPropagationRuntime.class, this::riskPropagationRuntime);
+    LOGGER.log(MessagePassingRuntime.class, this::messagePassingRuntime);
   }
 
   private CreateUsersRuntime createUsersRuntime() {
