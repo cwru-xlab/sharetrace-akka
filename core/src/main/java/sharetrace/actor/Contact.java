@@ -56,6 +56,14 @@ final class Contact implements Expirable, Comparable<Contact> {
   }
 
   private void refreshThreshold() {
+    /* When sendThreshold is the default score, it indicates that either no message has yet been
+    sent to this contact and/or the score cache is empty. If the cache is empty, and we have not yet
+    sent a message to this contact, then the message retrieved from the cache will be the same
+    message we are trying to send to the contact. Thus, no message will be sent since the message
+    is not greater than its own value. If we have sent a message to the contact, but it has since
+    expired, then updating the threshold based on the cache has no effect; we might as well just
+    wait for the next message the contact should receive, send that, and then update the threshold.
+    */
     if (sendThreshold != RiskScore.MIN && sendThreshold.isExpired(clock)) {
       scores
           .refresh()
