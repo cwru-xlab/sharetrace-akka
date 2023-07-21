@@ -23,7 +23,7 @@ abstract class BaseScaleFreeTemporalNetworkFactory
   }
 
   protected TemporalNetwork<Integer> newNetwork(Graph<Integer, TemporalEdge> target) {
-    return new SimpleTemporalNetwork<>(target, IdFactory.newIntString(), "ScaleFree", properties());
+    return new SimpleTemporalNetwork<>(target, IdFactory.newInt(), "ScaleFree", properties());
   }
 
   private Map<String, ?> properties() {

@@ -28,8 +28,7 @@ abstract class BaseRandomRegularTemporalNetworkFactory
 
   @Override
   protected TemporalNetwork<Integer> newNetwork(Graph<Integer, TemporalEdge> target) {
-    return new SimpleTemporalNetwork<>(
-        target, IdFactory.newIntString(), "RandomRegular", properties());
+    return new SimpleTemporalNetwork<>(target, IdFactory.newInt(), "RandomRegular", properties());
   }
 
   private Map<String, ?> properties() {

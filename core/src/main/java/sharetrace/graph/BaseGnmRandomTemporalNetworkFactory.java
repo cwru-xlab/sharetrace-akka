@@ -32,7 +32,7 @@ abstract class BaseGnmRandomTemporalNetworkFactory
 
   @Override
   protected TemporalNetwork<Integer> newNetwork(Graph<Integer, TemporalEdge> target) {
-    return new SimpleTemporalNetwork<>(target, IdFactory.newIntString(), "GnmRandom", properties());
+    return new SimpleTemporalNetwork<>(target, IdFactory.newInt(), "GnmRandom", properties());
   }
 
   private Map<String, ?> properties() {

@@ -50,8 +50,8 @@ abstract class BaseExperimentState<K> implements Runnable, Identifiable {
   }
 
   @Value.Derived
-  public String id() {
-    return IdFactory.newIntString();
+  public long id() {
+    return IdFactory.newInt();
   }
 
   @JsonIgnore
@@ -84,7 +84,7 @@ abstract class BaseExperimentState<K> implements Runnable, Identifiable {
     METRICS_LOGGER.log(GraphScores.class, statistics::graphScores);
     Supplier<GraphTopology> graphTopology = () -> GraphTopology.of(contactNetwork().id());
     if (METRICS_LOGGER.log(GraphTopology.class, graphTopology)) {
-      Exporter.export(contactNetwork(), contactNetwork().id());
+      Exporter.export(contactNetwork(), String.valueOf(contactNetwork().id()));
     }
   }
 

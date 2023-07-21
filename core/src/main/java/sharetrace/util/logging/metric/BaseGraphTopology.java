@@ -1,10 +1,11 @@
 package sharetrace.util.logging.metric;
 
 import org.immutables.value.Value;
+import sharetrace.model.Identifiable;
 
 @Value.Immutable
-interface BaseGraphTopology extends MetricRecord {
+interface BaseGraphTopology extends MetricRecord, Identifiable {
 
   @Value.Parameter
-  String id();
+  long id();
 }

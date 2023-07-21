@@ -24,8 +24,8 @@ abstract class BaseRiskScoreMessage implements UserMessage, Identifiable, Tempor
 
   @Override
   @Value.Default
-  public String id() {
-    return IdFactory.newLongString();
+  public long id() {
+    return IdFactory.newLong();
   }
 
   @Override

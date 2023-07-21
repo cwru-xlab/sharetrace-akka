@@ -30,8 +30,7 @@ abstract class BaseBarabasiAlbertTemporalNetworkFactory
 
   @Override
   protected TemporalNetwork<Integer> newNetwork(Graph<Integer, TemporalEdge> target) {
-    return new SimpleTemporalNetwork<>(
-        target, IdFactory.newIntString(), "BarabasiAlbert", properties());
+    return new SimpleTemporalNetwork<>(target, IdFactory.newInt(), "BarabasiAlbert", properties());
   }
 
   private Map<String, ?> properties() {

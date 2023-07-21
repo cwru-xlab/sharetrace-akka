@@ -17,25 +17,25 @@ import org.jgrapht.graph.GraphDelegator;
 public final class SimpleTemporalNetwork<V> extends GraphDelegator<V, TemporalEdge>
     implements TemporalNetwork<V> {
 
-  private final String id;
+  private final long id;
   private final String type;
   private final Map<String, ?> properties;
 
   public SimpleTemporalNetwork(
-      Graph<V, TemporalEdge> delegate, String id, String type, Map<String, ?> properties) {
+      Graph<V, TemporalEdge> delegate, long id, String type, Map<String, ?> properties) {
     super(delegate);
     this.id = id;
     this.type = type;
     this.properties = properties;
   }
 
-  public SimpleTemporalNetwork(Graph<V, TemporalEdge> delegate, String id, String type) {
+  public SimpleTemporalNetwork(Graph<V, TemporalEdge> delegate, long id, String type) {
     this(delegate, id, type, Map.of());
   }
 
   @Override
   @JsonProperty
-  public String id() {
+  public long id() {
     return id;
   }
 

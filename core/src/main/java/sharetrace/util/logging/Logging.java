@@ -45,8 +45,8 @@ public final class Logging {
     return ImmutableMap.copyOf(mdc);
   }
 
-  public static synchronized void setMdc(String stateId) {
-    mdc.put("sid", stateId); // MDC for all threads
+  public static synchronized void setMdc(long stateId) {
+    mdc.put("sid", String.valueOf(stateId)); // MDC for all threads
     MDC.setContextMap(mdc); // Still set MDC for the calling/main thread
   }
 

@@ -46,7 +46,7 @@ abstract class BaseFileTemporalNetworkFactory<V> extends AbstractTemporalNetwork
   @Override
   protected TemporalNetwork<V> newNetwork(Graph<V, TemporalEdge> target) {
     String type = path().getFileName().toString();
-    return new SimpleTemporalNetwork<>(target, IdFactory.newIntString(), type);
+    return new SimpleTemporalNetwork<>(target, IdFactory.newInt(), type);
   }
 
   @Override
