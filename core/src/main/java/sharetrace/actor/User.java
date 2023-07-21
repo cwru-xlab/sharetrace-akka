@@ -21,6 +21,8 @@ import sharetrace.model.message.TimedOutMessage;
 import sharetrace.model.message.UserMessage;
 import sharetrace.util.RangeCache;
 import sharetrace.util.RangeCacheBuilder;
+import sharetrace.util.StandardCache;
+import sharetrace.util.StandardCacheBuilder;
 import sharetrace.util.logging.Logging;
 import sharetrace.util.logging.RecordLogger;
 import sharetrace.util.logging.event.ContactEvent;
@@ -39,7 +41,7 @@ final class User extends AbstractBehavior<UserMessage> {
   private final Parameters parameters;
   private final Clock clock;
   private final RangeCache<RiskScoreMessage> scores;
-  private final RangeCache<Contact> contacts;
+  private final StandardCache<ActorRef<?>, Contact> contacts;
 
   private RiskScoreMessage exposureScore;
 
@@ -64,16 +66,14 @@ final class User extends AbstractBehavior<UserMessage> {
   private RangeCache<RiskScoreMessage> newScoreCache() {
     return RangeCacheBuilder.<RiskScoreMessage>create()
         .clock(clock)
-        .expiry(parameters.scoreExpiry())
         .comparator(TemporalScore::compareTo)
         .merger(BinaryOperator.maxBy(TemporalScore::compareTo))
         .build();
   }
 
-  private RangeCache<Contact> newContactCache() {
-    return RangeCacheBuilder.<Contact>create()
+  private StandardCache<ActorRef<?>, Contact> newContactCache() {
+    return StandardCacheBuilder.<ActorRef<?>, Contact>create()
         .clock(clock)
-        .expiry(parameters.contactExpiry())
         .comparator(Contact::compareTo)
         .merger(BinaryOperator.maxBy(Contact::compareTo))
         .build();
@@ -106,7 +106,7 @@ final class User extends AbstractBehavior<UserMessage> {
   private Behavior<UserMessage> handle(ContactMessage message) {
     if (message.isAlive(clock)) {
       Contact contact = newContact(message);
-      contacts.add(contact);
+      contacts.put(contact.self(), contact);
       logContactEvent(contact);
       sendCachedMessage(contact);
     }

@@ -3,7 +3,6 @@ package sharetrace.experiment.data;
 import sharetrace.model.RiskScore;
 import sharetrace.util.DistributedRandom;
 
-@FunctionalInterface
 public interface RiskScoreFactory<K> {
 
   RiskScore getScore(K key);

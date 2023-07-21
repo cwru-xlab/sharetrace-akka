@@ -56,7 +56,7 @@ final class Contact implements Expirable, Comparable<Contact> {
   }
 
   private void refreshThreshold() {
-    if (sendThreshold.isExpired(clock)) {
+    if (sendThreshold != RiskScore.MIN && sendThreshold.isExpired(clock)) {
       scores
           .refresh()
           .max(bufferedTimestamp)

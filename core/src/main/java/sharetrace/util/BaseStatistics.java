@@ -86,6 +86,6 @@ abstract class BaseStatistics {
   }
 
   @JsonIgnore
-  @Value.Redacted
+  @Value.Auxiliary
   protected abstract DescriptiveStatistics statistics();
 }

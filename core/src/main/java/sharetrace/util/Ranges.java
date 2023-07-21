@@ -1,5 +1,8 @@
 package sharetrace.util;
 
+import com.google.common.primitives.Doubles;
+
+@SuppressWarnings("UnstableApiUsage")
 public final class Ranges {
 
   private Ranges() {}
@@ -21,6 +24,6 @@ public final class Ranges {
   }
 
   public static double boundedDouble(double value, double min, double max) {
-    return Math.max(min, Math.min(max, value));
+    return Doubles.constrainToRange(value, min, max);
   }
 }

@@ -18,6 +18,5 @@ import org.immutables.value.Value.Style.ImplementationVisibility;
     newBuilder = "create",
     typeAbstract = "Base*",
     typeImmutable = "*",
-    withUnaryOperator = "map*",
-    defaults = @Value.Immutable(lazyhash = true))
+    withUnaryOperator = "map*")
 public @interface ImmutableStyle {}
