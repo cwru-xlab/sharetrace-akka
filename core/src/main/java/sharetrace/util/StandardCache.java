@@ -4,6 +4,7 @@ import com.google.common.collect.Iterators;
 import com.google.common.collect.Maps;
 import java.time.Clock;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Map;
@@ -32,13 +33,11 @@ public final class StandardCache<K, V extends Expirable> implements Iterable<V> 
   }
 
   public Optional<V> max() {
-    return cache.values().stream().max(comparator);
+    return values().stream().max(comparator);
   }
 
   public Optional<V> max(Instant atMost) {
-    return cache.values().stream()
-        .filter(value -> !value.timestamp().isAfter(atMost))
-        .max(comparator);
+    return values().stream().filter(value -> !value.timestamp().isAfter(atMost)).max(comparator);
   }
 
   public void put(K key, V value) {
@@ -48,7 +47,7 @@ public final class StandardCache<K, V extends Expirable> implements Iterable<V> 
 
   public StandardCache<K, V> refresh() {
     if (min.isBefore(clock.instant())) {
-      cache.values().removeIf(value -> value.isExpired(clock));
+      values().removeIf(value -> value.isExpired(clock));
       updateMin();
     }
     return this;
@@ -56,7 +55,7 @@ public final class StandardCache<K, V extends Expirable> implements Iterable<V> 
 
   @Override
   public Iterator<V> iterator() {
-    return Iterators.unmodifiableIterator(cache.values().iterator());
+    return Iterators.unmodifiableIterator(values().iterator());
   }
 
   private void updateMin(V value) {
@@ -64,10 +63,10 @@ public final class StandardCache<K, V extends Expirable> implements Iterable<V> 
   }
 
   private void updateMin() {
-    min =
-        cache.values().stream()
-            .map(Expirable::expiresAt)
-            .min(Instant::compareTo)
-            .orElse(Instant.MAX);
+    min = values().stream().map(Expirable::expiresAt).min(Instant::compareTo).orElse(Instant.MAX);
+  }
+
+  private Collection<V> values() {
+    return cache.values();
   }
 }
