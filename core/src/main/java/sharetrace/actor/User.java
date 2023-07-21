@@ -9,7 +9,6 @@ import akka.actor.typed.javadsl.Receive;
 import akka.actor.typed.javadsl.TimerScheduler;
 import java.time.Clock;
 import java.util.function.BinaryOperator;
-import java.util.function.Supplier;
 import org.immutables.builder.Builder;
 import sharetrace.model.Parameters;
 import sharetrace.model.RiskScore;
@@ -141,22 +140,6 @@ final class User extends AbstractBehavior<UserMessage> {
     return this;
   }
 
-  private RiskScoreMessage transmitted(RiskScoreMessage message) {
-    return message.withSender(getContext().getSelf()).mapScore(this::transmitted);
-  }
-
-  private RiskScore transmitted(RiskScore score) {
-    return score.mapValue(value -> value * parameters.transmissionRate());
-  }
-
-  private RiskScoreMessage preTransmission(RiskScoreMessage message) {
-    return message.mapScore(this::preTransmission);
-  }
-
-  private RiskScore preTransmission(RiskScore score) {
-    return score.mapValue(value -> value / parameters.transmissionRate());
-  }
-
   private void updateExposureScore(RiskScoreMessage message) {
     RiskScoreMessage previous = exposureScore;
     if (exposureScore.value() < message.value()) {
@@ -174,12 +157,28 @@ final class User extends AbstractBehavior<UserMessage> {
     return this;
   }
 
+  private RiskScoreMessage transmitted(RiskScoreMessage message) {
+    return message.withSender(getContext().getSelf()).mapScore(this::transmitted);
+  }
+
+  private RiskScore transmitted(RiskScore score) {
+    return score.mapValue(value -> value * parameters.transmissionRate());
+  }
+
+  private RiskScoreMessage preTransmission(RiskScoreMessage message) {
+    return message.mapScore(this::preTransmission);
+  }
+
+  private RiskScore preTransmission(RiskScore score) {
+    return score.mapValue(value -> value / parameters.transmissionRate());
+  }
+
   private RiskScoreMessage defaultExposureScore() {
     return RiskScoreMessage.builder().score(RiskScore.MIN).sender(getContext().getSelf()).build();
   }
 
   private void logContactEvent(Contact contact) {
-    logEvent(ContactEvent.class, () -> contactEvent(contact));
+    LOGGER.log(ContactEvent.class, () -> contactEvent(contact));
   }
 
   private ContactEvent contactEvent(Contact contact) {
@@ -191,7 +190,7 @@ final class User extends AbstractBehavior<UserMessage> {
   }
 
   private void logSendEvent(ActorRef<?> contact, RiskScoreMessage message) {
-    logEvent(SendEvent.class, () -> sendEvent(contact, message));
+    LOGGER.log(SendEvent.class, () -> sendEvent(contact, message));
   }
 
   private SendEvent sendEvent(ActorRef<?> contact, RiskScoreMessage message) {
@@ -204,7 +203,7 @@ final class User extends AbstractBehavior<UserMessage> {
   }
 
   private void logReceiveEvent(RiskScoreMessage message) {
-    logEvent(ReceiveEvent.class, () -> receiveEvent(message));
+    LOGGER.log(ReceiveEvent.class, () -> receiveEvent(message));
   }
 
   private ReceiveEvent receiveEvent(RiskScoreMessage message) {
@@ -217,7 +216,7 @@ final class User extends AbstractBehavior<UserMessage> {
   }
 
   private void logUpdateEvent(RiskScoreMessage previous, RiskScoreMessage current) {
-    logEvent(UpdateEvent.class, () -> updateEvent(previous, current));
+    LOGGER.log(UpdateEvent.class, () -> updateEvent(previous, current));
   }
 
   private UpdateEvent updateEvent(RiskScoreMessage previous, RiskScoreMessage current) {
@@ -227,9 +226,5 @@ final class User extends AbstractBehavior<UserMessage> {
         .current(current)
         .timestamp(clock.instant())
         .build();
-  }
-
-  private <T extends EventRecord> void logEvent(Class<T> type, Supplier<T> event) {
-    LOGGER.log(type, event);
   }
 }
