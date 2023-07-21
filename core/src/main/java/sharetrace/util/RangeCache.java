@@ -1,5 +1,6 @@
 package sharetrace.util;
 
+import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Range;
 import com.google.common.collect.RangeMap;
@@ -64,6 +65,6 @@ public final class RangeCache<V extends Expirable> implements Iterable<V> {
   }
 
   private void updateMin() {
-    min = Iterators.getNext(cache.asMapOfRanges().keySet().iterator(), Range.all());
+    min = Iterables.getFirst(cache.asMapOfRanges().keySet(), Range.all());
   }
 }
