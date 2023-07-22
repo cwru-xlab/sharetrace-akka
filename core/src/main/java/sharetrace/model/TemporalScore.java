@@ -5,7 +5,9 @@ import java.util.Comparator;
 public interface TemporalScore extends Expirable, Comparable<TemporalScore> {
 
   Comparator<TemporalScore> COMPARATOR =
-      Comparator.comparingDouble(TemporalScore::value).thenComparing(TemporalScore::timestamp);
+      Comparator.comparingDouble(TemporalScore::value)
+          .thenComparing(TemporalScore::timestamp)
+          .thenComparing(TemporalScore::expiry);
 
   float value();
 
