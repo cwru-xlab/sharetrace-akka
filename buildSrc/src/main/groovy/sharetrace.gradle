@@ -1,0 +1,38 @@
+plugins {
+    id "java"
+    id "com.diffplug.spotless"
+}
+
+group "sharetrace"
+version "1.0"
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+spotless {
+    java {
+        target "src/*/java/**/*.java"
+        importOrder()
+        removeUnusedImports()
+        cleanthat()
+        googleJavaFormat()
+        formatAnnotations()
+    }
+}
+
+dependencies {
+    testImplementation "org.junit.jupiter:junit-jupiter:5.9.3"
+    testImplementation "org.junit.jupiter:junit-jupiter-params:5.9.3"
+    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:5.9.3"
+}
+
+test {
+    useJUnitPlatform()
+}

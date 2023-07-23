@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration>
+
+<configuration debug="true">
+    <timestamp key="bySecond" datePattern="yyyyMMddHHmmss"/>
+    <property name="logDirectory" value="logs/${bySecond}" scope="context"/>
+
+    <appender
+            class="net.logstash.logback.appender.LoggingEventAsyncDisruptorAppender" name="ConsoleAppender">
+        <appendTimeout>-1</appendTimeout>
+        <appender class="ch.qos.logback.core.ConsoleAppender">
+            <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+                <fieldNames class="net.logstash.logback.fieldnames.ShortenedFieldNames">
+                    <levelValue>[ignore]</levelValue>
+                    <logger>[ignore]</logger>
+                    <thread>[ignore]</thread>
+                    <timestamp>[ignore]</timestamp>
+                    <version>[ignore]</version>
+                </fieldNames>
+                <includeContext>false</includeContext>
+                <includeMdcKeyName>sid</includeMdcKeyName>
+            </encoder>
+        </appender>
+    </appender>
+
+    <appender class="net.logstash.logback.appender.LoggingEventAsyncDisruptorAppender" name="EventsAppender">
+        <appendTimeout>-1</appendTimeout>
+        <appender class="ch.qos.logback.core.rolling.RollingFileAppender">
+            <file>${logDirectory}/events.log</file>
+            <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+                <fieldNames class="net.logstash.logback.fieldnames.ShortenedFieldNames">
+                    <levelValue>[ignore]</levelValue>
+                    <logger>[ignore]</logger>
+                    <thread>[ignore]</thread>
+                    <timestamp>[ignore]</timestamp>
+                    <version>[ignore]</version>
+                </fieldNames>
+                <includeContext>false</includeContext>
+                <includeMdcKeyName>sid</includeMdcKeyName>
+            </encoder>
+            <immediateFlush>false</immediateFlush>
+            <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+                <fileNamePattern>${logDirectory}/events-%i.log.gz</fileNamePattern>
+                <minIndex>1</minIndex>
+                <maxIndex>20</maxIndex>
+            </rollingPolicy>
+            <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+                <maxFileSize>1GB</maxFileSize>
+            </triggeringPolicy>
+        </appender>
+    </appender>
+
+    <appender
+            class="net.logstash.logback.appender.LoggingEventAsyncDisruptorAppender" name="MetricsAppender">
+        <appendTimeout>-1</appendTimeout>
+        <appender class="ch.qos.logback.core.FileAppender">
+            <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+                <fieldNames class="net.logstash.logback.fieldnames.ShortenedFieldNames">
+                    <levelValue>[ignore]</levelValue>
+                    <logger>[ignore]</logger>
+                    <thread>[ignore]</thread>
+                    <timestamp>[ignore]</timestamp>
+                    <version>[ignore]</version>
+                </fieldNames>
+                <includeContext>false</includeContext>
+                <includeMdcKeyName>sid</includeMdcKeyName>
+            </encoder>
+            <file>${logDirectory}/metrics.log</file>
+            <immediateFlush>false</immediateFlush>
+        </appender>
+    </appender>
+
+    <appender
+            class="net.logstash.logback.appender.LoggingEventAsyncDisruptorAppender"
+            name="SettingsAppender">
+        <appendTimeout>-1</appendTimeout>
+        <appender class="ch.qos.logback.core.FileAppender">
+            <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+                <fieldNames class="net.logstash.logback.fieldnames.ShortenedFieldNames">
+                    <levelValue>[ignore]</levelValue>
+                    <logger>[ignore]</logger>
+                    <thread>[ignore]</thread>
+                    <timestamp>[ignore]</timestamp>
+                    <version>[ignore]</version>
+                </fieldNames>
+                <includeContext>false</includeContext>
+                <includeMdcKeyName>sid</includeMdcKeyName>
+            </encoder>
+            <file>${logDirectory}/settings.log</file>
+            <immediateFlush>false</immediateFlush>
+        </appender>
+    </appender>
+
+    <root level="info">
+        <appender-ref ref="ConsoleAppender"/>
+    </root>
+    <logger name="EventsLogger" level="info" additivity="false">
+        <appender-ref ref="EventsAppender"/>
+    </logger>
+    <logger name="MetricsLogger" level="info" additivity="false">
+        <appender-ref ref="MetricsAppender"/>
+    </logger>
+    <logger name="SettingsLogger" level="info" additivity="false">
+        <appender-ref ref="SettingsAppender"/>
+    </logger>
+</configuration>

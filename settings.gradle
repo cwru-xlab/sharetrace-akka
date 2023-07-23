@@ -1,5 +1,2 @@
 rootProject.name = "sharetrace"
-include "core"
-include "app"
-include 'app'
-
+include "lib", "app"

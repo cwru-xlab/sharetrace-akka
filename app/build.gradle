@@ -1,42 +1,23 @@
 plugins {
-    id "java"
+    id "sharetrace"
     id "application"
-    id "com.diffplug.spotless" version "6.18.0"
 }
-
-group "sharetrace"
-version "0.1.0"
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(11)
+        applicationDefaultJvmArgs = ["-Xms8g", "-Xmx8g", "-XX:+UseZGC"]
     }
 }
 
-spotless {
-    java {
-        target "src/*/java/**/*.java"
-        importOrder()
-        removeUnusedImports()
-        cleanthat()
-        googleJavaFormat()
-        formatAnnotations()
-    }
+application {
+    mainClass = "sharetrace.app.Main"
 }
 
-repositories {
-    mavenCentral()
+// Ref: https://stackoverflow.com/a/58852595
+tasks.withType(JavaExec).configureEach {
+    systemProperties System.properties
 }
 
 dependencies {
-    annotationProcessor "org.immutables:value:2.9.3"
-    implementation project(":core")
-
-    testImplementation "org.junit.jupiter:junit-jupiter:5.9.3"
-    testImplementation "org.junit.jupiter:junit-jupiter-params:5.9.3"
-    testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:5.9.3"
-}
-
-test {
-    useJUnitPlatform()
+    implementation project(":lib")
 }
