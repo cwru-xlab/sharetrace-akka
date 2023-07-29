@@ -34,7 +34,7 @@ public record ContactNetworkFactoryParser(
     return GnmRandomContactNetworkFactoryBuilder.create()
         .nodes(config.getInt("nodes"))
         .edges(config.getInt("edges"))
-        .timeFactory(timeFactoryParser.parse(config.getConfig("time-factory")))
+        .timeFactory(timeFactory(config))
         .randomGenerator(context.randomGenerator())
         .build();
   }
@@ -43,7 +43,7 @@ public record ContactNetworkFactoryParser(
     return RandomRegularContactNetworkFactoryBuilder.create()
         .nodes(config.getInt("nodes"))
         .degree(config.getInt("degree"))
-        .timeFactory(timeFactoryParser.parse(config.getConfig("time-factory")))
+        .timeFactory(timeFactory(config))
         .randomGenerator(context.randomGenerator())
         .build();
   }
@@ -53,7 +53,7 @@ public record ContactNetworkFactoryParser(
         .initialNodes(config.getInt("initial-nodes"))
         .newEdges(config.getInt("new-edges"))
         .nodes(config.getInt("nodes"))
-        .timeFactory(timeFactoryParser.parse(config.getConfig("time-factory")))
+        .timeFactory(timeFactory(config))
         .randomGenerator(context.randomGenerator())
         .build();
   }
@@ -63,7 +63,7 @@ public record ContactNetworkFactoryParser(
         .nodes(config.getInt("nodes"))
         .nearestNeighbors(config.getInt("nearest-neighbors"))
         .rewiringProbability(config.getDouble("rewiring-probability"))
-        .timeFactory(timeFactoryParser.parse(config.getConfig("time-factory")))
+        .timeFactory(timeFactory(config))
         .randomGenerator(context.randomGenerator())
         .build();
   }
@@ -71,7 +71,7 @@ public record ContactNetworkFactoryParser(
   private ContactNetworkFactory<Integer> scaleFreeFactory(Config config) {
     return ScaleFreeContactNetworkFactoryBuilder.create()
         .nodes(config.getInt("nodes"))
-        .timeFactory(timeFactoryParser.parse(config.getConfig("time-factory")))
+        .timeFactory(timeFactory(config))
         .randomGenerator(context.randomGenerator())
         .build();
   }
@@ -83,5 +83,9 @@ public record ContactNetworkFactoryParser(
         .timestamp(context.referenceTime())
         .nodeParser(Integer::parseInt)
         .build();
+  }
+
+  private TimeFactory timeFactory(Config config) {
+    return timeFactoryParser.parse(config.getConfig("time-factory"));
   }
 }
