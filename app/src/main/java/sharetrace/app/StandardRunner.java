@@ -16,6 +16,6 @@ public record StandardRunner() implements Runner {
         .riskScoreFactory(parsed.scoreFactory())
         .contactNetwork(parsed.network())
         .build()
-        .run(parsed.iterationCount());
+        .run(parsed.iterations());
   }
 }

@@ -9,18 +9,18 @@ public record NoiseRunner() implements Runner {
 
   @Override
   public void run(Parameters parameters, Context context) {
-    var parsers = Parsed.of(parameters, context);
-    for (int i = 0; i < parsers.networkCount(); i++) {
-      var network = parsers.network();
-      var scoreFactory = parsers.scoreFactory().cached();
-      for (var noise : parsers.randoms()) {
+    var parsed = Parsed.of(parameters, context);
+    for (int i = 0; i < parsed.networks(); i++) {
+      var network = parsed.network();
+      var scoreFactory = parsed.scoreFactory().cached();
+      for (var noise : parsed.randoms()) {
         RiskPropagationBuilder.<Integer>create()
             .context(context)
             .parameters(parameters)
             .riskScoreFactory(scoreFactory.withNoise(noise))
             .contactNetwork(network)
             .build()
-            .run(parsers.iterationCount());
+            .run(parsed.iterations());
       }
     }
   }

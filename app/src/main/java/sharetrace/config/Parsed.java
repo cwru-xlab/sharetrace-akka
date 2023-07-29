@@ -31,12 +31,12 @@ public record Parsed(
         .build();
   }
 
-  public int iterationCount() {
-    return config.getInt("iteration-count");
+  public int iterations() {
+    return config.getInt("iterations");
   }
 
-  public int networkCount() {
-    return config.getInt("network-count");
+  public int networks() {
+    return config.getInt("networks");
   }
 
   public List<Float> transmissionRates() {
@@ -49,10 +49,6 @@ public record Parsed(
 
   public RiskScoreFactory scoreFactory() {
     return scoreFactoryParser.parse(config.getConfig("score-factory"));
-  }
-
-  public List<RiskScoreFactory> scoreFactories() {
-    return scoreFactoryParser.parseAll(config.getConfigList("score-factories"));
   }
 
   public ContactNetwork<Integer> network() {

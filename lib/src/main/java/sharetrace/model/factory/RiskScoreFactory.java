@@ -9,7 +9,7 @@ public interface RiskScoreFactory {
   RiskScore getRiskScore(Object key);
 
   default RiskScoreFactory cached() {
-    return new CachedRiskScoreFactory(this);
+    return this instanceof CachedRiskScoreFactory ? this : new CachedRiskScoreFactory(this);
   }
 
   default RiskScoreFactory withNoise(DistributedRandom noise) {

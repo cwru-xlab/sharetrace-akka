@@ -11,14 +11,14 @@ public record RuntimeRunner() implements Runner {
   public void run(Parameters parameters, Context context) {
     var parsed = Parsed.of(parameters, context);
     for (var networkFactory : parsed.networkFactories()) {
-      for (var i = 0; i < parsed.networkCount(); i++) {
+      for (var i = 0; i < parsed.networks(); i++) {
         RiskPropagationBuilder.<Integer>create()
             .context(context)
             .parameters(parameters)
             .riskScoreFactory(parsed.scoreFactory())
             .contactNetwork(networkFactory.getContactNetwork())
             .build()
-            .run(parsed.iterationCount());
+            .run(parsed.iterations());
       }
     }
   }

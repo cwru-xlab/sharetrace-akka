@@ -11,7 +11,7 @@ public record ParametersRunner() implements Runner {
   @Override
   public void run(Parameters parameters, Context context) {
     var parsed = Parsed.of(parameters, context);
-    for (int i = 0; i < parsed.networkCount(); i++) {
+    for (int i = 0; i < parsed.networks(); i++) {
       var network = parsed.network();
       var scoreFactory = parsed.scoreFactory().cached();
       for (float transmissionRate : parsed.transmissionRates()) {
@@ -26,7 +26,7 @@ public record ParametersRunner() implements Runner {
               .riskScoreFactory(scoreFactory)
               .contactNetwork(network)
               .build()
-              .run(parsed.iterationCount());
+              .run(parsed.iterations());
         }
       }
     }
