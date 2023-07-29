@@ -56,11 +56,11 @@ final class Monitor<V> extends AbstractBehavior<MonitorMessage> {
     this.timeouts = new BitSet(userCount);
   }
 
-  public static <K> Behavior<MonitorMessage> of(
+  public static <V> Behavior<MonitorMessage> of(
       Context context,
       Parameters parameters,
       RiskScoreFactory scoreFactory,
-      ContactNetwork<K> contactNetwork) {
+      ContactNetwork<V> contactNetwork) {
     return Behaviors.setup(
         ctx -> {
           var monitor = new Monitor<>(ctx, context, parameters, scoreFactory, contactNetwork);
