@@ -17,8 +17,6 @@
                     <timestamp>[ignore]</timestamp>
                     <version>[ignore]</version>
                 </fieldNames>
-                <includeContext>false</includeContext>
-                <includeMdcKeyName>sid</includeMdcKeyName>
             </encoder>
         </appender>
     </appender>
@@ -36,7 +34,6 @@
                     <version>[ignore]</version>
                 </fieldNames>
                 <includeContext>false</includeContext>
-                <includeMdcKeyName>sid</includeMdcKeyName>
             </encoder>
             <immediateFlush>false</immediateFlush>
             <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
@@ -63,7 +60,6 @@
                     <version>[ignore]</version>
                 </fieldNames>
                 <includeContext>false</includeContext>
-                <includeMdcKeyName>sid</includeMdcKeyName>
             </encoder>
             <file>${logDirectory}/metrics.log</file>
             <immediateFlush>false</immediateFlush>
@@ -84,7 +80,6 @@
                     <version>[ignore]</version>
                 </fieldNames>
                 <includeContext>false</includeContext>
-                <includeMdcKeyName>sid</includeMdcKeyName>
             </encoder>
             <file>${logDirectory}/settings.log</file>
             <immediateFlush>false</immediateFlush>

@@ -18,8 +18,8 @@ public final class TemporalNetworkExporter<V> {
     file = newFile(directory, filename);
   }
 
-  public static <V> void export(ContactNetwork<V> network, Path directory, Object filename) {
-    new TemporalNetworkExporter<V>(directory, String.valueOf(filename)).export(network);
+  public static <V> void export(ContactNetwork<V> network, Path directory, String filename) {
+    new TemporalNetworkExporter<V>(directory, filename).export(network);
   }
 
   public void export(ContactNetwork<V> network) {
@@ -37,7 +37,7 @@ public final class TemporalNetworkExporter<V> {
   }
 
   private Path ensureExists(Path path) {
-    if (Files.notExists(path)) {
+    if (!Files.exists(path) || Files.notExists(path)) {
       try {
         Files.createDirectories(path);
       } catch (IOException exception) {
