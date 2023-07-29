@@ -8,38 +8,30 @@ import java.nio.file.Path;
 import org.jgrapht.nio.GraphExporter;
 import org.jgrapht.nio.graphml.GraphMLExporter;
 
-public final class TemporalNetworkExporter<V> {
-
-  private final GraphExporter<V, TemporalEdge> delegate;
-  private final File file;
-
-  public TemporalNetworkExporter(Path directory, String filename) {
-    delegate = newExporter();
-    file = newFile(directory, filename);
-  }
+public record TemporalNetworkExporter<V>(Path directory, String filename) {
 
   public static <V> void export(ContactNetwork<V> network, Path directory, String filename) {
     new TemporalNetworkExporter<V>(directory, filename).export(network);
   }
 
   public void export(ContactNetwork<V> network) {
-    delegate.exportGraph(network, file);
+    exporter().exportGraph(network, file(directory, filename));
   }
 
-  private GraphExporter<V, TemporalEdge> newExporter() {
+  private GraphExporter<V, TemporalEdge> exporter() {
     var exporter = new GraphMLExporter<V, TemporalEdge>(String::valueOf);
     exporter.setExportEdgeWeights(true);
     return exporter;
   }
 
-  private File newFile(Path directory, String filename) {
-    return Path.of(ensureExists(directory).toString(), filename + ".graphml").toFile();
+  private File file(Path directory, String filename) {
+    return ensureExists(directory).resolve(filename + ".graphml").toFile();
   }
 
   private Path ensureExists(Path path) {
-    if (!Files.exists(path) || Files.notExists(path)) {
+    if (Files.notExists(path)) {
       try {
-        Files.createDirectories(path);
+        return Files.createDirectories(path);
       } catch (IOException exception) {
         throw new UncheckedIOException(exception);
       }
