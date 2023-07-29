@@ -51,7 +51,7 @@ final class Monitor<V> extends AbstractBehavior<MonitorMessage> {
     this.parameters = parameters;
     this.scoreFactory = scoreFactory;
     this.contactNetwork = contactNetwork;
-    this.userCount = contactNetwork.nodeSet().size();
+    this.userCount = contactNetwork.vertexSet().size();
     this.timer = new Timer<>();
     this.timeouts = new BitSet(userCount);
   }
@@ -108,7 +108,7 @@ final class Monitor<V> extends AbstractBehavior<MonitorMessage> {
   private Map<V, ActorRef<UserMessage>> newUsers() {
     var users = new HashMap<V, ActorRef<UserMessage>>();
     var i = 0;
-    for (var key : contactNetwork.nodeSet()) {
+    for (var key : contactNetwork.vertexSet()) {
       var user = User.of(context, parameters, getContext().getSelf(), new IdleTimeout(i));
       var reference = getContext().spawn(user, String.valueOf(key), User.props());
       getContext().watch(reference);
