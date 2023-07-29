@@ -46,7 +46,7 @@ public record RiskPropagation<V>(
     MDC.setContextMap(context.mdc());
     logSettings(context);
     logMetrics(context);
-    invoke();
+    invoke(context);
   }
 
   private Context contextWithMdc() {
@@ -82,9 +82,9 @@ public record RiskPropagation<V>(
     return () -> factory.apply(contactNetwork);
   }
 
-  private void invoke() {
+  private void invoke(Context context) {
     try {
-      newInstance().getWhenTerminated().toCompletableFuture().get();
+      newInstance(context).getWhenTerminated().toCompletableFuture().get();
     } catch (InterruptedException exception) {
       Thread.currentThread().interrupt();
       throw new RuntimeException(exception);
@@ -93,11 +93,11 @@ public record RiskPropagation<V>(
     }
   }
 
-  private ActorSystem<Void> newInstance() {
-    return ActorSystem.create(behavior(), RiskPropagation.class.getSimpleName());
+  private ActorSystem<Void> newInstance(Context context) {
+    return ActorSystem.create(behavior(context), RiskPropagation.class.getSimpleName());
   }
 
-  private Behavior<Void> behavior() {
+  private Behavior<Void> behavior(Context context) {
     return Behaviors.setup(
         ctx -> {
           var monitor = Monitor.of(context, parameters, riskScoreFactory, contactNetwork);
