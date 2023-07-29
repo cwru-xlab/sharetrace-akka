@@ -9,11 +9,11 @@ public interface Expirable extends Timestamped {
   @JsonIgnore
   Instant expiresAt();
 
-  default boolean isAlive(InstantSource source) {
-    return !isExpired(source);
+  default boolean isAlive(InstantSource timeSource) {
+    return !isExpired(timeSource);
   }
 
-  default boolean isExpired(InstantSource source) {
-    return expiresAt().isBefore(source.instant());
+  default boolean isExpired(InstantSource timeSource) {
+    return expiresAt().isBefore(timeSource.instant());
   }
 }

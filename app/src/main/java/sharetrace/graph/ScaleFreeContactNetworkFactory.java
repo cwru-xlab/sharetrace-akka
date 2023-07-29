@@ -8,12 +8,11 @@ import org.jgrapht.generate.GraphGenerator;
 import org.jgrapht.generate.ScaleFreeGraphGenerator;
 import sharetrace.Buildable;
 import sharetrace.model.factory.TimeFactory;
-import sharetrace.util.IdFactory;
 
 @Buildable
-public record ScaleFreeTemporalNetworkFactory(
+public record ScaleFreeContactNetworkFactory(
     int nodes, TimeFactory timeFactory, RandomGenerator randomGenerator)
-    implements GeneratedTemporalNetworkFactory<Integer> {
+    implements GeneratedContactNetworkFactory<Integer> {
 
   @Override
   public Graph<Integer, TemporalEdge> newTarget() {
@@ -26,11 +25,11 @@ public record ScaleFreeTemporalNetworkFactory(
   }
 
   @Override
-  public TemporalNetwork<Integer> newNetwork(Graph<Integer, TemporalEdge> target) {
-    return new SimpleTemporalNetwork<>(target, IdFactory.nextUlid(), "ScaleFree", properties());
+  public ContactNetwork<Integer> newContactNetwork(Graph<Integer, TemporalEdge> target) {
+    return new SimpleContactNetwork<>(target, "ScaleFree", props());
   }
 
-  private Map<String, ?> properties() {
+  private Map<String, ?> props() {
     return Map.of("nodes", nodes());
   }
 }

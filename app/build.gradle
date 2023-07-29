@@ -19,5 +19,6 @@ tasks.withType(JavaExec).configureEach {
 }
 
 dependencies {
+    annotationProcessor "io.soabase.record-builder:record-builder-processor:37"
     implementation project(":lib")
 }

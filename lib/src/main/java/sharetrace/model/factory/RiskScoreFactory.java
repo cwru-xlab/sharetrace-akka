@@ -4,15 +4,15 @@ import sharetrace.model.RiskScore;
 import sharetrace.util.DistributedRandom;
 
 @FunctionalInterface
-public interface RiskScoreFactory<K> {
+public interface RiskScoreFactory {
 
-  RiskScore getScore(K key);
+  RiskScore getRiskScore(Object key);
 
-  default RiskScoreFactory<K> cached() {
-    return new CachedRiskScoreFactory<>(this);
+  default RiskScoreFactory cached() {
+    return new CachedRiskScoreFactory(this);
   }
 
-  default RiskScoreFactory<K> withNoise(DistributedRandom noise) {
-    return new NoisyRiskScoreFactory<>(this, noise);
+  default RiskScoreFactory withNoise(DistributedRandom noise) {
+    return new NoisyRiskScoreFactory(this, noise);
   }
 }

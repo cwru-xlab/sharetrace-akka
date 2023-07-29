@@ -18,11 +18,11 @@ public final class TemporalNetworkExporter<V> {
     file = newFile(directory, filename);
   }
 
-  public static <V> void export(TemporalNetwork<V> network, Path directory, Object filename) {
+  public static <V> void export(ContactNetwork<V> network, Path directory, Object filename) {
     new TemporalNetworkExporter<V>(directory, String.valueOf(filename)).export(network);
   }
 
-  public void export(TemporalNetwork<V> network) {
+  public void export(ContactNetwork<V> network) {
     delegate.exportGraph(network, file);
   }
 

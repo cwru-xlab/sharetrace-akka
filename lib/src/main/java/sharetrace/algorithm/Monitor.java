@@ -11,7 +11,7 @@ import akka.actor.typed.javadsl.Receive;
 import java.util.BitSet;
 import java.util.HashMap;
 import java.util.Map;
-import sharetrace.graph.TemporalNetwork;
+import sharetrace.graph.ContactNetwork;
 import sharetrace.logging.metric.CreateUsersRuntime;
 import sharetrace.logging.metric.MessagePassingRuntime;
 import sharetrace.logging.metric.MetricRecord;
@@ -30,12 +30,12 @@ import sharetrace.util.Context;
 import sharetrace.util.Timer;
 
 // TODO Consider setting node attribute to be the exposure score and export before/after
-final class Monitor<K> extends AbstractBehavior<MonitorMessage> {
+final class Monitor<V> extends AbstractBehavior<MonitorMessage> {
 
   private final Context context;
   private final Parameters parameters;
-  private final RiskScoreFactory<K> scoreFactory;
-  private final TemporalNetwork<K> contactNetwork;
+  private final RiskScoreFactory scoreFactory;
+  private final ContactNetwork<V> contactNetwork;
   private final int userCount;
   private final Timer<Class<? extends MetricRecord>> timer;
   private final BitSet timeouts;
@@ -44,8 +44,8 @@ final class Monitor<K> extends AbstractBehavior<MonitorMessage> {
       ActorContext<MonitorMessage> ctx,
       Context context,
       Parameters parameters,
-      RiskScoreFactory<K> scoreFactory,
-      TemporalNetwork<K> contactNetwork) {
+      RiskScoreFactory scoreFactory,
+      ContactNetwork<V> contactNetwork) {
     super(ctx);
     this.context = context;
     this.parameters = parameters;
@@ -59,8 +59,8 @@ final class Monitor<K> extends AbstractBehavior<MonitorMessage> {
   public static <K> Behavior<MonitorMessage> of(
       Context context,
       Parameters parameters,
-      RiskScoreFactory<K> scoreFactory,
-      TemporalNetwork<K> contactNetwork) {
+      RiskScoreFactory scoreFactory,
+      ContactNetwork<K> contactNetwork) {
     return Behaviors.setup(
         ctx -> {
           var monitor = new Monitor<>(ctx, context, parameters, scoreFactory, contactNetwork);
@@ -84,7 +84,7 @@ final class Monitor<K> extends AbstractBehavior<MonitorMessage> {
         .build();
   }
 
-  private Behavior<MonitorMessage> handle(Run message) {
+  private Behavior<MonitorMessage> handle(Run run) {
     if (userCount < 1) {
       return Behaviors.stopped();
     }
@@ -105,8 +105,8 @@ final class Monitor<K> extends AbstractBehavior<MonitorMessage> {
     return this;
   }
 
-  private Map<K, ActorRef<UserMessage>> newUsers() {
-    var users = new HashMap<K, ActorRef<UserMessage>>();
+  private Map<V, ActorRef<UserMessage>> newUsers() {
+    var users = new HashMap<V, ActorRef<UserMessage>>();
     var i = 0;
     for (var key : contactNetwork.nodeSet()) {
       var user = User.of(context, parameters, getContext().getSelf(), new IdleTimeout(i));
@@ -118,7 +118,7 @@ final class Monitor<K> extends AbstractBehavior<MonitorMessage> {
     return users;
   }
 
-  private void sendContacts(Map<K, ActorRef<UserMessage>> users) {
+  private void sendContacts(Map<V, ActorRef<UserMessage>> users) {
     for (var edge : contactNetwork.edgeSet()) {
       var user1 = users.get(contactNetwork.getEdgeSource(edge));
       var user2 = users.get(contactNetwork.getEdgeTarget(edge));
@@ -127,8 +127,12 @@ final class Monitor<K> extends AbstractBehavior<MonitorMessage> {
     }
   }
 
-  private void sendRiskScores(Map<K, ActorRef<UserMessage>> users) {
-    users.forEach((key, user) -> user.tell(new RiskScoreMessage(user, scoreFactory.getScore(key))));
+  private void sendRiskScores(Map<V, ActorRef<UserMessage>> users) {
+    for (var entry : users.entrySet()) {
+      var user = entry.getValue();
+      var score = scoreFactory.getRiskScore(entry.getKey());
+      user.tell(new RiskScoreMessage(user, score));
+    }
   }
 
   private void logMetrics() {

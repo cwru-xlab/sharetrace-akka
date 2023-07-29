@@ -6,12 +6,12 @@ import sharetrace.model.RiskScore;
 import sharetrace.util.DistributedRandom;
 
 @Buildable
-public record RandomRiskScoreFactory<K>(
+public record RandomRiskScoreFactory(
     Duration scoreExpiry, DistributedRandom random, TimeFactory timeFactory)
-    implements RiskScoreFactory<K> {
+    implements RiskScoreFactory {
 
   @Override
-  public RiskScore getScore(K key) {
+  public RiskScore getRiskScore(Object key) {
     return new RiskScore(random.nextFloat(), timeFactory.getTime(), scoreExpiry);
   }
 }

@@ -8,16 +8,15 @@ import org.jgrapht.generate.BarabasiAlbertGraphGenerator;
 import org.jgrapht.generate.GraphGenerator;
 import sharetrace.Buildable;
 import sharetrace.model.factory.TimeFactory;
-import sharetrace.util.IdFactory;
 
 @Buildable
-public record BarabasiAlbertTemporalNetworkFactory(
+public record BarabasiAlbertContactNetworkFactory(
     int nodes,
     int initialNodes,
     int newEdges,
     TimeFactory timeFactory,
     RandomGenerator randomGenerator)
-    implements GeneratedTemporalNetworkFactory<Integer> {
+    implements GeneratedContactNetworkFactory<Integer> {
 
   @Override
   public Graph<Integer, TemporalEdge> newTarget() {
@@ -31,12 +30,11 @@ public record BarabasiAlbertTemporalNetworkFactory(
   }
 
   @Override
-  public TemporalNetwork<Integer> newNetwork(Graph<Integer, TemporalEdge> target) {
-    return new SimpleTemporalNetwork<>(
-        target, IdFactory.nextUlid(), "BarabasiAlbert", properties());
+  public ContactNetwork<Integer> newContactNetwork(Graph<Integer, TemporalEdge> target) {
+    return new SimpleContactNetwork<>(target, "BarabasiAlbert", props());
   }
 
-  private Map<String, ?> properties() {
+  private Map<String, ?> props() {
     return Map.of("nodes", nodes, "initialNodes", initialNodes, "newEdges", newEdges);
   }
 }

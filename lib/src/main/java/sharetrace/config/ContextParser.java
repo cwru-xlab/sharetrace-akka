@@ -13,14 +13,14 @@ import sharetrace.util.Context;
 import sharetrace.util.ContextBuilder;
 import sharetrace.util.IdFactory;
 
-public record ContextParser() implements ConfigParser<Context> {
+public record ContextParser(Config contextConfig) implements ConfigParser<Context> {
 
   @Override
   public Context parse(Config config) {
     var timeSource = timeSource(config);
     var seed = seed(config);
     return ContextBuilder.create()
-        .config(config)
+        .config(contextConfig)
         .timeSource(timeSource)
         .seed(seed)
         .referenceTime(referenceTime(config, timeSource))

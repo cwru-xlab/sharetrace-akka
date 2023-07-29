@@ -4,12 +4,12 @@ import sharetrace.model.RiskScore;
 import sharetrace.util.DistributedRandom;
 import sharetrace.util.Ranges;
 
-public record NoisyRiskScoreFactory<K>(RiskScoreFactory<K> scoreFactory, DistributedRandom random)
-    implements RiskScoreFactory<K> {
+public record NoisyRiskScoreFactory(RiskScoreFactory scoreFactory, DistributedRandom random)
+    implements RiskScoreFactory {
 
   @Override
-  public RiskScore getScore(K key) {
-    return scoreFactory.getScore(key).mapValue(value -> constrain(value + random.nextFloat()));
+  public RiskScore getRiskScore(Object key) {
+    return scoreFactory.getRiskScore(key).mapValue(value -> constrain(value + random.nextFloat()));
   }
 
   private float constrain(float value) {

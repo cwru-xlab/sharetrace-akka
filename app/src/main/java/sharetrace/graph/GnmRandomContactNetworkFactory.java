@@ -8,12 +8,11 @@ import org.jgrapht.generate.GnmRandomGraphGenerator;
 import org.jgrapht.generate.GraphGenerator;
 import sharetrace.Buildable;
 import sharetrace.model.factory.TimeFactory;
-import sharetrace.util.IdFactory;
 
 @Buildable
-public record GnmRandomTemporalNetworkFactory(
+public record GnmRandomContactNetworkFactory(
     int nodes, int edges, TimeFactory timeFactory, RandomGenerator randomGenerator)
-    implements GeneratedTemporalNetworkFactory<Integer> {
+    implements GeneratedContactNetworkFactory<Integer> {
 
   private static final boolean LOOPS = false;
   private static final boolean MULTIPLE_EDGES = false;
@@ -30,11 +29,11 @@ public record GnmRandomTemporalNetworkFactory(
   }
 
   @Override
-  public TemporalNetwork<Integer> newNetwork(Graph<Integer, TemporalEdge> target) {
-    return new SimpleTemporalNetwork<>(target, IdFactory.nextUlid(), "GnmRandom", properties());
+  public ContactNetwork<Integer> newContactNetwork(Graph<Integer, TemporalEdge> target) {
+    return new SimpleContactNetwork<>(target, "GnmRandom", props());
   }
 
-  private Map<String, ?> properties() {
+  private Map<String, ?> props() {
     return Map.of("nodes", nodes, "edges", edges, "loops", LOOPS, "multipleEdges", MULTIPLE_EDGES);
   }
 }

@@ -13,12 +13,11 @@ import org.jgrapht.Graph;
 import org.jgrapht.generate.GraphGenerator;
 import sharetrace.Buildable;
 import sharetrace.model.Timestamped;
-import sharetrace.util.IdFactory;
 
 @Buildable
-public record FileTemporalNetworkFactory<V>(
+public record FileContactNetworkFactory<V>(
     Path path, String delimiter, Function<String, V> nodeParser, Instant timestamp)
-    implements TemporalNetworkFactory<V>, Timestamped {
+    implements ContactNetworkFactory<V>, Timestamped {
 
   private static final String TEST_INT = "1";
   private static final BinaryOperator<Instant> MERGER = BinaryOperator.maxBy(Instant::compareTo);
@@ -29,9 +28,8 @@ public record FileTemporalNetworkFactory<V>(
   }
 
   @Override
-  public TemporalNetwork<V> newNetwork(Graph<V, TemporalEdge> target) {
-    var type = path.getFileName().toString();
-    return new SimpleTemporalNetwork<>(target, IdFactory.nextUlid(), type);
+  public ContactNetwork<V> newContactNetwork(Graph<V, TemporalEdge> target) {
+    return new SimpleContactNetwork<>(target, path.getFileName().toString());
   }
 
   @Override
@@ -40,14 +38,14 @@ public record FileTemporalNetworkFactory<V>(
   }
 
   private void generateGraph(Graph<V, TemporalEdge> target, Map<String, V> resultMap) {
-    var max = parseNetwork(target);
-    finalizeEdges(target, max);
+    var maxTimestamp = parseNetwork(target);
+    adjustTimestamps(target, maxTimestamp);
   }
 
   private Instant parseNetwork(Graph<V, TemporalEdge> target) {
     try (var reader = Files.newBufferedReader(path)) {
       Iterable<String> edges = reader.lines()::iterator;
-      var max = Instant.MIN;
+      var maxTimestamp = Instant.MIN;
       for (var edge : edges) {
         var args = edge.split(delimiter);
         var v1 = nodeParser.apply(args[1]);
@@ -55,10 +53,10 @@ public record FileTemporalNetworkFactory<V>(
         if (!v1.equals(v2)) {
           var timestamp = parseTimestamp(args[2]);
           mergeWithNodes(target, v1, v2, timestamp);
-          max = MERGER.apply(max, timestamp);
+          maxTimestamp = MERGER.apply(maxTimestamp, timestamp);
         }
       }
-      return max;
+      return maxTimestamp;
     } catch (IOException exception) {
       throw new UncheckedIOException(exception);
     }
@@ -79,8 +77,8 @@ public record FileTemporalNetworkFactory<V>(
     }
   }
 
-  private void finalizeEdges(Graph<V, TemporalEdge> target, Instant max) {
-    var offset = Duration.between(max, timestamp);
+  private void adjustTimestamps(Graph<V, TemporalEdge> target, Instant maxTimestamp) {
+    var offset = Duration.between(maxTimestamp, timestamp);
     for (var edge : target.edgeSet()) {
       edge.mapTimestamp(t -> t.plus(offset));
       target.setEdgeWeight(edge, edge.weight());

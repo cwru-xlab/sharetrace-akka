@@ -11,7 +11,7 @@ import java.util.function.Supplier;
 import java.util.stream.IntStream;
 import org.slf4j.MDC;
 import sharetrace.Buildable;
-import sharetrace.graph.TemporalNetwork;
+import sharetrace.graph.ContactNetwork;
 import sharetrace.graph.TemporalNetworkExporter;
 import sharetrace.logging.metric.GraphCycles;
 import sharetrace.logging.metric.GraphEccentricity;
@@ -29,11 +29,11 @@ import sharetrace.util.ContextBuilder;
 import sharetrace.util.IdFactory;
 
 @Buildable
-public record RiskPropagation<K>(
+public record RiskPropagation<V>(
     Context context,
     Parameters parameters,
-    RiskScoreFactory<K> scoreFactory,
-    TemporalNetwork<K> contactNetwork)
+    RiskScoreFactory riskScoreFactory,
+    ContactNetwork<V> contactNetwork)
     implements Runnable {
 
   public void run(int iterations) {
@@ -78,7 +78,7 @@ public record RiskPropagation<K>(
     }
   }
 
-  private <T extends MetricRecord> Supplier<T> metric(Function<TemporalNetwork<K>, T> factory) {
+  private <T extends MetricRecord> Supplier<T> metric(Function<ContactNetwork<V>, T> factory) {
     return () -> factory.apply(contactNetwork);
   }
 
@@ -100,7 +100,7 @@ public record RiskPropagation<K>(
   private Behavior<Void> behavior() {
     return Behaviors.setup(
         ctx -> {
-          var monitor = Monitor.of(context, parameters, scoreFactory, contactNetwork);
+          var monitor = Monitor.of(context, parameters, riskScoreFactory, contactNetwork);
           var reference = ctx.spawn(monitor, Monitor.name(), Monitor.props());
           ctx.watch(reference);
           reference.tell(Run.INSTANCE);

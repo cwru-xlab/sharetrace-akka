@@ -32,12 +32,8 @@ class Event(str, Enum):
     """Types of events logged by user actors."""
 
     CONTACT = "ContactEvent"
-    CONTACTS_REFRESH = "ContactsRefreshEvent"
-    CURRENT_REFRESH = "CurrentRefreshEvent"
-    PROPAGATE = "PropagateEvent"
     RECEIVE = "ReceiveEvent"
-    SEND_CACHED = "SendCachedEvent"
-    SEND_CURRENT = "SendCurrentEvent"
+    SEND = "SendEvent"
     UPDATE = "UpdateEvent"
     TIMEOUT = "TimeoutEvent"
 
@@ -133,56 +129,25 @@ class EventCounter(collections.Counter):
             raise TypeError(f"'key' must be an {Event.__name__} instance")
 
     @property
-    def num_sent_to_contacts(self) -> int:
-        """Returns the number of messages sent to a contact."""
-        return self.num_curr_sent + self.num_cached_sent
-
-    @property
-    def num_received(self) -> int:
+    def received(self) -> int:
         """Returns the number of messages received."""
         return self[Event.RECEIVE]
 
     @property
-    def num_curr_sent(self) -> int:
-        """Returns the number of current messages."""
-        return self[Event.SEND_CURRENT]
+    def sent(self) -> int:
+        """Returns the number of sent messages."""
+        return self[Event.SEND]
 
     @property
-    def num_cached_sent(self) -> int:
-        """Returns the number of cached messages."""
-        return self[Event.SEND_CACHED]
-
-    @property
-    def num_propagated(self) -> int:
-        """Returns the number of propagated messages."""
-        return self[Event.PROPAGATE]
-
-    @property
-    def num_updates(self) -> int:
+    def updates(self) -> int:
         """Returns the number of user actor updates."""
         return self[Event.UPDATE]
 
     @property
-    def num_contacts(self) -> int:
+    def contacts(self) -> int:
         """Returns the number of contacts."""
         # Each user logs a contact, so each contact is double counted.
         return int(self[Event.CONTACT] / 2)
-
-    @property
-    def num_contact_refreshes(self) -> int:
-        """Returns the number of contact refreshes."""
-        return self[Event.CONTACTS_REFRESH]
-
-    @property
-    def num_curr_refreshes(self) -> int:
-        """Returns the number of current message refreshes."""
-        return self[Event.CURRENT_REFRESH]
-
-    @property
-    def num_not_sent_to_contacts(self) -> int:
-        """Returns the number of messages not sent to a contact."""
-        # Each user sends a message, so double the number of contacts.
-        return 2 * self.num_contacts - self.num_sent_to_contacts
 
 
 class CallbackData(Callable):
