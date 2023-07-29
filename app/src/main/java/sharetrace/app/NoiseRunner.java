@@ -10,7 +10,7 @@ public record NoiseRunner() implements Runner {
   @Override
   public void run(Parameters parameters, Context context) {
     var parsed = Parsed.of(parameters, context);
-    for (int i = 0; i < parsed.networks(); i++) {
+    for (var i = 0; i < parsed.networks(); i++) {
       var network = parsed.network();
       var scoreFactory = parsed.scoreFactory().cached();
       for (var noise : parsed.randoms()) {
