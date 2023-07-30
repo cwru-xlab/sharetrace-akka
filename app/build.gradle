@@ -9,6 +9,7 @@ java {
     }
 }
 
+// Note: Run from the "app" module so that the logs directory can be created.
 application {
     mainClass = "sharetrace.app.Main"
 }
