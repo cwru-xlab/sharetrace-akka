@@ -7,7 +7,6 @@ import sharetrace.graph.ContactNetwork;
 import sharetrace.graph.ContactNetworkFactory;
 import sharetrace.model.Parameters;
 import sharetrace.model.factory.RiskScoreFactory;
-import sharetrace.model.factory.TimeFactory;
 import sharetrace.util.Context;
 import sharetrace.util.DistributedRandom;
 
@@ -15,7 +14,6 @@ import sharetrace.util.DistributedRandom;
 public record Parsed(
     Config config,
     ConfigParser<DistributedRandom> randomParser,
-    ConfigParser<TimeFactory> timeFactoryParser,
     ConfigParser<RiskScoreFactory> scoreFactoryParser,
     ConfigParser<ContactNetworkFactory<Integer>> networkFactoryParser) {
 
@@ -25,7 +23,6 @@ public record Parsed(
     return ParsedBuilder.create()
         .config(context.config())
         .randomParser(randomParser)
-        .timeFactoryParser(timeFactoryParser)
         .scoreFactoryParser(new RiskScoreFactoryParser(parameters, randomParser, timeFactoryParser))
         .networkFactoryParser(new ContactNetworkFactoryParser(context, timeFactoryParser))
         .build();
