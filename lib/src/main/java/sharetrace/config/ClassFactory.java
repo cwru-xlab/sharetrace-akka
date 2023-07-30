@@ -5,8 +5,7 @@ public record ClassFactory() {
   @SuppressWarnings("unchecked")
   public <T> Class<T> getClass(String name) {
     try {
-      var classLoader = Thread.currentThread().getContextClassLoader();
-      return (Class<T>) classLoader.loadClass(name);
+      return (Class<T>) Class.forName(name);
     } catch (ClassNotFoundException exception) {
       throw new RuntimeException(exception);
     }
