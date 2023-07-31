@@ -57,11 +57,11 @@ public record Parsed(
   }
 
   public List<ContactNetworkFactory<Integer>> networkFactories() {
-    return networkFactoryParser.parseAll(config.getConfigList("network-factories"));
+    return networkFactoryParser.parse(config.getConfigList("network-factories"));
   }
 
   public List<DistributedRandom> randoms() {
-    return randomParser.parseAll(config.getConfigList("distributions"));
+    return randomParser.parse(config.getConfigList("distributions"));
   }
 
   private List<Float> toFloats(List<Double> doubles) {
