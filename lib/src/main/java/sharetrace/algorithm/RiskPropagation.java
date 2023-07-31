@@ -18,7 +18,7 @@ import sharetrace.logging.metric.GraphEccentricity;
 import sharetrace.logging.metric.GraphScores;
 import sharetrace.logging.metric.GraphSize;
 import sharetrace.logging.metric.GraphTopology;
-import sharetrace.logging.metric.MetricRecord;
+import sharetrace.logging.metric.Metric;
 import sharetrace.logging.setting.ExperimentSettings;
 import sharetrace.logging.setting.ExperimentSettingsBuilder;
 import sharetrace.model.Parameters;
@@ -78,7 +78,7 @@ public record RiskPropagation<V>(
     }
   }
 
-  private <T extends MetricRecord> Supplier<T> metric(Function<ContactNetwork<V>, T> factory) {
+  private <T extends Metric> Supplier<T> metric(Function<ContactNetwork<V>, T> factory) {
     return () -> factory.apply(contactNetwork);
   }
 

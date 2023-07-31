@@ -16,7 +16,7 @@ import sharetrace.cache.RangeCache;
 import sharetrace.cache.StandardCache;
 import sharetrace.logging.RecordLogger;
 import sharetrace.logging.event.ContactEvent;
-import sharetrace.logging.event.EventRecord;
+import sharetrace.logging.event.Event;
 import sharetrace.logging.event.ReceiveEvent;
 import sharetrace.logging.event.SendEvent;
 import sharetrace.logging.event.UpdateEvent;
@@ -31,7 +31,7 @@ import sharetrace.util.Context;
 
 final class User extends AbstractBehavior<UserMessage> {
 
-  private final RecordLogger<EventRecord> logger;
+  private final RecordLogger<Event> logger;
   private final InstantSource timeSource;
   private final Parameters parameters;
   private final ActorRef<MonitorMessage> monitor;

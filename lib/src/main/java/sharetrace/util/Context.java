@@ -17,9 +17,9 @@ import sharetrace.Buildable;
 import sharetrace.logging.LogRecord;
 import sharetrace.logging.RecordLogger;
 import sharetrace.logging.ToClassNameSerializer;
-import sharetrace.logging.event.EventRecord;
-import sharetrace.logging.metric.MetricRecord;
-import sharetrace.logging.setting.SettingsRecord;
+import sharetrace.logging.event.Event;
+import sharetrace.logging.metric.Metric;
+import sharetrace.logging.setting.Settings;
 
 @Buildable
 public record Context(
@@ -31,15 +31,15 @@ public record Context(
     Set<Class<? extends LogRecord>> loggable,
     @JsonAnyGetter Map<String, String> mdc) {
 
-  public RecordLogger<EventRecord> eventsLogger() {
+  public RecordLogger<Event> eventsLogger() {
     return new RecordLogger<>("EventsLogger", "event", loggable);
   }
 
-  public RecordLogger<MetricRecord> metricsLogger() {
+  public RecordLogger<Metric> metricsLogger() {
     return new RecordLogger<>("MetricsLogger", "metric", loggable);
   }
 
-  public RecordLogger<SettingsRecord> settingsLogger() {
+  public RecordLogger<Settings> settingsLogger() {
     return new RecordLogger<>("SettingsLogger", "setting", loggable);
   }
 

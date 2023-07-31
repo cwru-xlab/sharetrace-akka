@@ -2,15 +2,13 @@ package sharetrace.model.message;
 
 import akka.actor.typed.ActorRef;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import java.time.Instant;
 import sharetrace.model.Identifiable;
 import sharetrace.model.RiskScore;
 import sharetrace.model.TemporalScore;
 import sharetrace.util.IdFactory;
 
-public record RiskScoreMessage(
-    @JsonIgnore ActorRef<UserMessage> sender, @JsonUnwrapped RiskScore score, String id)
+public record RiskScoreMessage(@JsonIgnore ActorRef<UserMessage> sender, RiskScore score, String id)
     implements TemporalScore, Identifiable, UserMessage {
 
   public RiskScoreMessage(ActorRef<UserMessage> sender, RiskScore score) {

@@ -14,7 +14,7 @@ import java.util.Map;
 import sharetrace.graph.ContactNetwork;
 import sharetrace.logging.metric.CreateUsersRuntime;
 import sharetrace.logging.metric.MessagePassingRuntime;
-import sharetrace.logging.metric.MetricRecord;
+import sharetrace.logging.metric.Metric;
 import sharetrace.logging.metric.SendContactsRuntime;
 import sharetrace.logging.metric.SendRiskScoresRuntime;
 import sharetrace.logging.metric.TotalRuntime;
@@ -37,7 +37,7 @@ final class Monitor<V> extends AbstractBehavior<MonitorMessage> {
   private final RiskScoreFactory scoreFactory;
   private final ContactNetwork<V> contactNetwork;
   private final int userCount;
-  private final Timer<Class<? extends MetricRecord>> timer;
+  private final Timer<Class<? extends Metric>> timer;
   private final BitSet timeouts;
 
   private Monitor(

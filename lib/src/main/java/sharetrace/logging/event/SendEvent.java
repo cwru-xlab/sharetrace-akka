@@ -9,6 +9,6 @@ public record SendEvent(String self, String contact, RiskScoreMessage message, I
 
   public SendEvent(
       ActorRef<?> self, ActorRef<?> contact, RiskScoreMessage message, Instant timestamp) {
-    this(EventRecord.toString(self), EventRecord.toString(contact), message, timestamp);
+    this(Event.toString(self), Event.toString(contact), message, timestamp);
   }
 }

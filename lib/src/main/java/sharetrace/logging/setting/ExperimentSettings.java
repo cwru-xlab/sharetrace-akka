@@ -6,5 +6,5 @@ import sharetrace.util.Context;
 
 @Buildable
 public record ExperimentSettings(
-    Parameters parameters, Context context, String networkId, String networkType)
-    implements SettingsRecord {}
+    String runId, Parameters parameters, Context context, String networkId, String networkType)
+    implements Settings {}

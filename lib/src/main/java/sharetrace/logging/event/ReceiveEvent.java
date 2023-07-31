@@ -8,6 +8,6 @@ public record ReceiveEvent(String self, String contact, RiskScoreMessage message
     implements MessageEvent {
 
   public ReceiveEvent(ActorRef<?> self, RiskScoreMessage message, Instant timestamp) {
-    this(EventRecord.toString(self), EventRecord.toString(message.sender()), message, timestamp);
+    this(Event.toString(self), Event.toString(message.sender()), message, timestamp);
   }
 }

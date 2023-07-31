@@ -4,7 +4,7 @@ import akka.actor.typed.ActorRef;
 import sharetrace.logging.LogRecord;
 import sharetrace.model.Timestamped;
 
-public interface EventRecord extends LogRecord, Timestamped {
+public interface Event extends LogRecord, Timestamped {
 
   String self();
 

@@ -18,7 +18,7 @@ public record GraphScores(
     double degeneracy,
     double globalClusteringCoefficient,
     Statistics localClusteringCoefficient)
-    implements MetricRecord {
+    implements Metric {
 
   public static GraphScores of(Graph<?, ?> graph) {
     return GraphScoresBuilder.create()

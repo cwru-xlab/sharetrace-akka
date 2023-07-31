@@ -6,7 +6,7 @@ import sharetrace.Buildable;
 
 @Buildable
 public record GraphEccentricity(long radius, long diameter, long center, long periphery)
-    implements MetricRecord {
+    implements Metric {
 
   public static GraphEccentricity of(Graph<?, ?> graph) {
     GraphMeasurer<?, ?> measurer = new GraphMeasurer<>(graph);
