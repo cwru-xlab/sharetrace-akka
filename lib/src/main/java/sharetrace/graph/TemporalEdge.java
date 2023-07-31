@@ -20,7 +20,7 @@ public final class TemporalEdge extends DefaultWeightedEdge {
   }
 
   public double weight() {
-    return timestamp == null ? Graph.DEFAULT_EDGE_WEIGHT : timestamp.toEpochMilli();
+    return timestamp == null ? Graph.DEFAULT_EDGE_WEIGHT : timestamp.getEpochSecond();
   }
 
   public Instant getTimestamp() {
