@@ -10,6 +10,7 @@
     <import class="net.logstash.logback.appender.LoggingEventAsyncDisruptorAppender"/>
     <import class="net.logstash.logback.encoder.LogstashEncoder"/>
     <import class="net.logstash.logback.fieldnames.ShortenedFieldNames"/>
+
     <timestamp key="bySecond" datePattern="yyyyMMddHHmmss"/>
     <variable name="logDirectory" value="logs/${bySecond}" scope="context"/>
 
@@ -32,7 +33,7 @@
         <appender-ref ref="BaseConsoleAppender"/>
     </appender>
 
-    <appender name="RollingFileAppender" class="RollingFileAppender">
+    <appender name="BaseFileAppender" class="RollingFileAppender">
         <file>${logDirectory}/events.log</file>
         <encoder class="LogstashEncoder">
             <fieldNames class="ShortenedFieldNames">
@@ -58,7 +59,7 @@
     </appender>
 
     <appender name="EventsAppender" class="LoggingEventAsyncDisruptorAppender">
-        <appender-ref ref="RollingFileAppender"/>
+        <appender-ref ref="BaseFileAppender"/>
         <appendTimeout>-1</appendTimeout>
     </appender>
 
