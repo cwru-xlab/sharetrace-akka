@@ -6,5 +6,5 @@ public interface MessageEvent extends Event {
 
   RiskScoreMessage message();
 
-  String contact();
+  int contact();
 }

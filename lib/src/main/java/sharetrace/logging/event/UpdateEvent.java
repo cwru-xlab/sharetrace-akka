@@ -5,11 +5,11 @@ import java.time.Instant;
 import sharetrace.model.message.RiskScoreMessage;
 
 public record UpdateEvent(
-    String self, RiskScoreMessage previous, RiskScoreMessage current, Instant timestamp)
+    int self, RiskScoreMessage previous, RiskScoreMessage current, Instant timestamp)
     implements Event {
 
   public UpdateEvent(
       ActorRef<?> self, RiskScoreMessage previous, RiskScoreMessage current, Instant timestamp) {
-    this(Event.toString(self), previous, current, timestamp);
+    this(Event.toInt(self), previous, current, timestamp);
   }
 }

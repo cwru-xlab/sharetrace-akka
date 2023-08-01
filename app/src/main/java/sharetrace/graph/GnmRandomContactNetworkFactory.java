@@ -12,15 +12,10 @@ import sharetrace.model.factory.TimeFactory;
 @Buildable
 public record GnmRandomContactNetworkFactory(
     int nodes, int edges, TimeFactory timeFactory, RandomGenerator randomGenerator)
-    implements GeneratedContactNetworkFactory<Integer> {
+    implements GeneratedContactNetworkFactory {
 
   private static final boolean LOOPS = false;
   private static final boolean MULTIPLE_EDGES = false;
-
-  @Override
-  public Graph<Integer, TemporalEdge> newTarget() {
-    return GraphFactory.newIntGraph();
-  }
 
   @Override
   public GraphGenerator<Integer, TemporalEdge, Integer> graphGenerator() {
@@ -29,8 +24,8 @@ public record GnmRandomContactNetworkFactory(
   }
 
   @Override
-  public ContactNetwork<Integer> newContactNetwork(Graph<Integer, TemporalEdge> target) {
-    return new SimpleContactNetwork<>(target, "GnmRandom", props());
+  public ContactNetwork newContactNetwork(Graph<Integer, TemporalEdge> target) {
+    return new SimpleContactNetwork(target, "GnmRandom", props());
   }
 
   private Map<String, ?> props() {

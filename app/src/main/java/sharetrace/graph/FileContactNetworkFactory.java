@@ -9,41 +9,33 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BinaryOperator;
-import java.util.function.Function;
 import org.jgrapht.Graph;
 import org.jgrapht.generate.GraphGenerator;
 import sharetrace.Buildable;
 import sharetrace.model.Timestamped;
 
 @Buildable
-public record FileContactNetworkFactory<V>(
-    Path path, String delimiter, Function<String, V> nodeParser, Instant timestamp)
-    implements ContactNetworkFactory<V>, Timestamped {
+public record FileContactNetworkFactory(Path path, String delimiter, Instant timestamp)
+    implements ContactNetworkFactory, Timestamped {
 
-  private static final String TEST_INT = "1";
   private static final BinaryOperator<Instant> MAX = BinaryOperator.maxBy(Instant::compareTo);
 
   @Override
-  public Graph<V, TemporalEdge> newTarget() {
-    return GraphFactory.newGraph(nodeParser.apply(TEST_INT));
+  public ContactNetwork newContactNetwork(Graph<Integer, TemporalEdge> target) {
+    return new SimpleContactNetwork(target, path.getFileName().toString());
   }
 
   @Override
-  public ContactNetwork<V> newContactNetwork(Graph<V, TemporalEdge> target) {
-    return new SimpleContactNetwork<>(target, path.getFileName().toString());
-  }
-
-  @Override
-  public GraphGenerator<V, TemporalEdge, V> graphGenerator() {
+  public GraphGenerator<Integer, TemporalEdge, ?> graphGenerator() {
     return this::generateGraph;
   }
 
-  private void generateGraph(Graph<V, TemporalEdge> target, Map<String, V> resultMap) {
+  private void generateGraph(Graph<Integer, TemporalEdge> target, Map<String, ?> resultMap) {
     var max = parseNetwork(target);
     adjustTimestamps(target, max);
   }
 
-  private Instant parseNetwork(Graph<V, TemporalEdge> target) {
+  private Instant parseNetwork(Graph<Integer, TemporalEdge> target) {
     var max = new AtomicReference<>(Instant.MIN);
     try (var edges = Files.lines(path)) {
       edges.forEach(edge -> processEdge(edge, target, max));
@@ -54,11 +46,11 @@ public record FileContactNetworkFactory<V>(
   }
 
   private void processEdge(
-      String edge, Graph<V, TemporalEdge> target, AtomicReference<Instant> max) {
+      String edge, Graph<Integer, TemporalEdge> target, AtomicReference<Instant> max) {
     var args = edge.split(delimiter);
-    var v1 = nodeParser.apply(args[1]);
-    var v2 = nodeParser.apply(args[2]);
-    if (!v1.equals(v2)) {
+    var v1 = Integer.parseInt(args[1]);
+    var v2 = Integer.parseInt(args[2]);
+    if (v1 != v2) {
       var timestamp = parseTimestamp(args[0]);
       mergeWithNodes(target, v1, v2, timestamp);
       max.set(MAX.apply(max.get(), timestamp));
@@ -69,7 +61,8 @@ public record FileContactNetworkFactory<V>(
     return Instant.ofEpochSecond(Long.parseLong(timestamp.strip()));
   }
 
-  private void mergeWithNodes(Graph<V, TemporalEdge> target, V v1, V v2, Instant timestamp) {
+  private void mergeWithNodes(
+      Graph<Integer, TemporalEdge> target, int v1, int v2, Instant timestamp) {
     target.addVertex(v1);
     target.addVertex(v2);
     var edge = target.getEdge(v1, v2);
@@ -80,7 +73,7 @@ public record FileContactNetworkFactory<V>(
     }
   }
 
-  private void adjustTimestamps(Graph<V, TemporalEdge> target, Instant max) {
+  private void adjustTimestamps(Graph<Integer, TemporalEdge> target, Instant max) {
     var offset = Duration.between(max, timestamp);
     for (var edge : target.edgeSet()) {
       edge.mapTimestamp(t -> t.plus(offset));

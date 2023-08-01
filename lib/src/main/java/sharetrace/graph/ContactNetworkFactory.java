@@ -3,15 +3,17 @@ package sharetrace.graph;
 import org.jgrapht.Graph;
 import org.jgrapht.generate.GraphGenerator;
 
-public interface ContactNetworkFactory<V> {
+public interface ContactNetworkFactory {
 
-  Graph<V, TemporalEdge> newTarget();
+  default Graph<Integer, TemporalEdge> newTarget() {
+    return Graphs.newTemporalGraph();
+  }
 
-  GraphGenerator<V, TemporalEdge, ?> graphGenerator();
+  GraphGenerator<Integer, TemporalEdge, ?> graphGenerator();
 
-  ContactNetwork<V> newContactNetwork(Graph<V, TemporalEdge> target);
+  ContactNetwork newContactNetwork(Graph<Integer, TemporalEdge> target);
 
-  default ContactNetwork<V> getContactNetwork() {
+  default ContactNetwork getContactNetwork() {
     var target = newTarget();
     graphGenerator().generateGraph(target);
     return newContactNetwork(target);

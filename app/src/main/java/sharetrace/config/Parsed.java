@@ -15,7 +15,7 @@ public record Parsed(
     Config config,
     ConfigParser<DistributedRandom> randomParser,
     ConfigParser<RiskScoreFactory> scoreFactoryParser,
-    ConfigParser<ContactNetworkFactory<Integer>> networkFactoryParser) {
+    ConfigParser<ContactNetworkFactory> networkFactoryParser) {
 
   public static Parsed of(Parameters parameters, Context context) {
     var randomParser = new DistributedRandomParser(context.randomGenerator());
@@ -48,15 +48,15 @@ public record Parsed(
     return scoreFactoryParser.parse(config.getConfig("score-factory"));
   }
 
-  public ContactNetwork<Integer> network() {
+  public ContactNetwork network() {
     return networkFactory().getContactNetwork();
   }
 
-  public ContactNetworkFactory<Integer> networkFactory() {
+  public ContactNetworkFactory networkFactory() {
     return networkFactoryParser.parse(config.getConfig("network-factory"));
   }
 
-  public List<ContactNetworkFactory<Integer>> networkFactories() {
+  public List<ContactNetworkFactory> networkFactories() {
     return networkFactoryParser.parse(config.getConfigList("network-factories"));
   }
 

@@ -2,12 +2,12 @@ package sharetrace.graph;
 
 import sharetrace.model.factory.TimeFactory;
 
-public interface GeneratedContactNetworkFactory<V> extends ContactNetworkFactory<V> {
+public interface GeneratedContactNetworkFactory extends ContactNetworkFactory {
 
   TimeFactory timeFactory();
 
   @Override
-  default ContactNetwork<V> getContactNetwork() {
+  default ContactNetwork getContactNetwork() {
     var network = ContactNetworkFactory.super.getContactNetwork();
     for (var edge : network.edgeSet()) {
       edge.setTimestamp(timeFactory().getTime());

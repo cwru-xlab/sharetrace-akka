@@ -13,21 +13,22 @@ import org.jgrapht.graph.GraphDelegator;
 import sharetrace.util.IdFactory;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME)
-public final class SimpleContactNetwork<V> extends GraphDelegator<V, TemporalEdge>
-    implements ContactNetwork<V> {
+public final class SimpleContactNetwork extends GraphDelegator<Integer, TemporalEdge>
+    implements ContactNetwork {
 
   private final String id;
   private final String type;
   private final Map<String, ?> props;
 
-  public SimpleContactNetwork(Graph<V, TemporalEdge> target, String type, Map<String, ?> props) {
+  public SimpleContactNetwork(
+      Graph<Integer, TemporalEdge> target, String type, Map<String, ?> props) {
     super(target);
     this.id = IdFactory.nextUlid();
     this.type = type;
     this.props = props;
   }
 
-  public SimpleContactNetwork(Graph<V, TemporalEdge> target, String type) {
+  public SimpleContactNetwork(Graph<Integer, TemporalEdge> target, String type) {
     this(target, type, Map.of());
   }
 
@@ -56,7 +57,7 @@ public final class SimpleContactNetwork<V> extends GraphDelegator<V, TemporalEdg
 
   @Override
   @JsonIgnore
-  public Supplier<V> getVertexSupplier() {
+  public Supplier<Integer> getVertexSupplier() {
     return super.getVertexSupplier();
   }
 

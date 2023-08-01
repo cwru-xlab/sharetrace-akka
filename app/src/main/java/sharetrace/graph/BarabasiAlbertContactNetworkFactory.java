@@ -16,12 +16,7 @@ public record BarabasiAlbertContactNetworkFactory(
     int newEdges,
     TimeFactory timeFactory,
     RandomGenerator randomGenerator)
-    implements GeneratedContactNetworkFactory<Integer> {
-
-  @Override
-  public Graph<Integer, TemporalEdge> newTarget() {
-    return GraphFactory.newIntGraph();
-  }
+    implements GeneratedContactNetworkFactory {
 
   @Override
   public GraphGenerator<Integer, TemporalEdge, Integer> graphGenerator() {
@@ -30,8 +25,8 @@ public record BarabasiAlbertContactNetworkFactory(
   }
 
   @Override
-  public ContactNetwork<Integer> newContactNetwork(Graph<Integer, TemporalEdge> target) {
-    return new SimpleContactNetwork<>(target, "BarabasiAlbert", props());
+  public ContactNetwork newContactNetwork(Graph<Integer, TemporalEdge> target) {
+    return new SimpleContactNetwork(target, "BarabasiAlbert", props());
   }
 
   private Map<String, ?> props() {

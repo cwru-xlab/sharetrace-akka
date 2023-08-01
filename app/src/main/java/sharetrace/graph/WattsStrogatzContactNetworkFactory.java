@@ -16,12 +16,7 @@ public record WattsStrogatzContactNetworkFactory(
     double rewiringProbability,
     TimeFactory timeFactory,
     RandomGenerator randomGenerator)
-    implements GeneratedContactNetworkFactory<Integer> {
-
-  @Override
-  public Graph<Integer, TemporalEdge> newTarget() {
-    return GraphFactory.newIntGraph();
-  }
+    implements GeneratedContactNetworkFactory {
 
   @Override
   public GraphGenerator<Integer, TemporalEdge, Integer> graphGenerator() {
@@ -32,8 +27,8 @@ public record WattsStrogatzContactNetworkFactory(
   }
 
   @Override
-  public ContactNetwork<Integer> newContactNetwork(Graph<Integer, TemporalEdge> target) {
-    return new SimpleContactNetwork<>(target, "WattsStrogatz", props());
+  public ContactNetwork newContactNetwork(Graph<Integer, TemporalEdge> target) {
+    return new SimpleContactNetwork(target, "WattsStrogatz", props());
   }
 
   private Map<String, ?> props() {

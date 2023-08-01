@@ -12,12 +12,7 @@ import sharetrace.model.factory.TimeFactory;
 @Buildable
 public record ScaleFreeContactNetworkFactory(
     int nodes, TimeFactory timeFactory, RandomGenerator randomGenerator)
-    implements GeneratedContactNetworkFactory<Integer> {
-
-  @Override
-  public Graph<Integer, TemporalEdge> newTarget() {
-    return GraphFactory.newIntGraph();
-  }
+    implements GeneratedContactNetworkFactory {
 
   @Override
   public GraphGenerator<Integer, TemporalEdge, Integer> graphGenerator() {
@@ -25,8 +20,8 @@ public record ScaleFreeContactNetworkFactory(
   }
 
   @Override
-  public ContactNetwork<Integer> newContactNetwork(Graph<Integer, TemporalEdge> target) {
-    return new SimpleContactNetwork<>(target, "ScaleFree", props());
+  public ContactNetwork newContactNetwork(Graph<Integer, TemporalEdge> target) {
+    return new SimpleContactNetwork(target, "ScaleFree", props());
   }
 
   private Map<String, ?> props() {

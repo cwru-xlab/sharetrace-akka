@@ -8,18 +8,18 @@ import java.nio.file.Path;
 import org.jgrapht.nio.GraphExporter;
 import org.jgrapht.nio.graphml.GraphMLExporter;
 
-public record TemporalNetworkExporter<V>(Path directory, String filename) {
+public record TemporalNetworkExporter(Path directory, String filename) {
 
-  public static <V> void export(ContactNetwork<V> network, Path directory, String filename) {
-    new TemporalNetworkExporter<V>(directory, filename).export(network);
+  public static void export(ContactNetwork network, Path directory, String filename) {
+    new TemporalNetworkExporter(directory, filename).export(network);
   }
 
-  public void export(ContactNetwork<V> network) {
+  public void export(ContactNetwork network) {
     exporter().exportGraph(network, file(directory, filename));
   }
 
-  private GraphExporter<V, TemporalEdge> exporter() {
-    var exporter = new GraphMLExporter<V, TemporalEdge>(String::valueOf);
+  private GraphExporter<Integer, TemporalEdge> exporter() {
+    var exporter = new GraphMLExporter<Integer, TemporalEdge>(String::valueOf);
     exporter.setExportEdgeWeights(true);
     return exporter;
   }

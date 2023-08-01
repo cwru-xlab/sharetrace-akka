@@ -29,11 +29,11 @@ import sharetrace.util.ContextBuilder;
 import sharetrace.util.IdFactory;
 
 @Buildable
-public record RiskPropagation<V>(
+public record RiskPropagation(
     Context context,
     Parameters parameters,
     RiskScoreFactory riskScoreFactory,
-    ContactNetwork<V> contactNetwork)
+    ContactNetwork contactNetwork)
     implements Runnable {
 
   public void run(int iterations) {
@@ -78,7 +78,7 @@ public record RiskPropagation<V>(
     }
   }
 
-  private <T extends Metric> Supplier<T> metric(Function<ContactNetwork<V>, T> factory) {
+  private <T extends Metric> Supplier<T> metric(Function<ContactNetwork, T> factory) {
     return () -> factory.apply(contactNetwork);
   }
 

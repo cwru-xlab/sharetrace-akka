@@ -14,10 +14,10 @@ import sharetrace.util.Context;
 
 public record ContactNetworkFactoryParser(
     Context context, ConfigParser<TimeFactory> timeFactoryParser)
-    implements ConfigParser<ContactNetworkFactory<Integer>> {
+    implements ConfigParser<ContactNetworkFactory> {
 
   @Override
-  public ContactNetworkFactory<Integer> parse(Config config) {
+  public ContactNetworkFactory parse(Config config) {
     var type = config.getString("type");
     return switch (type) {
       case ("gnm-random") -> gnmRandomFactory(config);
@@ -30,7 +30,7 @@ public record ContactNetworkFactoryParser(
     };
   }
 
-  private ContactNetworkFactory<Integer> gnmRandomFactory(Config config) {
+  private ContactNetworkFactory gnmRandomFactory(Config config) {
     return GnmRandomContactNetworkFactoryBuilder.create()
         .nodes(config.getInt("nodes"))
         .edges(config.getInt("edges"))
@@ -39,7 +39,7 @@ public record ContactNetworkFactoryParser(
         .build();
   }
 
-  private ContactNetworkFactory<Integer> randomRegularFactory(Config config) {
+  private ContactNetworkFactory randomRegularFactory(Config config) {
     return RandomRegularContactNetworkFactoryBuilder.create()
         .nodes(config.getInt("nodes"))
         .degree(config.getInt("degree"))
@@ -48,7 +48,7 @@ public record ContactNetworkFactoryParser(
         .build();
   }
 
-  private ContactNetworkFactory<Integer> barabasiAlbertFactory(Config config) {
+  private ContactNetworkFactory barabasiAlbertFactory(Config config) {
     return BarabasiAlbertContactNetworkFactoryBuilder.create()
         .initialNodes(config.getInt("initial-nodes"))
         .newEdges(config.getInt("new-edges"))
@@ -58,7 +58,7 @@ public record ContactNetworkFactoryParser(
         .build();
   }
 
-  private ContactNetworkFactory<Integer> wattsStrogatzFactory(Config config) {
+  private ContactNetworkFactory wattsStrogatzFactory(Config config) {
     return WattsStrogatzContactNetworkFactoryBuilder.create()
         .nodes(config.getInt("nodes"))
         .nearestNeighbors(config.getInt("nearest-neighbors"))
@@ -68,7 +68,7 @@ public record ContactNetworkFactoryParser(
         .build();
   }
 
-  private ContactNetworkFactory<Integer> scaleFreeFactory(Config config) {
+  private ContactNetworkFactory scaleFreeFactory(Config config) {
     return ScaleFreeContactNetworkFactoryBuilder.create()
         .nodes(config.getInt("nodes"))
         .timeFactory(timeFactory(config))
@@ -76,12 +76,11 @@ public record ContactNetworkFactoryParser(
         .build();
   }
 
-  private ContactNetworkFactory<Integer> fileFactory(Config config) {
+  private ContactNetworkFactory fileFactory(Config config) {
     return FileContactNetworkFactoryBuilder.<Integer>create()
         .path(Path.of(config.getString("path")))
         .delimiter(config.getString("delimiter"))
         .timestamp(context.referenceTime())
-        .nodeParser(Integer::parseInt)
         .build();
   }
 
