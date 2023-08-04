@@ -11,7 +11,6 @@ import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import org.jgrapht.Graph;
@@ -111,9 +110,18 @@ public final class MessageReachability implements EventHandler {
   }
 
   private IntSet targetsOfOrigin(int origin, List<int[]> edges) {
-    var targets = IntOpenHashSet.toSet(edges.stream().flatMapToInt(Arrays::stream));
-    targets.remove(origin);
+    var targets = new IntOpenHashSet(edges.size());
+    for (var edge : edges) {
+      addIfNotOrigin(edge[0], origin, targets);
+      addIfNotOrigin(edge[1], origin, targets);
+    }
     return targets;
+  }
+
+  private void addIfNotOrigin(int target, int origin, IntSet targets) {
+    if (target != origin) {
+      targets.add(target);
+    }
   }
 
   private Graph<Integer, ?> buildReachabilityGraph(List<int[]> edges) {
