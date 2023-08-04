@@ -1,11 +1,11 @@
 package sharetrace.cache;
 
 import com.google.common.collect.Iterators;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import java.time.Instant;
 import java.time.InstantSource;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
@@ -26,7 +26,7 @@ public final class StandardCache<K, V extends Expirable & Comparable<? super V>>
     this.timeSource = timeSource;
     this.comparator = Comparator.naturalOrder();
     this.merger = BinaryOperator.maxBy(comparator);
-    this.cache = new HashMap<>();
+    this.cache = new Object2ObjectOpenHashMap<>();
     updateMin();
   }
 
