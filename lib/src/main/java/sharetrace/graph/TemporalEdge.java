@@ -4,7 +4,6 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.function.BinaryOperator;
 import java.util.function.UnaryOperator;
-import org.jgrapht.Graph;
 import org.jgrapht.graph.DefaultWeightedEdge;
 
 public final class TemporalEdge extends DefaultWeightedEdge {
@@ -20,7 +19,7 @@ public final class TemporalEdge extends DefaultWeightedEdge {
   }
 
   public double weight() {
-    return timestamp == null ? Graph.DEFAULT_EDGE_WEIGHT : timestamp.getEpochSecond();
+    return timestamp.getEpochSecond();
   }
 
   public Instant getTimestamp() {
