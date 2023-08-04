@@ -6,6 +6,10 @@ import sharetrace.model.Timestamped;
 
 public interface Event extends LogRecord, Timestamped {
 
+  static String key() {
+    return "event";
+  }
+
   int self();
 
   static int toInt(ActorRef<?> actorRef) {

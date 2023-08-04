@@ -23,24 +23,48 @@ import sharetrace.logging.setting.Settings;
 
 @Buildable
 public record Context(
-    @JsonIgnore Config config,
-    @JsonSerialize(using = ToStringSerializer.class) InstantSource timeSource,
+    Config config,
+    InstantSource timeSource,
     Instant referenceTime,
     long seed,
-    @JsonSerialize(using = ToClassNameSerializer.class) RandomGenerator randomGenerator,
+    RandomGenerator randomGenerator,
     Set<Class<? extends LogRecord>> loggable,
-    @JsonAnyGetter Map<String, String> mdc) {
+    Map<String, String> mdc) {
+
+  @Override
+  @JsonIgnore
+  public Config config() {
+    return config;
+  }
+
+  @Override
+  @JsonSerialize(using = ToStringSerializer.class)
+  public InstantSource timeSource() {
+    return timeSource;
+  }
+
+  @Override
+  @JsonSerialize(using = ToClassNameSerializer.class)
+  public RandomGenerator randomGenerator() {
+    return randomGenerator;
+  }
+
+  @Override
+  @JsonAnyGetter
+  public Map<String, String> mdc() {
+    return mdc;
+  }
 
   public RecordLogger<Event> eventsLogger() {
-    return new RecordLogger<>("EventsLogger", "event", loggable);
+    return new RecordLogger<>("EventsLogger", Event.key(), loggable);
   }
 
   public RecordLogger<Metric> metricsLogger() {
-    return new RecordLogger<>("MetricsLogger", "metric", loggable);
+    return new RecordLogger<>("MetricsLogger", Metric.key(), loggable);
   }
 
   public RecordLogger<Settings> settingsLogger() {
-    return new RecordLogger<>("SettingsLogger", "setting", loggable);
+    return new RecordLogger<>("SettingsLogger", Settings.key(), loggable);
   }
 
   public Path logDirectory() {

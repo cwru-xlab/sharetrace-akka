@@ -4,21 +4,13 @@ import akka.actor.typed.ActorSystem;
 import akka.actor.typed.Behavior;
 import akka.actor.typed.Terminated;
 import akka.actor.typed.javadsl.Behaviors;
-import java.util.HashMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import java.util.concurrent.ExecutionException;
-import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.IntStream;
 import org.slf4j.MDC;
 import sharetrace.Buildable;
 import sharetrace.graph.ContactNetwork;
-import sharetrace.graph.TemporalNetworkExporter;
-import sharetrace.logging.metric.GraphCycles;
-import sharetrace.logging.metric.GraphEccentricity;
-import sharetrace.logging.metric.GraphScores;
-import sharetrace.logging.metric.GraphSize;
-import sharetrace.logging.metric.GraphTopology;
-import sharetrace.logging.metric.Metric;
+import sharetrace.logging.LogRecord;
 import sharetrace.logging.setting.ExperimentSettings;
 import sharetrace.logging.setting.ExperimentSettingsBuilder;
 import sharetrace.model.Parameters;
@@ -45,13 +37,12 @@ public record RiskPropagation(
     var context = contextWithMdc();
     MDC.setContextMap(context.mdc());
     logSettings(context);
-    logMetrics(context);
     invoke(context);
   }
 
   private Context contextWithMdc() {
-    var mdc = new HashMap<>(context.mdc());
-    mdc.put("runId", IdFactory.nextUlid());
+    var mdc = new Object2ObjectOpenHashMap<>(context.mdc());
+    mdc.put(LogRecord.key(), IdFactory.nextUlid());
     return ContextBuilder.from(context).withMdc(mdc);
   }
 
@@ -63,23 +54,8 @@ public record RiskPropagation(
     return ExperimentSettingsBuilder.create()
         .context(context)
         .parameters(parameters)
-        .networkId(contactNetwork.id())
+        .contactNetwork(contactNetwork)
         .build();
-  }
-
-  private void logMetrics(Context context) {
-    var logger = context.metricsLogger();
-    logger.log(GraphSize.class, metric(GraphSize::of));
-    logger.log(GraphCycles.class, metric(GraphCycles::of));
-    logger.log(GraphEccentricity.class, metric(GraphEccentricity::of));
-    logger.log(GraphScores.class, metric(GraphScores::of));
-    if (logger.log(GraphTopology.class, metric(GraphTopology::of))) {
-      TemporalNetworkExporter.export(contactNetwork, context.logDirectory(), contactNetwork.id());
-    }
-  }
-
-  private <T extends Metric> Supplier<T> metric(Function<ContactNetwork, T> factory) {
-    return () -> factory.apply(contactNetwork);
   }
 
   private void invoke(Context context) {
