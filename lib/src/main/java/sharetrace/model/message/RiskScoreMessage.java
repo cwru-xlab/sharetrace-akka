@@ -8,11 +8,17 @@ import sharetrace.model.RiskScore;
 import sharetrace.model.TemporalScore;
 import sharetrace.util.IdFactory;
 
-public record RiskScoreMessage(@JsonIgnore ActorRef<UserMessage> sender, RiskScore score, String id)
+public record RiskScoreMessage(ActorRef<UserMessage> sender, RiskScore score, String id)
     implements TemporalScore, Identifiable, UserMessage {
 
   public RiskScoreMessage(ActorRef<UserMessage> sender, RiskScore score) {
     this(sender, score, IdFactory.nextUlid());
+  }
+
+  @Override
+  @JsonIgnore
+  public ActorRef<UserMessage> sender() {
+    return sender;
   }
 
   @Override
