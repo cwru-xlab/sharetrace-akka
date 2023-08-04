@@ -20,6 +20,7 @@ public record Parameters(
     Checks.checkRange(timeBuffer, Range.atLeast(Duration.ZERO), "timeBuffer");
     Checks.checkRange(scoreExpiry, Range.atLeast(Duration.ZERO), "scoreExpiry");
     Checks.checkRange(contactExpiry, Range.atLeast(Duration.ZERO), "contactExpiry");
+    // 1 millisecond is the minimum duration supported by Akka for scheduled messages.
     Checks.checkRange(idleTimeout, Range.atLeast(Duration.ofMillis(1)), "idleTimeout");
   }
 }
