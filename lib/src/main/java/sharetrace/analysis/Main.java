@@ -16,13 +16,13 @@ import sharetrace.analysis.model.EventRecord;
 import sharetrace.config.InstanceFactory;
 import sharetrace.util.Parser;
 
-record Main() {
+public record Main() {
 
   public static void main(String[] args) {
     var config = ConfigFactory.load().getConfig("sharetrace.analysis");
     var parser = newEventRecordParser();
     var handlers = new Object2ObjectOpenHashMap<String, EventHandler>();
-    try (var stream = newEventStream(config)) {
+    try (var stream = newEventStream()) {
       for (var it = stream.iterator(); it.hasNext(); ) {
         var line = it.next();
         var record = parser.parse(line);
@@ -40,8 +40,8 @@ record Main() {
     return new EventRecordParser(new ObjectMapper().findAndRegisterModules());
   }
 
-  private static Stream<String> newEventStream(Config config) throws IOException {
-    var directory = Path.of(config.getString("log-directory"));
+  private static Stream<String> newEventStream() throws IOException {
+    var directory = Path.of(System.getProperty("config.logs"));
     return EventStream.of(directory);
   }
 

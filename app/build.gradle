@@ -19,6 +19,11 @@ tasks.withType(JavaExec).configureEach {
     systemProperties System.properties
 }
 
+tasks.register("analyze", JavaExec) {
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = "sharetrace.analysis.Main"
+}
+
 dependencies {
     annotationProcessor "io.soabase.record-builder:record-builder-processor:37"
     implementation project(":lib")
