@@ -1,9 +1,14 @@
 package sharetrace.config;
 
 import com.typesafe.config.Config;
+import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
+import it.unimi.dsi.fastutil.objects.ObjectSets;
 import java.time.Instant;
 import java.time.InstantSource;
 import java.time.ZoneId;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.apache.commons.math3.random.RandomGenerator;
@@ -17,42 +22,51 @@ public record ContextParser(Config contextConfig) implements ConfigParser<Contex
 
   @Override
   public Context parse(Config config) {
-    var timeSource = timeSource(config);
-    var seed = seed(config);
+    var timeSource = getTimeSource(config);
+    var seed = getSeed(config);
     return ContextBuilder.create()
+        .mdc(getMdc(config))
         .config(contextConfig)
         .timeSource(timeSource)
         .seed(seed)
-        .referenceTime(referenceTime(config, timeSource))
-        .randomGenerator(randomGenerator(config, seed))
-        .loggable(loggable(config))
+        .referenceTime(getReferenceTime(config, timeSource))
+        .randomGenerator(getRandomGenerator(config, seed))
+        .loggable(getLoggable(config))
         .build();
   }
 
-  private InstantSource timeSource(Config config) {
+  private Map<String, String> getMdc(Config config) {
+    var map = config.getObject("mdc").unwrapped();
+    var mdc = new Object2ObjectOpenHashMap<String, String>(map.size());
+    map.forEach((k, v) -> mdc.put(k, (String) v));
+    return Object2ObjectMaps.unmodifiable(mdc);
+  }
+
+  private InstantSource getTimeSource(Config config) {
     var timezone = ZoneId.of(config.getString("timezone"));
     return InstantSource.system().withZone(timezone);
   }
 
-  private long seed(Config config) {
+  private long getSeed(Config config) {
     var seed = config.getString("seed");
     return seed.equals("any") ? IdFactory.newLong() : Long.parseLong(seed);
   }
 
-  private Instant referenceTime(Config config, InstantSource timeSource) {
+  private Instant getReferenceTime(Config config, InstantSource timeSource) {
     var referenceTime = config.getString("reference-time");
     return referenceTime.equals("now") ? timeSource.instant() : Instant.parse(referenceTime);
   }
 
-  private RandomGenerator randomGenerator(Config config, long seed) {
+  private RandomGenerator getRandomGenerator(Config config, long seed) {
     var factory = new InstanceParser<>("random-generator-factory").parse(config);
     return ((RandomGeneratorFactory) factory).getRandomGenerator(seed);
   }
 
-  private Set<Class<? extends LogRecord>> loggable(Config config) {
+  private Set<Class<? extends LogRecord>> getLoggable(Config config) {
     var classFactory = new ClassFactory();
-    return config.getStringList("loggable").stream()
+    var loggable = config.getStringList("loggable");
+    return loggable.stream()
         .<Class<? extends LogRecord>>map(classFactory::getClass)
-        .collect(Collectors.toUnmodifiableSet());
+        .collect(Collectors.collectingAndThen(ObjectOpenHashSet.toSet(), ObjectSets::unmodifiable));
   }
 }
