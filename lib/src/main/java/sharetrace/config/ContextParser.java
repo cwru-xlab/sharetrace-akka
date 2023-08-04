@@ -58,7 +58,8 @@ public record ContextParser(Config contextConfig) implements ConfigParser<Contex
   }
 
   private RandomGenerator getRandomGenerator(Config config, long seed) {
-    var factory = new InstanceParser<>("random-generator-factory").parse(config);
+    var className = config.getString("random-generator-factory");
+    var factory = new InstanceFactory().getInstance(className);
     return ((RandomGeneratorFactory) factory).getRandomGenerator(seed);
   }
 
