@@ -56,7 +56,7 @@ public final class Graphs {
   }
 
   private static Graph<Integer, DefaultEdge> copy(
-          Graph<Integer, DefaultEdge> source, Graph<Integer, DefaultEdge> target) {
+      Graph<Integer, DefaultEdge> source, Graph<Integer, DefaultEdge> target) {
     org.jgrapht.Graphs.addGraph(target, source);
     return target;
   }
