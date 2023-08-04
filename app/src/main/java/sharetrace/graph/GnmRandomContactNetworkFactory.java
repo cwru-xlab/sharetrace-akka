@@ -25,10 +25,7 @@ public record GnmRandomContactNetworkFactory(
 
   @Override
   public ContactNetwork newContactNetwork(Graph<Integer, TemporalEdge> target) {
-    return new SimpleContactNetwork(target, "GnmRandom", props());
-  }
-
-  private Map<String, ?> props() {
-    return Map.of("nodes", nodes, "edges", edges, "loops", LOOPS, "multipleEdges", MULTIPLE_EDGES);
+    var props = Map.of("loops", LOOPS, "multipleEdges", MULTIPLE_EDGES);
+    return new SimpleContactNetwork(target, "GnmRandom", props);
   }
 }

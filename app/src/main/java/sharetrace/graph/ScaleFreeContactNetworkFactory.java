@@ -1,6 +1,5 @@
 package sharetrace.graph;
 
-import java.util.Map;
 import org.apache.commons.math3.random.RandomAdaptor;
 import org.apache.commons.math3.random.RandomGenerator;
 import org.jgrapht.Graph;
@@ -21,10 +20,6 @@ public record ScaleFreeContactNetworkFactory(
 
   @Override
   public ContactNetwork newContactNetwork(Graph<Integer, TemporalEdge> target) {
-    return new SimpleContactNetwork(target, "ScaleFree", props());
-  }
-
-  private Map<String, ?> props() {
-    return Map.of("nodes", nodes());
+    return new SimpleContactNetwork(target, "ScaleFree");
   }
 }

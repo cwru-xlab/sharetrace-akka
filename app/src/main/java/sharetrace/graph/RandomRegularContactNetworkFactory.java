@@ -22,10 +22,6 @@ public record RandomRegularContactNetworkFactory(
 
   @Override
   public ContactNetwork newContactNetwork(Graph<Integer, TemporalEdge> target) {
-    return new SimpleContactNetwork(target, "RandomRegular", props());
-  }
-
-  private Map<String, ?> props() {
-    return Map.of("nodes", nodes, "degree", degree);
+    return new SimpleContactNetwork(target, "RandomRegular", Map.of("degree", degree));
   }
 }

@@ -32,9 +32,6 @@ public record WattsStrogatzContactNetworkFactory(
   }
 
   private Map<String, ?> props() {
-    return Map.ofEntries(
-        Map.entry("nodes", nodes),
-        Map.entry("nearestNeighbors", nearestNeighbors),
-        Map.entry("rewiringProbability", rewiringProbability));
+    return Map.of("nearestNeighbors", nearestNeighbors, "rewiringProbability", rewiringProbability);
   }
 }

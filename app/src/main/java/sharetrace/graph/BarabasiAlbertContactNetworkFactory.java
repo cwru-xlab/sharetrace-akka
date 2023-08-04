@@ -26,10 +26,7 @@ public record BarabasiAlbertContactNetworkFactory(
 
   @Override
   public ContactNetwork newContactNetwork(Graph<Integer, TemporalEdge> target) {
-    return new SimpleContactNetwork(target, "BarabasiAlbert", props());
-  }
-
-  private Map<String, ?> props() {
-    return Map.of("nodes", nodes, "initialNodes", initialNodes, "newEdges", newEdges);
+    var props = Map.of("initialNodes", initialNodes, "newEdges", newEdges);
+    return new SimpleContactNetwork(target, "BarabasiAlbert", props);
   }
 }

@@ -3,42 +3,38 @@ package sharetrace.graph;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeId;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import java.util.Map;
 import java.util.function.Supplier;
 import org.jgrapht.Graph;
 import org.jgrapht.GraphType;
 import org.jgrapht.graph.GraphDelegator;
-import sharetrace.util.IdFactory;
 
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME)
 public final class SimpleContactNetwork extends GraphDelegator<Integer, TemporalEdge>
     implements ContactNetwork {
 
-  private final String id;
   private final String type;
   private final Map<String, ?> props;
 
   public SimpleContactNetwork(
       Graph<Integer, TemporalEdge> target, String type, Map<String, ?> props) {
     super(target);
-    this.id = IdFactory.nextUlid();
     this.type = type;
-    this.props = props;
+    this.props = withGraphSize(target, props);
+  }
+
+  private Map<String, ?> withGraphSize(Graph<?, ?> target, Map<String, ?> props) {
+    var newProps = new Object2ObjectOpenHashMap<String, Object>(props);
+    newProps.put("nodes", target.vertexSet().size());
+    newProps.put("edges", target.edgeSet().size());
+    return Object2ObjectMaps.unmodifiable(newProps);
   }
 
   public SimpleContactNetwork(Graph<Integer, TemporalEdge> target, String type) {
-    this(target, type, Map.of());
+    this(target, type, Object2ObjectMaps.emptyMap());
   }
 
-  @Override
-  @JsonProperty
-  public String id() {
-    return id;
-  }
-
-  @JsonTypeId
   @JsonProperty
   public String type() {
     return type;
