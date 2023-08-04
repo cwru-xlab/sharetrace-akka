@@ -26,7 +26,7 @@ public record Main() {
       for (var it = stream.iterator(); it.hasNext(); ) {
         var line = it.next();
         var record = parser.parse(line);
-        var handler = handlers.computeIfAbsent(record.key(), x -> newHandler(config));
+        var handler = handlers.computeIfAbsent(record.key(), x -> newEventHandler(config));
         handler.onNext(record.event());
       }
     } catch (IOException exception) {
@@ -45,7 +45,7 @@ public record Main() {
     return EventStream.of(directory);
   }
 
-  private static EventHandler newHandler(Config config) {
+  private static EventHandler newEventHandler(Config config) {
     var factory = new InstanceFactory();
     return config.getStringList("handlers").stream()
         .<EventHandler>map(factory::getInstance)
