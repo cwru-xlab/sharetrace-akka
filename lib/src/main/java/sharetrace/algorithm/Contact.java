@@ -17,6 +17,7 @@ final class Contact implements Expirable, Comparable<Contact> {
 
   private final ActorRef<UserMessage> self;
   private final Instant timestamp;
+  private final Instant bufferedTimestamp;
   private final Instant expiresAt;
   private final float sendCoefficient;
   private final Cache<?, RiskScoreMessage> scores;
@@ -30,7 +31,8 @@ final class Contact implements Expirable, Comparable<Contact> {
       Cache<?, RiskScoreMessage> scores,
       InstantSource timeSource) {
     this.self = message.contact();
-    this.timestamp = message.timestamp().plus(parameters.timeBuffer());
+    this.timestamp = message.timestamp();
+    this.bufferedTimestamp = message.timestamp().plus(parameters.timeBuffer());
     this.expiresAt = message.expiresAt();
     this.sendCoefficient = parameters.sendCoefficient();
     this.scores = scores;
@@ -61,6 +63,10 @@ final class Contact implements Expirable, Comparable<Contact> {
     return timestamp;
   }
 
+  public Instant bufferedTimestamp() {
+    return bufferedTimestamp;
+  }
+
   public ActorRef<UserMessage> self() {
     return self;
   }
@@ -82,7 +88,7 @@ final class Contact implements Expirable, Comparable<Contact> {
 
   private boolean shouldReceive(RiskScoreMessage message) {
     return message.value() > sendThreshold.value()
-        && message.timestamp().isBefore(timestamp)
+        && message.timestamp().isBefore(bufferedTimestamp)
         && !message.sender().equals(self);
   }
 
@@ -100,7 +106,7 @@ final class Contact implements Expirable, Comparable<Contact> {
     if (sendThreshold != RiskScore.MIN && sendThreshold.isExpired(timeSource)) {
       scores
           .refresh()
-          .max(timestamp)
+          .max(bufferedTimestamp)
           .map(RiskScoreMessage::score)
           .ifPresentOrElse(this::setThreshold, this::resetThreshold);
     }

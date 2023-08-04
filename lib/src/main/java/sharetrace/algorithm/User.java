@@ -101,7 +101,7 @@ final class User extends AbstractBehavior<UserMessage> {
   private void sendCachedMessage(Contact contact) {
     scores
         .refresh()
-        .max(contact.timestamp())
+        .max(contact.bufferedTimestamp())
         .ifPresent(message -> contact.tell(message, this::logSendEvent));
   }
 
@@ -149,7 +149,9 @@ final class User extends AbstractBehavior<UserMessage> {
   }
 
   private void logContactEvent(Contact contact) {
-    logger.log(ContactEvent.class, () -> new ContactEvent(self(), contact.self(), timestamp()));
+    logger.log(
+        ContactEvent.class,
+        () -> new ContactEvent(self(), contact.self(), contact.timestamp(), timestamp()));
   }
 
   private void logSendEvent(ActorRef<?> contact, RiskScoreMessage message) {
