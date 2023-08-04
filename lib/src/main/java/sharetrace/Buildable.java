@@ -9,10 +9,7 @@ import java.lang.annotation.Target;
 
 @RecordBuilder.Template(
     options =
-        @RecordBuilder.Options(
-            builderMethodName = "create",
-            addClassRetainedGenerated = true,
-            useImmutableCollections = true))
+        @RecordBuilder.Options(builderMethodName = "create", addClassRetainedGenerated = true))
 @Retention(RetentionPolicy.SOURCE)
 @Target(ElementType.TYPE)
 @Inherited
