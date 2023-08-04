@@ -77,7 +77,6 @@ public record FileContactNetworkFactory(Path path, String delimiter, Instant tim
     var offset = Duration.between(max, timestamp);
     for (var edge : target.edgeSet()) {
       edge.mapTimestamp(t -> t.plus(offset));
-      target.setEdgeWeight(edge, edge.weight());
     }
   }
 }

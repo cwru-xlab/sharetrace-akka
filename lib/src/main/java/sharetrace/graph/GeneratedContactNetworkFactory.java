@@ -11,7 +11,6 @@ public interface GeneratedContactNetworkFactory extends ContactNetworkFactory {
     var network = ContactNetworkFactory.super.getContactNetwork();
     for (var edge : network.edgeSet()) {
       edge.setTimestamp(timeFactory().getTime());
-      network.setEdgeWeight(edge, edge.weight());
     }
     return network;
   }
