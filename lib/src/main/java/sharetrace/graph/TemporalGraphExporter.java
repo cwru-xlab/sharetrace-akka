@@ -5,17 +5,16 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import org.jgrapht.Graph;
 import org.jgrapht.nio.GraphExporter;
 import org.jgrapht.nio.graphml.GraphMLExporter;
+import sharetrace.Buildable;
 
-public record TemporalNetworkExporter(Path directory, String filename) {
+@Buildable
+public record TemporalGraphExporter(Path directory, String filename) {
 
-  public static void export(ContactNetwork network, Path directory, String filename) {
-    new TemporalNetworkExporter(directory, filename).export(network);
-  }
-
-  public void export(ContactNetwork network) {
-    exporter().exportGraph(network, file(directory, filename));
+  public void export(Graph<Integer, TemporalEdge> graph) {
+    exporter().exportGraph(graph, file(directory, filename));
   }
 
   private GraphExporter<Integer, TemporalEdge> exporter() {
