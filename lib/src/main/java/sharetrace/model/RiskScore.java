@@ -1,9 +1,9 @@
 package sharetrace.model;
 
 import com.google.common.collect.Range;
+import it.unimi.dsi.fastutil.floats.FloatUnaryOperator;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.function.UnaryOperator;
 import sharetrace.util.Checks;
 
 public record RiskScore(float value, Instant timestamp, Instant expiresAt)
@@ -21,7 +21,7 @@ public record RiskScore(float value, Instant timestamp, Instant expiresAt)
     this(value, timestamp, timestamp.plus(expiry));
   }
 
-  public RiskScore mapValue(UnaryOperator<Float> mapper) {
+  public RiskScore mapValue(FloatUnaryOperator mapper) {
     return new RiskScore(mapper.apply(value), timestamp, expiresAt);
   }
 }

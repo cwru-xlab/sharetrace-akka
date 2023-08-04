@@ -1,7 +1,7 @@
 package sharetrace.util;
 
+import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import java.time.Duration;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
@@ -9,7 +9,11 @@ import org.apache.commons.lang3.time.StopWatch;
 
 public final class Timer<K> extends StopWatch {
 
-  private final Map<K, Long> runtimes = new HashMap<>();
+  private final Map<K, Long> runtimes;
+
+  public Timer() {
+    runtimes = new Object2LongOpenHashMap<>();
+  }
 
   public void time(Runnable runnable, K key) {
     time(Executors.callable(runnable), key);

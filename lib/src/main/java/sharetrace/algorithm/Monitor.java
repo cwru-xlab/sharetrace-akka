@@ -8,7 +8,7 @@ import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
-import java.util.ArrayList;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import java.util.BitSet;
 import java.util.List;
 import sharetrace.graph.ContactNetwork;
@@ -29,7 +29,6 @@ import sharetrace.model.message.UserMessage;
 import sharetrace.util.Context;
 import sharetrace.util.Timer;
 
-// TODO Consider setting node attribute to be the exposure score and export before/after
 final class Monitor extends AbstractBehavior<MonitorMessage> {
 
   private final Context context;
@@ -106,14 +105,13 @@ final class Monitor extends AbstractBehavior<MonitorMessage> {
   }
 
   private List<ActorRef<UserMessage>> newUsers() {
-    var users = new ArrayList<ActorRef<UserMessage>>(userCount);
+    var users = new ObjectArrayList<ActorRef<UserMessage>>(userCount);
     for (var key : contactNetwork.vertexSet()) {
       var user = User.of(context, parameters, getContext().getSelf(), new IdleTimeout(key));
       var reference = getContext().spawn(user, String.valueOf(key), User.props());
       getContext().watch(reference);
       users.add(reference);
     }
-    users.trimToSize();
     return users;
   }
 
