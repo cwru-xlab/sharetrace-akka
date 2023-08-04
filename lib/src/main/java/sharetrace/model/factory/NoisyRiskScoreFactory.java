@@ -8,7 +8,7 @@ public record NoisyRiskScoreFactory(RiskScoreFactory scoreFactory, DistributedRa
     implements RiskScoreFactory {
 
   @Override
-  public RiskScore getRiskScore(Object key) {
+  public RiskScore getRiskScore(int key) {
     return scoreFactory.getRiskScore(key).mapValue(value -> constrain(value + random.nextFloat()));
   }
 

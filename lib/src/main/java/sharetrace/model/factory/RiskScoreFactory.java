@@ -6,7 +6,7 @@ import sharetrace.util.DistributedRandom;
 @FunctionalInterface
 public interface RiskScoreFactory {
 
-  RiskScore getRiskScore(Object key);
+  RiskScore getRiskScore(int key);
 
   default RiskScoreFactory cached() {
     return this instanceof CachedRiskScoreFactory ? this : new CachedRiskScoreFactory(this);

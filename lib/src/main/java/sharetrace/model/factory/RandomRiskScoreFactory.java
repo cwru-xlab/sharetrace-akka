@@ -11,7 +11,7 @@ public record RandomRiskScoreFactory(
     implements RiskScoreFactory {
 
   @Override
-  public RiskScore getRiskScore(Object key) {
+  public RiskScore getRiskScore(int key) {
     return new RiskScore(random.nextFloat(), timeFactory.getTime(), scoreExpiry);
   }
 }
