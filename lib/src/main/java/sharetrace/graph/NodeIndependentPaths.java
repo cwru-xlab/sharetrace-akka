@@ -1,6 +1,6 @@
 package sharetrace.graph;
 
-import java.util.ArrayList;
+import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -55,14 +55,16 @@ public record NodeIndependentPaths(
     return graph.vertexSet().stream()
         .filter(target -> source != target)
         .map(target -> newTask(source, target, maxFind))
-        .toList();
+        .collect(ObjectArrayList.toListWithExpectedSize(graph.vertexSet().size() - 1));
   }
 
   private List<Callable<Integer>> newTasks(int maxFind) {
-    var tasks = new ArrayList<Callable<Integer>>();
     var isDirected = graph.getType().isDirected();
-    for (int source : graph.vertexSet()) {
-      for (int target : graph.vertexSet()) {
+    var nodes = graph.vertexSet();
+    var taskCount = nodes.size() * (nodes.size() - 1) / (isDirected ? 1 : 2);
+    var tasks = new ObjectArrayList<Callable<Integer>>(taskCount);
+    for (int source : nodes) {
+      for (int target : nodes) {
         if ((isDirected && source != target) || (!isDirected && source < target)) {
           tasks.add(newTask(source, target, maxFind));
         }
