@@ -13,7 +13,7 @@ import java.util.Optional;
 import java.util.function.BinaryOperator;
 import sharetrace.model.Expirable;
 
-@SuppressWarnings({"UnstableApiUsage", "BooleanMethodIsAlwaysInverted", "NullableProblems"})
+@SuppressWarnings("UnstableApiUsage")
 public final class RangeCache<V extends Expirable & Comparable<? super V>>
     implements Cache<Range<Instant>, V> {
 
@@ -64,6 +64,7 @@ public final class RangeCache<V extends Expirable & Comparable<? super V>>
   }
 
   @Override
+  @SuppressWarnings("NullableProblems")
   public Iterator<V> iterator() {
     return Iterators.unmodifiableIterator(cache.asMapOfRanges().values().iterator());
   }
