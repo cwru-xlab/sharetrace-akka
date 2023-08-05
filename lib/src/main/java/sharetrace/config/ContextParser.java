@@ -49,7 +49,7 @@ public record ContextParser(Config contextConfig) implements ConfigParser<Contex
 
   private long getSeed(Config config) {
     var seed = config.getString("seed");
-    return seed.equals("any") ? IdFactory.newLong() : Long.parseLong(seed);
+    return seed.equals("any") ? IdFactory.newSeed() : Long.parseLong(seed);
   }
 
   private Instant getReferenceTime(Config config, InstantSource timeSource) {

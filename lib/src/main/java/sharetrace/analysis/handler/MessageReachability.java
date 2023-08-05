@@ -6,10 +6,10 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
-import it.unimi.dsi.fastutil.objects.Object2IntMap;
-import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.longs.Long2IntMap;
+import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -25,14 +25,14 @@ import sharetrace.logging.event.ReceiveEvent;
 @SuppressWarnings("SpellCheckingInspection")
 public final class MessageReachability implements EventHandler {
 
-  private final Object2IntMap<String> origins;
+  private final Long2IntMap origins;
   private final Int2ObjectMap<List<int[]>> knowns;
-  private final Object2ObjectMap<String, List<int[]>> unknowns;
+  private final Long2ObjectMap<List<int[]>> unknowns;
 
   public MessageReachability() {
-    origins = new Object2IntOpenHashMap<>();
+    origins = new Long2IntOpenHashMap();
     knowns = new Int2ObjectOpenHashMap<>();
-    unknowns = new Object2ObjectOpenHashMap<>();
+    unknowns = new Long2ObjectOpenHashMap<>();
   }
 
   @Override
@@ -57,30 +57,30 @@ public final class MessageReachability implements EventHandler {
     computeReachability();
   }
 
-  private void addNewOrigin(String id, int origin) {
+  private void addNewOrigin(long id, int origin) {
     origins.put(id, origin);
     knowns.put(origin, new ObjectArrayList<>());
   }
 
-  private boolean isOriginKnown(String id) {
+  private boolean isOriginKnown(long id) {
     return origins.containsKey(id);
   }
 
-  private List<int[]> getEdgesOfKnownOrigin(String id) {
-    return knowns.get(origins.getInt(id));
+  private List<int[]> getEdgesOfKnownOrigin(long id) {
+    return knowns.get(origins.get(id));
   }
 
-  private void addEdgeOfKnownOrigin(String id, int source, int target) {
+  private void addEdgeOfKnownOrigin(long id, int source, int target) {
     getEdgesOfKnownOrigin(id).add(new int[] {source, target});
   }
 
-  private void addEdgeOfUnknownOrigin(String id, int source, int target) {
+  private void addEdgeOfUnknownOrigin(long id, int source, int target) {
     unknowns.computeIfAbsent(id, x -> new ObjectArrayList<>()).add(new int[] {source, target});
   }
 
   private void resolveUnknowns() {
-    for (var entry : unknowns.object2ObjectEntrySet()) {
-      var id = entry.getKey();
+    for (var entry : unknowns.long2ObjectEntrySet()) {
+      var id = entry.getLongKey();
       if (isOriginKnown(id)) {
         var newEdges = entry.getValue();
         getEdgesOfKnownOrigin(id).addAll(newEdges);

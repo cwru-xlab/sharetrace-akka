@@ -36,7 +36,7 @@ public record FileContactNetworkFactory(Path path, String delimiter, Instant tim
   }
 
   private Instant parseNetwork(Graph<Integer, TemporalEdge> target) {
-    var max = new AtomicReference<>(Instant.MIN);
+    var max = new AtomicReference<>(Instant.EPOCH);
     try (var edges = Files.lines(path)) {
       edges.forEach(edge -> processEdge(edge, target, max));
     } catch (IOException exception) {

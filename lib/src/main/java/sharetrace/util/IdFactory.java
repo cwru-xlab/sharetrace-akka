@@ -1,20 +1,20 @@
 package sharetrace.util;
 
-import de.huxhorn.sulky.ulid.ULID;
 import java.util.concurrent.ThreadLocalRandom;
 
 public final class IdFactory {
 
-  private static final ULID ULID = new ULID();
-
   private IdFactory() {}
+
+  public static String newKey() {
+    return String.valueOf(ThreadLocalRandom.current().nextInt(100_000));
+  }
 
   public static long newLong() {
     return ThreadLocalRandom.current().nextLong(Long.MAX_VALUE);
   }
 
-  @SuppressWarnings("SpellCheckingInspection")
-  public static String nextUlid() {
-    return ULID.nextULID();
+  public static long newSeed() {
+    return ThreadLocalRandom.current().nextInt(Integer.MAX_VALUE);
   }
 }

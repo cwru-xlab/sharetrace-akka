@@ -16,7 +16,7 @@ public final class EventTimeline implements EventHandler {
 
   public EventTimeline() {
     timeline = new ObjectArrayList<>();
-    min = Instant.MIN;
+    min = Instant.EPOCH;
   }
 
   @Override

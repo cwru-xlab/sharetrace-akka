@@ -11,7 +11,7 @@ public record RiskScore(float value, Instant timestamp, Instant expiresAt)
 
   public static final float MIN_VALUE = 0;
   public static final float MAX_VALUE = 1;
-  public static final RiskScore MIN = new RiskScore(MIN_VALUE, Instant.MIN, Instant.MIN);
+  public static final RiskScore MIN = new RiskScore(MIN_VALUE, Instant.EPOCH, Instant.EPOCH);
 
   public RiskScore {
     Checks.checkRange(value, Range.closed(MIN_VALUE, MAX_VALUE), "value");

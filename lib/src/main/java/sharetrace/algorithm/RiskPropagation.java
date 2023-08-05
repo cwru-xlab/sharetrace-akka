@@ -42,7 +42,7 @@ public record RiskPropagation(
 
   private Context contextWithMdc() {
     var mdc = new Object2ObjectOpenHashMap<>(context.mdc());
-    mdc.put(LogRecord.key(), IdFactory.nextUlid());
+    mdc.put(LogRecord.key(), IdFactory.newKey());
     return ContextBuilder.from(context).withMdc(mdc);
   }
 
