@@ -46,9 +46,8 @@ public record Main() {
   }
 
   private static EventHandler newEventHandler(Config config) {
-    var factory = new InstanceFactory();
     return config.getStringList("handlers").stream()
-        .<EventHandler>map(factory::getInstance)
+        .<EventHandler>map(InstanceFactory::getInstance)
         .collect(Collectors.collectingAndThen(ObjectArrayList.toList(), EventHandlers::new));
   }
 }

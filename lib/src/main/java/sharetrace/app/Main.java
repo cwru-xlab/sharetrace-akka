@@ -20,7 +20,7 @@ public record Main() {
 
   private static Runner getRunner(Config config) {
     var classPath = config.getString("runner.type");
-    return new InstanceFactory().getInstance(classPath);
+    return InstanceFactory.getInstance(classPath);
   }
 
   private static Parameters getParameters(Config config) {

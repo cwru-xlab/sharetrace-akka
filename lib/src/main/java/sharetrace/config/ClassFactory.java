@@ -1,9 +1,11 @@
 package sharetrace.config;
 
-public record ClassFactory() {
+public final class ClassFactory {
+
+  private ClassFactory() {}
 
   @SuppressWarnings("unchecked")
-  public <T> Class<T> getClass(String name) {
+  public static <T> Class<T> getClass(String name) {
     try {
       return (Class<T>) Class.forName(name);
     } catch (ClassNotFoundException exception) {
