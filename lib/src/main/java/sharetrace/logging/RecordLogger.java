@@ -18,11 +18,9 @@ public final class RecordLogger<T extends LogRecord> {
     this.loggable = loggable;
   }
 
-  public <R extends T> boolean log(Class<R> type, Supplier<R> record) {
-    var logged = delegate.isInfoEnabled() && loggable.contains(type);
-    if (logged) {
+  public <R extends T> void log(Class<R> type, Supplier<R> record) {
+    if (delegate.isInfoEnabled() && loggable.contains(type)) {
       delegate.info(key, StructuredArguments.value(key, record.get()));
     }
-    return logged;
   }
 }
