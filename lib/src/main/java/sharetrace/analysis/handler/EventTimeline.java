@@ -29,11 +29,11 @@ public final class EventTimeline implements EventHandler {
 
   @Override
   public void onComplete() {
-    timeline.replaceAll(this::adjustTimestamps);
+    timeline.replaceAll(this::adjustTimestamp);
     timeline.sort(Comparator.comparing(LoggedEvent::timestamp));
   }
 
-  private LoggedEvent adjustTimestamps(LoggedEvent event) {
+  private LoggedEvent adjustTimestamp(LoggedEvent event) {
     var timestamp = event.timestamp();
     var offset = Duration.between(min, timestamp);
     return new LoggedEvent(event.type(), timestamp.minus(offset));
