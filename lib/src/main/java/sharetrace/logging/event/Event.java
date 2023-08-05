@@ -10,9 +10,9 @@ public interface Event extends LogRecord, Timestamped {
     return "event";
   }
 
-  int self();
-
   static int toInt(ActorRef<?> actorRef) {
     return Integer.parseInt(actorRef.path().name());
   }
+
+  int self();
 }
