@@ -1,6 +1,5 @@
 package sharetrace.analysis;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
@@ -15,6 +14,7 @@ import sharetrace.analysis.handler.EventHandler;
 import sharetrace.analysis.handler.EventHandlers;
 import sharetrace.analysis.model.EventRecord;
 import sharetrace.config.InstanceFactory;
+import sharetrace.logging.Jackson;
 import sharetrace.util.Parser;
 
 public final class Main {
@@ -48,7 +48,7 @@ public final class Main {
   }
 
   private static Parser<String, EventRecord> newEventRecordParser() {
-    return new EventRecordParser(new ObjectMapper().findAndRegisterModules());
+    return new EventRecordParser(Jackson.newObjectMapper());
   }
 
   private static void processRecord(

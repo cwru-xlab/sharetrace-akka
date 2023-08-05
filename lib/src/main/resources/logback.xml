@@ -46,6 +46,7 @@
                 <version>[ignore]</version>
             </fieldNames>
             <includeContext>false</includeContext>
+            <jsonFactoryDecorator class="sharetrace.logging.LoggingFactoryDecorator"/>
         </encoder>
         <immediateFlush>false</immediateFlush>
         <rollingPolicy class="FixedWindowRollingPolicy">
@@ -75,6 +76,7 @@
                 <version>[ignore]</version>
             </fieldNames>
             <includeContext>false</includeContext>
+            <jsonFactoryDecorator class="sharetrace.logging.LoggingFactoryDecorator"/>
         </encoder>
         <file>${logDirectory}/metrics.log</file>
         <immediateFlush>false</immediateFlush>
@@ -97,6 +99,7 @@
                 <version>[ignore]</version>
             </fieldNames>
             <includeContext>false</includeContext>
+            <jsonFactoryDecorator class="sharetrace.logging.LoggingFactoryDecorator"/>
         </encoder>
         <file>${logDirectory}/settings.log</file>
         <immediateFlush>false</immediateFlush>
