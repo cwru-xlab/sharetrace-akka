@@ -8,6 +8,7 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import sharetrace.analysis.handler.EventHandler;
@@ -16,19 +17,15 @@ import sharetrace.analysis.model.EventRecord;
 import sharetrace.config.InstanceFactory;
 import sharetrace.util.Parser;
 
-public record Main() {
+public final class Main {
+
+  private Main() {}
 
   public static void main(String[] args) {
-    var config = ConfigFactory.load().getConfig("sharetrace.analysis");
-    var parser = newEventRecordParser();
-    var handlers = new Object2ObjectOpenHashMap<String, EventHandler>();
-    try (var stream = newEventStream()) {
-      for (var it = stream.iterator(); it.hasNext(); ) {
-        var line = it.next();
-        var record = parser.parse(line);
-        var handler = handlers.computeIfAbsent(record.key(), x -> newEventHandler(config));
-        handler.onNext(record.event());
-      }
+    var config = getConfig();
+    var handlers = newEventHandlersMap();
+    try (var stream = newEventRecordStream()) {
+      stream.forEach(record -> processRecord(record, handlers, config));
     } catch (IOException exception) {
       throw new UncheckedIOException(exception);
     } finally {
@@ -36,13 +33,27 @@ public record Main() {
     }
   }
 
+  private static Config getConfig() {
+    return ConfigFactory.load().getConfig("sharetrace.analysis");
+  }
+
+  private static Map<String, EventHandler> newEventHandlersMap() {
+    return new Object2ObjectOpenHashMap<>();
+  }
+
+  private static Stream<EventRecord> newEventRecordStream() throws IOException {
+    var directory = Path.of(System.getProperty("config.logs"));
+    var parser = newEventRecordParser();
+    return new EventRecordStream(parser).open(directory);
+  }
+
   private static Parser<String, EventRecord> newEventRecordParser() {
     return new EventRecordParser(new ObjectMapper().findAndRegisterModules());
   }
 
-  private static Stream<String> newEventStream() throws IOException {
-    var directory = Path.of(System.getProperty("config.logs"));
-    return EventStream.of(directory);
+  private static void processRecord(
+      EventRecord record, Map<String, EventHandler> handlers, Config config) {
+    handlers.computeIfAbsent(record.key(), x -> newEventHandler(config)).onNext(record.event());
   }
 
   private static EventHandler newEventHandler(Config config) {

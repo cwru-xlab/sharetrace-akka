@@ -8,14 +8,20 @@ import sharetrace.config.ParametersParser;
 import sharetrace.model.Parameters;
 import sharetrace.util.Context;
 
-public record Main() {
+public final class Main {
+
+  private Main() {}
 
   public static void main(String[] args) {
-    var config = ConfigFactory.load().getConfig("sharetrace");
+    var config = getConfig();
     var runner = getRunner(config);
     var parameters = getParameters(config);
     var context = getContext(config);
     runner.run(parameters, context);
+  }
+
+  private static Config getConfig() {
+    return ConfigFactory.load().getConfig("sharetrace");
   }
 
   private static Runner getRunner(Config config) {
