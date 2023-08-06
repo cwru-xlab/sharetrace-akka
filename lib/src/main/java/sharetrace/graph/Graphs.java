@@ -1,5 +1,6 @@
 package sharetrace.graph;
 
+import java.time.Instant;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import org.jgrapht.Graph;
@@ -8,10 +9,25 @@ import org.jgrapht.GraphType;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.DefaultGraphType;
 import org.jgrapht.opt.graph.fastutil.FastutilMapIntVertexGraph;
+import sharetrace.util.Instants;
 
 public final class Graphs {
 
   private Graphs() {}
+
+  public static void addEdgeWithNodes(
+      Graph<Integer, TemporalEdge> graph, int source, int target, Instant timestamp) {
+    graph.addVertex(source);
+    graph.addVertex(target);
+    var edge = graph.getEdge(source, target);
+    if (edge == null) {
+      edge = graph.addEdge(source, target);
+    }
+    edge.mergeTimestamp(timestamp, Instants::max);
+    if (graph.getType().isWeighted()) {
+      graph.setEdgeWeight(edge, edge.weight());
+    }
+  }
 
   public static Graph<Integer, DefaultEdge> copy(Graph<Integer, DefaultEdge> graph) {
     return graph.getType().isDirected() ? copyDirected(graph) : copyUndirected(graph);

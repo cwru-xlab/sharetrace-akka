@@ -1,10 +1,9 @@
 package sharetrace.analysis.handler;
 
 import java.nio.file.Path;
-import java.time.Instant;
-import java.util.function.BinaryOperator;
 import org.jgrapht.Graph;
 import org.jgrapht.GraphMetrics;
+import org.jgrapht.alg.interfaces.ShortestPathAlgorithm;
 import org.jgrapht.alg.interfaces.VertexScoringAlgorithm;
 import org.jgrapht.alg.scoring.ClosenessCentrality;
 import org.jgrapht.alg.scoring.ClusteringCoefficient;
@@ -12,6 +11,7 @@ import org.jgrapht.alg.scoring.Coreness;
 import org.jgrapht.alg.scoring.EigenvectorCentrality;
 import org.jgrapht.alg.scoring.KatzCentrality;
 import org.jgrapht.alg.shortestpath.GraphMeasurer;
+import org.jgrapht.alg.shortestpath.IntVertexDijkstraShortestPath;
 import sharetrace.graph.Graphs;
 import sharetrace.graph.TemporalEdge;
 import sharetrace.graph.TemporalGraphExporterBuilder;
@@ -31,18 +31,8 @@ public final class GraphHandler implements EventHandler {
 
   @Override
   public void onNext(Event event) {
-    if (event instanceof ContactEvent contact) {
-      var source = contact.self();
-      var target = contact.contact();
-      graph.addVertex(source);
-      graph.addVertex(target);
-      var edge = graph.getEdge(source, target);
-      if (edge != null) {
-        edge.mergeTimestamp(contact.contactTime(), BinaryOperator.maxBy(Instant::compareTo));
-      } else {
-        edge = graph.addEdge(source, target);
-      }
-      graph.setEdgeWeight(edge, edge.weight());
+    if (event instanceof ContactEvent e) {
+      Graphs.addEdgeWithNodes(graph, e.self(), e.contact(), e.contactTime());
     }
   }
 
@@ -50,7 +40,8 @@ public final class GraphHandler implements EventHandler {
   public void onComplete() {
     var girth = GraphMetrics.getGirth(graph);
     var triangleCount = GraphMetrics.getNumberOfTriangles(graph);
-    var measurer = new GraphMeasurer<>(graph);
+    var shortestPathsAlgorithm = new IntVertexDijkstraShortestPath<>(graph);
+    var measurer = new GraphMeasurer<>(graph, shortestPathsAlgorithm);
     var radius = (long) measurer.getRadius();
     var diameter = (long) measurer.getDiameter();
     var centerCount = measurer.getGraphCenter().size();
@@ -58,7 +49,7 @@ public final class GraphHandler implements EventHandler {
     var degeneracy = degeneracy();
     var globalClusteringCoefficient = globalClusteringCoefficient();
     var localClusteringCoefficient = localClusteringCoefficients();
-    var closenessCentrality = closenessCentrality();
+    var harmonicCentrality = harmonicCentrality(shortestPathsAlgorithm);
     var katzCentrality = katzCentrality();
     var eigenvectorCentrality = eigenvectorCentrality();
     TemporalGraphExporterBuilder.create()
@@ -80,8 +71,9 @@ public final class GraphHandler implements EventHandler {
     return scoreStatistics(new ClusteringCoefficient<>(graph));
   }
 
-  private Statistics closenessCentrality() {
-    return scoreStatistics(new ClosenessCentrality<>(graph));
+  private Statistics harmonicCentrality(
+      ShortestPathAlgorithm<Integer, TemporalEdge> shortestPathAlgorithm) {
+    return scoreStatistics(new IntHarmonicCentrality<>(graph, shortestPathAlgorithm));
   }
 
   private Statistics katzCentrality() {
@@ -94,5 +86,21 @@ public final class GraphHandler implements EventHandler {
 
   private Statistics scoreStatistics(VertexScoringAlgorithm<?, Double> algorithm) {
     return Statistics.of(algorithm.getScores().values());
+  }
+
+  private static final class IntHarmonicCentrality<E> extends ClosenessCentrality<Integer, E> {
+
+    private final ShortestPathAlgorithm<Integer, E> shortestPathAlgorithm;
+
+    public IntHarmonicCentrality(
+        Graph<Integer, E> graph, ShortestPathAlgorithm<Integer, E> shortestPathAlgorithm) {
+      super(graph);
+      this.shortestPathAlgorithm = shortestPathAlgorithm;
+    }
+
+    @Override
+    protected ShortestPathAlgorithm<Integer, E> getShortestPathAlgorithm() {
+      return shortestPathAlgorithm;
+    }
   }
 }

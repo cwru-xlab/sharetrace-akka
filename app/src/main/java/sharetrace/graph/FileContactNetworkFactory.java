@@ -8,17 +8,15 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.BinaryOperator;
 import org.jgrapht.Graph;
 import org.jgrapht.generate.GraphGenerator;
 import sharetrace.Buildable;
 import sharetrace.model.Timestamped;
+import sharetrace.util.Instants;
 
 @Buildable
 public record FileContactNetworkFactory(Path path, String delimiter, Instant timestamp)
     implements ContactNetworkFactory, Timestamped {
-
-  private static final BinaryOperator<Instant> MAX = BinaryOperator.maxBy(Instant::compareTo);
 
   @Override
   public ContactNetwork newContactNetwork(Graph<Integer, TemporalEdge> target) {
@@ -52,25 +50,13 @@ public record FileContactNetworkFactory(Path path, String delimiter, Instant tim
     var v2 = Integer.parseInt(args[2]);
     if (v1 != v2) {
       var timestamp = parseTimestamp(args[0]);
-      mergeWithNodes(target, v1, v2, timestamp);
-      max.set(MAX.apply(max.get(), timestamp));
+      Graphs.addEdgeWithNodes(target, v1, v2, timestamp);
+      max.set(Instants.max(max.get(), timestamp));
     }
   }
 
   private Instant parseTimestamp(String timestamp) {
     return Instant.ofEpochSecond(Long.parseLong(timestamp.strip()));
-  }
-
-  private void mergeWithNodes(
-      Graph<Integer, TemporalEdge> target, int v1, int v2, Instant timestamp) {
-    target.addVertex(v1);
-    target.addVertex(v2);
-    var edge = target.getEdge(v1, v2);
-    if (edge != null) {
-      edge.mergeTimestamp(timestamp, MAX);
-    } else {
-      target.addEdge(v1, v2).setTimestamp(timestamp);
-    }
   }
 
   private void adjustTimestamps(Graph<Integer, TemporalEdge> target, Instant max) {
