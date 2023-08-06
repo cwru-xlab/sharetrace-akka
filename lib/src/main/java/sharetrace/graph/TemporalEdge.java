@@ -8,26 +8,26 @@ import org.jgrapht.graph.DefaultWeightedEdge;
 
 public final class TemporalEdge extends DefaultWeightedEdge {
 
-  private Instant timestamp;
+  private Instant time;
 
-  public void mergeTimestamp(Instant timestamp, BinaryOperator<Instant> merger) {
-    mapTimestamp(t -> t == null ? timestamp : merger.apply(t, timestamp));
+  public void updateTime(Instant time, BinaryOperator<Instant> merger) {
+    updateTime(t -> t == null ? time : merger.apply(t, time));
   }
 
-  public void mapTimestamp(UnaryOperator<Instant> mapper) {
-    setTimestamp(mapper.apply(timestamp));
+  public void updateTime(UnaryOperator<Instant> mapper) {
+    setTime(mapper.apply(time));
   }
 
   public double weight() {
-    return timestamp.getEpochSecond();
+    return time.getEpochSecond();
   }
 
-  public Instant getTimestamp() {
-    return timestamp;
+  public Instant getTime() {
+    return time;
   }
 
-  public void setTimestamp(Instant timestamp) {
-    this.timestamp = timestamp;
+  public void setTime(Instant time) {
+    this.time = time;
   }
 
   @Override
@@ -35,13 +35,13 @@ public final class TemporalEdge extends DefaultWeightedEdge {
     if (obj instanceof TemporalEdge edge) {
       return Objects.equals(getSource(), edge.getSource())
           && Objects.equals(getTarget(), edge.getTarget())
-          && Objects.equals(getTimestamp(), edge.getTimestamp());
+          && Objects.equals(getTime(), edge.getTime());
     }
     return false;
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(getSource(), getTarget(), getTimestamp());
+    return Objects.hash(getSource(), getTarget(), getTime());
   }
 }

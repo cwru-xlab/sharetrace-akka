@@ -126,8 +126,8 @@ final class Monitor extends AbstractBehavior<MonitorMessage> {
     for (var edge : contactNetwork.edgeSet()) {
       var user1 = users.get(contactNetwork.getEdgeSource(edge));
       var user2 = users.get(contactNetwork.getEdgeTarget(edge));
-      user1.tell(new ContactMessage(user2, edge.getTimestamp(), parameters.contactExpiry()));
-      user2.tell(new ContactMessage(user1, edge.getTimestamp(), parameters.contactExpiry()));
+      user1.tell(new ContactMessage(user2, edge.getTime(), parameters.contactExpiry()));
+      user2.tell(new ContactMessage(user1, edge.getTime(), parameters.contactExpiry()));
     }
     logEvent(SendContactsEnd.class, SendContactsEnd::new);
   }

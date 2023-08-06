@@ -10,7 +10,7 @@ public interface GeneratedContactNetworkFactory extends ContactNetworkFactory {
   default ContactNetwork getContactNetwork() {
     var network = ContactNetworkFactory.super.getContactNetwork();
     for (var edge : network.edgeSet()) {
-      edge.setTimestamp(timeFactory().getTime());
+      edge.setTime(timeFactory().getTime());
     }
     return network;
   }

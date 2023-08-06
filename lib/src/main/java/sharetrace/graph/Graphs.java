@@ -15,15 +15,15 @@ public final class Graphs {
 
   private Graphs() {}
 
-  public static void addEdgeWithNodes(
-      Graph<Integer, TemporalEdge> graph, int source, int target, Instant timestamp) {
+  public static void addTemporalEdge(
+      Graph<Integer, TemporalEdge> graph, int source, int target, Instant time) {
     graph.addVertex(source);
     graph.addVertex(target);
     var edge = graph.getEdge(source, target);
     if (edge == null) {
       edge = graph.addEdge(source, target);
     }
-    edge.mergeTimestamp(timestamp, Instants::max);
+    edge.updateTime(time, Instants::max);
     if (graph.getType().isWeighted()) {
       graph.setEdgeWeight(edge, edge.weight());
     }

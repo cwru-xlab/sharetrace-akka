@@ -50,7 +50,7 @@ public record FileContactNetworkFactory(Path path, String delimiter, Instant tim
     var v2 = Integer.parseInt(args[2]);
     if (v1 != v2) {
       var timestamp = parseTimestamp(args[0]);
-      Graphs.addEdgeWithNodes(target, v1, v2, timestamp);
+      Graphs.addTemporalEdge(target, v1, v2, timestamp);
       max.set(Instants.max(max.get(), timestamp));
     }
   }
@@ -62,7 +62,7 @@ public record FileContactNetworkFactory(Path path, String delimiter, Instant tim
   private void adjustTimestamps(Graph<Integer, TemporalEdge> target, Instant max) {
     var offset = Duration.between(max, timestamp);
     for (var edge : target.edgeSet()) {
-      edge.mapTimestamp(t -> t.plus(offset));
+      edge.updateTime(t -> t.plus(offset));
     }
   }
 }
