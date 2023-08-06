@@ -56,10 +56,10 @@ public final class Main {
   }
 
   private static EventHandler newEventHandler(String key, Config config) {
-    var handlers = new ObjectArrayList<EventHandler>();
-    config.getStringList("handlers").stream()
-        .<EventHandler>map(InstanceFactory::getInstance)
-        .forEach(handlers::add);
+    var handlers =
+        config.getStringList("handlers").stream()
+            .<EventHandler>map(InstanceFactory::getInstance)
+            .collect(ObjectArrayList.toList());
     return new EventHandlers(key, handlers);
   }
 }
