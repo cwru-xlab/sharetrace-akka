@@ -23,8 +23,7 @@ public final class EventTimeline implements EventHandler {
   @Override
   public void onNext(Event event) {
     var loggedEvent = LoggedEvent.from(event);
-    var timestamp = loggedEvent.timestamp();
-    min = Instants.min(min, timestamp);
+    min = Instants.min(min, loggedEvent.timestamp());
     timeline.add(loggedEvent);
   }
 
