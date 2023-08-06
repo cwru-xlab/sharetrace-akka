@@ -1,15 +1,16 @@
 package sharetrace.analysis.handler;
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
-import sharetrace.analysis.model.CreateUsersRuntime;
+import java.util.function.Predicate;
 import sharetrace.analysis.model.MessagePassingRuntime;
 import sharetrace.analysis.model.RiskPropagationRuntime;
 import sharetrace.analysis.model.Runtime;
-import sharetrace.analysis.model.SendRiskScoresRuntime;
 import sharetrace.logging.event.CreateUsersEnd;
 import sharetrace.logging.event.CreateUsersStart;
 import sharetrace.logging.event.Event;
@@ -45,41 +46,58 @@ public final class Runtimes implements EventHandler {
 
   @Override
   public void onComplete() {
-    var runtimes = new ObjectArrayList<>();
-    runtimes.add(createUsersRuntime());
-    runtimes.add(sendContactsRuntime());
-    runtimes.add(sendRiskScoresRuntime());
-    runtimes.add(riskPropagationRuntime());
-    runtimes.add(messagePassingRuntime());
-    runtimes.trim();
+    var runtimes =
+        new Runtime[] {
+          createUsersRuntime(),
+          sendContactsRuntime(),
+          sendRiskScoresRuntime(),
+          riskPropagationRuntime(),
+          messagePassingRuntime()
+        };
   }
 
   private Runtime createUsersRuntime() {
-    var start = events.get(CreateUsersStart.class);
-    var end = events.get(CreateUsersEnd.class);
-    return new CreateUsersRuntime(Duration.between(start, end));
+    return getRuntime(CreateUsersStart.class, CreateUsersEnd.class);
   }
 
   private Runtime sendContactsRuntime() {
-    var start = events.get(SendContactsStart.class);
-    var end = events.get(SendContactsEnd.class);
-    return new CreateUsersRuntime(Duration.between(start, end));
+    return getRuntime(SendContactsStart.class, SendContactsEnd.class);
   }
 
   private Runtime sendRiskScoresRuntime() {
-    var start = events.get(SendRiskScoresStart.class);
-    var end = events.get(SendRiskScoresEnd.class);
-    return new SendRiskScoresRuntime(Duration.between(start, end));
+    return getRuntime(SendRiskScoresStart.class, SendRiskScoresEnd.class);
   }
 
   private Runtime riskPropagationRuntime() {
-    var start = events.get(RiskPropagationStart.class);
-    var end = events.get(RiskPropagationEnd.class);
-    return new RiskPropagationRuntime(Duration.between(start, end));
+    return getRuntime(RiskPropagationStart.class, RiskPropagationEnd.class);
   }
 
   private Runtime messagePassingRuntime() {
-    var start = events.get(SendContactsStart.class);
-    return new MessagePassingRuntime(Duration.between(start, lastUserEvent));
+    var notLogged = notLogged(SendContactsStart.class);
+    if (notLogged.isEmpty()) {
+      var start = events.get(SendContactsStart.class);
+      return new MessagePassingRuntime(Duration.between(start, lastUserEvent));
+    } else {
+      throw missingEventsException(notLogged);
+    }
+  }
+
+  private Runtime getRuntime(Class<?> startEvent, Class<?> endEvent) {
+    var notLogged = notLogged(startEvent, endEvent);
+    if (notLogged.isEmpty()) {
+      var start = events.get(startEvent);
+      var end = events.get(endEvent);
+      return new RiskPropagationRuntime(Duration.between(start, end));
+    } else {
+      throw missingEventsException(notLogged);
+    }
+  }
+
+  private List<Class<?>> notLogged(Class<?>... evenTypes) {
+    return Arrays.stream(evenTypes).filter(Predicate.not(events::containsKey)).toList();
+  }
+
+  private RuntimeException missingEventsException(Collection<Class<?>> events) {
+    return new IllegalStateException("Expected events were not logged: " + events);
   }
 }
