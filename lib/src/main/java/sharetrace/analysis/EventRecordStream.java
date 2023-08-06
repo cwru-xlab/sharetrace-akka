@@ -42,7 +42,7 @@ public record EventRecordStream(Parser<String, EventRecord> parser) {
 
   private int compareEventLogs(Path path1, Path path2) {
     /* Compressed event logs include events that occurred before events in non-compressed logs, so
-    they should be read first. If both event logs are (un)compressed, then compare normally. */
+    they should be read first. If both event logs are (non-)compressed, then compare normally. */
     if (isCompressed(path1) ^ isCompressed(path2)) {
       return isCompressed(path1) ? -1 : 1;
     } else {
