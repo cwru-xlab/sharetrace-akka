@@ -4,7 +4,6 @@ import java.util.Set;
 import java.util.function.Supplier;
 import net.logstash.logback.argument.StructuredArguments;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public final class RecordLogger<T extends LogRecord> {
 
@@ -12,8 +11,8 @@ public final class RecordLogger<T extends LogRecord> {
   private final String key;
   private final Set<Class<? extends LogRecord>> loggable;
 
-  public RecordLogger(String name, String key, Set<Class<? extends LogRecord>> loggable) {
-    this.delegate = LoggerFactory.getLogger(name);
+  public RecordLogger(Logger delegate, String key, Set<Class<? extends LogRecord>> loggable) {
+    this.delegate = delegate;
     this.key = key;
     this.loggable = loggable;
   }

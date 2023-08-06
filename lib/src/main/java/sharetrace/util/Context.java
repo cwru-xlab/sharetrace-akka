@@ -10,6 +10,8 @@ import java.time.InstantSource;
 import java.util.Map;
 import java.util.Set;
 import org.apache.commons.math3.random.RandomGenerator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import sharetrace.Buildable;
 import sharetrace.logging.LogRecord;
 import sharetrace.logging.RecordLogger;
@@ -26,6 +28,9 @@ public record Context(
     RandomGenerator randomGenerator,
     Set<Class<? extends LogRecord>> loggable,
     Map<String, String> mdc) {
+
+  private static final Logger EVENTS_LOGGER = LoggerFactory.getLogger("EventsLogger");
+  private static final Logger SETTINGS_LOGGER = LoggerFactory.getLogger("SettingsLogger");
 
   @Override
   @JsonIgnore
@@ -52,10 +57,10 @@ public record Context(
   }
 
   public RecordLogger<Event> eventsLogger() {
-    return new RecordLogger<>("EventsLogger", Event.key(), loggable);
+    return new RecordLogger<>(EVENTS_LOGGER, Event.key(), loggable);
   }
 
   public RecordLogger<Settings> settingsLogger() {
-    return new RecordLogger<>("SettingsLogger", Settings.key(), loggable);
+    return new RecordLogger<>(SETTINGS_LOGGER, Settings.key(), loggable);
   }
 }
