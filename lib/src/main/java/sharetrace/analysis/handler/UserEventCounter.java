@@ -7,11 +7,11 @@ import java.util.Map;
 import sharetrace.logging.event.Event;
 import sharetrace.logging.event.UserEvent;
 
-public final class EventCounter implements EventHandler {
+public final class UserEventCounter implements EventHandler {
 
-  private final Map<Integer, Object2IntMap<Class<? extends Event>>> counts;
+  private final Map<Integer, Object2IntMap<Class<?>>> counts;
 
-  public EventCounter() {
+  public UserEventCounter() {
     counts = new Int2ObjectOpenHashMap<>();
   }
 
@@ -20,7 +20,7 @@ public final class EventCounter implements EventHandler {
     if (event instanceof UserEvent userEvent) {
       counts
           .computeIfAbsent(userEvent.self(), x -> new Object2IntOpenHashMap<>())
-          .mergeInt(event.getClass(), 1, Integer::sum);
+          .mergeInt(userEvent.getClass(), 1, Integer::sum);
     }
   }
 }
