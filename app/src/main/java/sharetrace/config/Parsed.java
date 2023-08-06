@@ -1,6 +1,7 @@
 package sharetrace.config;
 
 import com.typesafe.config.Config;
+import it.unimi.dsi.fastutil.floats.FloatArrayList;
 import java.util.List;
 import sharetrace.Buildable;
 import sharetrace.graph.ContactNetwork;
@@ -65,6 +66,10 @@ public record Parsed(
   }
 
   private List<Float> toFloats(List<Double> doubles) {
-    return doubles.stream().map(Double::floatValue).toList();
+    var floats = new FloatArrayList(doubles.size());
+    for (var d : doubles) {
+      floats.add((float) d.doubleValue());
+    }
+    return floats;
   }
 }
