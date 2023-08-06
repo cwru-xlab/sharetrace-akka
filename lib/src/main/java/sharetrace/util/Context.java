@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.typesafe.config.Config;
 import java.time.Instant;
 import java.time.InstantSource;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import org.apache.commons.math3.random.RandomGenerator;
@@ -53,7 +54,12 @@ public record Context(
   @Override
   @JsonAnyGetter
   public Map<String, String> mdc() {
-    return mdc;
+    return Collections.unmodifiableMap(mdc);
+  }
+
+  @Override
+  public Set<Class<? extends LogRecord>> loggable() {
+    return Collections.unmodifiableSet(loggable);
   }
 
   public RecordLogger<Event> eventsLogger() {
