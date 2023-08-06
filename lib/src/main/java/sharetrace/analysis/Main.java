@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.util.Map;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import sharetrace.analysis.handler.EventHandler;
 import sharetrace.analysis.handler.EventHandlers;
@@ -53,12 +52,14 @@ public final class Main {
 
   private static void processRecord(
       EventRecord record, Map<String, EventHandler> handlers, Config config) {
-    handlers.computeIfAbsent(record.key(), x -> newEventHandler(config)).onNext(record.event());
+    handlers.computeIfAbsent(record.key(), k -> newEventHandler(k, config)).onNext(record.event());
   }
 
-  private static EventHandler newEventHandler(Config config) {
-    return config.getStringList("handlers").stream()
+  private static EventHandler newEventHandler(String key, Config config) {
+    var handlers = new ObjectArrayList<EventHandler>();
+    config.getStringList("handlers").stream()
         .<EventHandler>map(InstanceFactory::getInstance)
-        .collect(Collectors.collectingAndThen(ObjectArrayList.toList(), EventHandlers::new));
+        .forEach(handlers::add);
+    return new EventHandlers(key, handlers);
   }
 }
