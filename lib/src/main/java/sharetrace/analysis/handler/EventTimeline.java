@@ -7,6 +7,7 @@ import java.util.Comparator;
 import java.util.List;
 import sharetrace.analysis.model.LoggedEvent;
 import sharetrace.logging.event.Event;
+import sharetrace.util.Instants;
 
 public final class EventTimeline implements EventHandler {
 
@@ -23,7 +24,7 @@ public final class EventTimeline implements EventHandler {
   public void onNext(Event event) {
     var loggedEvent = LoggedEvent.from(event);
     var timestamp = loggedEvent.timestamp();
-    min = timestamp.isBefore(min) ? timestamp : min;
+    min = Instants.min(min, timestamp);
     timeline.add(loggedEvent);
   }
 

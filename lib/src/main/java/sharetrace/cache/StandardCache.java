@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.BinaryOperator;
 import sharetrace.model.Expirable;
+import sharetrace.util.Instants;
 
 public final class StandardCache<K, V extends Expirable & Comparable<? super V>>
     implements Cache<K, V> {
@@ -62,7 +63,7 @@ public final class StandardCache<K, V extends Expirable & Comparable<? super V>>
   }
 
   private void updateMin(V value) {
-    min = min.isBefore(value.expiresAt()) ? min : value.expiresAt();
+    min = Instants.min(min, value.expiresAt());
   }
 
   private void updateMin() {
