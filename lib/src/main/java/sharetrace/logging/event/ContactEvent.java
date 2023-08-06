@@ -4,10 +4,10 @@ import akka.actor.typed.ActorRef;
 import java.time.Instant;
 
 public record ContactEvent(int self, int contact, Instant contactTime, Instant timestamp)
-    implements Event {
+    implements UserEvent {
 
   public ContactEvent(
       ActorRef<?> self, ActorRef<?> contact, Instant contactTime, Instant timestamp) {
-    this(Event.toInt(self), Event.toInt(contact), contactTime, timestamp);
+    this(UserEvent.toInt(self), UserEvent.toInt(contact), contactTime, timestamp);
   }
 }

@@ -5,6 +5,7 @@ import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import java.util.Map;
 import sharetrace.logging.event.Event;
+import sharetrace.logging.event.UserEvent;
 
 public final class EventCounter implements EventHandler {
 
@@ -16,8 +17,10 @@ public final class EventCounter implements EventHandler {
 
   @Override
   public void onNext(Event event) {
-    counts
-        .computeIfAbsent(event.self(), x -> new Object2IntOpenHashMap<>())
-        .mergeInt(event.getClass(), 1, Integer::sum);
+    if (event instanceof UserEvent userEvent) {
+      counts
+          .computeIfAbsent(userEvent.self(), x -> new Object2IntOpenHashMap<>())
+          .mergeInt(event.getClass(), 1, Integer::sum);
+    }
   }
 }

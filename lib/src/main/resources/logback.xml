@@ -64,29 +64,6 @@
         <appendTimeout>-1</appendTimeout>
     </appender>
 
-    <appender name="MetricsFileAppender" class="FileAppender">
-        <encoder class="LogstashEncoder">
-            <fieldNames class="ShortenedFieldNames">
-                <level>[ignore]</level>
-                <levelValue>[ignore]</levelValue>
-                <logger>[ignore]</logger>
-                <message>[ignore]</message>
-                <thread>[ignore]</thread>
-                <timestamp>[ignore]</timestamp>
-                <version>[ignore]</version>
-            </fieldNames>
-            <includeContext>false</includeContext>
-            <jsonFactoryDecorator class="sharetrace.logging.LoggingFactoryDecorator"/>
-        </encoder>
-        <file>${logDirectory}/metrics.log</file>
-        <immediateFlush>false</immediateFlush>
-    </appender>
-
-    <appender name="MetricsAppender" class="LoggingEventAsyncDisruptorAppender">
-        <appendTimeout>-1</appendTimeout>
-        <appender-ref ref="MetricsFileAppender"/>
-    </appender>
-
     <appender name="SettingsFileAppender" class="FileAppender">
         <encoder class="LogstashEncoder">
             <fieldNames class="ShortenedFieldNames">
@@ -115,9 +92,6 @@
     </root>
     <logger name="EventsLogger" level="info" additivity="false">
         <appender-ref ref="EventsAppender"/>
-    </logger>
-    <logger name="MetricsLogger" level="info" additivity="false">
-        <appender-ref ref="MetricsAppender"/>
     </logger>
     <logger name="SettingsLogger" level="info" additivity="false">
         <appender-ref ref="SettingsAppender"/>

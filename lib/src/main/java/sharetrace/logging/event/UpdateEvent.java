@@ -6,10 +6,10 @@ import sharetrace.model.message.RiskScoreMessage;
 
 public record UpdateEvent(
     int self, RiskScoreMessage previous, RiskScoreMessage current, Instant timestamp)
-    implements Event {
+    implements UserEvent {
 
   public UpdateEvent(
       ActorRef<?> self, RiskScoreMessage previous, RiskScoreMessage current, Instant timestamp) {
-    this(Event.toInt(self), previous, current, timestamp);
+    this(UserEvent.toInt(self), previous, current, timestamp);
   }
 }
