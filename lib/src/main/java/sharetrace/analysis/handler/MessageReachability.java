@@ -11,11 +11,13 @@ import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import org.jgrapht.Graph;
 import org.jgrapht.GraphPath;
 import org.jgrapht.alg.shortestpath.IntVertexDijkstraShortestPath;
+import org.jgrapht.graph.DefaultEdge;
 import sharetrace.analysis.model.ReachabilityResult;
 import sharetrace.analysis.model.ReachabilityResultBuilder;
 import sharetrace.graph.Graphs;
@@ -109,7 +111,7 @@ public final class MessageReachability implements EventHandler {
         .build();
   }
 
-  private IntSet targetsOfOrigin(int origin, List<int[]> edges) {
+  private IntSet targetsOfOrigin(int origin, Collection<int[]> edges) {
     var targets = new IntOpenHashSet(edges.size());
     for (var edge : edges) {
       addIfNotOrigin(edge[0], origin, targets);
@@ -118,13 +120,13 @@ public final class MessageReachability implements EventHandler {
     return targets;
   }
 
-  private void addIfNotOrigin(int target, int origin, IntSet targets) {
+  private void addIfNotOrigin(int target, int origin, Collection<Integer> targets) {
     if (target != origin) {
       targets.add(target);
     }
   }
 
-  private Graph<Integer, ?> buildReachabilityGraph(List<int[]> edges) {
+  private Graph<Integer, DefaultEdge> buildReachabilityGraph(Iterable<int[]> edges) {
     var graph = Graphs.newDirectedGraph();
     for (var edge : edges) {
       graph.addVertex(edge[0]);
