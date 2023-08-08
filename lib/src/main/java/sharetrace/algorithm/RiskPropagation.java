@@ -37,7 +37,7 @@ public record RiskPropagation(
     var context = contextWithMdc();
     MDC.setContextMap(context.mdc());
     logSettings(context);
-    invoke(context);
+    run(context);
   }
 
   private Context contextWithMdc() {
@@ -58,7 +58,7 @@ public record RiskPropagation(
         .build();
   }
 
-  private void invoke(Context context) {
+  private void run(Context context) {
     try {
       newInstance(context).getWhenTerminated().toCompletableFuture().get();
     } catch (InterruptedException exception) {
