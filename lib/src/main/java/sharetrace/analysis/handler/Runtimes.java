@@ -7,10 +7,14 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.function.Predicate;
+import sharetrace.analysis.model.CreateUsersRuntime;
 import sharetrace.analysis.model.MessagePassingRuntime;
 import sharetrace.analysis.model.RiskPropagationRuntime;
 import sharetrace.analysis.model.Runtime;
+import sharetrace.analysis.model.SendContactsRuntime;
+import sharetrace.analysis.model.SendRiskScoresRuntime;
 import sharetrace.logging.event.CreateUsersEnd;
 import sharetrace.logging.event.CreateUsersStart;
 import sharetrace.logging.event.Event;
@@ -57,19 +61,21 @@ public final class Runtimes implements EventHandler {
   }
 
   private Runtime createUsersRuntime() {
-    return getRuntime(CreateUsersStart.class, CreateUsersEnd.class);
+    return getRuntime(CreateUsersStart.class, CreateUsersEnd.class, CreateUsersRuntime::new);
   }
 
   private Runtime sendContactsRuntime() {
-    return getRuntime(SendContactsStart.class, SendContactsEnd.class);
+    return getRuntime(SendContactsStart.class, SendContactsEnd.class, SendContactsRuntime::new);
   }
 
   private Runtime sendRiskScoresRuntime() {
-    return getRuntime(SendRiskScoresStart.class, SendRiskScoresEnd.class);
+    return getRuntime(
+        SendRiskScoresStart.class, SendRiskScoresEnd.class, SendRiskScoresRuntime::new);
   }
 
   private Runtime riskPropagationRuntime() {
-    return getRuntime(RiskPropagationStart.class, RiskPropagationEnd.class);
+    return getRuntime(
+        RiskPropagationStart.class, RiskPropagationEnd.class, RiskPropagationRuntime::new);
   }
 
   private Runtime messagePassingRuntime() {
@@ -82,12 +88,13 @@ public final class Runtimes implements EventHandler {
     }
   }
 
-  private Runtime getRuntime(Class<?> startEvent, Class<?> endEvent) {
+  private Runtime getRuntime(
+      Class<?> startEvent, Class<?> endEvent, Function<Duration, Runtime> factory) {
     var notLogged = notLogged(startEvent, endEvent);
     if (notLogged.isEmpty()) {
       var start = events.get(startEvent);
       var end = events.get(endEvent);
-      return new RiskPropagationRuntime(Duration.between(start, end));
+      return factory.apply(Duration.between(start, end));
     } else {
       throw missingEventsException(notLogged);
     }
