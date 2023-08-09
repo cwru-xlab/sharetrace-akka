@@ -63,10 +63,10 @@ public record Context(
   }
 
   public RecordLogger<Event> eventsLogger() {
-    return new RecordLogger<>(EVENTS_LOGGER, Event.key(), loggable);
+    return new RecordLogger<>(EVENTS_LOGGER, Event.key(), loggable());
   }
 
   public RecordLogger<Settings> settingsLogger() {
-    return new RecordLogger<>(SETTINGS_LOGGER, Settings.key(), loggable);
+    return new RecordLogger<>(SETTINGS_LOGGER, Settings.key(), loggable());
   }
 }
