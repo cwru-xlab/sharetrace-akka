@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import sharetrace.logging.event.ContactEvent;
 import sharetrace.logging.event.CreateUsersEnd;
 import sharetrace.logging.event.CreateUsersStart;
+import sharetrace.logging.event.LastEvent;
 import sharetrace.logging.event.ReceiveEvent;
 import sharetrace.logging.event.RiskPropagationEnd;
 import sharetrace.logging.event.RiskPropagationStart;
@@ -24,6 +25,7 @@ import sharetrace.logging.setting.ExperimentSettings;
   @Type(value = ReceiveEvent.class, name = "R"),
   @Type(value = SendEvent.class, name = "S"),
   @Type(value = UpdateEvent.class, name = "U"),
+  @Type(value = LastEvent.class, name = "L"),
   // Risk propagation events
   @Type(value = CreateUsersStart.class, name = "CUS"),
   @Type(value = CreateUsersEnd.class, name = "CUE"),

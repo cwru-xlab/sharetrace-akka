@@ -4,8 +4,6 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -79,32 +77,27 @@ public final class Runtimes implements EventHandler {
   }
 
   private Runtime messagePassingRuntime() {
-    var notLogged = notLogged(SendContactsStart.class);
-    if (notLogged.isEmpty()) {
-      var start = events.get(SendContactsStart.class);
+    var startEvent = SendContactsStart.class;
+    if (isLogged(startEvent)) {
+      var start = events.get(startEvent);
       return new MessagePassingRuntime(Duration.between(start, lastUserEvent));
     } else {
-      throw missingEventsException(notLogged);
+      return UnknownRuntime.INSTANCE;
     }
   }
 
   private Runtime getRuntime(
       Class<?> startEvent, Class<?> endEvent, Function<Duration, Runtime> factory) {
-    var notLogged = notLogged(startEvent, endEvent);
-    if (notLogged.isEmpty()) {
+    if (isLogged(startEvent, endEvent)) {
       var start = events.get(startEvent);
       var end = events.get(endEvent);
       return factory.apply(Duration.between(start, end));
     } else {
-      throw missingEventsException(notLogged);
+      return UnknownRuntime.INSTANCE;
     }
   }
 
-  private List<Class<?>> notLogged(Class<?>... evenTypes) {
-    return Arrays.stream(evenTypes).filter(Predicate.not(events::containsKey)).toList();
-  }
-
-  private RuntimeException missingEventsException(Collection<Class<?>> events) {
-    return new IllegalStateException("Expected events were not logged: " + events);
+  private boolean isLogged(Class<?>... evenTypes) {
+    return Arrays.stream(evenTypes).allMatch(events::containsKey);
   }
 }

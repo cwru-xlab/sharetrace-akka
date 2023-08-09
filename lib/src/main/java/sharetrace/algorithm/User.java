@@ -3,6 +3,7 @@ package sharetrace.algorithm;
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
 import akka.actor.typed.DispatcherSelector;
+import akka.actor.typed.PostStop;
 import akka.actor.typed.Props;
 import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
@@ -11,12 +12,14 @@ import akka.actor.typed.javadsl.Receive;
 import akka.actor.typed.javadsl.TimerScheduler;
 import java.time.Instant;
 import java.time.InstantSource;
+import java.util.function.Function;
 import sharetrace.cache.Cache;
 import sharetrace.cache.RangeCache;
 import sharetrace.cache.StandardCache;
 import sharetrace.logging.RecordLogger;
 import sharetrace.logging.event.ContactEvent;
 import sharetrace.logging.event.Event;
+import sharetrace.logging.event.LastEvent;
 import sharetrace.logging.event.ReceiveEvent;
 import sharetrace.logging.event.SendEvent;
 import sharetrace.logging.event.UpdateEvent;
@@ -41,6 +44,7 @@ final class User extends AbstractBehavior<UserMessage> {
   private final Cache<ActorRef<?>, Contact> contacts;
 
   private RiskScoreMessage exposureScore;
+  private Instant lastEvent;
 
   private User(
       ActorContext<UserMessage> ctx,
@@ -85,6 +89,7 @@ final class User extends AbstractBehavior<UserMessage> {
         .onMessage(ContactMessage.class, this::handle)
         .onMessage(RiskScoreMessage.class, this::handle)
         .onMessage(IdleTimeout.class, this::handle)
+        .onSignal(PostStop.class, this::handle)
         .build();
   }
 
@@ -134,6 +139,11 @@ final class User extends AbstractBehavior<UserMessage> {
     return this;
   }
 
+  private Behavior<UserMessage> handle(PostStop stop) {
+    logLastEvent();
+    return this;
+  }
+
   private RiskScoreMessage transmitted(RiskScoreMessage message) {
     var score = message.score().mapValue(value -> value * parameters.transmissionRate());
     return new RiskScoreMessage(self(), score, message.id());
@@ -149,25 +159,29 @@ final class User extends AbstractBehavior<UserMessage> {
   }
 
   private void logContactEvent(Contact contact) {
-    logger.log(
-        ContactEvent.class,
-        () -> new ContactEvent(self(), contact.self(), contact.timestamp(), timestamp()));
+    var contactTime = contact.timestamp();
+    logEvent(ContactEvent.class, t -> new ContactEvent(self(), contact.self(), contactTime, t));
   }
 
   private void logSendEvent(ActorRef<?> contact, RiskScoreMessage message) {
-    logger.log(SendEvent.class, () -> new SendEvent(self(), contact, message, timestamp()));
+    logEvent(SendEvent.class, t -> new SendEvent(self(), contact, message, t));
   }
 
   private void logReceiveEvent(RiskScoreMessage message) {
-    logger.log(ReceiveEvent.class, () -> new ReceiveEvent(self(), message, timestamp()));
+    logEvent(ReceiveEvent.class, t -> new ReceiveEvent(self(), message, t));
   }
 
   private void logUpdateEvent(RiskScoreMessage previous, RiskScoreMessage current) {
-    logger.log(UpdateEvent.class, () -> new UpdateEvent(self(), previous, current, timestamp()));
+    logEvent(UpdateEvent.class, t -> new UpdateEvent(self(), previous, current, t));
   }
 
-  private Instant timestamp() {
-    return timeSource.instant();
+  private void logLastEvent() {
+    logger.log(LastEvent.class, () -> new LastEvent(self(), lastEvent));
+  }
+
+  private <T extends Event> void logEvent(Class<T> type, Function<Instant, T> factory) {
+    lastEvent = timeSource.instant();
+    logger.log(type, () -> factory.apply(lastEvent));
   }
 
   private ActorRef<UserMessage> self() {
