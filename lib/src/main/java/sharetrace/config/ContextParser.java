@@ -10,13 +10,13 @@ import java.time.InstantSource;
 import java.time.ZoneId;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 import org.apache.commons.math3.random.RandomGenerator;
 import sharetrace.logging.LogRecord;
 import sharetrace.model.factory.RandomGeneratorFactory;
 import sharetrace.util.Context;
 import sharetrace.util.ContextBuilder;
-import sharetrace.util.IdFactory;
 
 public record ContextParser(Config contextConfig) implements ConfigParser<Context> {
 
@@ -49,7 +49,8 @@ public record ContextParser(Config contextConfig) implements ConfigParser<Contex
 
   private long getSeed(Config config) {
     var seed = config.getString("seed");
-    return seed.equals("any") ? IdFactory.newSeed() : Long.parseLong(seed);
+    var random = ThreadLocalRandom.current().nextLong(Long.MAX_VALUE);
+    return seed.equals("any") ? random : Long.parseLong(seed);
   }
 
   private Instant getReferenceTime(Config config, InstantSource timeSource) {

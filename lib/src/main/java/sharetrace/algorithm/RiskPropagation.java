@@ -18,14 +18,15 @@ import sharetrace.model.factory.RiskScoreFactory;
 import sharetrace.model.message.Run;
 import sharetrace.util.Context;
 import sharetrace.util.ContextBuilder;
-import sharetrace.util.IdFactory;
+import sharetrace.util.KeyFactory;
 
 @Buildable
 public record RiskPropagation(
     Context context,
     Parameters parameters,
     RiskScoreFactory riskScoreFactory,
-    ContactNetwork contactNetwork)
+    ContactNetwork contactNetwork,
+    KeyFactory keyFactory)
     implements Runnable {
 
   public void run(int iterations) {
@@ -42,7 +43,7 @@ public record RiskPropagation(
 
   private Context contextWithMdc() {
     var mdc = new Object2ObjectOpenHashMap<>(context.mdc());
-    mdc.put(LogRecord.key(), IdFactory.newKey());
+    mdc.put(LogRecord.key(), keyFactory.getKey());
     return ContextBuilder.from(context).withMdc(mdc);
   }
 

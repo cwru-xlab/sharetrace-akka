@@ -3,15 +3,15 @@ package sharetrace.model.message;
 import akka.actor.typed.ActorRef;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.time.Instant;
+import java.util.concurrent.ThreadLocalRandom;
 import sharetrace.model.RiskScore;
 import sharetrace.model.TemporalScore;
-import sharetrace.util.IdFactory;
 
 public record RiskScoreMessage(ActorRef<UserMessage> sender, RiskScore score, long id)
     implements TemporalScore, UserMessage {
 
   public RiskScoreMessage(ActorRef<UserMessage> sender, RiskScore score) {
-    this(sender, score, IdFactory.newLong());
+    this(sender, score, ThreadLocalRandom.current().nextLong(Long.MAX_VALUE));
   }
 
   @Override
