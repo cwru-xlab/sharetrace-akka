@@ -58,11 +58,13 @@ public record Parsed(
   }
 
   public List<ContactNetworkFactory> networkFactories() {
-    return networkFactoryParser.parse(config.getConfigList("network-factories"));
+    return config.getConfigList("network-factories").stream()
+        .map(networkFactoryParser::parse)
+        .toList();
   }
 
   public List<DistributedRandom> randoms() {
-    return randomParser.parse(config.getConfigList("distributions"));
+    return config.getConfigList("distributions").stream().map(randomParser::parse).toList();
   }
 
   private List<Float> toFloats(List<Double> doubles) {
