@@ -3,8 +3,8 @@ package sharetrace.graph;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import java.util.Collections;
 import java.util.Map;
 import java.util.function.Supplier;
 import org.jgrapht.Graph;
@@ -28,11 +28,11 @@ public final class SimpleContactNetwork extends GraphDelegator<Integer, Temporal
     var newProps = new Object2ObjectOpenHashMap<String, Object>(props);
     newProps.put("nodes", target.vertexSet().size());
     newProps.put("edges", target.edgeSet().size());
-    return Object2ObjectMaps.unmodifiable(newProps);
+    return Collections.unmodifiableMap(newProps);
   }
 
   public SimpleContactNetwork(Graph<Integer, TemporalEdge> target, String type) {
-    this(target, type, Object2ObjectMaps.emptyMap());
+    this(target, type, Map.of());
   }
 
   @JsonProperty
