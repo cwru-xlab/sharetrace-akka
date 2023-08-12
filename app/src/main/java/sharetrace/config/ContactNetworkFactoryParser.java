@@ -77,7 +77,7 @@ public record ContactNetworkFactoryParser(
   }
 
   private ContactNetworkFactory fileFactory(Config config) {
-    return FileContactNetworkFactoryBuilder.<Integer>create()
+    return FileContactNetworkFactoryBuilder.create()
         .path(Path.of(config.getString("path")))
         .delimiter(config.getString("delimiter"))
         .timestamp(context.referenceTime())
