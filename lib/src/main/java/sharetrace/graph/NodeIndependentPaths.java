@@ -1,5 +1,6 @@
 package sharetrace.graph;
 
+import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -19,8 +20,7 @@ import org.jheaps.tree.FibonacciHeap;
  * Computes the approximate number of node-independent paths (<a
  * href=https://dx.doi.org/10.2139/ssrn.1831790>White and Newman 2011</a>).
  */
-public record NodeIndependentPaths(
-    Graph<Integer, DefaultEdge> graph, ExecutorService executorService) {
+public record NodeIndependentPaths(Graph<Integer, DefaultEdge> graph, ExecutorService executor) {
 
   public NodeIndependentPaths(Graph<Integer, DefaultEdge> graph) {
     this(graph, Executors.newWorkStealingPool());
@@ -32,7 +32,7 @@ public record NodeIndependentPaths(
 
   public int compute(int source, int target, int maxFind) {
     var task = newTask(source, target, maxFind);
-    return getResult(executorService.submit(task));
+    return getResult(executor.submit(task));
   }
 
   public List<Integer> computeForSource(int source) {
@@ -52,10 +52,14 @@ public record NodeIndependentPaths(
   }
 
   private List<Callable<Integer>> newTasks(int source, int maxFind) {
-    return graph.vertexSet().stream()
-        .filter(target -> source != target)
-        .map(target -> newTask(source, target, maxFind))
-        .collect(ObjectArrayList.toListWithExpectedSize(graph.vertexSet().size() - 1));
+    var taskCount = graph.vertexSet().size() - 1;
+    var tasks = new ObjectArrayList<Callable<Integer>>(taskCount);
+    for (int target : graph.vertexSet()) {
+      if (source != target) {
+        tasks.add(newTask(source, target, maxFind));
+      }
+    }
+    return tasks;
   }
 
   private List<Callable<Integer>> newTasks(int maxFind) {
@@ -79,7 +83,8 @@ public record NodeIndependentPaths(
 
   private List<Integer> getResults(List<Callable<Integer>> tasks) {
     try {
-      return executorService.invokeAll(tasks).stream().map(this::getResult).toList();
+      return IntArrayList.of(
+          executor.invokeAll(tasks).stream().mapToInt(this::getResult).toArray());
     } catch (InterruptedException exception) {
       Thread.currentThread().interrupt();
       throw new RuntimeException(exception);
