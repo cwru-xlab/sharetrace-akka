@@ -4,7 +4,6 @@ import akka.actor.typed.ActorSystem;
 import akka.actor.typed.Behavior;
 import akka.actor.typed.Terminated;
 import akka.actor.typed.javadsl.Behaviors;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.IntStream;
 import org.slf4j.MDC;
@@ -42,9 +41,7 @@ public record RiskPropagation(
   }
 
   private Context contextWithMdc() {
-    var mdc = new Object2ObjectOpenHashMap<>(context.mdc());
-    mdc.put(LogRecord.key(), keyFactory.getKey());
-    return ContextBuilder.from(context).withMdc(mdc);
+    return ContextBuilder.builder(context).addMdc(LogRecord.key(), keyFactory.getKey()).build();
   }
 
   private void logSettings(Context context) {

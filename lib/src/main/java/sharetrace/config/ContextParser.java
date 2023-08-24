@@ -1,13 +1,10 @@
 package sharetrace.config;
 
 import com.typesafe.config.Config;
-import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
-import it.unimi.dsi.fastutil.objects.ObjectSets;
 import java.time.Instant;
 import java.time.InstantSource;
 import java.time.ZoneId;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
@@ -37,9 +34,9 @@ public record ContextParser(Config contextConfig) implements ConfigParser<Contex
 
   private Map<String, String> getMdc(Config config) {
     var map = config.getObject("mdc").unwrapped();
-    var mdc = new Object2ObjectOpenHashMap<String, String>(map.size());
+    var mdc = new HashMap<String, String>(map.size());
     map.forEach((k, v) -> mdc.put(k, (String) v));
-    return Object2ObjectMaps.unmodifiable(mdc);
+    return mdc;
   }
 
   private InstantSource getTimeSource(Config config) {
@@ -68,6 +65,6 @@ public record ContextParser(Config contextConfig) implements ConfigParser<Contex
     var loggable = config.getStringList("loggable");
     return loggable.stream()
         .<Class<? extends LogRecord>>map(ClassFactory::getClass)
-        .collect(Collectors.collectingAndThen(ObjectOpenHashSet.toSet(), ObjectSets::unmodifiable));
+        .collect(Collectors.toSet());
   }
 }

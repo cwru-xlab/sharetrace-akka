@@ -1,9 +1,9 @@
 package sharetrace.analysis.handler;
 
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -33,7 +33,7 @@ public final class Runtimes implements EventHandler {
   private Instant lastUserEvent;
 
   public Runtimes() {
-    events = new Object2ObjectOpenHashMap<>();
+    events = new HashMap<>();
     lastUserEvent = Instant.MIN;
   }
 

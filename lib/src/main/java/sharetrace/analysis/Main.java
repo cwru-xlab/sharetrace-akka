@@ -2,12 +2,12 @@ package sharetrace.analysis;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import sharetrace.analysis.handler.EventHandler;
 import sharetrace.analysis.handler.EventHandlers;
@@ -22,7 +22,7 @@ public final class Main {
 
   public static void main(String[] args) {
     var config = getConfig();
-    var handlers = newEventHandlersMap();
+    var handlers = new HashMap<String, EventHandler>();
     try (var stream = newEventRecordStream()) {
       stream.forEach(record -> processRecord(record, handlers, config));
     } catch (IOException exception) {
@@ -36,18 +36,10 @@ public final class Main {
     return ConfigFactory.load().getConfig("sharetrace.analysis");
   }
 
-  private static Map<String, EventHandler> newEventHandlersMap() {
-    return new Object2ObjectOpenHashMap<>();
-  }
-
   private static Stream<EventRecord> newEventRecordStream() throws IOException {
     var directory = Path.of(System.getProperty("config.logs"));
     var parser = newEventRecordParser();
     return new EventRecordStream(parser).open(directory);
-  }
-
-  private static Parser<String, EventRecord> newEventRecordParser() {
-    return new EventRecordParser(Jackson.newObjectMapper());
   }
 
   private static void processRecord(
@@ -56,10 +48,10 @@ public final class Main {
   }
 
   private static EventHandler newEventHandler(String key, Config config) {
-    var handlers =
-        config.getStringList("handlers").stream()
-            .<EventHandler>map(InstanceFactory::getInstance)
-            .collect(ObjectArrayList.toList());
-    return new EventHandlers(key, handlers);
+    return config.getStringList("handlers").stream()
+        .<EventHandler>map(InstanceFactory::getInstance)
+        .collect(
+            Collectors.collectingAndThen(
+                Collectors.toList(), handlers -> new EventHandlers(key, handlers)));
   }
 }

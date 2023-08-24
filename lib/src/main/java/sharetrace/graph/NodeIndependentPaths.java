@@ -1,7 +1,6 @@
 package sharetrace.graph;
 
-import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -52,21 +51,17 @@ public record NodeIndependentPaths(Graph<Integer, DefaultEdge> graph, ExecutorSe
   }
 
   private List<Callable<Integer>> newTasks(int source, int maxFind) {
-    var taskCount = graph.vertexSet().size() - 1;
-    var tasks = new ObjectArrayList<Callable<Integer>>(taskCount);
-    for (int target : graph.vertexSet()) {
-      if (source != target) {
-        tasks.add(newTask(source, target, maxFind));
-      }
-    }
-    return tasks;
+    return graph.vertexSet().stream()
+        .filter(target -> source != target)
+        .map(target -> newTask(source, target, maxFind))
+        .toList();
   }
 
   private List<Callable<Integer>> newTasks(int maxFind) {
     var isDirected = graph.getType().isDirected();
     var nodes = graph.vertexSet();
     var taskCount = nodes.size() * (nodes.size() - 1) / (isDirected ? 1 : 2);
-    var tasks = new ObjectArrayList<Callable<Integer>>(taskCount);
+    var tasks = new ArrayList<Callable<Integer>>(taskCount);
     for (int source : nodes) {
       for (int target : nodes) {
         if ((isDirected && source != target) || (!isDirected && source < target)) {
@@ -83,8 +78,7 @@ public record NodeIndependentPaths(Graph<Integer, DefaultEdge> graph, ExecutorSe
 
   private List<Integer> getResults(List<Callable<Integer>> tasks) {
     try {
-      return IntArrayList.of(
-          executor.invokeAll(tasks).stream().mapToInt(this::getResult).toArray());
+      return executor.invokeAll(tasks).stream().map(this::getResult).toList();
     } catch (InterruptedException exception) {
       Thread.currentThread().interrupt();
       throw new RuntimeException(exception);

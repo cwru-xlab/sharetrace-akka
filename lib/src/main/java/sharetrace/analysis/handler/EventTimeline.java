@@ -1,8 +1,8 @@
 package sharetrace.analysis.handler;
 
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import sharetrace.analysis.model.LoggedEvent;
@@ -16,7 +16,7 @@ public final class EventTimeline implements EventHandler {
   private Instant min;
 
   public EventTimeline() {
-    timeline = new ObjectArrayList<>();
+    timeline = new ArrayList<>();
     min = Instant.EPOCH;
   }
 

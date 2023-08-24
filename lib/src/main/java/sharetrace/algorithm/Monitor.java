@@ -8,10 +8,8 @@ import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
-import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import java.time.Instant;
 import java.util.BitSet;
-import java.util.List;
 import java.util.function.Function;
 import sharetrace.graph.ContactNetwork;
 import sharetrace.logging.RecordLogger;
@@ -108,36 +106,35 @@ final class Monitor extends AbstractBehavior<MonitorMessage> {
     return this;
   }
 
-  private List<ActorRef<UserMessage>> newUsers() {
+  @SuppressWarnings("unchecked")
+  private ActorRef<UserMessage>[] newUsers() {
     logEvent(CreateUsersStart.class, CreateUsersStart::new);
-    var users = new ObjectArrayList<ActorRef<UserMessage>>(userCount);
+    var users = new ActorRef[userCount];
     for (int key : contactNetwork.vertexSet()) {
       var user = User.of(context, parameters, getContext().getSelf(), new IdleTimeout(key));
-      var reference = getContext().spawn(user, String.valueOf(key), User.props());
-      getContext().watch(reference);
-      users.add(reference);
+      users[key] = getContext().spawn(user, String.valueOf(key), User.props());
+      getContext().watch(users[key]);
     }
     logEvent(CreateUsersEnd.class, CreateUsersEnd::new);
     return users;
   }
 
-  private void sendContacts(List<ActorRef<UserMessage>> users) {
+  private void sendContacts(ActorRef<UserMessage>[] users) {
     logEvent(SendContactsStart.class, SendContactsStart::new);
     for (var edge : contactNetwork.edgeSet()) {
-      var user1 = users.get(contactNetwork.getEdgeSource(edge));
-      var user2 = users.get(contactNetwork.getEdgeTarget(edge));
+      var user1 = users[contactNetwork.getEdgeSource(edge)];
+      var user2 = users[contactNetwork.getEdgeTarget(edge)];
       user1.tell(new ContactMessage(user2, edge.getTime(), parameters.contactExpiry()));
       user2.tell(new ContactMessage(user1, edge.getTime(), parameters.contactExpiry()));
     }
     logEvent(SendContactsEnd.class, SendContactsEnd::new);
   }
 
-  private void sendRiskScores(List<ActorRef<UserMessage>> users) {
+  private void sendRiskScores(ActorRef<UserMessage>[] users) {
     logEvent(SendRiskScoresStart.class, SendRiskScoresStart::new);
     for (var i = 0; i < userCount; i++) {
-      var user = users.get(i);
       var score = scoreFactory.getRiskScore(i);
-      user.tell(new RiskScoreMessage(user, score));
+      users[i].tell(new RiskScoreMessage(users[i], score));
     }
     logEvent(SendRiskScoresEnd.class, SendRiskScoresEnd::new);
   }
