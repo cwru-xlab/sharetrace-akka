@@ -75,9 +75,9 @@ public record RiskPropagation(
     return Behaviors.setup(
         ctx -> {
           var monitor = Monitor.of(context, parameters, riskScoreFactory, contactNetwork);
-          var reference = ctx.spawn(monitor, Monitor.name(), Monitor.props());
-          ctx.watch(reference);
-          reference.tell(Run.INSTANCE);
+          var ref = ctx.spawn(monitor, Monitor.name(), Monitor.props());
+          ctx.watch(ref);
+          ref.tell(Run.INSTANCE);
           return Behaviors.receive(Void.class)
               .onSignal(Terminated.class, x -> Behaviors.stopped())
               .build();

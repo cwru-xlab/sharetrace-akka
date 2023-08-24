@@ -51,10 +51,7 @@ public record Statistics(
     return stats;
   }
 
-  private static double[] outliers(
-      DescriptiveStatistics stats, double lowerWhisker, double upperWhisker) {
-    return DoubleStream.of(stats.getValues())
-        .filter(v -> v < lowerWhisker || v > upperWhisker)
-        .toArray();
+  private static double[] outliers(DescriptiveStatistics stats, double lower, double upper) {
+    return DoubleStream.of(stats.getValues()).filter(v -> v < lower || v > upper).toArray();
   }
 }

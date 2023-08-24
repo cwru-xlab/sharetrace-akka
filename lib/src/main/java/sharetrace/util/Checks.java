@@ -8,7 +8,7 @@ public final class Checks {
 
   public static <T extends Comparable<T>> void checkRange(T value, Range<T> range, String name) {
     if (!range.contains(value)) {
-      throw new IllegalArgumentException(name + " must be in " + range + "; got " + value);
+      throw new IllegalArgumentException("%s must be in %s; got %s".formatted(name, range, value));
     }
   }
 }

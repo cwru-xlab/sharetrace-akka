@@ -12,7 +12,7 @@ public final class ToClassNameSerializer extends StdSerializer<Object> {
   }
 
   @Override
-  public void serialize(Object value, JsonGenerator generator, SerializerProvider serializers)
+  public void serialize(Object value, JsonGenerator generator, SerializerProvider provider)
       throws IOException {
     generator.writeString(value.getClass().getName());
   }

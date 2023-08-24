@@ -9,10 +9,10 @@ public record NoisyRiskScoreFactory(RiskScoreFactory scoreFactory, DistributedRa
 
   @Override
   public RiskScore getRiskScore(int key) {
-    return scoreFactory.getRiskScore(key).mapValue(value -> constrain(value + random.nextFloat()));
+    return scoreFactory.getRiskScore(key).mapValue(this::distort);
   }
 
-  private float constrain(float value) {
-    return Ranges.boundedFloat(value, RiskScore.MIN_VALUE, RiskScore.MAX_VALUE);
+  private float distort(float v) {
+    return Ranges.boundedFloat(v + random.nextFloat(), RiskScore.MIN_VALUE, RiskScore.MAX_VALUE);
   }
 }

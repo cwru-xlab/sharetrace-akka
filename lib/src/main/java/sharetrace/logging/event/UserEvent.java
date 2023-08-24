@@ -4,8 +4,8 @@ import akka.actor.typed.ActorRef;
 
 public interface UserEvent extends Event {
 
-  static int toInt(ActorRef<?> actorRef) {
-    return Integer.parseInt(actorRef.path().name());
+  static int toInt(ActorRef<?> ref) {
+    return Integer.parseInt(ref.path().name());
   }
 
   int self();
