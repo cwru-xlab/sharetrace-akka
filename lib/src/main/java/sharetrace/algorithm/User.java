@@ -94,12 +94,14 @@ final class User extends AbstractBehavior<UserMessage> {
   }
 
   private Behavior<UserMessage> handle(ContactMessage message) {
+    var contact = new Contact(message, parameters, scores, timeSource);
     if (message.isAlive(timeSource)) {
-      var contact = new Contact(message, parameters, scores, timeSource);
       contacts.put(contact.self(), contact);
       logContactEvent(contact);
-      sendCachedMessage(contact);
     }
+    /* Always try to send a new contact a risk score. An expired contact may still receive a risk
+    score if it is "relevant" (i.e., within the time buffer of the contact time). */
+    sendCachedMessage(contact);
     return this;
   }
 
