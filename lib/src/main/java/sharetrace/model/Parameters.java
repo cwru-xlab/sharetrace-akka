@@ -7,16 +7,16 @@ import sharetrace.util.Checks;
 
 @Buildable
 public record Parameters(
-    float transmissionRate,
-    float sendCoefficient,
+    double transmissionRate,
+    double sendCoefficient,
     Duration timeBuffer,
     Duration scoreExpiry,
     Duration contactExpiry,
     Duration idleTimeout) {
 
   public Parameters {
-    Checks.checkRange(transmissionRate, Range.closed(0f, 1f), "transmissionRate");
-    Checks.checkRange(sendCoefficient, Range.atLeast(0f), "sendCoefficient");
+    Checks.checkRange(transmissionRate, Range.closed(0d, 1d), "transmissionRate");
+    Checks.checkRange(sendCoefficient, Range.atLeast(0d), "sendCoefficient");
     Checks.checkRange(timeBuffer, Range.atLeast(Duration.ZERO), "timeBuffer");
     Checks.checkRange(scoreExpiry, Range.atLeast(Duration.ZERO), "scoreExpiry");
     Checks.checkRange(contactExpiry, Range.atLeast(Duration.ZERO), "contactExpiry");

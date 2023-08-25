@@ -13,8 +13,8 @@ public record ParametersParser() implements ConfigParser<Parameters> {
         .scoreExpiry(config.getDuration("score-expiry"))
         .idleTimeout(config.getDuration("idle-timeout"))
         .timeBuffer(config.getDuration("time-buffer"))
-        .sendCoefficient((float) config.getDouble("send-coefficient"))
-        .transmissionRate((float) config.getDouble("transmission-rate"))
+        .sendCoefficient(config.getDouble("send-coefficient"))
+        .transmissionRate(config.getDouble("transmission-rate"))
         .build();
   }
 }

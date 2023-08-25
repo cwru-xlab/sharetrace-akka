@@ -21,7 +21,7 @@ public record RiskScoreMessage(ActorRef<UserMessage> sender, RiskScore score, lo
   }
 
   @Override
-  public float value() {
+  public double value() {
     return score.value();
   }
 

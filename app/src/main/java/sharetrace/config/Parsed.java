@@ -36,12 +36,12 @@ public record Parsed(
     return config.getInt("networks");
   }
 
-  public List<Float> transmissionRates() {
-    return toFloats(config.getDoubleList("transmission-rates"));
+  public List<Double> transmissionRates() {
+    return List.copyOf(config.getDoubleList("transmission-rates"));
   }
 
-  public List<Float> sendCoefficients() {
-    return toFloats(config.getDoubleList("send-coefficients"));
+  public List<Double> sendCoefficients() {
+    return List.copyOf(config.getDoubleList("send-coefficients"));
   }
 
   public RiskScoreFactory scoreFactory() {
@@ -64,9 +64,5 @@ public record Parsed(
 
   public List<DistributedRandom> randoms() {
     return config.getConfigList("distributions").stream().map(randomParser::parse).toList();
-  }
-
-  private List<Float> toFloats(List<Double> doubles) {
-    return doubles.stream().map(Double::floatValue).toList();
   }
 }

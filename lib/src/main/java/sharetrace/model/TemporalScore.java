@@ -9,7 +9,7 @@ public interface TemporalScore extends Expirable, Comparable<TemporalScore> {
           .thenComparing(TemporalScore::timestamp)
           .thenComparing(TemporalScore::expiresAt);
 
-  float value();
+  double value();
 
   @Override
   @SuppressWarnings("NullableProblems")

@@ -12,6 +12,6 @@ public record RandomRiskScoreFactory(
 
   @Override
   public RiskScore getRiskScore(int key) {
-    return new RiskScore(random.nextFloat(), timeFactory.getTime(), scoreExpiry);
+    return new RiskScore(random.nextDouble(), timeFactory.getTime(), scoreExpiry);
   }
 }

@@ -9,23 +9,19 @@ public interface DistributedRandom {
   static DistributedRandom from(RealDistribution distribution) {
     var min = distribution.getSupportLowerBound();
     var max = distribution.getSupportUpperBound();
-    return () -> Ranges.normalized(distribution.sample(), min, max);
+    return () -> Doubles.normalized(distribution.sample(), min, max);
   }
 
   static DistributedRandom from(IntegerDistribution distribution) {
     var min = distribution.getSupportLowerBound();
     var max = distribution.getSupportUpperBound();
-    return () -> Ranges.normalized(distribution.sample(), min, max);
+    return () -> Doubles.normalized(distribution.sample(), min, max);
   }
 
   double nextDouble();
 
   default double nextDouble(double scale) {
     return nextDouble() * scale;
-  }
-
-  default float nextFloat() {
-    return Ranges.finiteFloat(nextDouble());
   }
 
   default long nextLong(double scale) {

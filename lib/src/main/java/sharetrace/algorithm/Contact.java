@@ -19,7 +19,7 @@ final class Contact implements Expirable, Comparable<Contact> {
   private final Instant timestamp;
   private final Instant bufferedTimestamp;
   private final Instant expiresAt;
-  private final float sendCoefficient;
+  private final double sendCoefficient;
   private final Cache<?, RiskScoreMessage> scores;
   private final InstantSource timeSource;
 
