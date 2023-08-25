@@ -18,7 +18,7 @@ public record RandomTimeFactory(DistributedRandom random, Duration range, Instan
 
   @Override
   public Instant getTime() {
-    var offset = random.nextLong(range.toNanos());
-    return timestamp.minusNanos(offset);
+    var offset = random.nextLong(range.toMillis());
+    return timestamp.minusMillis(offset);
   }
 }
