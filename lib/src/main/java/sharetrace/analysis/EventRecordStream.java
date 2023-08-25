@@ -17,8 +17,8 @@ public record EventRecordStream(Parser<String, EventRecord> parser) {
   public Stream<EventRecord> open(Path directory) throws IOException {
     return Files.list(directory)
         .filter(this::isEventLog)
-        .sorted(this::compareEventLogs)
-        .flatMap(this::streamRecords)
+        .sorted(this::compare)
+        .flatMap(this::records)
         .map(parser::parse);
   }
 
@@ -26,7 +26,7 @@ public record EventRecordStream(Parser<String, EventRecord> parser) {
     return filename(path).startsWith("event") && (isCompressed(path) || isUncompressed(path));
   }
 
-  private Stream<String> streamRecords(Path path) {
+  private Stream<String> records(Path path) {
     var buffer = 8192; // Default buffer size used by BufferedReader
     try {
       var input = Files.newInputStream(path);
@@ -40,13 +40,13 @@ public record EventRecordStream(Parser<String, EventRecord> parser) {
     }
   }
 
-  private int compareEventLogs(Path path1, Path path2) {
+  private int compare(Path left, Path right) {
     /* Compressed event logs include events that occurred before events in non-compressed logs, so
     they should be read first. If both event logs are (non-)compressed, then compare normally. */
-    if (isCompressed(path1) ^ isCompressed(path2)) {
-      return isCompressed(path1) ? -1 : 1;
+    if (isCompressed(left) ^ isCompressed(right)) {
+      return isCompressed(left) ? -1 : 1;
     } else {
-      return path1.compareTo(path2);
+      return left.compareTo(right);
     }
   }
 

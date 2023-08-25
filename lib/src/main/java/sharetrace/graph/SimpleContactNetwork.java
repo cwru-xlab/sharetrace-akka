@@ -20,10 +20,10 @@ public final class SimpleContactNetwork extends GraphDelegator<Integer, Temporal
       Graph<Integer, TemporalEdge> target, String type, Map<String, ?> props) {
     super(target);
     this.type = type;
-    this.props = withGraphSize(target, props);
+    this.props = propsWithGraphSize(target, props);
   }
 
-  private Map<String, ?> withGraphSize(Graph<?, ?> target, Map<String, ?> props) {
+  private Map<String, ?> propsWithGraphSize(Graph<?, ?> target, Map<String, ?> props) {
     var newProps = new HashMap<String, Object>(props);
     newProps.put("nodes", target.vertexSet().size());
     newProps.put("edges", target.edgeSet().size());
