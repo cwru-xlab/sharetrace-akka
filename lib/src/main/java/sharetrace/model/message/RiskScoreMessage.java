@@ -7,17 +7,11 @@ import java.util.concurrent.ThreadLocalRandom;
 import sharetrace.model.RiskScore;
 import sharetrace.model.TemporalScore;
 
-public record RiskScoreMessage(ActorRef<UserMessage> sender, RiskScore score, long id)
+public record RiskScoreMessage(@JsonIgnore ActorRef<UserMessage> sender, RiskScore score, long id)
     implements TemporalScore, UserMessage {
 
   public RiskScoreMessage(ActorRef<UserMessage> sender, RiskScore score) {
     this(sender, score, ThreadLocalRandom.current().nextLong(Long.MAX_VALUE));
-  }
-
-  @Override
-  @JsonIgnore
-  public ActorRef<UserMessage> sender() {
-    return sender;
   }
 
   @Override
