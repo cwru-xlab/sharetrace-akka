@@ -12,7 +12,6 @@ import java.time.Instant;
 import java.util.BitSet;
 import java.util.function.Function;
 import sharetrace.graph.ContactNetwork;
-import sharetrace.logging.RecordLogger;
 import sharetrace.logging.event.CreateUsersEnd;
 import sharetrace.logging.event.CreateUsersStart;
 import sharetrace.logging.event.Event;
@@ -35,7 +34,6 @@ import sharetrace.util.Context;
 final class Monitor extends AbstractBehavior<MonitorMessage> {
 
   private final Context context;
-  private final RecordLogger<Event> logger;
   private final Parameters parameters;
   private final RiskScoreFactory scoreFactory;
   private final ContactNetwork contactNetwork;
@@ -50,7 +48,6 @@ final class Monitor extends AbstractBehavior<MonitorMessage> {
       ContactNetwork contactNetwork) {
     super(ctx);
     this.context = context;
-    this.logger = context.eventsLogger();
     this.parameters = parameters;
     this.scoreFactory = scoreFactory;
     this.contactNetwork = contactNetwork;
@@ -140,6 +137,6 @@ final class Monitor extends AbstractBehavior<MonitorMessage> {
   }
 
   private <T extends Event> void logEvent(Class<T> type, Function<Instant, T> factory) {
-    logger.log(type, () -> factory.apply(context.timeSource().instant()));
+    context.eventsLogger().log(type, () -> factory.apply(context.timeSource().instant()));
   }
 }

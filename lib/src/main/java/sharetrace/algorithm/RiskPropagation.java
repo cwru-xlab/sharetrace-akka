@@ -9,9 +9,8 @@ import java.util.stream.IntStream;
 import org.slf4j.MDC;
 import sharetrace.Buildable;
 import sharetrace.graph.ContactNetwork;
-import sharetrace.logging.LogRecord;
-import sharetrace.logging.setting.ExperimentSettings;
-import sharetrace.logging.setting.ExperimentSettingsBuilder;
+import sharetrace.logging.Settings;
+import sharetrace.logging.SettingsBuilder;
 import sharetrace.model.Parameters;
 import sharetrace.model.factory.RiskScoreFactory;
 import sharetrace.model.message.Run;
@@ -41,15 +40,15 @@ public record RiskPropagation(
   }
 
   private Context contextWithMdc() {
-    return ContextBuilder.builder(context).addMdc(LogRecord.key(), keyFactory.getKey()).build();
+    return ContextBuilder.builder(context).addMdc("key", keyFactory.getKey()).build();
   }
 
   private void logSettings(Context context) {
-    context.settingsLogger().log(ExperimentSettings.class, () -> settings(context));
+    context.settingsLogger().log(Settings.class, () -> settings(context));
   }
 
-  private ExperimentSettings settings(Context context) {
-    return ExperimentSettingsBuilder.create()
+  private Settings settings(Context context) {
+    return SettingsBuilder.create()
         .context(context)
         .parameters(parameters)
         .contactNetwork(contactNetwork)

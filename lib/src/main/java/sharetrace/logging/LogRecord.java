@@ -16,7 +16,6 @@ import sharetrace.logging.event.SendEvent;
 import sharetrace.logging.event.SendRiskScoresEnd;
 import sharetrace.logging.event.SendRiskScoresStart;
 import sharetrace.logging.event.UpdateEvent;
-import sharetrace.logging.setting.ExperimentSettings;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({
@@ -36,11 +35,6 @@ import sharetrace.logging.setting.ExperimentSettings;
   @Type(value = RiskPropagationStart.class, name = "RPS"),
   @Type(value = RiskPropagationEnd.class, name = "RPE"),
   // Settings
-  @Type(value = ExperimentSettings.class)
+  @Type(value = Settings.class)
 })
-public interface LogRecord {
-
-  static String key() {
-    return "key";
-  }
-}
+public interface LogRecord {}
