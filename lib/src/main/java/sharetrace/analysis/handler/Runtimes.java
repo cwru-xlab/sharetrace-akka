@@ -6,13 +6,14 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
-import java.util.function.Predicate;
+import sharetrace.analysis.appender.ResultsCollector;
 import sharetrace.analysis.model.CreateUsersRuntime;
 import sharetrace.analysis.model.MessagePassingRuntime;
 import sharetrace.analysis.model.RiskPropagationRuntime;
 import sharetrace.analysis.model.Runtime;
 import sharetrace.analysis.model.SendContactsRuntime;
 import sharetrace.analysis.model.SendRiskScoresRuntime;
+import sharetrace.analysis.model.UnknownRuntime;
 import sharetrace.logging.event.CreateUsersEnd;
 import sharetrace.logging.event.CreateUsersStart;
 import sharetrace.logging.event.Event;
@@ -47,15 +48,13 @@ public final class Runtimes implements EventHandler {
   }
 
   @Override
-  public void onComplete() {
-    var runtimes =
-        new Runtime[] {
-          createUsersRuntime(),
-          sendContactsRuntime(),
-          sendRiskScoresRuntime(),
-          riskPropagationRuntime(),
-          messagePassingRuntime()
-        };
+  public void onComplete(ResultsCollector collector) {
+    collector
+        .add(createUsersRuntime())
+        .add(sendContactsRuntime())
+        .add(sendRiskScoresRuntime())
+        .add(riskPropagationRuntime())
+        .add(messagePassingRuntime());
   }
 
   private Runtime createUsersRuntime() {
@@ -97,7 +96,7 @@ public final class Runtimes implements EventHandler {
     }
   }
 
-  private boolean isLogged(Class<?>... evenTypes) {
-    return Arrays.stream(evenTypes).allMatch(events::containsKey);
+  private boolean isLogged(Class<?>... eventTypes) {
+    return Arrays.stream(eventTypes).allMatch(events::containsKey);
   }
 }
