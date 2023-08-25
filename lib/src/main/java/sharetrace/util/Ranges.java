@@ -1,8 +1,10 @@
 package sharetrace.util;
 
-public final class Doubles {
+import com.google.common.primitives.Doubles;
 
-  private Doubles() {}
+public final class Ranges {
+
+  private Ranges() {}
 
   public static double normalized(double value, double min, double max) {
     return finite(value - min) / finite(max - min);
@@ -14,6 +16,6 @@ public final class Doubles {
 
   @SuppressWarnings("UnstableApiUsage")
   public static double bounded(double value, double min, double max) {
-    return com.google.common.primitives.Doubles.constrainToRange(value, min, max);
+    return Doubles.constrainToRange(value, min, max);
   }
 }

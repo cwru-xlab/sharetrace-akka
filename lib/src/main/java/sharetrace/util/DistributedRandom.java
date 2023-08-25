@@ -9,13 +9,13 @@ public interface DistributedRandom {
   static DistributedRandom from(RealDistribution distribution) {
     var min = distribution.getSupportLowerBound();
     var max = distribution.getSupportUpperBound();
-    return () -> Doubles.normalized(distribution.sample(), min, max);
+    return () -> Ranges.normalized(distribution.sample(), min, max);
   }
 
   static DistributedRandom from(IntegerDistribution distribution) {
     var min = distribution.getSupportLowerBound();
     var max = distribution.getSupportUpperBound();
-    return () -> Doubles.normalized(distribution.sample(), min, max);
+    return () -> Ranges.normalized(distribution.sample(), min, max);
   }
 
   double nextDouble();

@@ -2,7 +2,7 @@ package sharetrace.model.factory;
 
 import sharetrace.model.RiskScore;
 import sharetrace.util.DistributedRandom;
-import sharetrace.util.Doubles;
+import sharetrace.util.Ranges;
 
 public record NoisyRiskScoreFactory(RiskScoreFactory scoreFactory, DistributedRandom random)
     implements RiskScoreFactory {
@@ -13,6 +13,6 @@ public record NoisyRiskScoreFactory(RiskScoreFactory scoreFactory, DistributedRa
   }
 
   private double distort(double v) {
-    return Doubles.bounded(v + random.nextDouble(), RiskScore.MIN_VALUE, RiskScore.MAX_VALUE);
+    return Ranges.bounded(v + random.nextDouble(), RiskScore.MIN_VALUE, RiskScore.MAX_VALUE);
   }
 }
