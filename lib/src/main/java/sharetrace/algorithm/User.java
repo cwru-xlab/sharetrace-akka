@@ -63,6 +63,7 @@ final class User extends AbstractBehavior<UserMessage> {
     this.scores = new RangeCache<>(timeSource);
     this.contacts = new StandardCache<>(timeSource);
     this.exposureScore = defaultExposureScore();
+    this.lastEvent = Instant.EPOCH;
   }
 
   public static Behavior<UserMessage> of(
@@ -101,15 +102,11 @@ final class User extends AbstractBehavior<UserMessage> {
     }
     /* Always try to send a new contact a risk score. An expired contact may still receive a risk
     score if it is "relevant" (i.e., within the time buffer of the contact time). */
-    sendCachedMessage(contact);
-    return this;
-  }
-
-  private void sendCachedMessage(Contact contact) {
     scores
         .refresh()
         .max(contact.bufferedTimestamp())
-        .ifPresent(message -> contact.tell(message, this::logSendEvent));
+        .ifPresent(msg -> contact.tell(msg, this::logSendEvent));
+    return this;
   }
 
   private Behavior<UserMessage> handle(RiskScoreMessage message) {
