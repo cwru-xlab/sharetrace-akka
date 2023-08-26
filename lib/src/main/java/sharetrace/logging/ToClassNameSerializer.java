@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import java.io.IOException;
 
-public final class ToClassNameSerializer extends StdSerializer<Object> {
+final class ToClassNameSerializer extends StdSerializer<Object> {
 
   public ToClassNameSerializer() {
     super(Object.class);
