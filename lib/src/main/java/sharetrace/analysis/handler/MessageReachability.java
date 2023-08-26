@@ -55,9 +55,14 @@ public final class MessageReachability implements EventHandler {
   }
 
   @Override
-  public void onComplete() {
+  public void onComplete(ResultsCollector collector) {
     resolveUnknowns();
-    computeReachability();
+    var results = computeReachability();
+    //        collector
+    //            .add("influenceCounts", results.influenceCounts())
+    //            .add("sourceCounts", results.sourceCounts())
+    //            .add("messageReachabilities", results.messageReachabilities())
+    //            .add("reachabilityRatio", results.reachabilityRatio());
   }
 
   private void addNewOrigin(long id, int origin) {

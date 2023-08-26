@@ -9,12 +9,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import sharetrace.analysis.appender.MapResultsCollector;
 import sharetrace.analysis.handler.EventHandler;
 import sharetrace.analysis.handler.EventHandlers;
 import sharetrace.analysis.model.EventRecord;
 import sharetrace.config.InstanceFactory;
 import sharetrace.logging.Jackson;
-import sharetrace.util.Parser;
 
 public final class Main {
 
@@ -28,7 +28,9 @@ public final class Main {
     } catch (IOException exception) {
       throw new UncheckedIOException(exception);
     } finally {
-      handlers.values().forEach(EventHandler::onComplete);
+      var collector = new MapResultsCollector();
+      handlers.values().forEach(handler -> handler.onComplete(collector));
+      System.out.println(collector);
     }
   }
 
@@ -37,8 +39,8 @@ public final class Main {
   }
 
   private static Stream<EventRecord> newEventRecordStream() throws IOException {
-    var directory = Path.of(System.getProperty("config.logs"));
-    var parser = newEventRecordParser();
+    var directory = Path.of(System.getProperty("analysis.logs"));
+    var parser = new EventRecordParser(Jackson.newObjectMapper());
     return new EventRecordStream(parser).open(directory);
   }
 
