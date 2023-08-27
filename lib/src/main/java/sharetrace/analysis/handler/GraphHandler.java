@@ -1,9 +1,9 @@
 package sharetrace.analysis.handler;
 
-import java.nio.file.Path;
 import org.jgrapht.Graph;
 import org.jgrapht.GraphMetrics;
 import org.jgrapht.alg.interfaces.ShortestPathAlgorithm;
+import org.jgrapht.alg.interfaces.VertexScoringAlgorithm;
 import org.jgrapht.alg.scoring.ClosenessCentrality;
 import org.jgrapht.alg.scoring.ClusteringCoefficient;
 import org.jgrapht.alg.scoring.Coreness;
@@ -11,23 +11,18 @@ import org.jgrapht.alg.scoring.EigenvectorCentrality;
 import org.jgrapht.alg.scoring.KatzCentrality;
 import org.jgrapht.alg.shortestpath.GraphMeasurer;
 import org.jgrapht.alg.shortestpath.IntVertexDijkstraShortestPath;
-import sharetrace.analysis.appender.ResultsCollector;
-import sharetrace.analysis.model.NumericResult;
-import sharetrace.analysis.model.Result;
-import sharetrace.analysis.model.StatisticsResult;
+import sharetrace.analysis.collector.ResultsCollector;
 import sharetrace.graph.Graphs;
 import sharetrace.graph.TemporalEdge;
-import sharetrace.graph.TemporalGraphExporterBuilder;
 import sharetrace.logging.event.ContactEvent;
 import sharetrace.logging.event.Event;
+import sharetrace.util.Statistics;
 
 public final class GraphHandler implements EventHandler {
 
-  private final String graphId;
   private final Graph<Integer, TemporalEdge> graph;
 
-  public GraphHandler(String graphId) {
-    this.graphId = graphId;
+  public GraphHandler() {
     this.graph = Graphs.newTemporalGraph();
   }
 
@@ -39,46 +34,49 @@ public final class GraphHandler implements EventHandler {
 
   @Override
   public void onComplete(ResultsCollector collector) {
-    var shortestPathsAlgorithm = new IntVertexDijkstraShortestPath<>(graph);
-    var measurer = new GraphMeasurer<>(graph, shortestPathsAlgorithm);
+    var algorithm = new IntVertexDijkstraShortestPath<>(graph);
+    var measurer = new GraphMeasurer<>(graph, algorithm);
+    collector = collector.withPrefix("graph");
     collector
-        .add(new NumericResult("Girth", GraphMetrics.getGirth(graph)))
-        .add(new NumericResult("Triangles", GraphMetrics.getNumberOfTriangles(graph)))
-        .add(new NumericResult("Radius", measurer.getRadius()))
-        .add(new NumericResult("Diameter", measurer.getDiameter()))
-        .add(new NumericResult("Center", measurer.getGraphCenter().size()))
-        .add(new NumericResult("Periphery", measurer.getGraphPeriphery().size()))
-        .add(new NumericResult("Degeneracy", new Coreness<>(graph).getDegeneracy()))
-        .add(globalClusteringCoefficient())
-        .add(StatisticsResult.from(new ClusteringCoefficient<>(graph)))
-        .add(StatisticsResult.from(new HarmonicCentrality<>(graph, shortestPathsAlgorithm)))
-        .add(StatisticsResult.from(new KatzCentrality<>(graph)))
-        .add(StatisticsResult.from(new EigenvectorCentrality<>(graph)));
-    TemporalGraphExporterBuilder.create()
-        .directory(Path.of("."))
-        .filename(graphId)
-        .build()
-        .export(graph);
+        .put("girth", GraphMetrics.getGirth(graph))
+        .put("triangles", GraphMetrics.getNumberOfTriangles(graph))
+        .put("radius", measurer.getRadius())
+        .put("diameter", measurer.getGraphCenter().size())
+        .put("periphery", measurer.getGraphPeriphery().size())
+        .put("degeneracy", new Coreness<>(graph).getDegeneracy());
+    collector
+        .withPrefix("clustering")
+        .put("global", globalClusteringCoefficient())
+        .put("local", scoreStats(new ClusteringCoefficient<>(graph)));
+    collector
+        .withPrefix("centrality")
+        .put("harmonic", scoreStats(new HarmonicCentrality<>(graph, algorithm)))
+        .put("katz", scoreStats(new KatzCentrality<>(graph)))
+        .put("eigenvector", scoreStats(new EigenvectorCentrality<>(graph)));
   }
 
-  private Result<?> globalClusteringCoefficient() {
-    var coefficient = new ClusteringCoefficient<>(graph).getGlobalClusteringCoefficient();
-    return new NumericResult("GlobalClusteringCoefficient", coefficient);
+  private double globalClusteringCoefficient() {
+    return new ClusteringCoefficient<>(graph).getGlobalClusteringCoefficient();
   }
 
+  private Statistics scoreStats(VertexScoringAlgorithm<?, ? extends Number> algorithm) {
+    return Statistics.of(algorithm.getScores().values());
+  }
+
+  // TODO Use HarmonicCentrality provided by JGraphT or ClosenessCentrality?
   private static final class HarmonicCentrality<E> extends ClosenessCentrality<Integer, E> {
 
-    private final ShortestPathAlgorithm<Integer, E> shortestPathAlgorithm;
+    private final ShortestPathAlgorithm<Integer, E> algorithm;
 
     public HarmonicCentrality(
-        Graph<Integer, E> graph, ShortestPathAlgorithm<Integer, E> shortestPathAlgorithm) {
+        Graph<Integer, E> graph, ShortestPathAlgorithm<Integer, E> algorithm) {
       super(graph);
-      this.shortestPathAlgorithm = shortestPathAlgorithm;
+      this.algorithm = algorithm;
     }
 
     @Override
     protected ShortestPathAlgorithm<Integer, E> getShortestPathAlgorithm() {
-      return shortestPathAlgorithm;
+      return algorithm;
     }
   }
 }

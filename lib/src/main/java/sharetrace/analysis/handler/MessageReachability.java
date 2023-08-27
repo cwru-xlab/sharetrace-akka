@@ -18,9 +18,7 @@ import org.jgrapht.Graph;
 import org.jgrapht.GraphPath;
 import org.jgrapht.alg.shortestpath.IntVertexDijkstraShortestPath;
 import org.jgrapht.graph.DefaultEdge;
-import sharetrace.analysis.appender.ResultsCollector;
-import sharetrace.analysis.model.ReachabilityResult;
-import sharetrace.analysis.model.ReachabilityResultBuilder;
+import sharetrace.analysis.collector.ResultsCollector;
 import sharetrace.graph.Graphs;
 import sharetrace.logging.event.Event;
 import sharetrace.logging.event.ReceiveEvent;
@@ -57,12 +55,7 @@ public final class MessageReachability implements EventHandler {
   @Override
   public void onComplete(ResultsCollector collector) {
     resolveUnknowns();
-    var results = computeReachability();
-    //        collector
-    //            .add("influenceCounts", results.influenceCounts())
-    //            .add("sourceCounts", results.sourceCounts())
-    //            .add("messageReachabilities", results.messageReachabilities())
-    //            .add("reachabilityRatio", results.reachabilityRatio());
+    computeReachability(collector);
   }
 
   private void addNewOrigin(long id, int origin) {
@@ -96,25 +89,25 @@ public final class MessageReachability implements EventHandler {
     }
   }
 
-  private ReachabilityResult computeReachability() {
-    var influenceCounts = new Int2IntOpenHashMap(knowns.size());
-    var sourceCounts = new Int2IntOpenHashMap(knowns.size());
-    var reachabilities = new Int2IntOpenHashMap(knowns.size());
+  private void computeReachability(ResultsCollector collector) {
+    var influence = new Int2IntOpenHashMap(knowns.size());
+    var source = new Int2IntOpenHashMap(knowns.size());
+    var reachability = new Int2IntOpenHashMap(knowns.size());
     for (var entry : knowns.int2ObjectEntrySet()) {
       var origin = entry.getIntKey();
       var edges = entry.getValue();
       var targets = targetsOfOrigin(origin, edges);
       var graph = buildReachabilityGraph(edges);
-      influenceCounts.put(origin, targets.size());
-      targets.forEach(target -> sourceCounts.mergeInt(target, 1, Integer::sum));
-      reachabilities.put(origin, computeMessageReachability(origin, graph));
+      influence.put(origin, targets.size());
+      targets.forEach(target -> source.mergeInt(target, 1, Integer::sum));
+      reachability.put(origin, computeMessageReachability(origin, graph));
     }
-    return ReachabilityResultBuilder.create()
-        .influenceCounts(influenceCounts)
-        .sourceCounts(sourceCounts)
-        .messageReachabilities(reachabilities)
-        .reachabilityRatio(computeReachabilityRatio(influenceCounts))
-        .build();
+    collector
+        .withPrefix("reachability")
+        .put("influence", influence)
+        .put("source", source)
+        .put("message", reachability)
+        .put("ratio", computeReachabilityRatio(influence));
   }
 
   private IntSet targetsOfOrigin(int origin, Collection<int[]> edges) {
@@ -155,7 +148,7 @@ public final class MessageReachability implements EventHandler {
         .orElse(0);
   }
 
-  private double computeReachabilityRatio(Int2IntMap influenceCounts) {
-    return influenceCounts.values().intStream().summaryStatistics().getAverage();
+  private double computeReachabilityRatio(Int2IntMap influence) {
+    return influence.values().intStream().summaryStatistics().getAverage();
   }
 }

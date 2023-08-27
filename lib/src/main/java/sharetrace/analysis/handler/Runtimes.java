@@ -5,15 +5,7 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Function;
-import sharetrace.analysis.appender.ResultsCollector;
-import sharetrace.analysis.model.CreateUsersRuntime;
-import sharetrace.analysis.model.MessagePassingRuntime;
-import sharetrace.analysis.model.RiskPropagationRuntime;
-import sharetrace.analysis.model.Runtime;
-import sharetrace.analysis.model.SendContactsRuntime;
-import sharetrace.analysis.model.SendRiskScoresRuntime;
-import sharetrace.analysis.model.UnknownRuntime;
+import sharetrace.analysis.collector.ResultsCollector;
 import sharetrace.logging.event.CreateUsersEnd;
 import sharetrace.logging.event.CreateUsersStart;
 import sharetrace.logging.event.Event;
@@ -28,6 +20,8 @@ import sharetrace.logging.event.UserEvent;
 import sharetrace.util.Instants;
 
 public final class Runtimes implements EventHandler {
+
+  private static final Object UNKNOWN_RUNTIME = "unknown";
 
   private final Map<Class<?>, Instant> events;
 
@@ -50,49 +44,31 @@ public final class Runtimes implements EventHandler {
   @Override
   public void onComplete(ResultsCollector collector) {
     collector
-        .add(createUsersRuntime())
-        .add(sendContactsRuntime())
-        .add(sendRiskScoresRuntime())
-        .add(riskPropagationRuntime())
-        .add(messagePassingRuntime());
+        .withPrefix("runtime")
+        .put("createUsers", getRuntime(CreateUsersStart.class, CreateUsersEnd.class))
+        .put("sendContacts", getRuntime(SendContactsStart.class, SendContactsEnd.class))
+        .put("sendContacts", getRuntime(SendRiskScoresStart.class, SendRiskScoresEnd.class))
+        .put("riskPropagation", getRuntime(RiskPropagationStart.class, RiskPropagationEnd.class))
+        .put("messagePassing", messagePassingRuntime());
   }
 
-  private Runtime createUsersRuntime() {
-    return getRuntime(CreateUsersStart.class, CreateUsersEnd.class, CreateUsersRuntime::new);
-  }
-
-  private Runtime sendContactsRuntime() {
-    return getRuntime(SendContactsStart.class, SendContactsEnd.class, SendContactsRuntime::new);
-  }
-
-  private Runtime sendRiskScoresRuntime() {
-    return getRuntime(
-        SendRiskScoresStart.class, SendRiskScoresEnd.class, SendRiskScoresRuntime::new);
-  }
-
-  private Runtime riskPropagationRuntime() {
-    return getRuntime(
-        RiskPropagationStart.class, RiskPropagationEnd.class, RiskPropagationRuntime::new);
-  }
-
-  private Runtime messagePassingRuntime() {
-    var startEvent = SendContactsStart.class;
-    if (isLogged(startEvent)) {
-      var start = events.get(startEvent);
-      return new MessagePassingRuntime(Duration.between(start, lastUserEvent));
-    } else {
-      return UnknownRuntime.INSTANCE;
-    }
-  }
-
-  private Runtime getRuntime(
-      Class<?> startEvent, Class<?> endEvent, Function<Duration, Runtime> factory) {
+  private Object getRuntime(Class<?> startEvent, Class<?> endEvent) {
     if (isLogged(startEvent, endEvent)) {
       var start = events.get(startEvent);
       var end = events.get(endEvent);
-      return factory.apply(Duration.between(start, end));
+      return Duration.between(start, end);
     } else {
-      return UnknownRuntime.INSTANCE;
+      return UNKNOWN_RUNTIME;
+    }
+  }
+
+  private Object messagePassingRuntime() {
+    var startEvent = SendContactsStart.class;
+    if (isLogged(startEvent)) {
+      var start = events.get(startEvent);
+      return Duration.between(start, lastUserEvent);
+    } else {
+      return UNKNOWN_RUNTIME;
     }
   }
 

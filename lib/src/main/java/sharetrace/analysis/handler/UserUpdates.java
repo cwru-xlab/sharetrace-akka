@@ -6,7 +6,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.IntStream;
-import sharetrace.analysis.appender.ResultsCollector;
+import sharetrace.analysis.collector.ResultsCollector;
 import sharetrace.logging.event.Event;
 import sharetrace.logging.event.UpdateEvent;
 import sharetrace.model.RiskScore;
@@ -31,6 +31,7 @@ public final class UserUpdates implements EventHandler {
   public void onComplete(ResultsCollector collector) {
     var selected = new Int2ObjectOpenHashMap<>(updates.size());
     updates.forEach((user, updates) -> selected.put((int) user, selected(updates)));
+    collector.withPrefix("user").put("updates", selected);
   }
 
   private List<RiskScore> selected(List<UpdateEvent> updates) {

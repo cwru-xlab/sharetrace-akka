@@ -4,6 +4,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import java.util.Map;
+import sharetrace.analysis.collector.ResultsCollector;
 import sharetrace.logging.event.Event;
 import sharetrace.logging.event.UserEvent;
 
@@ -22,5 +23,10 @@ public final class UserEventCounter implements EventHandler {
           .computeIfAbsent(userEvent.self(), x -> new Object2IntOpenHashMap<>())
           .mergeInt(userEvent.getClass(), 1, Integer::sum);
     }
+  }
+
+  @Override
+  public void onComplete(ResultsCollector collector) {
+    collector.withPrefix("user").put("eventCounts", counts);
   }
 }

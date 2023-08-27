@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import sharetrace.analysis.appender.MapResultsCollector;
+import sharetrace.analysis.collector.MapResultsCollector;
 import sharetrace.analysis.handler.EventHandler;
 import sharetrace.analysis.handler.EventHandlers;
 import sharetrace.analysis.model.EventRecord;
@@ -28,8 +28,8 @@ public final class Main {
     } catch (IOException exception) {
       throw new UncheckedIOException(exception);
     } finally {
-      var collector = new MapResultsCollector();
-      handlers.values().forEach(handler -> handler.onComplete(collector));
+      var collector = new MapResultsCollector(".");
+      handlers.forEach((key, handler) -> handler.onComplete(collector.withPrefix(key)));
       System.out.println(collector);
     }
   }
@@ -46,14 +46,12 @@ public final class Main {
 
   private static void processRecord(
       EventRecord record, Map<String, EventHandler> handlers, Config config) {
-    handlers.computeIfAbsent(record.key(), k -> newEventHandler(k, config)).onNext(record.event());
+    handlers.computeIfAbsent(record.key(), x -> newEventHandler(config)).onNext(record.event());
   }
 
-  private static EventHandler newEventHandler(String key, Config config) {
+  private static EventHandler newEventHandler(Config config) {
     return config.getStringList("handlers").stream()
         .<EventHandler>map(InstanceFactory::getInstance)
-        .collect(
-            Collectors.collectingAndThen(
-                Collectors.toList(), handlers -> new EventHandlers(key, handlers)));
+        .collect(Collectors.collectingAndThen(Collectors.toList(), EventHandlers::new));
   }
 }
