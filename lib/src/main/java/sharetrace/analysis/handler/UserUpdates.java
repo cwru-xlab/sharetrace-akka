@@ -1,7 +1,6 @@
 package sharetrace.analysis.handler;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectMaps;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -32,7 +31,7 @@ public final class UserUpdates implements EventHandler {
   public void onComplete(ResultsCollector collector) {
     updates.replaceAll((user, updates) -> scores(updates));
     updates.values().removeIf(List::isEmpty);
-    collector.withScope("user").put("updates", Int2ObjectMaps.unmodifiable(updates));
+    collector.withScope("user").put("updates", updates);
   }
 
   private List<RiskScore> scores(List<UpdateEvent> updates) {

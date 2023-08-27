@@ -3,7 +3,6 @@ package sharetrace.analysis.handler;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import sharetrace.analysis.collector.ResultsCollector;
@@ -32,7 +31,7 @@ public final class EventTimeline implements EventHandler {
   public void onComplete(ResultsCollector collector) {
     timeline.replaceAll(this::adjustTimestamp);
     timeline.sort(Comparator.comparing(LoggedEvent::timestamp));
-    collector.put("timeline", Collections.unmodifiableList(timeline));
+    collector.put("timeline", timeline);
   }
 
   private LoggedEvent adjustTimestamp(LoggedEvent event) {

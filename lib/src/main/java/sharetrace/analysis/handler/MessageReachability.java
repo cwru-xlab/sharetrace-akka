@@ -1,7 +1,6 @@
 package sharetrace.analysis.handler;
 
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
-import it.unimi.dsi.fastutil.ints.Int2IntMaps;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
@@ -105,9 +104,9 @@ public final class MessageReachability implements EventHandler {
     }
     collector
         .withScope("reachability")
-        .put("influence", Int2IntMaps.unmodifiable(influence))
-        .put("source", Int2IntMaps.unmodifiable(source))
-        .put("message", Int2IntMaps.unmodifiable(reachability))
+        .put("influence", influence)
+        .put("source", source)
+        .put("message", reachability)
         .put("ratio", computeReachabilityRatio(influence));
   }
 
