@@ -14,12 +14,20 @@ public final class Jackson {
 
   private Jackson() {}
 
-  public static JsonFactory newJsonFactory() {
-    return new IonFactory(newObjectMapper());
+  public static JsonFactory newIonJsonFactory() {
+    return new IonFactory(newIonObjectMapper());
+  }
+
+  public static ObjectMapper newIonObjectMapper() {
+    return configured(new IonObjectMapper());
   }
 
   public static ObjectMapper newObjectMapper() {
-    return new IonObjectMapper().findAndRegisterModules().registerModule(shareTraceModule());
+    return configured(new ObjectMapper());
+  }
+
+  private static ObjectMapper configured(ObjectMapper mapper) {
+    return mapper.findAndRegisterModules().registerModule(shareTraceModule());
   }
 
   private static Module shareTraceModule() {

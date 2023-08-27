@@ -2,12 +2,11 @@ package sharetrace.analysis.handler;
 
 import org.jgrapht.Graph;
 import org.jgrapht.GraphMetrics;
-import org.jgrapht.alg.interfaces.ShortestPathAlgorithm;
 import org.jgrapht.alg.interfaces.VertexScoringAlgorithm;
-import org.jgrapht.alg.scoring.ClosenessCentrality;
 import org.jgrapht.alg.scoring.ClusteringCoefficient;
 import org.jgrapht.alg.scoring.Coreness;
 import org.jgrapht.alg.scoring.EigenvectorCentrality;
+import org.jgrapht.alg.scoring.HarmonicCentrality;
 import org.jgrapht.alg.scoring.KatzCentrality;
 import org.jgrapht.alg.shortestpath.GraphMeasurer;
 import org.jgrapht.alg.shortestpath.IntVertexDijkstraShortestPath;
@@ -34,9 +33,8 @@ public final class GraphHandler implements EventHandler {
 
   @Override
   public void onComplete(ResultsCollector collector) {
-    var algorithm = new IntVertexDijkstraShortestPath<>(graph);
-    var measurer = new GraphMeasurer<>(graph, algorithm);
-    collector = collector.withPrefix("graph");
+    var measurer = new GraphMeasurer<>(graph, new IntVertexDijkstraShortestPath<>(graph));
+    collector = collector.withScope("graph");
     collector
         .put("girth", GraphMetrics.getGirth(graph))
         .put("triangles", GraphMetrics.getNumberOfTriangles(graph))
@@ -45,12 +43,12 @@ public final class GraphHandler implements EventHandler {
         .put("periphery", measurer.getGraphPeriphery().size())
         .put("degeneracy", new Coreness<>(graph).getDegeneracy());
     collector
-        .withPrefix("clustering")
+        .withScope("clustering")
         .put("global", globalClusteringCoefficient())
         .put("local", scoreStats(new ClusteringCoefficient<>(graph)));
     collector
-        .withPrefix("centrality")
-        .put("harmonic", scoreStats(new HarmonicCentrality<>(graph, algorithm)))
+        .withScope("centrality")
+        .put("harmonic", scoreStats(new HarmonicCentrality<>(graph)))
         .put("katz", scoreStats(new KatzCentrality<>(graph)))
         .put("eigenvector", scoreStats(new EigenvectorCentrality<>(graph)));
   }
@@ -61,22 +59,5 @@ public final class GraphHandler implements EventHandler {
 
   private Statistics scoreStats(VertexScoringAlgorithm<?, ? extends Number> algorithm) {
     return Statistics.of(algorithm.getScores().values());
-  }
-
-  // TODO Use HarmonicCentrality provided by JGraphT or ClosenessCentrality?
-  private static final class HarmonicCentrality<E> extends ClosenessCentrality<Integer, E> {
-
-    private final ShortestPathAlgorithm<Integer, E> algorithm;
-
-    public HarmonicCentrality(
-        Graph<Integer, E> graph, ShortestPathAlgorithm<Integer, E> algorithm) {
-      super(graph);
-      this.algorithm = algorithm;
-    }
-
-    @Override
-    protected ShortestPathAlgorithm<Integer, E> getShortestPathAlgorithm() {
-      return algorithm;
-    }
   }
 }

@@ -20,7 +20,6 @@ public final class StandardCache<K, V extends Expirable & Comparable<? super V>>
   private final InstantSource timeSource;
   private final Comparator<? super V> comparator;
   private final BinaryOperator<V> merger;
-
   private Instant min;
 
   public StandardCache(InstantSource timeSource) {

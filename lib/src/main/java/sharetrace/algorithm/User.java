@@ -42,7 +42,6 @@ final class User extends AbstractBehavior<UserMessage> {
   private final TimerScheduler<UserMessage> timers;
   private final Cache<?, RiskScoreMessage> scores;
   private final Cache<ActorRef<?>, Contact> contacts;
-
   private RiskScoreMessage exposureScore;
   private Instant lastEvent;
 

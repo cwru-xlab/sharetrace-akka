@@ -40,7 +40,7 @@ public final class Main {
 
   private static Stream<EventRecord> newEventRecordStream() throws IOException {
     var directory = Path.of(System.getProperty("analysis.logs"));
-    var parser = new EventRecordParser(Jackson.newObjectMapper());
+    var parser = new EventRecordParser(Jackson.newIonObjectMapper());
     return new EventRecordStream(parser).open(directory);
   }
 

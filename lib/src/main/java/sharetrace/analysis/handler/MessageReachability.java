@@ -1,6 +1,7 @@
 package sharetrace.analysis.handler;
 
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
+import it.unimi.dsi.fastutil.ints.Int2IntMaps;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
@@ -97,16 +98,16 @@ public final class MessageReachability implements EventHandler {
       var origin = entry.getIntKey();
       var edges = entry.getValue();
       var targets = targetsOfOrigin(origin, edges);
-      var graph = buildReachabilityGraph(edges);
+      var graph = reachabilityGraph(edges);
       influence.put(origin, targets.size());
       targets.forEach(target -> source.mergeInt(target, 1, Integer::sum));
       reachability.put(origin, computeMessageReachability(origin, graph));
     }
     collector
-        .withPrefix("reachability")
-        .put("influence", influence)
-        .put("source", source)
-        .put("message", reachability)
+        .withScope("reachability")
+        .put("influence", Int2IntMaps.unmodifiable(influence))
+        .put("source", Int2IntMaps.unmodifiable(source))
+        .put("message", Int2IntMaps.unmodifiable(reachability))
         .put("ratio", computeReachabilityRatio(influence));
   }
 
@@ -125,7 +126,7 @@ public final class MessageReachability implements EventHandler {
     }
   }
 
-  private Graph<Integer, DefaultEdge> buildReachabilityGraph(Iterable<int[]> edges) {
+  private Graph<Integer, DefaultEdge> reachabilityGraph(Iterable<int[]> edges) {
     var graph = Graphs.newDirectedGraph();
     for (var edge : edges) {
       graph.addVertex(edge[0]);

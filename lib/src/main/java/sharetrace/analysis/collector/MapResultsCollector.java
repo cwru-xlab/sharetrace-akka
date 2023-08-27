@@ -1,37 +1,38 @@
 package sharetrace.analysis.collector;
 
+import com.fasterxml.jackson.annotation.JsonValue;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
-public final class MapResultsCollector implements ResultsCollector {
-
-  private final Map<String, Object> results;
-  private final String delimiter;
-  private final String prefix;
-
-  private MapResultsCollector(Map<String, Object> results, String prefix, String delimiter) {
-    this.results = results;
-    this.delimiter = delimiter;
-    this.prefix = prefix;
-  }
+public record MapResultsCollector(Map<String, Object> results, String scope, String delimiter)
+    implements ResultsCollector {
 
   public MapResultsCollector(String delimiter) {
-    this(new HashMap<>(), "", delimiter);
+    this(new HashMap<>(), null, delimiter);
   }
 
   @Override
   public ResultsCollector put(String key, Object result) {
-    results.put(String.join(delimiter, prefix, key), result);
+    results.put(join(scope, key), result);
     return this;
   }
 
   @Override
-  public ResultsCollector withPrefix(String prefix) {
-    return new MapResultsCollector(results, prefix, delimiter);
+  public ResultsCollector withScope(String scope) {
+    return new MapResultsCollector(results, join(this.scope, scope), delimiter);
   }
 
   @Override
-  public String toString() {
-    return results.toString();
+  @JsonValue
+  public Map<String, Object> results() {
+    return Collections.unmodifiableMap(results);
+  }
+
+  private String join(String... elements) {
+    return Arrays.stream(elements).filter(Objects::nonNull).collect(Collectors.joining(delimiter));
   }
 }
