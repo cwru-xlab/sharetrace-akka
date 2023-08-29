@@ -5,15 +5,7 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Function;
-import sharetrace.analysis.appender.ResultsCollector;
-import sharetrace.analysis.model.CreateUsersRuntime;
-import sharetrace.analysis.model.MessagePassingRuntime;
-import sharetrace.analysis.model.RiskPropagationRuntime;
-import sharetrace.analysis.model.Runtime;
-import sharetrace.analysis.model.SendContactsRuntime;
-import sharetrace.analysis.model.SendRiskScoresRuntime;
-import sharetrace.analysis.model.UnknownRuntime;
+import sharetrace.analysis.collector.ResultsCollector;
 import sharetrace.logging.event.CreateUsersEnd;
 import sharetrace.logging.event.CreateUsersStart;
 import sharetrace.logging.event.Event;
@@ -29,8 +21,8 @@ import sharetrace.util.Instants;
 
 public final class Runtimes implements EventHandler {
 
+  private static final Object UNKNOWN_RUNTIME = "unknown";
   private final Map<Class<?>, Instant> events;
-
   private Instant lastUserEvent;
 
   public Runtimes() {
@@ -50,53 +42,28 @@ public final class Runtimes implements EventHandler {
   @Override
   public void onComplete(ResultsCollector collector) {
     collector
-        .add(createUsersRuntime())
-        .add(sendContactsRuntime())
-        .add(sendRiskScoresRuntime())
-        .add(riskPropagationRuntime())
-        .add(messagePassingRuntime());
+        .withScope("runtime")
+        .put("createUsers", getRuntime(CreateUsersStart.class, CreateUsersEnd.class))
+        .put("sendContacts", getRuntime(SendContactsStart.class, SendContactsEnd.class))
+        .put("sendContacts", getRuntime(SendRiskScoresStart.class, SendRiskScoresEnd.class))
+        .put("riskPropagation", getRuntime(RiskPropagationStart.class, RiskPropagationEnd.class))
+        .put("messagePassing", messagePassingRuntime());
   }
 
-  private Runtime createUsersRuntime() {
-    return getRuntime(CreateUsersStart.class, CreateUsersEnd.class, CreateUsersRuntime::new);
+  private Object getRuntime(Class<?> start, Class<?> end) {
+    return isLogged(start, end)
+        ? Duration.between(events.get(start), events.get(end))
+        : UNKNOWN_RUNTIME;
   }
 
-  private Runtime sendContactsRuntime() {
-    return getRuntime(SendContactsStart.class, SendContactsEnd.class, SendContactsRuntime::new);
+  private Object messagePassingRuntime() {
+    var start = SendContactsStart.class;
+    return lastUserEvent != Instant.MIN && isLogged(start)
+        ? Duration.between(events.get(start), lastUserEvent)
+        : UNKNOWN_RUNTIME;
   }
 
-  private Runtime sendRiskScoresRuntime() {
-    return getRuntime(
-        SendRiskScoresStart.class, SendRiskScoresEnd.class, SendRiskScoresRuntime::new);
-  }
-
-  private Runtime riskPropagationRuntime() {
-    return getRuntime(
-        RiskPropagationStart.class, RiskPropagationEnd.class, RiskPropagationRuntime::new);
-  }
-
-  private Runtime messagePassingRuntime() {
-    var startEvent = SendContactsStart.class;
-    if (isLogged(startEvent)) {
-      var start = events.get(startEvent);
-      return new MessagePassingRuntime(Duration.between(start, lastUserEvent));
-    } else {
-      return UnknownRuntime.INSTANCE;
-    }
-  }
-
-  private Runtime getRuntime(
-      Class<?> startEvent, Class<?> endEvent, Function<Duration, Runtime> factory) {
-    if (isLogged(startEvent, endEvent)) {
-      var start = events.get(startEvent);
-      var end = events.get(endEvent);
-      return factory.apply(Duration.between(start, end));
-    } else {
-      return UnknownRuntime.INSTANCE;
-    }
-  }
-
-  private boolean isLogged(Class<?>... eventTypes) {
-    return Arrays.stream(eventTypes).allMatch(events::containsKey);
+  private boolean isLogged(Class<?>... types) {
+    return Arrays.stream(types).allMatch(events::containsKey);
   }
 }

@@ -1,6 +1,7 @@
 package sharetrace.util;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.stream.DoubleStream;
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import sharetrace.Buildable;
@@ -19,7 +20,7 @@ public record Statistics(
     double upperWhisker,
     long count,
     double sum,
-    double[] outliers) {
+    List<Double> outliers) {
 
   public static Statistics of(Collection<? extends Number> values) {
     DescriptiveStatistics stats = stats(values);
@@ -51,7 +52,7 @@ public record Statistics(
     return stats;
   }
 
-  private static double[] outliers(DescriptiveStatistics stats, double lower, double upper) {
-    return DoubleStream.of(stats.getValues()).filter(v -> v < lower || v > upper).toArray();
+  private static List<Double> outliers(DescriptiveStatistics stats, double lower, double upper) {
+    return DoubleStream.of(stats.getValues()).filter(v -> v < lower || v > upper).boxed().toList();
   }
 }

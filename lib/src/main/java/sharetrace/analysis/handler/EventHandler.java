@@ -1,10 +1,11 @@
 package sharetrace.analysis.handler;
 
+import sharetrace.analysis.collector.ResultsCollector;
 import sharetrace.logging.event.Event;
 
 public interface EventHandler {
 
-  default void onNext(Event event) {}
+  void onNext(Event event);
 
-  default void onComplete() {}
+  void onComplete(ResultsCollector collector);
 }

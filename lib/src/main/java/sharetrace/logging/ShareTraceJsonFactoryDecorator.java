@@ -7,6 +7,6 @@ public record ShareTraceJsonFactoryDecorator() implements JsonFactoryDecorator {
 
   @Override
   public JsonFactory decorate(JsonFactory factory) {
-    return Jackson.newJsonFactory();
+    return Jackson.newIonJsonFactory();
   }
 }

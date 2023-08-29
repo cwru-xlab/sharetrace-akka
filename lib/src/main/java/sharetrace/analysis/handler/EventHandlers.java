@@ -1,20 +1,15 @@
 package sharetrace.analysis.handler;
 
-import java.util.List;
+import java.util.Collection;
+import sharetrace.analysis.collector.ResultsCollector;
 import sharetrace.logging.event.Event;
 
 public final class EventHandlers implements EventHandler {
 
-  private final String key;
-  private final Iterable<? extends EventHandler> handlers;
+  private final Collection<? extends EventHandler> handlers;
 
-  public EventHandlers(String key, Iterable<? extends EventHandler> handlers) {
-    this.key = key;
+  public EventHandlers(Collection<? extends EventHandler> handlers) {
     this.handlers = handlers;
-  }
-
-  public EventHandlers(String key, EventHandler... handlers) {
-    this(key, List.of(handlers));
   }
 
   @Override
@@ -23,7 +18,7 @@ public final class EventHandlers implements EventHandler {
   }
 
   @Override
-  public void onComplete() {
-    handlers.forEach(EventHandler::onComplete);
+  public void onComplete(ResultsCollector collector) {
+    handlers.forEach(handler -> handler.onComplete(collector));
   }
 }

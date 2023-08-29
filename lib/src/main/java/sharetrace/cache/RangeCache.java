@@ -21,7 +21,6 @@ public final class RangeCache<V extends Expirable & Comparable<? super V>>
   private final InstantSource timeSource;
   private final Comparator<? super V> comparator;
   private final BinaryOperator<V> merger;
-
   private Range<Instant> min;
 
   public RangeCache(InstantSource timeSource) {

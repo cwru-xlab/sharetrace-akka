@@ -1,20 +1,20 @@
 package sharetrace.analysis.handler;
 
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.IntStream;
-import sharetrace.analysis.appender.ResultsCollector;
+import sharetrace.analysis.collector.ResultsCollector;
 import sharetrace.logging.event.Event;
 import sharetrace.logging.event.UpdateEvent;
 import sharetrace.model.RiskScore;
 import sharetrace.model.message.RiskScoreMessage;
 
+@SuppressWarnings({"rawtypes", "unchecked"})
 public final class UserUpdates implements EventHandler {
 
-  private final Map<Integer, List<UpdateEvent>> updates;
+  private final Int2ObjectMap<List> updates;
 
   public UserUpdates() {
     updates = new Int2ObjectOpenHashMap<>();
@@ -29,21 +29,17 @@ public final class UserUpdates implements EventHandler {
 
   @Override
   public void onComplete(ResultsCollector collector) {
-    var selected = new Int2ObjectOpenHashMap<>(updates.size());
-    updates.forEach((user, updates) -> selected.put((int) user, selected(updates)));
+    updates.replaceAll((user, updates) -> scores(updates));
+    updates.values().removeIf(List::isEmpty);
+    collector.withScope("user").put("updates", updates);
   }
 
-  private List<RiskScore> selected(List<UpdateEvent> updates) {
-    updates.sort(Comparator.comparing(UpdateEvent::timestamp));
-    var selected = new ArrayList<RiskScore>(updates.size() + 1);
-    var first = updates.get(0);
-    selected.add(first.previous().score());
-    selected.add(first.current().score());
-    IntStream.range(1, updates.size())
-        .mapToObj(updates::get)
+  private List<RiskScore> scores(List<UpdateEvent> updates) {
+    return updates.stream()
+        .skip(1)
+        .sorted(Comparator.comparing(UpdateEvent::timestamp))
         .map(UpdateEvent::current)
         .map(RiskScoreMessage::score)
-        .forEach(selected::add);
-    return selected;
+        .toList();
   }
 }
