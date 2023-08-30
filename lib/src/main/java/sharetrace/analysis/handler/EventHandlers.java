@@ -4,13 +4,7 @@ import java.util.Collection;
 import sharetrace.analysis.collector.ResultsCollector;
 import sharetrace.logging.event.Event;
 
-public final class EventHandlers implements EventHandler {
-
-  private final Collection<? extends EventHandler> handlers;
-
-  public EventHandlers(Collection<? extends EventHandler> handlers) {
-    this.handlers = handlers;
-  }
+public record EventHandlers(Collection<? extends EventHandler> handlers) implements EventHandler {
 
   @Override
   public void onNext(Event event) {
