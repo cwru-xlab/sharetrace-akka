@@ -15,7 +15,8 @@ public record Parameters(
     Duration idleTimeout) {
 
   public Parameters {
-    Checks.checkRange(transmissionRate, Range.closed(0d, 1d), "transmissionRate");
+    // Greater than 0 to avoid divide-by-zero errors; less than 1 to ensure finite runtime.
+    Checks.checkRange(transmissionRate, Range.open(0d, 1d), "transmissionRate");
     Checks.checkRange(sendCoefficient, Range.atLeast(0d), "sendCoefficient");
     Checks.checkRange(timeBuffer, Range.atLeast(Duration.ZERO), "timeBuffer");
     Checks.checkRange(scoreExpiry, Range.atLeast(Duration.ZERO), "scoreExpiry");
