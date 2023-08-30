@@ -19,10 +19,10 @@ repositories {
 spotless {
     java {
         target "src/*/java/**/*.java"
-        importOrder()
+        importOrder().semanticSort()
         removeUnusedImports()
         cleanthat()
-        googleJavaFormat()
+        googleJavaFormat().reflowLongStrings()
         formatAnnotations()
     }
 }
