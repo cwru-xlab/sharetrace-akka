@@ -11,7 +11,7 @@ public record RiskScoreMessage(@JsonIgnore ActorRef<UserMessage> sender, RiskSco
     implements TemporalScore, UserMessage {
 
   public RiskScoreMessage(ActorRef<UserMessage> sender, RiskScore score) {
-    this(sender, score, ThreadLocalRandom.current().nextLong(Long.MAX_VALUE));
+    this(sender, score, ThreadLocalRandom.current().nextLong());
   }
 
   @Override
