@@ -11,7 +11,6 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 import org.apache.commons.math3.random.RandomGenerator;
 import sharetrace.logging.LogRecord;
-import sharetrace.model.factory.RandomGeneratorFactory;
 import sharetrace.util.Context;
 import sharetrace.util.ContextBuilder;
 
@@ -56,9 +55,8 @@ public record ContextParser(Config contextConfig) implements ConfigParser<Contex
   }
 
   private RandomGenerator getRandomGenerator(Config config, long seed) {
-    var className = config.getString("random-generator-factory");
-    var factory = InstanceFactory.getInstance(className);
-    return ((RandomGeneratorFactory) factory).getRandomGenerator(seed);
+    var className = config.getString("random-generator");
+    return InstanceFactory.getInstance(className, seed);
   }
 
   private Set<Class<? extends LogRecord>> getLoggable(Config config) {
