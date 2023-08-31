@@ -9,11 +9,12 @@ import sharetrace.model.Expirable;
 import sharetrace.model.Parameters;
 import sharetrace.model.RiskScore;
 import sharetrace.model.TemporalScore;
+import sharetrace.model.Timestamped;
 import sharetrace.model.message.ContactMessage;
 import sharetrace.model.message.RiskScoreMessage;
 import sharetrace.model.message.UserMessage;
 
-final class Contact implements Expirable, Comparable<Contact> {
+final class Contact implements Expirable, Timestamped, Comparable<Contact> {
 
   private final ActorRef<UserMessage> self;
   private final Instant timestamp;

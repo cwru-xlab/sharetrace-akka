@@ -12,9 +12,11 @@ import java.util.Iterator;
 import java.util.Optional;
 import java.util.function.BinaryOperator;
 import sharetrace.model.Expirable;
+import sharetrace.model.Timestamped;
 
 @SuppressWarnings("UnstableApiUsage")
-public final class RangeCache<V extends Expirable & Comparable<? super V>> implements Cache<V> {
+public final class RangeCache<V extends Expirable & Timestamped & Comparable<? super V>>
+    implements Cache<V> {
 
   private final RangeMap<Instant, V> cache;
   private final InstantSource timeSource;

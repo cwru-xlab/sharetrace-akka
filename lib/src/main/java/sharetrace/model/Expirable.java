@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.time.Instant;
 import java.time.InstantSource;
 
-public interface Expirable extends Timestamped {
+public interface Expirable {
 
   @JsonIgnore
   Instant expiresAt();

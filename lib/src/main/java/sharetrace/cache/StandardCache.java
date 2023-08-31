@@ -11,9 +11,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.BinaryOperator;
 import sharetrace.model.Expirable;
+import sharetrace.model.Timestamped;
 import sharetrace.util.Instants;
 
-public final class StandardCache<V extends Expirable & Comparable<? super V>> implements Cache<V> {
+public final class StandardCache<V extends Expirable & Timestamped & Comparable<? super V>>
+    implements Cache<V> {
 
   private final Map<V, V> cache;
   private final InstantSource timeSource;
