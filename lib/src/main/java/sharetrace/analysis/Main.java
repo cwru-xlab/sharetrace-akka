@@ -29,7 +29,7 @@ public final class Main {
       throw new UncheckedIOException(exception);
     } finally {
       var collector = new MapResultsCollector(".");
-      handlers.forEach((key, handler) -> handler.onComplete(collector.withPrefix(key)));
+      handlers.forEach((key, handler) -> handler.onComplete(collector.withScope(key)));
       System.out.println(collector);
     }
   }

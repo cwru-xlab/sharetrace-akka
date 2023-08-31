@@ -40,8 +40,8 @@ final class User extends AbstractBehavior<UserMessage> {
   private final ActorRef<MonitorMessage> monitor;
   private final IdleTimeout idleTimeout;
   private final TimerScheduler<UserMessage> timers;
-  private final Cache<?, RiskScoreMessage> scores;
-  private final Cache<ActorRef<?>, Contact> contacts;
+  private final Cache<RiskScoreMessage> scores;
+  private final Cache<Contact> contacts;
   private RiskScoreMessage exposureScore;
   private Instant lastEvent;
 
@@ -96,7 +96,7 @@ final class User extends AbstractBehavior<UserMessage> {
   private Behavior<UserMessage> handle(ContactMessage message) {
     var contact = new Contact(message, parameters, scores, timeSource);
     if (contact.isAlive(timeSource)) {
-      contacts.put(contact.self(), contact);
+      contacts.add(contact);
       logContactEvent(contact);
     }
     /* Always try to send a new contact a risk score. An expired contact may still receive a risk

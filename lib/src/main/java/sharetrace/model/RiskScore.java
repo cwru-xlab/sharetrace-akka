@@ -4,7 +4,6 @@ import com.google.common.collect.Range;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.function.DoubleUnaryOperator;
-
 import sharetrace.util.Ranges;
 
 public record RiskScore(double value, Instant timestamp, Instant expiresAt)

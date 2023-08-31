@@ -20,14 +20,14 @@ final class Contact implements Expirable, Comparable<Contact> {
   private final Instant bufferedTimestamp;
   private final Instant expiresAt;
   private final double sendCoefficient;
-  private final Cache<?, RiskScoreMessage> scores;
+  private final Cache<RiskScoreMessage> scores;
   private final InstantSource timeSource;
   private TemporalScore sendThreshold;
 
   public Contact(
       ContactMessage message,
       Parameters parameters,
-      Cache<?, RiskScoreMessage> scores,
+      Cache<RiskScoreMessage> scores,
       InstantSource timeSource) {
     this.self = message.contact();
     this.timestamp = message.timestamp();

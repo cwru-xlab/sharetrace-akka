@@ -13,10 +13,9 @@ import java.util.function.BinaryOperator;
 import sharetrace.model.Expirable;
 import sharetrace.util.Instants;
 
-public final class StandardCache<K, V extends Expirable & Comparable<? super V>>
-    implements Cache<K, V> {
+public final class StandardCache<V extends Expirable & Comparable<? super V>> implements Cache<V> {
 
-  private final Map<K, V> cache;
+  private final Map<V, V> cache;
   private final InstantSource timeSource;
   private final Comparator<? super V> comparator;
   private final BinaryOperator<V> merger;
@@ -41,13 +40,13 @@ public final class StandardCache<K, V extends Expirable & Comparable<? super V>>
   }
 
   @Override
-  public void put(K key, V value) {
-    cache.merge(key, value, merger);
+  public void add(V value) {
+    cache.merge(value, value, merger);
     updateMin(value);
   }
 
   @Override
-  public StandardCache<K, V> refresh() {
+  public StandardCache<V> refresh() {
     if (min.isBefore(timeSource.instant())) {
       values().removeIf(value -> value.isExpired(timeSource));
       updateMin();

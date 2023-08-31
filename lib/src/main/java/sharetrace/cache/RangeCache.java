@@ -14,8 +14,7 @@ import java.util.function.BinaryOperator;
 import sharetrace.model.Expirable;
 
 @SuppressWarnings("UnstableApiUsage")
-public final class RangeCache<V extends Expirable & Comparable<? super V>>
-    implements Cache<Range<Instant>, V> {
+public final class RangeCache<V extends Expirable & Comparable<? super V>> implements Cache<V> {
 
   private final RangeMap<Instant, V> cache;
   private final InstantSource timeSource;
@@ -52,14 +51,10 @@ public final class RangeCache<V extends Expirable & Comparable<? super V>>
   }
 
   @Override
-  public void put(Range<Instant> key, V value) {
+  public void add(V value) {
+    var key = Range.closedOpen(value.timestamp(), value.expiresAt());
     cache.merge(key, value, merger);
     updateMin();
-  }
-
-  @Override
-  public void add(V value) {
-    put(Range.closedOpen(value.timestamp(), value.expiresAt()), value);
   }
 
   @Override
