@@ -95,7 +95,7 @@ final class User extends AbstractBehavior<UserMessage> {
 
   private Behavior<UserMessage> handle(ContactMessage message) {
     var contact = new Contact(message, parameters, scores, timeSource);
-    if (message.isAlive(timeSource)) {
+    if (contact.isAlive(timeSource)) {
       contacts.put(contact.self(), contact);
       logContactEvent(contact);
     }
