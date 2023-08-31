@@ -5,15 +5,15 @@ import java.time.Duration;
 import java.time.Instant;
 import sharetrace.Buildable;
 import sharetrace.model.Timestamped;
-import sharetrace.util.Checks;
 import sharetrace.util.DistributedRandom;
+import sharetrace.util.Ranges;
 
 @Buildable
 public record RandomTimeFactory(DistributedRandom random, Duration range, Instant timestamp)
     implements TimeFactory, Timestamped {
 
   public RandomTimeFactory {
-    Checks.checkRange(range, Range.atLeast(Duration.ZERO), "range");
+    Ranges.check("range", range, Range.atLeast(Duration.ZERO));
   }
 
   @Override

@@ -4,7 +4,8 @@ import com.google.common.collect.Range;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.function.DoubleUnaryOperator;
-import sharetrace.util.Checks;
+
+import sharetrace.util.Ranges;
 
 public record RiskScore(double value, Instant timestamp, Instant expiresAt)
     implements TemporalScore {
@@ -14,7 +15,7 @@ public record RiskScore(double value, Instant timestamp, Instant expiresAt)
   public static final RiskScore MIN = new RiskScore(MIN_VALUE, Instant.EPOCH, Instant.EPOCH);
 
   public RiskScore {
-    Checks.checkRange(value, Range.closed(MIN_VALUE, MAX_VALUE), "value");
+    Ranges.check("value", value, Range.closed(MIN_VALUE, MAX_VALUE));
   }
 
   public RiskScore(double value, Instant timestamp, Duration expiry) {

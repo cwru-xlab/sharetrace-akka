@@ -3,7 +3,7 @@ package sharetrace.model;
 import com.google.common.collect.Range;
 import java.time.Duration;
 import sharetrace.Buildable;
-import sharetrace.util.Checks;
+import sharetrace.util.Ranges;
 
 @Buildable
 public record Parameters(
@@ -16,12 +16,12 @@ public record Parameters(
 
   public Parameters {
     // Greater than 0 to avoid divide-by-zero errors; less than 1 to ensure finite runtime.
-    Checks.checkRange(transmissionRate, Range.open(0d, 1d), "transmissionRate");
-    Checks.checkRange(sendCoefficient, Range.atLeast(0d), "sendCoefficient");
-    Checks.checkRange(timeBuffer, Range.atLeast(Duration.ZERO), "timeBuffer");
-    Checks.checkRange(scoreExpiry, Range.atLeast(Duration.ZERO), "scoreExpiry");
-    Checks.checkRange(contactExpiry, Range.atLeast(Duration.ZERO), "contactExpiry");
+    Ranges.check("transmissionRate", transmissionRate, Range.open(0d, 1d));
+    Ranges.check("sendCoefficient", sendCoefficient, Range.atLeast(0d));
+    Ranges.check("timeBuffer", timeBuffer, Range.atLeast(Duration.ZERO));
+    Ranges.check("scoreExpiry", scoreExpiry, Range.atLeast(Duration.ZERO));
+    Ranges.check("contactExpiry", contactExpiry, Range.atLeast(Duration.ZERO));
     // 1 millisecond is the minimum duration supported by Akka for scheduled messages.
-    Checks.checkRange(idleTimeout, Range.atLeast(Duration.ofMillis(1)), "idleTimeout");
+    Ranges.check("idleTimeout", idleTimeout, Range.atLeast(Duration.ofMillis(1)));
   }
 }
