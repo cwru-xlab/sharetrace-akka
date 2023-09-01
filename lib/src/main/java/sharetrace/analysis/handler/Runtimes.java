@@ -23,20 +23,17 @@ public final class Runtimes implements EventHandler {
 
   private static final Object UNKNOWN_RUNTIME = "unknown";
   private final Map<Class<?>, Instant> events;
-  private Instant lastUserEvent;
+  private Instant lastEvent;
 
   public Runtimes() {
     events = new HashMap<>();
-    lastUserEvent = Instant.MIN;
+    lastEvent = Instant.MIN;
   }
 
   @Override
   public void onNext(Event event) {
-    if (event instanceof RiskPropagationEvent) {
-      events.put(event.getClass(), event.timestamp());
-    } else if (event instanceof UserEvent) {
-      lastUserEvent = Instants.max(lastUserEvent, event.timestamp());
-    }
+    if (event instanceof RiskPropagationEvent) events.put(event.getClass(), event.timestamp());
+    else if (event instanceof UserEvent) lastEvent = Instants.max(lastEvent, event.timestamp());
   }
 
   @Override
@@ -58,8 +55,8 @@ public final class Runtimes implements EventHandler {
 
   private Object messagePassingRuntime() {
     var start = SendContactsStart.class;
-    return lastUserEvent != Instant.MIN && isLogged(start)
-        ? Duration.between(events.get(start), lastUserEvent)
+    return lastEvent != Instant.MIN && isLogged(start)
+        ? Duration.between(events.get(start), lastEvent)
         : UNKNOWN_RUNTIME;
   }
 

@@ -64,9 +64,8 @@ public record NodeIndependentPaths(Graph<Integer, DefaultEdge> graph, ExecutorSe
     var tasks = new ArrayList<Callable<Integer>>(taskCount);
     for (int source : nodes) {
       for (int target : nodes) {
-        if ((isDirected && source != target) || (!isDirected && source < target)) {
+        if ((isDirected && source != target) || (!isDirected && source < target))
           tasks.add(newTask(source, target, maxFind));
-        }
       }
     }
     return tasks;
@@ -106,18 +105,15 @@ public record NodeIndependentPaths(Graph<Integer, DefaultEdge> graph, ExecutorSe
     }
 
     private int maxPaths() {
-      if (source == target) {
-        return 0;
-      } else if (graph.getType().isDirected()) {
-        return Math.min(graph.outDegreeOf(source), graph.inDegreeOf(target));
-      } else {
-        return Math.min(graph.degreeOf(source), graph.degreeOf(target));
-      }
+      if (source == target) return 0;
+      else if (isDirected()) return Math.min(graph.outDegreeOf(source), graph.inDegreeOf(target));
+      else return Math.min(graph.degreeOf(source), graph.degreeOf(target));
     }
 
     private int compute(int maxFind) {
-      var isAdjacent = graph.getEdge(source, target) != null;
-      return isAdjacent ? computeAdjacent(maxFind) : computeNonadjacent(maxFind);
+      return graph.getEdge(source, target) != null
+          ? computeAdjacent(maxFind)
+          : computeNonadjacent(maxFind);
     }
 
     private int computeAdjacent(int maxFind) {
@@ -147,11 +143,15 @@ public record NodeIndependentPaths(Graph<Integer, DefaultEdge> graph, ExecutorSe
     }
 
     private Graph<Integer, ?> getDirectedCopy() {
-      return graph.getType().isDirected() ? Graphs.copyDirected(graph) : Graphs.asDirected(graph);
+      return isDirected() ? Graphs.copyDirected(graph) : Graphs.asDirected(graph);
     }
 
     private Graph<Integer, ?> getCopy() {
       return Graphs.copy(graph);
+    }
+
+    private boolean isDirected() {
+      return graph.getType().isDirected();
     }
 
     @SuppressWarnings("SpellCheckingInspection")

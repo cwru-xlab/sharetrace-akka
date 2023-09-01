@@ -28,13 +28,12 @@ public record TemporalGraphExporter(Path directory, String filename) {
   }
 
   private Path ensureExists(Path path) {
-    if (Files.notExists(path)) {
+    if (Files.notExists(path))
       try {
         return Files.createDirectories(path);
       } catch (IOException exception) {
         throw new UncheckedIOException(exception);
       }
-    }
     return path;
   }
 }

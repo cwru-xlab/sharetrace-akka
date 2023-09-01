@@ -84,9 +84,7 @@ final class Monitor extends AbstractBehavior<MonitorMessage> {
   }
 
   private Behavior<MonitorMessage> handle(Run run) {
-    if (userCount < 1) {
-      return Behaviors.stopped();
-    }
+    if (userCount < 1) return Behaviors.stopped();
     logEvent(RiskPropagationStart.class, RiskPropagationStart::new);
     var users = newUsers();
     sendContacts(users);
@@ -96,11 +94,9 @@ final class Monitor extends AbstractBehavior<MonitorMessage> {
 
   private Behavior<MonitorMessage> handle(IdleTimeout timeout) {
     timeouts.set(timeout.key());
-    if (timeouts.cardinality() == userCount) {
-      logEvent(RiskPropagationEnd.class, RiskPropagationEnd::new);
-      return Behaviors.stopped();
-    }
-    return this;
+    if (timeouts.cardinality() < userCount) return this;
+    logEvent(RiskPropagationEnd.class, RiskPropagationEnd::new);
+    return Behaviors.stopped();
   }
 
   @SuppressWarnings("unchecked")

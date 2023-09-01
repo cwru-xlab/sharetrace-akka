@@ -81,9 +81,7 @@ public final class MessageReachability implements EventHandler {
   }
 
   private int computeMessageReachability(int origin, Graph<Integer, ?> graph) {
-    if (!graph.containsVertex(origin)) {
-      return 0;
-    }
+    if (!graph.containsVertex(origin)) return 0;
     return graph.vertexSet().stream()
         .map(new IntVertexDijkstraShortestPath<>(graph).getPaths(origin)::getPath)
         .filter(Objects::nonNull)

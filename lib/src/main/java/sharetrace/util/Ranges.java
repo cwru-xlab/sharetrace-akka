@@ -8,9 +8,8 @@ public final class Ranges {
   private Ranges() {}
 
   public static <T extends Comparable<T>> void check(String name, T value, Range<T> range) {
-    if (!range.contains(value)) {
+    if (!range.contains(value))
       throw new IllegalArgumentException("%s must be in %s; got %s".formatted(name, range, value));
-    }
   }
 
   public static double normalized(double value, double min, double max) {

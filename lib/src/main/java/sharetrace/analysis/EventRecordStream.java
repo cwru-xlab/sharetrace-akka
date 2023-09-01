@@ -30,10 +30,8 @@ public record EventRecordStream(Parser<String, EventRecord> parser) {
     var buffer = 8192; // Default buffer size used by BufferedReader
     try {
       var input = Files.newInputStream(path);
-      if (isCompressed(path)) {
-        // Buffering is required here as well for performant throughput.
-        input = new GZIPInputStream(input, buffer);
-      }
+      // Buffering is required here as well for performant throughput.
+      if (isCompressed(path)) input = new GZIPInputStream(input, buffer);
       return new BufferedReader(new InputStreamReader(input), buffer).lines();
     } catch (IOException exception) {
       throw new UncheckedIOException(exception);
@@ -43,11 +41,8 @@ public record EventRecordStream(Parser<String, EventRecord> parser) {
   private int compare(Path left, Path right) {
     /* Compressed event logs include events that occurred before events in non-compressed logs, so
     they should be read first. If both event logs are (non-)compressed, then compare normally. */
-    if (isCompressed(left) ^ isCompressed(right)) {
-      return isCompressed(left) ? -1 : 1;
-    } else {
-      return left.compareTo(right);
-    }
+    if (isCompressed(left) ^ isCompressed(right)) return isCompressed(left) ? -1 : 1;
+    return left.compareTo(right);
   }
 
   private boolean isCompressed(Path path) {
