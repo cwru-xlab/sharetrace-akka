@@ -26,6 +26,16 @@ public record EventRecordStream(Parser<String, EventRecord> parser) {
     return filename(path).startsWith("event") && (isCompressed(path) || isUncompressed(path));
   }
 
+  private int compare(Path left, Path right) {
+    /* Compressed event logs include events that occurred before events in non-compressed logs, so
+    they should be read first. If both event logs are (non-)compressed, then compare normally. */
+    if (isCompressed(left) ^ isCompressed(right)) {
+      return isCompressed(left) ? -1 : 1;
+    } else {
+      return left.compareTo(right);
+    }
+  }
+
   private Stream<String> records(Path path) {
     var buffer = 8192; // Default buffer size used by BufferedReader
     try {
@@ -37,16 +47,6 @@ public record EventRecordStream(Parser<String, EventRecord> parser) {
       return new BufferedReader(new InputStreamReader(input), buffer).lines();
     } catch (IOException exception) {
       throw new UncheckedIOException(exception);
-    }
-  }
-
-  private int compare(Path left, Path right) {
-    /* Compressed event logs include events that occurred before events in non-compressed logs, so
-    they should be read first. If both event logs are (non-)compressed, then compare normally. */
-    if (isCompressed(left) ^ isCompressed(right)) {
-      return isCompressed(left) ? -1 : 1;
-    } else {
-      return left.compareTo(right);
     }
   }
 
