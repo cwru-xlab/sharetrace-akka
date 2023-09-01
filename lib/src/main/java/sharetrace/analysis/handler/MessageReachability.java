@@ -6,10 +6,6 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
-import it.unimi.dsi.fastutil.longs.Long2IntMap;
-import it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap;
-import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
-import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -23,17 +19,12 @@ import sharetrace.graph.Graphs;
 import sharetrace.logging.event.Event;
 import sharetrace.logging.event.ReceiveEvent;
 
-@SuppressWarnings("SpellCheckingInspection")
 public final class MessageReachability implements EventHandler {
 
-  private final Long2IntMap origins;
-  private final Int2ObjectMap<List<int[]>> knowns;
-  private final Long2ObjectMap<List<int[]>> unknowns;
+  private final Int2ObjectMap<List<int[]>> edges;
 
   public MessageReachability() {
-    origins = new Long2IntOpenHashMap();
-    knowns = new Int2ObjectOpenHashMap<>();
-    unknowns = new Long2ObjectOpenHashMap<>();
+    edges = new Int2ObjectOpenHashMap<>();
   }
 
   @Override
@@ -41,59 +32,19 @@ public final class MessageReachability implements EventHandler {
     if (event instanceof ReceiveEvent receive) {
       var source = receive.contact();
       var target = receive.self();
-      var id = receive.message().id();
-      if (source == target) {
-        addNewOrigin(id, source);
-      } else if (isOriginKnown(id)) {
-        addEdgeOfKnownOrigin(id, source, target);
-      } else {
-        addEdgeOfUnknownOrigin(id, source, target);
+      if (source != target) {
+        var origin = receive.message().id();
+        edges.computeIfAbsent(origin, x -> new ArrayList<>()).add(new int[] {source, target});
       }
     }
   }
 
   @Override
   public void onComplete(ResultsCollector collector) {
-    resolveUnknowns();
-    computeReachability(collector);
-  }
-
-  private void addNewOrigin(long id, int origin) {
-    origins.put(id, origin);
-    knowns.put(origin, new ArrayList<>());
-  }
-
-  private boolean isOriginKnown(long id) {
-    return origins.containsKey(id);
-  }
-
-  private List<int[]> getEdgesOfKnownOrigin(long id) {
-    return knowns.get(origins.get(id));
-  }
-
-  private void addEdgeOfKnownOrigin(long id, int source, int target) {
-    getEdgesOfKnownOrigin(id).add(new int[] {source, target});
-  }
-
-  private void addEdgeOfUnknownOrigin(long id, int source, int target) {
-    unknowns.computeIfAbsent(id, x -> new ArrayList<>()).add(new int[] {source, target});
-  }
-
-  private void resolveUnknowns() {
-    for (var entry : unknowns.long2ObjectEntrySet()) {
-      var id = entry.getLongKey();
-      if (isOriginKnown(id)) {
-        var newEdges = entry.getValue();
-        getEdgesOfKnownOrigin(id).addAll(newEdges);
-      }
-    }
-  }
-
-  private void computeReachability(ResultsCollector collector) {
-    var influence = new Int2IntOpenHashMap(knowns.size());
-    var source = new Int2IntOpenHashMap(knowns.size());
-    var reachability = new Int2IntOpenHashMap(knowns.size());
-    for (var entry : knowns.int2ObjectEntrySet()) {
+    var influence = new Int2IntOpenHashMap(edges.size());
+    var source = new Int2IntOpenHashMap(edges.size());
+    var reachability = new Int2IntOpenHashMap(edges.size());
+    for (var entry : edges.int2ObjectEntrySet()) {
       var origin = entry.getIntKey();
       var edges = entry.getValue();
       var targets = targetsOfOrigin(origin, edges);
@@ -113,16 +64,10 @@ public final class MessageReachability implements EventHandler {
   private IntSet targetsOfOrigin(int origin, Collection<int[]> edges) {
     var targets = new IntOpenHashSet(edges.size());
     for (var edge : edges) {
-      addIfNotOrigin(edge[0], origin, targets);
-      addIfNotOrigin(edge[1], origin, targets);
+      if (edge[0] != origin) targets.add(edge[0]);
+      if (edge[1] != origin) targets.add(edge[1]);
     }
     return targets;
-  }
-
-  private void addIfNotOrigin(int target, int origin, Collection<Integer> targets) {
-    if (target != origin) {
-      targets.add(target);
-    }
   }
 
   private Graph<Integer, DefaultEdge> reachabilityGraph(Iterable<int[]> edges) {
@@ -139,9 +84,8 @@ public final class MessageReachability implements EventHandler {
     if (!graph.containsVertex(origin)) {
       return 0;
     }
-    var shortestPaths = new IntVertexDijkstraShortestPath<>(graph).getPaths(origin);
     return graph.vertexSet().stream()
-        .map(shortestPaths::getPath)
+        .map(new IntVertexDijkstraShortestPath<>(graph).getPaths(origin)::getPath)
         .filter(Objects::nonNull)
         .mapToInt(GraphPath::getLength)
         .max()

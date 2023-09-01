@@ -107,10 +107,10 @@ final class Monitor extends AbstractBehavior<MonitorMessage> {
   private ActorRef<UserMessage>[] newUsers() {
     logEvent(CreateUsersStart.class, CreateUsersStart::new);
     var users = new ActorRef[userCount];
-    for (int key : contactNetwork.vertexSet()) {
-      var user = User.of(context, parameters, getContext().getSelf(), new IdleTimeout(key));
-      users[key] = getContext().spawn(user, String.valueOf(key), User.props());
-      getContext().watch(users[key]);
+    for (int i : contactNetwork.vertexSet()) {
+      var user = User.of(context, parameters, i, getContext().getSelf(), new IdleTimeout(i));
+      users[i] = getContext().spawn(user, String.valueOf(i), User.props());
+      getContext().watch(users[i]);
     }
     logEvent(CreateUsersEnd.class, CreateUsersEnd::new);
     return users;
@@ -131,7 +131,7 @@ final class Monitor extends AbstractBehavior<MonitorMessage> {
     logEvent(SendRiskScoresStart.class, SendRiskScoresStart::new);
     for (var i = 0; i < userCount; i++) {
       var score = scoreFactory.getRiskScore(i);
-      users[i].tell(new RiskScoreMessage(users[i], score));
+      users[i].tell(new RiskScoreMessage(users[i], score, i));
     }
     logEvent(SendRiskScoresEnd.class, SendRiskScoresEnd::new);
   }
