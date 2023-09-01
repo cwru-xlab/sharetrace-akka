@@ -104,7 +104,7 @@ final class Monitor extends AbstractBehavior<MonitorMessage> {
     logEvent(CreateUsersStart.class, CreateUsersStart::new);
     var users = new ActorRef[userCount];
     for (int i : contactNetwork.vertexSet()) {
-      var user = User.of(context, parameters, i, getContext().getSelf(), new IdleTimeout(i));
+      var user = User.of(i, context, parameters, getContext().getSelf(), new IdleTimeout(i));
       users[i] = getContext().spawn(user, String.valueOf(i), User.props());
       getContext().watch(users[i]);
     }

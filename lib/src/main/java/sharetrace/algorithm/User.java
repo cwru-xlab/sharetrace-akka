@@ -34,9 +34,9 @@ import sharetrace.util.Context;
 
 final class User extends AbstractBehavior<UserMessage> {
 
+  private final int id;
   private final RecordLogger<Event> logger;
   private final InstantSource timeSource;
-  private final int id;
   private final Parameters parameters;
   private final ActorRef<MonitorMessage> monitor;
   private final IdleTimeout idleTimeout;
@@ -47,18 +47,18 @@ final class User extends AbstractBehavior<UserMessage> {
   private Instant lastEvent;
 
   private User(
+      int id,
       ActorContext<UserMessage> ctx,
       Context context,
       Parameters parameters,
-      int id,
       ActorRef<MonitorMessage> monitor,
       IdleTimeout idleTimeout,
       TimerScheduler<UserMessage> timers) {
     super(ctx);
+    this.id = id;
     this.logger = context.eventsLogger();
     this.timeSource = context.timeSource();
     this.parameters = parameters;
-    this.id = id;
     this.monitor = monitor;
     this.idleTimeout = idleTimeout;
     this.timers = timers;
@@ -69,16 +69,16 @@ final class User extends AbstractBehavior<UserMessage> {
   }
 
   public static Behavior<UserMessage> of(
+      int id,
       Context context,
       Parameters parameters,
-      int id,
       ActorRef<MonitorMessage> monitor,
       IdleTimeout idleTimeout) {
     return Behaviors.setup(
         ctx -> {
           var user =
               Behaviors.<UserMessage>withTimers(
-                  timers -> new User(ctx, context, parameters, id, monitor, idleTimeout, timers));
+                  timers -> new User(id, ctx, context, parameters, monitor, idleTimeout, timers));
           return Behaviors.withMdc(UserMessage.class, context.mdc(), user);
         });
   }
