@@ -11,13 +11,12 @@ public record StandardRunner() implements Runner {
   @Override
   public void run(Parameters parameters, Context context) {
     var parsed = Parsed.of(parameters, context);
-    var keyFactory = KeyFactory.autoIncrementing();
     RiskPropagationBuilder.create()
         .context(context)
         .parameters(parameters)
         .riskScoreFactory(parsed.scoreFactory())
         .contactNetwork(parsed.network())
-        .keyFactory(keyFactory)
+        .keyFactory(KeyFactory.autoIncrementing())
         .build()
         .run(parsed.iterations());
   }
