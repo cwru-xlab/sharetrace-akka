@@ -22,9 +22,8 @@ public final class UserUpdates implements EventHandler {
 
   @Override
   public void onNext(Event event) {
-    if (event instanceof UpdateEvent update) {
-      updates.computeIfAbsent(update.self(), x -> new ArrayList<>()).add(update);
-    }
+    if (event instanceof UpdateEvent update)
+        updates.computeIfAbsent(update.self(), x -> new ArrayList<>()).add(update);
   }
 
   @Override
