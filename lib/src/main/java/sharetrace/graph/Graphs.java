@@ -50,9 +50,8 @@ public final class Graphs {
   }
 
   public static Graph<Integer, DefaultEdge> asDirected(Graph<Integer, DefaultEdge> graph) {
-    Graph<Integer, DefaultEdge> directed;
     if (graph.getType().isDirected()) return graph;
-    directed = newDirectedGraph();
+    var directed = newDirectedGraph();
     for (var edge : graph.edgeSet()) {
       var source = graph.getEdgeSource(edge);
       var target = graph.getEdgeTarget(edge);
