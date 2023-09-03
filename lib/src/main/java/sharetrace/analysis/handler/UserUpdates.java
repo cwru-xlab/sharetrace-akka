@@ -5,7 +5,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import sharetrace.analysis.collector.ResultsCollector;
+import sharetrace.analysis.results.Results;
 import sharetrace.logging.event.Event;
 import sharetrace.logging.event.UpdateEvent;
 import sharetrace.model.RiskScore;
@@ -27,10 +27,10 @@ public final class UserUpdates implements EventHandler {
   }
 
   @Override
-  public void onComplete(ResultsCollector collector) {
+  public void onComplete(Results results) {
     updates.replaceAll((user, updates) -> scores(updates));
     updates.values().removeIf(List::isEmpty);
-    collector.withScope("user").put("updates", updates);
+    results.withScope("user").put("updates", updates);
   }
 
   private List<RiskScore> scores(List<UpdateEvent> updates) {

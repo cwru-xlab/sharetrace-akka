@@ -1,5 +1,6 @@
 package sharetrace.analysis.handler;
 
+import java.util.Arrays;
 import org.jgrapht.Graph;
 import org.jgrapht.GraphMetrics;
 import org.jgrapht.alg.interfaces.VertexScoringAlgorithm;
@@ -10,12 +11,11 @@ import org.jgrapht.alg.scoring.HarmonicCentrality;
 import org.jgrapht.alg.scoring.KatzCentrality;
 import org.jgrapht.alg.shortestpath.GraphMeasurer;
 import org.jgrapht.alg.shortestpath.IntVertexDijkstraShortestPath;
-import sharetrace.analysis.collector.ResultsCollector;
+import sharetrace.analysis.results.Results;
 import sharetrace.graph.Graphs;
 import sharetrace.graph.TemporalEdge;
 import sharetrace.logging.event.ContactEvent;
 import sharetrace.logging.event.Event;
-import sharetrace.util.Statistics;
 
 public final class GraphHandler implements EventHandler {
 
@@ -32,32 +32,25 @@ public final class GraphHandler implements EventHandler {
   }
 
   @Override
-  public void onComplete(ResultsCollector collector) {
+  public void onComplete(Results results) {
     var measurer = new GraphMeasurer<>(graph, new IntVertexDijkstraShortestPath<>(graph));
-    collector = collector.withScope("graph");
-    collector
+    results = results.withScope("graph");
+    results
         .put("girth", GraphMetrics.getGirth(graph))
         .put("triangles", GraphMetrics.getNumberOfTriangles(graph))
         .put("radius", measurer.getRadius())
-        .put("diameter", measurer.getGraphCenter().size())
+        .put("diameter", measurer.getDiameter())
+        .put("center", measurer.getGraphCenter().size())
         .put("periphery", measurer.getGraphPeriphery().size())
         .put("degeneracy", new Coreness<>(graph).getDegeneracy());
-    collector
+    results
         .withScope("clustering")
-        .put("global", globalClusteringCoefficient())
-        .put("local", scoreStats(new ClusteringCoefficient<>(graph)));
-    collector
+        .put("global", new ClusteringCoefficient<>(graph).getGlobalClusteringCoefficient())
+        .put("local", new ClusteringCoefficient<>(graph).getScores());
+    results
         .withScope("centrality")
-        .put("harmonic", scoreStats(new HarmonicCentrality<>(graph)))
-        .put("katz", scoreStats(new KatzCentrality<>(graph)))
-        .put("eigenvector", scoreStats(new EigenvectorCentrality<>(graph)));
-  }
-
-  private double globalClusteringCoefficient() {
-    return new ClusteringCoefficient<>(graph).getGlobalClusteringCoefficient();
-  }
-
-  private Statistics scoreStats(VertexScoringAlgorithm<?, ? extends Number> algorithm) {
-    return Statistics.of(algorithm.getScores().values());
+        .put("harmonic", new HarmonicCentrality<>(graph).getScores())
+        .put("katz", new KatzCentrality<>(graph).getScores())
+        .put("eigenvector", new EigenvectorCentrality<>(graph).getScores());
   }
 }

@@ -5,8 +5,8 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import sharetrace.analysis.collector.ResultsCollector;
 import sharetrace.analysis.model.LoggedEvent;
+import sharetrace.analysis.results.Results;
 import sharetrace.logging.event.Event;
 import sharetrace.util.Instants;
 
@@ -28,10 +28,10 @@ public final class EventTimeline implements EventHandler {
   }
 
   @Override
-  public void onComplete(ResultsCollector collector) {
+  public void onComplete(Results results) {
     timeline.replaceAll(this::adjustTimestamp);
     timeline.sort(Comparator.comparing(LoggedEvent::timestamp));
-    collector.put("timeline", timeline);
+    results.put("timeline", timeline);
   }
 
   private LoggedEvent adjustTimestamp(LoggedEvent event) {

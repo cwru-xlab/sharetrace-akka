@@ -4,7 +4,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import sharetrace.analysis.collector.ResultsCollector;
+import sharetrace.analysis.results.Results;
 import sharetrace.logging.event.Event;
 import sharetrace.logging.event.UserEvent;
 
@@ -26,7 +26,7 @@ public final class UserEventCounter implements EventHandler {
   }
 
   @Override
-  public void onComplete(ResultsCollector collector) {
-    collector.withScope("user").put("events", counts);
+  public void onComplete(Results results) {
+    results.withScope("user").put("events", counts);
   }
 }

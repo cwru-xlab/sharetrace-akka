@@ -5,7 +5,7 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import sharetrace.analysis.collector.ResultsCollector;
+import sharetrace.analysis.results.Results;
 import sharetrace.logging.event.CreateUsersEnd;
 import sharetrace.logging.event.CreateUsersStart;
 import sharetrace.logging.event.Event;
@@ -37,8 +37,8 @@ public final class Runtimes implements EventHandler {
   }
 
   @Override
-  public void onComplete(ResultsCollector collector) {
-    collector
+  public void onComplete(Results results) {
+    results
         .withScope("runtime")
         .put("createUsers", getRuntime(CreateUsersStart.class, CreateUsersEnd.class))
         .put("sendContacts", getRuntime(SendContactsStart.class, SendContactsEnd.class))

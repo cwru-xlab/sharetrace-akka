@@ -14,7 +14,7 @@ import org.jgrapht.Graph;
 import org.jgrapht.GraphPath;
 import org.jgrapht.alg.shortestpath.IntVertexDijkstraShortestPath;
 import org.jgrapht.graph.DefaultEdge;
-import sharetrace.analysis.collector.ResultsCollector;
+import sharetrace.analysis.results.Results;
 import sharetrace.graph.Graphs;
 import sharetrace.logging.event.Event;
 import sharetrace.logging.event.ReceiveEvent;
@@ -40,7 +40,7 @@ public final class MessageReachability implements EventHandler {
   }
 
   @Override
-  public void onComplete(ResultsCollector collector) {
+  public void onComplete(Results results) {
     var influence = new Int2IntOpenHashMap(edges.size());
     var source = new Int2IntOpenHashMap(edges.size());
     var reachability = new Int2IntOpenHashMap(edges.size());
@@ -53,7 +53,7 @@ public final class MessageReachability implements EventHandler {
       targets.forEach(target -> source.mergeInt(target, 1, Integer::sum));
       reachability.put(origin, computeMessageReachability(origin, graph));
     }
-    collector
+    results
         .withScope("reachability")
         .put("influence", influence)
         .put("source", source)

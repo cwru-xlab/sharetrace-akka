@@ -1,6 +1,6 @@
 package sharetrace.analysis.handler;
 
-import sharetrace.analysis.collector.ResultsCollector;
+import sharetrace.analysis.results.Results;
 import sharetrace.logging.event.Event;
 
 public record EventHandlers(Iterable<? extends EventHandler> handlers) implements EventHandler {
@@ -11,7 +11,7 @@ public record EventHandlers(Iterable<? extends EventHandler> handlers) implement
   }
 
   @Override
-  public void onComplete(ResultsCollector collector) {
-    handlers.forEach(handler -> handler.onComplete(collector));
+  public void onComplete(Results results) {
+    handlers.forEach(handler -> handler.onComplete(results));
   }
 }
