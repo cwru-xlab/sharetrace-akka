@@ -154,7 +154,6 @@ public record NodeIndependentPaths(Graph<Integer, DefaultEdge> graph, ExecutorSe
       return graph.getType().isDirected();
     }
 
-    @SuppressWarnings("SpellCheckingInspection")
     private List<? extends GraphPath<Integer, ?>> shortestPaths(Graph<Integer, ?> graph) {
       // Suurballe provides a simpler implementation since it ensures no loops.
       // Suurballe copies internally, so we must pass in the graph on every call.
