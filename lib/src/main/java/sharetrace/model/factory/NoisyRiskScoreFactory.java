@@ -12,7 +12,7 @@ public record NoisyRiskScoreFactory(RiskScoreFactory scoreFactory, DistributedRa
     return scoreFactory.getRiskScore(key).mapValue(this::distort);
   }
 
-  private double distort(double v) {
-    return Ranges.bounded(v + random.nextDouble(), RiskScore.MIN_VALUE, RiskScore.MAX_VALUE);
+  private double distort(double value) {
+    return Ranges.bounded(value + random.nextDouble(), RiskScore.MIN_VALUE, RiskScore.MAX_VALUE);
   }
 }
