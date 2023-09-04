@@ -19,8 +19,8 @@ public record Parameters(
     Ranges.check("transmissionRate", transmissionRate, Range.open(0d, 1d));
     Ranges.check("sendCoefficient", sendCoefficient, Range.atLeast(0d));
     Ranges.check("timeBuffer", timeBuffer, Range.atLeast(Duration.ZERO));
-    Ranges.check("scoreExpiry", scoreExpiry, Range.atLeast(Duration.ZERO));
-    Ranges.check("contactExpiry", contactExpiry, Range.atLeast(Duration.ZERO));
+    Ranges.check("scoreExpiry", scoreExpiry, Range.greaterThan(Duration.ZERO));
+    Ranges.check("contactExpiry", contactExpiry, Range.greaterThan(Duration.ZERO));
     // 1 millisecond is the minimum duration supported by Akka for scheduled messages.
     Ranges.check("idleTimeout", idleTimeout, Range.atLeast(Duration.ofMillis(1)));
   }
