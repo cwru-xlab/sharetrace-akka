@@ -7,6 +7,8 @@ import java.io.IOException;
 
 final class ToClassNameSerializer extends StdSerializer<Object> {
 
+  public static final ToClassNameSerializer INSTANCE = new ToClassNameSerializer();
+
   public ToClassNameSerializer() {
     super(Object.class);
   }
@@ -14,6 +16,6 @@ final class ToClassNameSerializer extends StdSerializer<Object> {
   @Override
   public void serialize(Object value, JsonGenerator generator, SerializerProvider provider)
       throws IOException {
-    generator.writeString(value.getClass().getName());
+    ClassSerializer.INSTANCE.serialize(value.getClass(), generator, provider);
   }
 }
