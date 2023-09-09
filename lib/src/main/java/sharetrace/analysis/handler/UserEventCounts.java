@@ -8,11 +8,11 @@ import sharetrace.analysis.results.Results;
 import sharetrace.logging.event.Event;
 import sharetrace.logging.event.UserEvent;
 
-public final class UserEventCounter implements EventHandler {
+public final class UserEventCounts implements EventHandler {
 
   private final Int2ObjectMap<Object2IntMap<String>> counts;
 
-  public UserEventCounter() {
+  public UserEventCounts() {
     counts = new Int2ObjectOpenHashMap<>();
   }
 
