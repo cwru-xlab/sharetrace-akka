@@ -1,9 +1,7 @@
 package sharetrace.analysis.handler;
 
-import java.util.Arrays;
 import org.jgrapht.Graph;
 import org.jgrapht.GraphMetrics;
-import org.jgrapht.alg.interfaces.VertexScoringAlgorithm;
 import org.jgrapht.alg.scoring.ClusteringCoefficient;
 import org.jgrapht.alg.scoring.Coreness;
 import org.jgrapht.alg.scoring.EigenvectorCentrality;
