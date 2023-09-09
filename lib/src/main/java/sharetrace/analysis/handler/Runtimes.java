@@ -2,9 +2,9 @@ package sharetrace.analysis.handler;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Stream;
 import sharetrace.analysis.results.Results;
 import sharetrace.logging.event.CreateUsersEnd;
 import sharetrace.logging.event.CreateUsersStart;
@@ -54,13 +54,13 @@ public final class Runtimes implements EventHandler {
   }
 
   private Object messagePassingRuntime() {
-    var start = SendContactsStart.class;
+    var start = SendRiskScoresStart.class;
     return lastEvent != Instant.MIN && isLogged(start)
         ? Duration.between(events.get(start), lastEvent)
         : UNKNOWN_RUNTIME;
   }
 
   private boolean isLogged(Class<?>... types) {
-    return Arrays.stream(types).allMatch(events::containsKey);
+    return Stream.of(types).allMatch(events::containsKey);
   }
 }
