@@ -49,7 +49,7 @@ final class Contact implements Expirable, Timestamped, Comparable<Contact> {
     var shouldReceive = shouldReceive(message);
     if (shouldReceive) {
       self.tell(message);
-      setThreshold(message.score());
+      setThreshold(message);
     }
     return shouldReceive;
   }
@@ -108,12 +108,11 @@ final class Contact implements Expirable, Timestamped, Comparable<Contact> {
       scores
           .refresh()
           .max(bufferedTimestamp)
-          .map(RiskScoreMessage::score)
           .ifPresentOrElse(this::setThreshold, this::resetThreshold);
   }
 
-  private void setThreshold(RiskScore score) {
-    sendThreshold = score.mapValue(value -> value * sendCoefficient);
+  private void setThreshold(RiskScoreMessage message) {
+    sendThreshold = message.score().mapValue(value -> value * sendCoefficient);
   }
 
   private void resetThreshold() {
