@@ -43,7 +43,7 @@ final class User extends AbstractBehavior<UserMessage> {
   private final TimerScheduler<UserMessage> timers;
   private final Cache<RiskScoreMessage> scores;
   private final Cache<Contact> contacts;
-  private RiskScoreMessage exposureScore;
+  private RiskScoreMessage currentScore;
   private Instant lastEvent;
 
   private User(
@@ -64,7 +64,7 @@ final class User extends AbstractBehavior<UserMessage> {
     this.timers = timers;
     this.scores = new RangeCache<>(timeSource);
     this.contacts = new StandardCache<>(timeSource);
-    this.exposureScore = defaultExposureScore();
+    this.currentScore = defaultScore();
     this.lastEvent = Instant.EPOCH;
   }
 
@@ -105,10 +105,7 @@ final class User extends AbstractBehavior<UserMessage> {
     }
     /* Always try to send a new contact a risk score. An expired contact may still receive a risk
     score if it is "relevant" (i.e., within the time buffer of the contact time). */
-    scores
-        .refresh()
-        .max(contact.bufferedTimestamp())
-        .ifPresent(msg -> contact.tell(msg, this::logSendEvent));
+    contact.maxRelevantMessageInCache().ifPresent(msg -> contact.tell(msg, this::logSendEvent));
     return this;
   }
 
@@ -125,14 +122,14 @@ final class User extends AbstractBehavior<UserMessage> {
   }
 
   private void updateExposureScore(RiskScoreMessage message) {
-    var previous = exposureScore;
-    if (exposureScore.value() < message.value()) {
-      exposureScore = message;
-      logUpdateEvent(previous, exposureScore);
-    } else if (exposureScore.isExpired(timeSource)) {
-      scores.refresh();
-      exposureScore = scores.max().map(this::preTransmission).orElseGet(this::defaultExposureScore);
-      logUpdateEvent(previous, exposureScore);
+    if (currentScore.value() < message.value()) {
+      var previousScore = currentScore;
+      currentScore = message;
+      logUpdateEvent(previousScore, currentScore);
+    } else if (currentScore.isExpired(timeSource)) {
+      var previousScore = currentScore;
+      currentScore = scores.refresh().max().map(this::untransmitted).orElseGet(this::defaultScore);
+      logUpdateEvent(previousScore, currentScore);
     }
   }
 
@@ -151,12 +148,13 @@ final class User extends AbstractBehavior<UserMessage> {
     return new RiskScoreMessage(self(), score, message.id());
   }
 
-  private RiskScoreMessage preTransmission(RiskScoreMessage message) {
+  @SuppressWarnings("SpellCheckingInspection")
+  private RiskScoreMessage untransmitted(RiskScoreMessage message) {
     var score = message.score().mapValue(value -> value / parameters.transmissionRate());
     return new RiskScoreMessage(message.sender(), score, message.id());
   }
 
-  private RiskScoreMessage defaultExposureScore() {
+  private RiskScoreMessage defaultScore() {
     return new RiskScoreMessage(self(), RiskScore.MIN, id);
   }
 

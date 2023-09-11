@@ -3,6 +3,7 @@ package sharetrace.algorithm;
 import akka.actor.typed.ActorRef;
 import java.time.Instant;
 import java.time.InstantSource;
+import java.util.Optional;
 import java.util.function.BiConsumer;
 import sharetrace.cache.Cache;
 import sharetrace.model.Expirable;
@@ -40,17 +41,22 @@ final class Contact implements Expirable, Timestamped, Comparable<Contact> {
     resetThreshold();
   }
 
-  public void tell(RiskScoreMessage message) {
-    tell(message, (self, msg) -> {});
+  public void tell(RiskScoreMessage message, BiConsumer<ActorRef<?>, RiskScoreMessage> logEvent) {
+    if (tell(message)) logEvent.accept(self, message);
   }
 
-  public void tell(RiskScoreMessage message, BiConsumer<ActorRef<?>, RiskScoreMessage> logEvent) {
+  public boolean tell(RiskScoreMessage message) {
     refreshThreshold();
-    if (shouldReceive(message)) {
+    var shouldReceive = shouldReceive(message);
+    if (shouldReceive) {
       self.tell(message);
-      logEvent.accept(self, message);
-      setThreshold(message.score());
+      setThreshold(message);
     }
+    return shouldReceive;
+  }
+
+  public Optional<RiskScoreMessage> maxRelevantMessageInCache() {
+    return scores.refresh().max(bufferedTimestamp);
   }
 
   @Override
@@ -61,10 +67,6 @@ final class Contact implements Expirable, Timestamped, Comparable<Contact> {
   @Override
   public Instant timestamp() {
     return timestamp;
-  }
-
-  public Instant bufferedTimestamp() {
-    return bufferedTimestamp;
   }
 
   public ActorRef<UserMessage> self() {
@@ -104,15 +106,11 @@ final class Contact implements Expirable, Timestamped, Comparable<Contact> {
      entire contact network, this would prevent all propagation of messages.
     */
     if (sendThreshold != RiskScore.MIN && sendThreshold.isExpired(timeSource))
-      scores
-          .refresh()
-          .max(bufferedTimestamp)
-          .map(RiskScoreMessage::score)
-          .ifPresentOrElse(this::setThreshold, this::resetThreshold);
+      maxRelevantMessageInCache().ifPresentOrElse(this::setThreshold, this::resetThreshold);
   }
 
-  private void setThreshold(RiskScore score) {
-    sendThreshold = score.mapValue(value -> value * sendCoefficient);
+  private void setThreshold(RiskScoreMessage message) {
+    sendThreshold = message.score().mapValue(value -> value * sendCoefficient);
   }
 
   private void resetThreshold() {
