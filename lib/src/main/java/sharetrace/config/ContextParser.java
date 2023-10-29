@@ -61,6 +61,16 @@ public record ContextParser(Config contextConfig) implements ConfigParser<Contex
   private Set<Class<? extends LogRecord>> getLoggable(Config config) {
     return config.getStringList("loggable").stream()
         .<Class<? extends LogRecord>>map(ClassFactory::getClass)
+        .peek(this::ensureIsLogRecord)
         .collect(Collectors.toSet());
+  }
+
+  @SuppressWarnings("SameParameterValue")
+  private void ensureIsLogRecord(Class<?> cls) {
+    var expected = LogRecord.class;
+    if (!expected.isAssignableFrom(cls)) {
+      throw new IllegalArgumentException(
+          "%s must be of type %s".formatted(cls.getSimpleName(), expected.getSimpleName()));
+    }
   }
 }
