@@ -27,6 +27,7 @@ public final class GraphHandler implements EventHandler {
   public void onNext(Event event) {
     if (event instanceof ContactEvent e) {
       Graphs.addTemporalEdge(graph, e.self(), e.contact(), e.contactTime());
+    }
   }
 
   @Override
