@@ -45,7 +45,7 @@ public final class Runtimes implements EventHandler {
         .withScope("runtime")
         .put("createUsers", getRuntime(CreateUsersStart.class, CreateUsersEnd.class))
         .put("sendContacts", getRuntime(SendContactsStart.class, SendContactsEnd.class))
-        .put("sendContacts", getRuntime(SendRiskScoresStart.class, SendRiskScoresEnd.class))
+        .put("sendScores", getRuntime(SendRiskScoresStart.class, SendRiskScoresEnd.class))
         .put("riskPropagation", getRuntime(RiskPropagationStart.class, RiskPropagationEnd.class))
         .put("messagePassing", messagePassingRuntime());
   }
