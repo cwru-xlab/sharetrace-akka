@@ -6,11 +6,11 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import java.io.IOException;
 
 @SuppressWarnings("rawtypes")
-public class ClassSerializer extends StdSerializer<Class> {
+final class ClassSerializer extends StdSerializer<Class> {
 
   public static final ClassSerializer INSTANCE = new ClassSerializer();
 
-  protected ClassSerializer() {
+  private ClassSerializer() {
     super(Class.class);
   }
 

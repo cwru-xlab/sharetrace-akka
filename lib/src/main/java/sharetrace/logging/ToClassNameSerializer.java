@@ -9,7 +9,7 @@ final class ToClassNameSerializer extends StdSerializer<Object> {
 
   public static final ToClassNameSerializer INSTANCE = new ToClassNameSerializer();
 
-  public ToClassNameSerializer() {
+  private ToClassNameSerializer() {
     super(Object.class);
   }
 
