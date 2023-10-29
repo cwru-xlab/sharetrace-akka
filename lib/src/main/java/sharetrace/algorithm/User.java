@@ -35,7 +35,7 @@ import sharetrace.util.Context;
 final class User extends AbstractBehavior<UserMessage> {
 
   private final int id;
-  private final RecordLogger<Event> logger;
+  private final RecordLogger logger;
   private final InstantSource timeSource;
   private final Parameters parameters;
   private final ActorRef<MonitorMessage> monitor;

@@ -13,8 +13,6 @@ import org.slf4j.LoggerFactory;
 import sharetrace.Buildable;
 import sharetrace.logging.LogRecord;
 import sharetrace.logging.RecordLogger;
-import sharetrace.logging.Settings;
-import sharetrace.logging.event.Event;
 
 @Buildable
 public record Context(
@@ -29,11 +27,11 @@ public record Context(
   private static final Logger EVENTS_LOGGER = LoggerFactory.getLogger("EventsLogger");
   private static final Logger SETTINGS_LOGGER = LoggerFactory.getLogger("SettingsLogger");
 
-  public RecordLogger<Event> eventsLogger() {
-    return new RecordLogger<>(EVENTS_LOGGER, "event", loggable);
+  public RecordLogger eventsLogger() {
+    return new RecordLogger(EVENTS_LOGGER, "event", loggable);
   }
 
-  public RecordLogger<Settings> settingsLogger() {
-    return new RecordLogger<>(SETTINGS_LOGGER, "setting", loggable);
+  public RecordLogger settingsLogger() {
+    return new RecordLogger(SETTINGS_LOGGER, "setting", loggable);
   }
 }
