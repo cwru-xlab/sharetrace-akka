@@ -20,7 +20,7 @@ final class Contact implements Expirable, Timestamped, Comparable<Contact> {
   private final ActorRef<UserMessage> self;
   private final Instant timestamp;
   private final Instant bufferedTimestamp;
-  private final Instant expiresAt;
+  private final Instant expiryTime;
   private final double sendCoefficient;
   private final Cache<RiskScoreMessage> scores;
   private final InstantSource timeSource;
@@ -34,7 +34,7 @@ final class Contact implements Expirable, Timestamped, Comparable<Contact> {
     this.self = message.contact();
     this.timestamp = message.timestamp();
     this.bufferedTimestamp = message.timestamp().plus(parameters.timeBuffer());
-    this.expiresAt = message.expiresAt();
+    this.expiryTime = message.expiryTime();
     this.sendCoefficient = parameters.sendCoefficient();
     this.scores = scores;
     this.timeSource = timeSource;
@@ -60,8 +60,8 @@ final class Contact implements Expirable, Timestamped, Comparable<Contact> {
   }
 
   @Override
-  public Instant expiresAt() {
-    return expiresAt;
+  public Instant expiryTime() {
+    return expiryTime;
   }
 
   @Override

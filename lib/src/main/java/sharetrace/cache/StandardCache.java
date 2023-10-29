@@ -63,11 +63,11 @@ public final class StandardCache<V extends Expirable & Timestamped & Comparable<
   }
 
   private void updateMin(V value) {
-    min = Instants.min(min, value.expiresAt());
+    min = Instants.min(min, value.expiryTime());
   }
 
   private void updateMin() {
-    min = values().stream().map(Expirable::expiresAt).min(Instant::compareTo).orElse(Instant.MAX);
+    min = values().stream().map(Expirable::expiryTime).min(Instant::compareTo).orElse(Instant.MAX);
   }
 
   private Collection<V> values() {

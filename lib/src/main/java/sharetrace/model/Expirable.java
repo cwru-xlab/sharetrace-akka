@@ -7,13 +7,13 @@ import java.time.InstantSource;
 public interface Expirable {
 
   @JsonIgnore
-  Instant expiresAt();
+  Instant expiryTime();
 
   default boolean isAlive(InstantSource timeSource) {
     return !isExpired(timeSource);
   }
 
   default boolean isExpired(InstantSource timeSource) {
-    return expiresAt().isBefore(timeSource.instant());
+    return expiryTime().isBefore(timeSource.instant());
   }
 }

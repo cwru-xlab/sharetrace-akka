@@ -6,7 +6,7 @@ import java.time.Instant;
 import sharetrace.model.Expirable;
 import sharetrace.model.Timestamped;
 
-public record ContactMessage(ActorRef<UserMessage> contact, Instant timestamp, Instant expiresAt)
+public record ContactMessage(ActorRef<UserMessage> contact, Instant timestamp, Instant expiryTime)
     implements Expirable, Timestamped, UserMessage {
 
   public ContactMessage(ActorRef<UserMessage> contact, Instant timestamp, Duration expiry) {

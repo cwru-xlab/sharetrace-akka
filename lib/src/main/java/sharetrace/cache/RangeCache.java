@@ -14,7 +14,6 @@ import java.util.function.BinaryOperator;
 import sharetrace.model.Expirable;
 import sharetrace.model.Timestamped;
 
-@SuppressWarnings("UnstableApiUsage")
 public final class RangeCache<V extends Expirable & Timestamped & Comparable<? super V>>
     implements Cache<V> {
 
@@ -54,7 +53,7 @@ public final class RangeCache<V extends Expirable & Timestamped & Comparable<? s
 
   @Override
   public void add(V value) {
-    var key = Range.closedOpen(value.timestamp(), value.expiresAt());
+    var key = Range.closedOpen(value.timestamp(), value.expiryTime());
     cache.merge(key, value, merger);
     updateMin();
   }

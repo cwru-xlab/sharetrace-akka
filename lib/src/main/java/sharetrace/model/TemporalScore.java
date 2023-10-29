@@ -7,7 +7,7 @@ public interface TemporalScore extends Expirable, Timestamped, Comparable<Tempor
   Comparator<TemporalScore> COMPARATOR =
       Comparator.comparingDouble(TemporalScore::value)
           .thenComparing(TemporalScore::timestamp)
-          .thenComparing(TemporalScore::expiresAt);
+          .thenComparing(TemporalScore::expiryTime);
 
   double value();
 

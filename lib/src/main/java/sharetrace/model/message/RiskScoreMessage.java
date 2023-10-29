@@ -20,7 +20,7 @@ public record RiskScoreMessage(@JsonIgnore ActorRef<UserMessage> sender, RiskSco
   }
 
   @Override
-  public Instant expiresAt() {
-    return score.expiresAt();
+  public Instant expiryTime() {
+    return score.expiryTime();
   }
 }

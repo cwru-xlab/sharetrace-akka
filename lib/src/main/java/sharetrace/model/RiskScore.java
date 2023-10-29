@@ -4,7 +4,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.function.DoubleUnaryOperator;
 
-public record RiskScore(double value, Instant timestamp, Instant expiresAt)
+public record RiskScore(double value, Instant timestamp, Instant expiryTime)
     implements TemporalScore {
 
   public static final double MIN_VALUE = 0;
