@@ -20,9 +20,13 @@ public final class Graphs {
     graph.addVertex(source);
     graph.addVertex(target);
     var edge = graph.getEdge(source, target);
-    if (edge == null) edge = graph.addEdge(source, target);
+    if (edge == null) {
+      edge = graph.addEdge(source, target);
+    }
     edge.updateTime(time, Instants::max);
-    if (graph.getType().isWeighted()) graph.setEdgeWeight(edge, edge.weight());
+    if (graph.getType().isWeighted()) {
+      graph.setEdgeWeight(edge, edge.weight());
+    }
   }
 
   public static Graph<Integer, DefaultEdge> copy(Graph<Integer, DefaultEdge> graph) {
@@ -50,7 +54,9 @@ public final class Graphs {
   }
 
   public static Graph<Integer, DefaultEdge> asDirected(Graph<Integer, DefaultEdge> graph) {
-    if (graph.getType().isDirected()) return graph;
+    if (graph.getType().isDirected()) {
+      return graph;
+    }
     var directed = newDirectedGraph();
     for (var edge : graph.edgeSet()) {
       var source = graph.getEdgeSource(edge);

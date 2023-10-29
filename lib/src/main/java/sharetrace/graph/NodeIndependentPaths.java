@@ -64,8 +64,9 @@ public record NodeIndependentPaths(Graph<Integer, DefaultEdge> graph, ExecutorSe
     var tasks = new ArrayList<Callable<Integer>>(taskCount);
     for (int source : nodes) {
       for (int target : nodes) {
-        if ((isDirected && source != target) || (!isDirected && source < target))
+        if ((isDirected && source != target) || (!isDirected && source < target)) {
           tasks.add(newTask(source, target, maxFind));
+        }
       }
     }
     return tasks;
@@ -105,9 +106,13 @@ public record NodeIndependentPaths(Graph<Integer, DefaultEdge> graph, ExecutorSe
     }
 
     private int maxPaths() {
-      if (source == target) return 0;
-      else if (isDirected()) return Math.min(graph.outDegreeOf(source), graph.inDegreeOf(target));
-      else return Math.min(graph.degreeOf(source), graph.degreeOf(target));
+      if (source == target) {
+        return 0;
+      } else if (isDirected()) {
+        return Math.min(graph.outDegreeOf(source), graph.inDegreeOf(target));
+      } else {
+        return Math.min(graph.degreeOf(source), graph.degreeOf(target));
+      }
     }
 
     private int compute(int maxFind) {

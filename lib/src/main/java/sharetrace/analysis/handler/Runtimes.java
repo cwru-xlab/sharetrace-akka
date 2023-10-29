@@ -32,8 +32,11 @@ public final class Runtimes implements EventHandler {
 
   @Override
   public void onNext(Event event) {
-    if (event instanceof RiskPropagationEvent) events.put(event.getClass(), event.timestamp());
-    else if (event instanceof UserEvent) lastEvent = Instants.max(lastEvent, event.timestamp());
+    if (event instanceof RiskPropagationEvent) {
+      events.put(event.getClass(), event.timestamp());
+    } else if (event instanceof UserEvent) {
+      lastEvent = Instants.max(lastEvent, event.timestamp());
+    }
   }
 
   @Override
