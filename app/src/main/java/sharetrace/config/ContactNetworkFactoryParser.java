@@ -80,7 +80,7 @@ public record ContactNetworkFactoryParser(
     return FileContactNetworkFactoryBuilder.create()
         .path(Path.of(config.getString("path")))
         .delimiter(config.getString("delimiter"))
-        .timestamp(context.referenceTime())
+        .referenceTime(context.referenceTime())
         .build();
   }
 
