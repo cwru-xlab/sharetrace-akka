@@ -41,18 +41,17 @@ final class Contact implements Expirable, Timestamped, Comparable<Contact> {
     resetThreshold();
   }
 
-  public void tell(RiskScoreMessage message, BiConsumer<ActorRef<?>, RiskScoreMessage> logEvent) {
-    if (tell(message)) logEvent.accept(self, message);
+  public void tell(RiskScoreMessage message) {
+    tell(message, (self, msg) -> {});
   }
 
-  public boolean tell(RiskScoreMessage message) {
+  public void tell(RiskScoreMessage message, BiConsumer<ActorRef<?>, RiskScoreMessage> logEvent) {
     refreshThreshold();
-    var shouldReceive = shouldReceive(message);
-    if (shouldReceive) {
+    if (shouldReceive(message)) {
       self.tell(message);
+      logEvent.accept(self, message);
       setThreshold(message);
     }
-    return shouldReceive;
   }
 
   public Optional<RiskScoreMessage> maxRelevantMessageInCache() {

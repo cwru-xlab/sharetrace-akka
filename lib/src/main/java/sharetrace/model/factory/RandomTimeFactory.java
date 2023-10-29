@@ -9,16 +9,17 @@ import sharetrace.util.DistributedRandom;
 import sharetrace.util.Ranges;
 
 @Buildable
-public record RandomTimeFactory(DistributedRandom random, Duration range, Instant timestamp)
-    implements TimeFactory, Timestamped {
+public record RandomTimeFactory(DistributedRandom random, Duration period, Instant referenceTime)
+    implements TimeFactory {
 
   public RandomTimeFactory {
-    Ranges.check("range", range, Range.atLeast(Duration.ZERO));
+    Ranges.check("period", period, Range.atLeast(Duration.ZERO));
+    Ranges.check("referenceTime", referenceTime, Range.atLeast(Timestamped.MIN_TIME));
   }
 
   @Override
   public Instant getTime() {
-    var offset = random.nextLong(range.toMillis());
-    return timestamp.minusMillis(offset);
+    var offset = random.nextLong(period.toMillis());
+    return referenceTime.minusMillis(offset);
   }
 }

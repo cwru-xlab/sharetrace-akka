@@ -21,7 +21,6 @@ public final class Ranges {
     return bounded(value, -Double.MAX_VALUE, Double.MAX_VALUE);
   }
 
-  @SuppressWarnings("UnstableApiUsage")
   public static double bounded(double value, double min, double max) {
     return Doubles.constrainToRange(value, min, max);
   }

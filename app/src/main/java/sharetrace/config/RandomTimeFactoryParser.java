@@ -13,8 +13,8 @@ public record RandomTimeFactoryParser(
   @Override
   public RandomTimeFactory parse(Config config) {
     return RandomTimeFactoryBuilder.create()
-        .timestamp(context.referenceTime())
-        .range(config.getDuration("time-range"))
+        .referenceTime(context.referenceTime())
+        .period(config.getDuration("time-period"))
         .random(randomParser.parse(config.getConfig("time-distribution")))
         .build();
   }

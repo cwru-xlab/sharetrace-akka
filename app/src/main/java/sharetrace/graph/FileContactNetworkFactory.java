@@ -15,8 +15,8 @@ import sharetrace.model.Timestamped;
 import sharetrace.util.Instants;
 
 @Buildable
-public record FileContactNetworkFactory(Path path, String delimiter, Instant timestamp)
-    implements ContactNetworkFactory, Timestamped {
+public record FileContactNetworkFactory(Path path, String delimiter, Instant referenceTime)
+    implements ContactNetworkFactory {
 
   @Override
   public ContactNetwork newContactNetwork(Graph<Integer, TemporalEdge> target) {
@@ -29,13 +29,13 @@ public record FileContactNetworkFactory(Path path, String delimiter, Instant tim
   }
 
   private void generateGraph(Graph<Integer, TemporalEdge> target, Map<String, ?> resultMap) {
-    var max = new AtomicReference<>(Instant.EPOCH);
+    var max = new AtomicReference<>(Timestamped.MIN_TIME);
     try (var edges = Files.lines(path)) {
       edges.forEach(edge -> processEdge(edge, target, max));
     } catch (IOException exception) {
       throw new UncheckedIOException(exception);
     }
-    var offset = Duration.between(max.get(), timestamp);
+    var offset = Duration.between(max.get(), referenceTime);
     target.edgeSet().forEach(edge -> edge.updateTime(t -> t.plus(offset)));
   }
 
@@ -45,9 +45,9 @@ public record FileContactNetworkFactory(Path path, String delimiter, Instant tim
     var v1 = Integer.parseInt(args[1]);
     var v2 = Integer.parseInt(args[2]);
     if (v1 != v2) {
-      var timestamp = Instant.ofEpochSecond(Long.parseLong(args[0]));
-      Graphs.addTemporalEdge(target, v1, v2, timestamp);
-      max.updateAndGet(t -> Instants.max(t, timestamp));
+      var contactTime = Instant.ofEpochSecond(Long.parseLong(args[0]));
+      Graphs.addTemporalEdge(target, v1, v2, contactTime);
+      max.updateAndGet(t -> Instants.max(t, contactTime));
     }
   }
 }

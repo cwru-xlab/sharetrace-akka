@@ -23,11 +23,11 @@ public final class Runtimes implements EventHandler {
 
   private static final Object UNKNOWN_RUNTIME = "unknown";
   private final Map<Class<?>, Instant> events;
-  private Instant lastEvent;
+  private Instant lastEventTime;
 
   public Runtimes() {
     events = new HashMap<>();
-    lastEvent = Instant.MIN;
+    lastEventTime = Instant.MIN;
   }
 
   @Override
@@ -35,7 +35,7 @@ public final class Runtimes implements EventHandler {
     if (event instanceof RiskPropagationEvent) {
       events.put(event.getClass(), event.timestamp());
     } else if (event instanceof UserEvent) {
-      lastEvent = Instants.max(lastEvent, event.timestamp());
+      lastEventTime = Instants.max(lastEventTime, event.timestamp());
     }
   }
 
@@ -58,8 +58,8 @@ public final class Runtimes implements EventHandler {
 
   private Object messagePassingRuntime() {
     var start = SendRiskScoresStart.class;
-    return lastEvent != Instant.MIN && isLogged(start)
-        ? Duration.between(events.get(start), lastEvent)
+    return lastEventTime != Instant.MIN && isLogged(start)
+        ? Duration.between(events.get(start), lastEventTime)
         : UNKNOWN_RUNTIME;
   }
 

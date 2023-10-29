@@ -44,7 +44,7 @@ final class User extends AbstractBehavior<UserMessage> {
   private final Cache<RiskScoreMessage> scores;
   private final Cache<Contact> contacts;
   private RiskScoreMessage currentScore;
-  private Instant lastEvent;
+  private Instant lastEventTime;
 
   private User(
       int id,
@@ -65,7 +65,7 @@ final class User extends AbstractBehavior<UserMessage> {
     this.scores = new RangeCache<>(timeSource);
     this.contacts = new StandardCache<>(timeSource);
     this.currentScore = defaultScore();
-    this.lastEvent = Instant.EPOCH;
+    this.lastEventTime = Instant.EPOCH;
   }
 
   public static Behavior<UserMessage> of(
@@ -176,12 +176,12 @@ final class User extends AbstractBehavior<UserMessage> {
   }
 
   private void logLastEvent() {
-    logger.log(LastEvent.class, () -> new LastEvent(self(), lastEvent));
+    logger.log(LastEvent.class, () -> new LastEvent(self(), lastEventTime));
   }
 
   private <T extends Event> void logEvent(Class<T> type, Function<Instant, T> factory) {
-    lastEvent = timeSource.instant();
-    logger.log(type, () -> factory.apply(lastEvent));
+    lastEventTime = timeSource.instant();
+    logger.log(type, () -> factory.apply(lastEventTime));
   }
 
   private ActorRef<UserMessage> self() {
