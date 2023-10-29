@@ -25,6 +25,7 @@ import sharetrace.logging.event.SendEvent;
 import sharetrace.logging.event.UpdateEvent;
 import sharetrace.model.Parameters;
 import sharetrace.model.RiskScore;
+import sharetrace.model.Timestamped;
 import sharetrace.model.message.ContactMessage;
 import sharetrace.model.message.IdleTimeout;
 import sharetrace.model.message.MonitorMessage;
@@ -65,7 +66,7 @@ final class User extends AbstractBehavior<UserMessage> {
     this.scores = new RangeCache<>(timeSource);
     this.contacts = new StandardCache<>(timeSource);
     this.currentScore = defaultScore();
-    this.lastEventTime = Instant.EPOCH;
+    this.lastEventTime = Timestamped.MIN_TIME;
   }
 
   public static Behavior<UserMessage> of(
