@@ -43,9 +43,9 @@ public final class RangeCache<V extends Expirable & Timestamped & Comparable<? s
 
   @Override
   public RangeCache<V> refresh() {
-    var now = timeSource.instant();
-    if (!min.contains(now)) {
-      cache.remove(Range.lessThan(now));
+    var currentTime = timeSource.instant();
+    if (!min.contains(currentTime)) {
+      cache.remove(Range.lessThan(currentTime));
       updateMin();
     }
     return this;
