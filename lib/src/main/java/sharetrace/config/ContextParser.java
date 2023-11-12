@@ -10,7 +10,9 @@ import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 import org.apache.commons.math3.random.RandomGenerator;
+import org.slf4j.LoggerFactory;
 import sharetrace.logging.LogRecord;
+import sharetrace.logging.RecordLogger;
 import sharetrace.util.Context;
 import sharetrace.util.ContextBuilder;
 
@@ -20,6 +22,7 @@ public record ContextParser(Config contextConfig) implements ConfigParser<Contex
   public Context parse(Config config) {
     var timeSource = getTimeSource(config);
     var seed = getSeed(config);
+    var loggable = getLoggable(config);
     return ContextBuilder.create()
         .mdc(getMdc(config))
         .config(contextConfig)
@@ -27,7 +30,9 @@ public record ContextParser(Config contextConfig) implements ConfigParser<Contex
         .seed(seed)
         .referenceTime(getReferenceTime(config, timeSource))
         .randomGenerator(getRandomGenerator(config, seed))
-        .loggable(getLoggable(config))
+        .loggable(loggable)
+        .eventsLogger(getEventsLogger(loggable))
+        .settingsLogger(getSettingsLogger(loggable))
         .build();
   }
 
@@ -72,5 +77,13 @@ public record ContextParser(Config contextConfig) implements ConfigParser<Contex
       throw new IllegalArgumentException(
           "%s must be of type %s".formatted(cls.getSimpleName(), expected.getSimpleName()));
     }
+  }
+
+  private RecordLogger getEventsLogger(Set<Class<? extends LogRecord>> loggable) {
+    return new RecordLogger(LoggerFactory.getLogger("EventsLogger"), "event", loggable);
+  }
+
+  private RecordLogger getSettingsLogger(Set<Class<? extends LogRecord>> loggable) {
+    return new RecordLogger(LoggerFactory.getLogger("SettingsLogger"), "setting", loggable);
   }
 }

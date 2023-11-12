@@ -104,7 +104,7 @@ final class Contact implements Expirable, Timestamped, Comparable<Contact> {
      with a value *greater* than the threshold are eligible. Considering this in the context of the
      entire contact network, this would prevent all propagation of messages.
     */
-    if (sendThreshold != RiskScore.MIN && sendThreshold.isExpired(timeSource)) {
+    if (sendThreshold != RiskScore.MIN && sendThreshold.isExpired(timeSource.instant())) {
       maxRelevantMessageInCache().ifPresentOrElse(this::setThreshold, this::resetThreshold);
     }
   }

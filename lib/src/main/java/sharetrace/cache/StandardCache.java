@@ -49,8 +49,9 @@ public final class StandardCache<V extends Expirable & Timestamped & Comparable<
 
   @Override
   public StandardCache<V> refresh() {
-    if (min.isBefore(timeSource.instant())) {
-      values().removeIf(value -> value.isExpired(timeSource));
+    var currentTime = timeSource.instant();
+    if (min.isBefore(currentTime)) {
+      values().removeIf(value -> value.isExpired(currentTime));
       updateMin();
     }
     return this;

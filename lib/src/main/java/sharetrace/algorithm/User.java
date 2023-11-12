@@ -10,9 +10,6 @@ import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import akka.actor.typed.javadsl.TimerScheduler;
-import java.time.Instant;
-import java.time.InstantSource;
-import java.util.function.Function;
 import sharetrace.cache.Cache;
 import sharetrace.cache.RangeCache;
 import sharetrace.cache.StandardCache;
@@ -33,11 +30,13 @@ import sharetrace.model.message.RiskScoreMessage;
 import sharetrace.model.message.UserMessage;
 import sharetrace.util.Context;
 
+import java.time.Instant;
+import java.util.function.Function;
+
 final class User extends AbstractBehavior<UserMessage> {
 
   private final int id;
-  private final RecordLogger logger;
-  private final InstantSource timeSource;
+  private final Context context;
   private final Parameters parameters;
   private final ActorRef<MonitorMessage> monitor;
   private final IdleTimeout idleTimeout;
@@ -49,22 +48,21 @@ final class User extends AbstractBehavior<UserMessage> {
 
   private User(
       int id,
-      ActorContext<UserMessage> ctx,
+      ActorContext<UserMessage> actorContext,
       Context context,
       Parameters parameters,
       ActorRef<MonitorMessage> monitor,
       IdleTimeout idleTimeout,
       TimerScheduler<UserMessage> timers) {
-    super(ctx);
+    super(actorContext);
     this.id = id;
-    this.logger = context.eventsLogger();
-    this.timeSource = context.timeSource();
+    this.context = context;
     this.parameters = parameters;
     this.monitor = monitor;
     this.idleTimeout = idleTimeout;
     this.timers = timers;
-    this.scores = new RangeCache<>(timeSource);
-    this.contacts = new StandardCache<>(timeSource);
+    this.scores = new RangeCache<>(context.timeSource());
+    this.contacts = new StandardCache<>(context.timeSource());
     this.currentScore = defaultScore();
     this.lastEventTime = Timestamped.MIN_TIME;
   }
@@ -99,8 +97,8 @@ final class User extends AbstractBehavior<UserMessage> {
   }
 
   private Behavior<UserMessage> handle(ContactMessage message) {
-    var contact = new Contact(message, parameters, scores, timeSource);
-    if (contact.isAlive(timeSource)) {
+    var contact = new Contact(message, parameters, scores, context.timeSource());
+    if (contact.isAlive(currentTime())) {
       contacts.add(contact);
       logContactEvent(contact);
     }
@@ -112,7 +110,7 @@ final class User extends AbstractBehavior<UserMessage> {
 
   private Behavior<UserMessage> handle(RiskScoreMessage message) {
     logReceiveEvent(message);
-    if (message.isAlive(timeSource)) {
+    if (message.isAlive(currentTime())) {
       var transmitted = transmitted(message);
       scores.add(transmitted);
       updateExposureScore(message);
@@ -127,7 +125,7 @@ final class User extends AbstractBehavior<UserMessage> {
       var previousScore = currentScore;
       currentScore = message;
       logUpdateEvent(previousScore, currentScore);
-    } else if (currentScore.isExpired(timeSource)) {
+    } else if (currentScore.isExpired(currentTime())) {
       var previousScore = currentScore;
       currentScore = scores.refresh().max().map(this::untransmitted).orElseGet(this::defaultScore);
       logUpdateEvent(previousScore, currentScore);
@@ -177,15 +175,23 @@ final class User extends AbstractBehavior<UserMessage> {
   }
 
   private void logLastEvent() {
-    logger.log(LastEvent.class, () -> new LastEvent(self(), lastEventTime));
+    logger().log(LastEvent.class, () -> new LastEvent(self(), lastEventTime));
   }
 
   private <T extends Event> void logEvent(Class<T> type, Function<Instant, T> factory) {
-    lastEventTime = timeSource.instant();
-    logger.log(type, () -> factory.apply(lastEventTime));
+    lastEventTime = currentTime();
+    logger().log(type, () -> factory.apply(lastEventTime));
   }
 
   private ActorRef<UserMessage> self() {
     return getContext().getSelf();
+  }
+
+  private RecordLogger logger() {
+    return context.eventsLogger();
+  }
+
+  private Instant currentTime() {
+    return context.timeSource().instant();
   }
 }
