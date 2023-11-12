@@ -10,6 +10,8 @@ import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import akka.actor.typed.javadsl.TimerScheduler;
+import java.time.Instant;
+import java.util.function.Function;
 import sharetrace.cache.Cache;
 import sharetrace.cache.RangeCache;
 import sharetrace.cache.StandardCache;
@@ -29,9 +31,6 @@ import sharetrace.model.message.MonitorMessage;
 import sharetrace.model.message.RiskScoreMessage;
 import sharetrace.model.message.UserMessage;
 import sharetrace.util.Context;
-
-import java.time.Instant;
-import java.util.function.Function;
 
 final class User extends AbstractBehavior<UserMessage> {
 

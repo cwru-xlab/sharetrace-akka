@@ -36,8 +36,8 @@ public final class UserUpdates implements EventHandler {
 
   private List<RiskScore> scores(List<UpdateEvent> updates) {
     return updates.stream()
-        .skip(1)
         .sorted(Comparator.comparing(UpdateEvent::timestamp))
+        .skip(1) // First update is trivial: default risk score -> initial non-zero risk score
         .map(UpdateEvent::current)
         .map(RiskScoreMessage::score)
         .toList();
