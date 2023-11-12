@@ -61,12 +61,12 @@ public record ContextParser(Config contextConfig) implements ConfigParser<Contex
 
   private RandomGenerator getRandomGenerator(Config config, long seed) {
     var className = config.getString("random-generator");
-    return InstanceFactory.getInstance(className, RandomGenerator.class, seed);
+    return InstanceFactory.getInstance(RandomGenerator.class, className, seed);
   }
 
   private Set<Class<? extends LogRecord>> getLoggable(Config config) {
     return config.getStringList("loggable").stream()
-        .map(className -> ClassFactory.getClass(className, LogRecord.class))
+        .map(className -> ClassFactory.getClass(LogRecord.class, className))
         .collect(Collectors.toSet());
   }
 

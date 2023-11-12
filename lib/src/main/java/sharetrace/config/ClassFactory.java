@@ -4,7 +4,7 @@ public final class ClassFactory {
 
   private ClassFactory() {}
 
-  public static <T> Class<T> getClass(String name, Class<? super T> expected) {
+  public static <T> Class<T> getClass(Class<T> expected, String name) {
     try {
       return checkType(Class.forName(name), expected);
     } catch (ClassNotFoundException exception) {
