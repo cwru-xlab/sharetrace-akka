@@ -6,10 +6,10 @@ public final class InstanceFactory {
 
   private InstanceFactory() {}
 
-  public static <T> T getInstance(String name, Object... parameters) {
+  public static <T> T getInstance(String name, Class<T> type, Object... parameters) {
     try {
       var types = Arrays.stream(parameters).map(InstanceFactory::getClass).toArray(Class[]::new);
-      var clazz = ClassFactory.<T>getClass(name);
+      var clazz = ClassFactory.getClass(name, type);
       return clazz.getConstructor(types).newInstance(parameters);
     } catch (Exception exception) {
       throw new RuntimeException(exception);

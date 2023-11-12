@@ -57,7 +57,7 @@ public final class Main {
 
   private static EventHandler newEventHandler(Config config) {
     return config.getStringList("handlers").stream()
-        .<EventHandler>map(InstanceFactory::getInstance)
+        .map(className -> InstanceFactory.getInstance(className, EventHandler.class))
         .collect(Collectors.collectingAndThen(Collectors.toList(), EventHandlers::new));
   }
 

@@ -26,7 +26,7 @@ public final class Main {
 
   private static Runner getRunner(Config config) {
     var classPath = config.getString("runner.type");
-    return InstanceFactory.getInstance(classPath);
+    return InstanceFactory.getInstance(classPath, Runner.class);
   }
 
   private static Parameters getParameters(Config config) {

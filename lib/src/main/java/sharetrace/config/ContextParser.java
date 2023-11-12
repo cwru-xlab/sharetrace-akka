@@ -60,23 +60,14 @@ public record ContextParser(Config contextConfig) implements ConfigParser<Contex
   }
 
   private RandomGenerator getRandomGenerator(Config config, long seed) {
-    return InstanceFactory.getInstance(config.getString("random-generator"), seed);
+    var className = config.getString("random-generator");
+    return InstanceFactory.getInstance(className, RandomGenerator.class, seed);
   }
 
   private Set<Class<? extends LogRecord>> getLoggable(Config config) {
     return config.getStringList("loggable").stream()
-        .<Class<? extends LogRecord>>map(ClassFactory::getClass)
-        .peek(this::ensureIsLogRecord)
+        .map(className -> ClassFactory.getClass(className, LogRecord.class))
         .collect(Collectors.toSet());
-  }
-
-  @SuppressWarnings("SameParameterValue")
-  private void ensureIsLogRecord(Class<?> cls) {
-    var expected = LogRecord.class;
-    if (!expected.isAssignableFrom(cls)) {
-      throw new IllegalArgumentException(
-          "%s must be of type %s".formatted(cls.getSimpleName(), expected.getSimpleName()));
-    }
   }
 
   private RecordLogger getEventsLogger(Set<Class<? extends LogRecord>> loggable) {
