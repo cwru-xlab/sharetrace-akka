@@ -1,18 +1,17 @@
 package sharetrace.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import java.time.Instant;
 
 public interface Expirable {
 
   @JsonIgnore
-  Instant expiryTime();
+  Timestamp expiryTime();
 
-  default boolean isAlive(Instant currentTime) {
+  default boolean isAlive(Timestamp currentTime) {
     return !isExpired(currentTime);
   }
 
-  default boolean isExpired(Instant currentTime) {
-    return expiryTime().isBefore(currentTime);
+  default boolean isExpired(Timestamp currentTime) {
+    return expiryTime().before(currentTime);
   }
 }

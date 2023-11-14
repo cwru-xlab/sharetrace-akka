@@ -1,9 +1,9 @@
 package sharetrace.model.factory;
 
-import java.time.Instant;
+import sharetrace.model.Timestamp;
 
 @FunctionalInterface
 public interface TimeFactory {
 
-  Instant getTime();
+  Timestamp getTime();
 }

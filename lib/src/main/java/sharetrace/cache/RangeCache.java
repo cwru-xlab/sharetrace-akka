@@ -5,26 +5,25 @@ import com.google.common.collect.Iterators;
 import com.google.common.collect.Range;
 import com.google.common.collect.RangeMap;
 import com.google.common.collect.TreeRangeMap;
-import java.time.Instant;
-import java.time.InstantSource;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Optional;
 import java.util.function.BinaryOperator;
 import sharetrace.model.Expirable;
+import sharetrace.model.Timestamp;
 import sharetrace.model.Timestamped;
+import sharetrace.util.TimeSource;
 
 public final class RangeCache<V extends Expirable & Timestamped & Comparable<? super V>>
-    implements Cache<V> {
+    extends Cache<V> {
 
-  private final RangeMap<Instant, V> cache;
-  private final InstantSource timeSource;
+  private final RangeMap<Timestamp, V> cache;
   private final Comparator<? super V> comparator;
   private final BinaryOperator<V> merger;
-  private Range<Instant> min;
+  private Range<Timestamp> min;
 
-  public RangeCache(InstantSource timeSource) {
-    this.timeSource = timeSource;
+  public RangeCache(TimeSource timeSource) {
+    super(timeSource);
     this.comparator = Comparator.naturalOrder();
     this.merger = BinaryOperator.maxBy(comparator);
     this.cache = TreeRangeMap.create();
@@ -37,13 +36,13 @@ public final class RangeCache<V extends Expirable & Timestamped & Comparable<? s
   }
 
   @Override
-  public Optional<V> max(Instant atMost) {
+  public Optional<V> max(Timestamp atMost) {
     return max(Range.atMost(atMost));
   }
 
   @Override
   public RangeCache<V> refresh() {
-    var currentTime = timeSource.instant();
+    var currentTime = timeSource.timestamp();
     if (!min.contains(currentTime)) {
       cache.remove(Range.lessThan(currentTime));
       updateMin();
@@ -64,7 +63,7 @@ public final class RangeCache<V extends Expirable & Timestamped & Comparable<? s
     return Iterators.unmodifiableIterator(cache.asMapOfRanges().values().iterator());
   }
 
-  private Optional<V> max(Range<Instant> range) {
+  private Optional<V> max(Range<Timestamp> range) {
     return cache.subRangeMap(range).asMapOfRanges().values().stream().max(comparator);
   }
 

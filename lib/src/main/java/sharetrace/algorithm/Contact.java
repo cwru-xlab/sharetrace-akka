@@ -1,8 +1,6 @@
 package sharetrace.algorithm;
 
 import akka.actor.typed.ActorRef;
-import java.time.Instant;
-import java.time.InstantSource;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import sharetrace.cache.Cache;
@@ -10,27 +8,29 @@ import sharetrace.model.Expirable;
 import sharetrace.model.Parameters;
 import sharetrace.model.RiskScore;
 import sharetrace.model.TemporalScore;
+import sharetrace.model.Timestamp;
 import sharetrace.model.Timestamped;
 import sharetrace.model.message.ContactMessage;
 import sharetrace.model.message.RiskScoreMessage;
 import sharetrace.model.message.UserMessage;
+import sharetrace.util.TimeSource;
 
 final class Contact implements Expirable, Timestamped, Comparable<Contact> {
 
   private final ActorRef<UserMessage> self;
-  private final Instant timestamp;
-  private final Instant bufferedTimestamp;
-  private final Instant expiryTime;
+  private final Timestamp timestamp;
+  private final Timestamp bufferedTimestamp;
+  private final Timestamp expiryTime;
   private final double sendCoefficient;
   private final Cache<RiskScoreMessage> scores;
-  private final InstantSource timeSource;
+  private final TimeSource timeSource;
   private TemporalScore sendThreshold;
 
   public Contact(
       ContactMessage message,
       Parameters parameters,
       Cache<RiskScoreMessage> scores,
-      InstantSource timeSource) {
+      TimeSource timeSource) {
     this.self = message.contact();
     this.timestamp = message.timestamp();
     this.bufferedTimestamp = message.timestamp().plus(parameters.timeBuffer());
@@ -59,12 +59,12 @@ final class Contact implements Expirable, Timestamped, Comparable<Contact> {
   }
 
   @Override
-  public Instant expiryTime() {
+  public Timestamp expiryTime() {
     return expiryTime;
   }
 
   @Override
-  public Instant timestamp() {
+  public Timestamp timestamp() {
     return timestamp;
   }
 
@@ -89,7 +89,7 @@ final class Contact implements Expirable, Timestamped, Comparable<Contact> {
 
   private boolean shouldReceive(RiskScoreMessage message) {
     return message.value() > sendThreshold.value()
-        && message.timestamp().isBefore(bufferedTimestamp)
+        && message.timestamp().before(bufferedTimestamp)
         && !message.sender().equals(self);
   }
 
@@ -104,7 +104,7 @@ final class Contact implements Expirable, Timestamped, Comparable<Contact> {
      with a value *greater* than the threshold are eligible. Considering this in the context of the
      entire contact network, this would prevent all propagation of messages.
     */
-    if (sendThreshold != RiskScore.MIN && sendThreshold.isExpired(timeSource.instant())) {
+    if (sendThreshold != RiskScore.MIN && sendThreshold.isExpired(timeSource.timestamp())) {
       maxRelevantMessageInCache().ifPresentOrElse(this::setThreshold, this::resetThreshold);
     }
   }

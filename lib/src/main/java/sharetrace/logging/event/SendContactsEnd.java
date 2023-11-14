@@ -1,5 +1,5 @@
 package sharetrace.logging.event;
 
-import java.time.Instant;
+import sharetrace.model.Timestamp;
 
-public record SendContactsEnd(Instant timestamp) implements RiskPropagationEvent {}
+public record SendContactsEnd(Timestamp timestamp) implements RiskPropagationEvent {}

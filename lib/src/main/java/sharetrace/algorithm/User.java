@@ -10,7 +10,6 @@ import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import akka.actor.typed.javadsl.TimerScheduler;
-import java.time.Instant;
 import java.util.function.Function;
 import sharetrace.cache.Cache;
 import sharetrace.cache.RangeCache;
@@ -24,7 +23,7 @@ import sharetrace.logging.event.SendEvent;
 import sharetrace.logging.event.UpdateEvent;
 import sharetrace.model.Parameters;
 import sharetrace.model.RiskScore;
-import sharetrace.model.Timestamped;
+import sharetrace.model.Timestamp;
 import sharetrace.model.message.ContactMessage;
 import sharetrace.model.message.IdleTimeout;
 import sharetrace.model.message.MonitorMessage;
@@ -43,7 +42,7 @@ final class User extends AbstractBehavior<UserMessage> {
   private final Cache<RiskScoreMessage> scores;
   private final Cache<Contact> contacts;
   private RiskScoreMessage currentScore;
-  private Instant lastEventTime;
+  private Timestamp lastEventTime;
 
   private User(
       int id,
@@ -63,7 +62,7 @@ final class User extends AbstractBehavior<UserMessage> {
     this.scores = new RangeCache<>(context.timeSource());
     this.contacts = new StandardCache<>(context.timeSource());
     this.currentScore = defaultScore();
-    this.lastEventTime = Timestamped.MIN_TIME;
+    this.lastEventTime = Timestamp.MIN;
   }
 
   public static Behavior<UserMessage> of(
@@ -97,7 +96,7 @@ final class User extends AbstractBehavior<UserMessage> {
 
   private Behavior<UserMessage> handle(ContactMessage message) {
     var contact = new Contact(message, parameters, scores, context.timeSource());
-    if (contact.isAlive(currentTime())) {
+    if (contact.isAlive(getCurrentTime())) {
       contacts.add(contact);
       logContactEvent(contact);
     }
@@ -109,7 +108,7 @@ final class User extends AbstractBehavior<UserMessage> {
 
   private Behavior<UserMessage> handle(RiskScoreMessage message) {
     logReceiveEvent(message);
-    if (message.isAlive(currentTime())) {
+    if (message.isAlive(getCurrentTime())) {
       var transmitted = transmitted(message);
       scores.add(transmitted);
       updateExposureScore(message);
@@ -124,7 +123,7 @@ final class User extends AbstractBehavior<UserMessage> {
       var previousScore = currentScore;
       currentScore = message;
       logUpdateEvent(previousScore, currentScore);
-    } else if (currentScore.isExpired(currentTime())) {
+    } else if (currentScore.isExpired(getCurrentTime())) {
       var previousScore = currentScore;
       currentScore = scores.refresh().max().map(this::untransmitted).orElseGet(this::defaultScore);
       logUpdateEvent(previousScore, currentScore);
@@ -177,8 +176,8 @@ final class User extends AbstractBehavior<UserMessage> {
     logger().log(LastEvent.class, () -> new LastEvent(self(), lastEventTime));
   }
 
-  private <T extends Event> void logEvent(Class<T> type, Function<Instant, T> factory) {
-    lastEventTime = currentTime();
+  private <T extends Event> void logEvent(Class<T> type, Function<Timestamp, T> factory) {
+    lastEventTime = getCurrentTime();
     logger().log(type, () -> factory.apply(lastEventTime));
   }
 
@@ -190,7 +189,7 @@ final class User extends AbstractBehavior<UserMessage> {
     return context.eventsLogger();
   }
 
-  private Instant currentTime() {
-    return context.timeSource().instant();
+  private Timestamp getCurrentTime() {
+    return context.timeSource().timestamp();
   }
 }

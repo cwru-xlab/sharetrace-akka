@@ -1,8 +1,6 @@
 package sharetrace.cache;
 
 import com.google.common.collect.Iterators;
-import java.time.Instant;
-import java.time.InstantSource;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -11,20 +9,20 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.BinaryOperator;
 import sharetrace.model.Expirable;
+import sharetrace.model.Timestamp;
 import sharetrace.model.Timestamped;
-import sharetrace.util.Instants;
+import sharetrace.util.TimeSource;
 
 public final class StandardCache<V extends Expirable & Timestamped & Comparable<? super V>>
-    implements Cache<V> {
+    extends Cache<V> {
 
   private final Map<V, V> cache;
-  private final InstantSource timeSource;
   private final Comparator<? super V> comparator;
   private final BinaryOperator<V> merger;
-  private Instant min;
+  private Timestamp min;
 
-  public StandardCache(InstantSource timeSource) {
-    this.timeSource = timeSource;
+  public StandardCache(TimeSource timeSource) {
+    super(timeSource);
     this.comparator = Comparator.naturalOrder();
     this.merger = BinaryOperator.maxBy(comparator);
     this.cache = new HashMap<>();
@@ -37,8 +35,8 @@ public final class StandardCache<V extends Expirable & Timestamped & Comparable<
   }
 
   @Override
-  public Optional<V> max(Instant atMost) {
-    return values().stream().filter(value -> !value.timestamp().isAfter(atMost)).max(comparator);
+  public Optional<V> max(Timestamp atMost) {
+    return values().stream().filter(value -> !value.timestamp().after(atMost)).max(comparator);
   }
 
   @Override
@@ -49,8 +47,8 @@ public final class StandardCache<V extends Expirable & Timestamped & Comparable<
 
   @Override
   public StandardCache<V> refresh() {
-    var currentTime = timeSource.instant();
-    if (min.isBefore(currentTime)) {
+    var currentTime = timeSource.timestamp();
+    if (min.before(currentTime)) {
       values().removeIf(value -> value.isExpired(currentTime));
       updateMin();
     }
@@ -64,11 +62,15 @@ public final class StandardCache<V extends Expirable & Timestamped & Comparable<
   }
 
   private void updateMin(V value) {
-    min = Instants.min(min, value.expiryTime());
+    min = Timestamp.min(min, value.expiryTime());
   }
 
   private void updateMin() {
-    min = values().stream().map(Expirable::expiryTime).min(Instant::compareTo).orElse(Instant.MAX);
+    min =
+        values().stream()
+            .map(Expirable::expiryTime)
+            .min(Timestamp::compareTo)
+            .orElse(Timestamp.MAX);
   }
 
   private Collection<V> values() {

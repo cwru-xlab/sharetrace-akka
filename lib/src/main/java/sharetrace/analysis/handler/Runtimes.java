@@ -1,7 +1,6 @@
 package sharetrace.analysis.handler;
 
 import java.time.Duration;
-import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -17,17 +16,17 @@ import sharetrace.logging.event.SendContactsStart;
 import sharetrace.logging.event.SendRiskScoresEnd;
 import sharetrace.logging.event.SendRiskScoresStart;
 import sharetrace.logging.event.UserEvent;
-import sharetrace.util.Instants;
+import sharetrace.model.Timestamp;
 
 public final class Runtimes implements EventHandler {
 
   private static final Object UNKNOWN_RUNTIME = "unknown";
-  private final Map<Class<?>, Instant> events;
-  private Instant lastEventTime;
+  private final Map<Class<?>, Timestamp> events;
+  private Timestamp lastEventTime;
 
   public Runtimes() {
     events = new HashMap<>();
-    lastEventTime = Instant.MIN;
+    lastEventTime = Timestamp.MIN;
   }
 
   @Override
@@ -35,7 +34,7 @@ public final class Runtimes implements EventHandler {
     if (event instanceof RiskPropagationEvent) {
       events.put(event.getClass(), event.timestamp());
     } else if (event instanceof UserEvent) {
-      lastEventTime = Instants.max(lastEventTime, event.timestamp());
+      lastEventTime = Timestamp.max(lastEventTime, event.timestamp());
     }
   }
 
@@ -58,9 +57,7 @@ public final class Runtimes implements EventHandler {
 
   private Object messagePassingRuntime() {
     var start = SendRiskScoresStart.class;
-    return lastEventTime != Instant.MIN && isLogged(start)
-        ? Duration.between(events.get(start), lastEventTime)
-        : UNKNOWN_RUNTIME;
+    return isLogged(start) ? Duration.between(events.get(start), lastEventTime) : UNKNOWN_RUNTIME;
   }
 
   private boolean isLogged(Class<?>... types) {

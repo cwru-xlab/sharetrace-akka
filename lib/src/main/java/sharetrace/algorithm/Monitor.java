@@ -8,7 +8,6 @@ import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
-import java.time.Instant;
 import java.util.BitSet;
 import java.util.function.Function;
 import sharetrace.graph.ContactNetwork;
@@ -22,6 +21,7 @@ import sharetrace.logging.event.SendContactsStart;
 import sharetrace.logging.event.SendRiskScoresEnd;
 import sharetrace.logging.event.SendRiskScoresStart;
 import sharetrace.model.Parameters;
+import sharetrace.model.Timestamp;
 import sharetrace.model.factory.RiskScoreFactory;
 import sharetrace.model.message.ContactMessage;
 import sharetrace.model.message.IdleTimeout;
@@ -136,7 +136,7 @@ final class Monitor extends AbstractBehavior<MonitorMessage> {
     logEvent(SendRiskScoresEnd.class, SendRiskScoresEnd::new);
   }
 
-  private <T extends Event> void logEvent(Class<T> type, Function<Instant, T> factory) {
-    context.eventsLogger().log(type, () -> factory.apply(context.timeSource().instant()));
+  private <T extends Event> void logEvent(Class<T> type, Function<Timestamp, T> factory) {
+    context.eventsLogger().log(type, () -> factory.apply(context.timeSource().timestamp()));
   }
 }

@@ -1,15 +1,22 @@
 package sharetrace.cache;
 
-import java.time.Instant;
 import java.util.Optional;
+import sharetrace.model.Timestamp;
+import sharetrace.util.TimeSource;
 
-public interface Cache<V> extends Iterable<V> {
+public abstract class Cache<V> implements Iterable<V> {
 
-  Optional<V> max();
+  protected final TimeSource timeSource;
 
-  Optional<V> max(Instant atMost);
+  protected Cache(TimeSource timeSource) {
+    this.timeSource = timeSource;
+  }
 
-  Cache<V> refresh();
+  public abstract Optional<V> max();
 
-  void add(V value);
+  public abstract Optional<V> max(Timestamp atMost);
+
+  public abstract Cache<V> refresh();
+
+  public abstract void add(V value);
 }
