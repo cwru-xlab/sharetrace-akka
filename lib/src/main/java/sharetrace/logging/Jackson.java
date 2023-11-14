@@ -14,26 +14,34 @@ public final class Jackson {
 
   private Jackson() {}
 
-  public static JsonFactory newIonJsonFactory() {
-    return new IonFactory(newIonObjectMapper());
+  public static JsonFactory ionJsonFactory() {
+    return InstanceHolder.ION_JSON_FACTORY;
   }
 
-  public static ObjectMapper newIonObjectMapper() {
-    return configured(new IonObjectMapper());
+  public static ObjectMapper ionObjectMapper() {
+    return InstanceHolder.ION_OBJECT_MAPPER;
   }
 
-  public static ObjectMapper newObjectMapper() {
-    return configured(new ObjectMapper());
+  public static ObjectMapper objectMapper() {
+    return InstanceHolder.OBJECT_MAPPER;
   }
 
-  private static ObjectMapper configured(ObjectMapper mapper) {
-    return mapper.findAndRegisterModules().registerModule(shareTraceModule());
-  }
+  private static class InstanceHolder {
 
-  private static Module shareTraceModule() {
-    return new SimpleModule()
-        .addSerializer(InstantSource.class, ToStringSerializer.instance)
-        .addSerializer(RandomGenerator.class, ToClassNameSerializer.INSTANCE)
-        .addSerializer(Class.class, ClassSerializer.INSTANCE);
+    public static final Module SHARETRACE_MODULE = newShareTraceModule();
+    public static final ObjectMapper ION_OBJECT_MAPPER = configured(new IonObjectMapper());
+    public static final ObjectMapper OBJECT_MAPPER = configured(new ObjectMapper());
+    public static final JsonFactory ION_JSON_FACTORY = new IonFactory(ION_OBJECT_MAPPER);
+
+    private static ObjectMapper configured(ObjectMapper mapper) {
+      return mapper.findAndRegisterModules().registerModule(SHARETRACE_MODULE);
+    }
+
+    private static Module newShareTraceModule() {
+      return new SimpleModule()
+          .addSerializer(InstantSource.class, ToStringSerializer.instance)
+          .addSerializer(RandomGenerator.class, ToClassNameSerializer.INSTANCE)
+          .addSerializer(Class.class, ClassSerializer.INSTANCE);
+    }
   }
 }

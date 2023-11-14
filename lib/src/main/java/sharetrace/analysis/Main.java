@@ -46,7 +46,7 @@ public final class Main {
 
   private static Stream<EventRecord> eventRecords() throws IOException {
     var directory = Path.of(System.getProperty("analysis.logs"));
-    var parser = new EventRecordParser(Jackson.newIonObjectMapper());
+    var parser = new EventRecordParser(Jackson.ionObjectMapper());
     return new EventRecordStream(parser).open(directory);
   }
 
@@ -69,7 +69,7 @@ public final class Main {
 
   private static void saveResults(Results results) {
     try {
-      Jackson.newObjectMapper()
+      Jackson.objectMapper()
           .writerWithDefaultPrettyPrinter()
           .writeValue(new File("test.json"), results);
     } catch (IOException exception) {

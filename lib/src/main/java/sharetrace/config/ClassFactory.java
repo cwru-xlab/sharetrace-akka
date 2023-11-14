@@ -16,7 +16,7 @@ public final class ClassFactory {
   private static <T> Class<T> checkType(Class<?> clazz, Class<? super T> expected) {
     if (!expected.isAssignableFrom(clazz)) {
       throw new IllegalArgumentException(
-              "%s must be of type %s".formatted(clazz.getName(), expected.getName()));
+          "%s must be of type %s".formatted(clazz.getName(), expected.getName()));
     }
     return (Class<T>) clazz;
   }
