@@ -12,7 +12,7 @@ import javax.annotation.concurrent.Immutable;
 import sharetrace.util.Ranges;
 
 @Immutable
-@SuppressWarnings("deprecation")
+@SuppressWarnings({ "deprecation", "unused" })
 public final class Timestamp extends Date implements Temporal {
 
   private static final Range<Long> RANGE = Range.closed(0L, Long.MAX_VALUE);
