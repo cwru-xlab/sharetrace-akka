@@ -10,8 +10,8 @@ import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.fasterxml.jackson.dataformat.ion.IonFactory;
 import com.fasterxml.jackson.dataformat.ion.IonObjectMapper;
 import com.fasterxml.jackson.dataformat.ion.jsr310.IonJavaTimeModule;
-import java.time.InstantSource;
 import org.apache.commons.math3.random.RandomGenerator;
+import sharetrace.util.TimeSource;
 
 public final class Jackson {
 
@@ -46,7 +46,7 @@ public final class Jackson {
 
     private static Module shareTraceModule() {
       return new SimpleModule()
-          .addSerializer(InstantSource.class, ToStringSerializer.instance)
+          .addSerializer(TimeSource.class, ToStringSerializer.instance)
           .addSerializer(RandomGenerator.class, ToClassNameSerializer.INSTANCE)
           .addSerializer(Class.class, ClassSerializer.INSTANCE);
     }

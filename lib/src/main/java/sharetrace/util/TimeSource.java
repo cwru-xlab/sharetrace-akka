@@ -3,13 +3,12 @@ package sharetrace.util;
 import java.time.InstantSource;
 import sharetrace.model.Timestamp;
 
-public interface TimeSource extends InstantSource {
+@FunctionalInterface
+public interface TimeSource {
 
   static TimeSource from(InstantSource instantSource) {
-    return instantSource::instant;
+    return new AdaptedTimeSource(instantSource);
   }
 
-  default Timestamp timestamp() {
-    return Timestamp.from(instant());
-  }
+  Timestamp timestamp();
 }
