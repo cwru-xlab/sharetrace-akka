@@ -10,6 +10,6 @@ public interface TimeSource extends InstantSource {
   }
 
   default Timestamp timestamp() {
-    return Timestamp.ofEpochMillis(millis());
+    return Timestamp.from(instant());
   }
 }
