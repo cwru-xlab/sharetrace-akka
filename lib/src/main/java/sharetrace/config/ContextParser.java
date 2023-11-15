@@ -57,7 +57,7 @@ public record ContextParser(Config contextConfig) implements ConfigParser<Contex
 
   private Timestamp getReferenceTime(Config config, TimeSource timeSource) {
     var string = config.getString("reference-time");
-    return string.equals("now") ? timeSource.timestamp() : Timestamp.parseIso8601(string);
+    return string.equals("now") ? timeSource.timestamp() : Timestamp.parse(string);
   }
 
   private RandomGenerator getRandomGenerator(Config config, long seed) {

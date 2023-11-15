@@ -36,7 +36,7 @@ public final class StandardCache<V extends Expirable & Timestamped & Comparable<
 
   @Override
   public Optional<V> max(Timestamp atMost) {
-    return values().stream().filter(value -> !value.timestamp().after(atMost)).max(comparator);
+    return values().stream().filter(value -> !value.timestamp().isAfter(atMost)).max(comparator);
   }
 
   @Override
@@ -48,7 +48,7 @@ public final class StandardCache<V extends Expirable & Timestamped & Comparable<
   @Override
   public StandardCache<V> refresh() {
     var currentTime = timeSource.timestamp();
-    if (min.before(currentTime)) {
+    if (min.isBefore(currentTime)) {
       values().removeIf(value -> value.isExpired(currentTime));
       updateMin();
     }

@@ -12,6 +12,6 @@ public interface Expirable {
   }
 
   default boolean isExpired(Timestamp currentTime) {
-    return expiryTime().before(currentTime);
+    return expiryTime().isBefore(currentTime);
   }
 }

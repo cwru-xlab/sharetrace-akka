@@ -7,13 +7,9 @@ import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAmount;
 import java.time.temporal.TemporalField;
 import java.time.temporal.TemporalUnit;
-import java.util.Date;
-import javax.annotation.concurrent.Immutable;
 import sharetrace.util.Ranges;
 
-@Immutable
-@SuppressWarnings({ "deprecation", "unused" })
-public final class Timestamp extends Date implements Temporal {
+public final class Timestamp implements Temporal, Comparable<Timestamp> {
 
   private static final Range<Long> RANGE = Range.closed(0L, Long.MAX_VALUE);
 
@@ -23,24 +19,7 @@ public final class Timestamp extends Date implements Temporal {
   @JsonValue private final Instant instant;
 
   private Timestamp(long epochMillis) {
-    super(Ranges.check("epochMillis", epochMillis, RANGE));
-    this.instant = Instant.ofEpochMilli(epochMillis);
-  }
-
-  private Timestamp(int year, int month, int date, Instant instant) {
-    throw new UnsupportedOperationException();
-  }
-
-  private Timestamp(int year, int month, int date, int hrs, int min, Instant instant) {
-    throw new UnsupportedOperationException();
-  }
-
-  private Timestamp(int year, int month, int date, int hrs, int min, int sec, Instant instant) {
-    throw new UnsupportedOperationException();
-  }
-
-  private Timestamp(String s, Instant instant) {
-    throw new UnsupportedOperationException();
+    this.instant = Instant.ofEpochMilli(Ranges.check("epochMillis", epochMillis, RANGE));
   }
 
   public static Timestamp ofEpochMillis(long epochMillis) {
@@ -55,51 +34,16 @@ public final class Timestamp extends Date implements Temporal {
     return new Timestamp(instant.toEpochMilli());
   }
 
-  public static Timestamp parseIso8601(String string) {
+  public static Timestamp parse(String string) {
     return from(Instant.parse(string));
   }
 
   public static Timestamp min(Timestamp left, Timestamp right) {
-    return left.before(right) ? left : right;
+    return left.isBefore(right) ? left : right;
   }
 
   public static Timestamp max(Timestamp left, Timestamp right) {
-    return left.after(right) ? left : right;
-  }
-
-  @Override
-  public void setTime(long time) {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public void setYear(int year) {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public void setMonth(int month) {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public void setDate(int date) {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public void setHours(int hours) {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public void setMinutes(int minutes) {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public void setSeconds(int seconds) {
-    throw new UnsupportedOperationException();
+    return left.isAfter(right) ? left : right;
   }
 
   @Override
@@ -148,13 +92,31 @@ public final class Timestamp extends Date implements Temporal {
   }
 
   @Override
-  public Instant toInstant() {
-    return instant;
+  public String toString() {
+    return instant.toString();
   }
 
   @Override
-  public String toString() {
-    return instant.toString();
+  public int hashCode() {
+    return instant.hashCode();
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    return obj instanceof Timestamp timestamp && instant.equals(timestamp.instant);
+  }
+
+  @Override
+  public int compareTo(Timestamp timestamp) {
+    return instant.compareTo(timestamp.instant);
+  }
+
+  public boolean isAfter(Timestamp timestamp) {
+    return instant.isAfter(timestamp.instant);
+  }
+
+  public boolean isBefore(Timestamp timestamp) {
+    return instant.isBefore(timestamp.instant);
   }
 
   public long toEpochMillis() {

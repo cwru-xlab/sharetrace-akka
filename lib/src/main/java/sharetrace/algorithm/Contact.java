@@ -89,7 +89,7 @@ final class Contact implements Expirable, Timestamped, Comparable<Contact> {
 
   private boolean shouldReceive(RiskScoreMessage message) {
     return message.value() > sendThreshold.value()
-        && message.timestamp().before(bufferedTimestamp)
+        && message.timestamp().isBefore(bufferedTimestamp)
         && !message.sender().equals(self);
   }
 
