@@ -14,15 +14,16 @@ import sharetrace.model.Timestamped;
 import sharetrace.util.TimeSource;
 
 public final class StandardCache<V extends Expirable & Timestamped & Comparable<? super V>>
-    extends Cache<V> {
+    implements Cache<V> {
 
+  private final TimeSource timeSource;
   private final Map<V, V> cache;
   private final Comparator<? super V> comparator;
   private final BinaryOperator<V> merger;
   private Timestamp min;
 
   public StandardCache(TimeSource timeSource) {
-    super(timeSource);
+    this.timeSource = timeSource;
     this.comparator = Comparator.naturalOrder();
     this.merger = BinaryOperator.maxBy(comparator);
     this.cache = new HashMap<>();
