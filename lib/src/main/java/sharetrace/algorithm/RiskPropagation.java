@@ -57,17 +57,16 @@ public record RiskPropagation(
 
   private void run(Context context) {
     try {
-      newInstance(context).getWhenTerminated().toCompletableFuture().get();
+      ActorSystem.create(behavior(context), getClass().getSimpleName())
+          .getWhenTerminated()
+          .toCompletableFuture()
+          .get();
     } catch (InterruptedException exception) {
       Thread.currentThread().interrupt();
       throw new RuntimeException(exception);
     } catch (ExecutionException exception) {
       throw new RuntimeException(exception);
     }
-  }
-
-  private ActorSystem<Void> newInstance(Context context) {
-    return ActorSystem.create(behavior(context), RiskPropagation.class.getSimpleName());
   }
 
   private Behavior<Void> behavior(Context context) {
