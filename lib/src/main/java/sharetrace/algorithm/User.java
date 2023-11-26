@@ -94,7 +94,7 @@ final class User extends AbstractBehavior<UserMessage> {
 
   private Behavior<UserMessage> handle(ContactMessage message) {
     var contact = new Contact(message, parameters, scores, context.timeSource());
-    if (contact.isAlive(getCurrentTime())) {
+    if (contact.isAlive(currentTime())) {
       contacts.add(contact);
       logContactEvent(contact);
     }
@@ -106,7 +106,7 @@ final class User extends AbstractBehavior<UserMessage> {
 
   private Behavior<UserMessage> handle(RiskScoreMessage message) {
     logReceiveEvent(message);
-    if (message.isAlive(getCurrentTime())) {
+    if (message.isAlive(currentTime())) {
       var transmitted = transmitted(message);
       scores.add(transmitted);
       updateExposureScore(message);
@@ -121,7 +121,7 @@ final class User extends AbstractBehavior<UserMessage> {
       var previousScore = currentScore;
       currentScore = message;
       logUpdateEvent(previousScore, currentScore);
-    } else if (currentScore.isExpired(getCurrentTime())) {
+    } else if (currentScore.isExpired(currentTime())) {
       var previousScore = currentScore;
       currentScore = scores.refresh().max().map(this::untransmitted).orElseGet(this::defaultScore);
       logUpdateEvent(previousScore, currentScore);
@@ -175,7 +175,7 @@ final class User extends AbstractBehavior<UserMessage> {
   }
 
   private <T extends Event> void logEvent(Class<T> type, Function<Timestamp, T> factory) {
-    lastEventTime = getCurrentTime();
+    lastEventTime = currentTime();
     logger().log(type, () -> factory.apply(lastEventTime));
   }
 
@@ -187,7 +187,7 @@ final class User extends AbstractBehavior<UserMessage> {
     return context.eventsLogger();
   }
 
-  private Timestamp getCurrentTime() {
+  private Timestamp currentTime() {
     return context.timeSource().timestamp();
   }
 }
