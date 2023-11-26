@@ -1,4 +1,4 @@
-package sharetrace.cache;
+package sharetrace.algorithm;
 
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Iterators;
@@ -9,13 +9,12 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Optional;
 import java.util.function.BinaryOperator;
-import sharetrace.model.Expirable;
+import sharetrace.model.TemporalScore;
 import sharetrace.model.Timestamp;
-import sharetrace.model.Timestamped;
+import sharetrace.util.Cache;
 import sharetrace.util.TimeSource;
 
-public final class RangeCache<V extends Expirable & Timestamped & Comparable<? super V>>
-    implements Cache<V> {
+final class TemopralScoreCache<V extends TemporalScore> implements Cache<V> {
 
   private final TimeSource timeSource;
   private final RangeMap<Timestamp, V> cache;
@@ -23,7 +22,7 @@ public final class RangeCache<V extends Expirable & Timestamped & Comparable<? s
   private final BinaryOperator<V> merger;
   private Range<Timestamp> min;
 
-  public RangeCache(TimeSource timeSource) {
+  public TemopralScoreCache(TimeSource timeSource) {
     this.timeSource = timeSource;
     this.comparator = Comparator.naturalOrder();
     this.merger = BinaryOperator.maxBy(comparator);
@@ -42,7 +41,7 @@ public final class RangeCache<V extends Expirable & Timestamped & Comparable<? s
   }
 
   @Override
-  public RangeCache<V> refresh() {
+  public TemopralScoreCache<V> refresh() {
     var currentTime = timeSource.timestamp();
     if (!min.contains(currentTime)) {
       cache.remove(Range.lessThan(currentTime));

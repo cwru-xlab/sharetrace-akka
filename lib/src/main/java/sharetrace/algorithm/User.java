@@ -11,9 +11,6 @@ import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import akka.actor.typed.javadsl.TimerScheduler;
 import java.util.function.Function;
-import sharetrace.cache.Cache;
-import sharetrace.cache.RangeCache;
-import sharetrace.cache.StandardCache;
 import sharetrace.logging.RecordLogger;
 import sharetrace.logging.event.ContactEvent;
 import sharetrace.logging.event.Event;
@@ -29,6 +26,7 @@ import sharetrace.model.message.IdleTimeout;
 import sharetrace.model.message.MonitorMessage;
 import sharetrace.model.message.RiskScoreMessage;
 import sharetrace.model.message.UserMessage;
+import sharetrace.util.Cache;
 import sharetrace.util.Context;
 
 final class User extends AbstractBehavior<UserMessage> {
@@ -59,8 +57,8 @@ final class User extends AbstractBehavior<UserMessage> {
     this.monitor = monitor;
     this.idleTimeout = idleTimeout;
     this.timers = timers;
-    this.scores = new RangeCache<>(context.timeSource());
-    this.contacts = new StandardCache<>(context.timeSource());
+    this.scores = new TemopralScoreCache<>(context.timeSource());
+    this.contacts = new ContactCache(context.timeSource());
     this.currentScore = defaultScore();
     this.lastEventTime = Timestamp.MIN;
   }

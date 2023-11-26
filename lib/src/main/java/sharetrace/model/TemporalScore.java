@@ -2,7 +2,7 @@ package sharetrace.model;
 
 import java.util.Comparator;
 
-public interface TemporalScore extends Expirable, Timestamped, Comparable<TemporalScore> {
+public interface TemporalScore extends Expirable, Comparable<TemporalScore> {
 
   Comparator<TemporalScore> COMPARATOR =
       Comparator.comparingDouble(TemporalScore::value)

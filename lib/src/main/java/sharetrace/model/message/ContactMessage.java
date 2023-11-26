@@ -4,11 +4,10 @@ import akka.actor.typed.ActorRef;
 import java.time.Duration;
 import sharetrace.model.Expirable;
 import sharetrace.model.Timestamp;
-import sharetrace.model.Timestamped;
 
 public record ContactMessage(
     ActorRef<UserMessage> contact, Timestamp timestamp, Timestamp expiryTime)
-    implements Expirable, Timestamped, UserMessage {
+    implements Expirable, UserMessage {
 
   public ContactMessage(ActorRef<UserMessage> contact, Timestamp timestamp, Duration expiry) {
     this(contact, timestamp, timestamp.plus(expiry));

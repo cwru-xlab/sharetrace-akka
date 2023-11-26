@@ -3,19 +3,18 @@ package sharetrace.algorithm;
 import akka.actor.typed.ActorRef;
 import java.util.Optional;
 import java.util.function.BiConsumer;
-import sharetrace.cache.Cache;
 import sharetrace.model.Expirable;
 import sharetrace.model.Parameters;
 import sharetrace.model.RiskScore;
 import sharetrace.model.TemporalScore;
 import sharetrace.model.Timestamp;
-import sharetrace.model.Timestamped;
 import sharetrace.model.message.ContactMessage;
 import sharetrace.model.message.RiskScoreMessage;
 import sharetrace.model.message.UserMessage;
+import sharetrace.util.Cache;
 import sharetrace.util.TimeSource;
 
-final class Contact implements Expirable, Timestamped, Comparable<Contact> {
+final class Contact implements Expirable, Comparable<Contact> {
 
   private final ActorRef<UserMessage> self;
   private final Timestamp timestamp;
@@ -83,8 +82,9 @@ final class Contact implements Expirable, Timestamped, Comparable<Contact> {
   }
 
   @Override
+  @SuppressWarnings("NullableProblems")
   public int compareTo(Contact contact) {
-    return timestamp.compareTo(contact.timestamp);
+    return Expirable.compare(this, contact);
   }
 
   private boolean shouldReceive(RiskScoreMessage message) {

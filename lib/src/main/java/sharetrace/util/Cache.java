@@ -1,4 +1,4 @@
-package sharetrace.cache;
+package sharetrace.util;
 
 import java.util.Optional;
 import sharetrace.model.Timestamp;
