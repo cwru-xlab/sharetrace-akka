@@ -41,7 +41,7 @@ public record ContextParser(Config contextConfig) implements ConfigParser<Contex
     var map = config.getObject("mdc").unwrapped();
     var mdc = new HashMap<String, String>(map.size());
     map.forEach((k, v) -> mdc.put(k, (String) v));
-    return mdc;
+    return Map.copyOf(mdc);
   }
 
   private TimeSource getTimeSource(Config config) {
@@ -68,7 +68,7 @@ public record ContextParser(Config contextConfig) implements ConfigParser<Contex
   private Set<Class<? extends LogRecord>> getLoggable(Config config) {
     return config.getStringList("loggable").stream()
         .map(className -> ClassFactory.getClass(LogRecord.class, className))
-        .collect(Collectors.toSet());
+        .collect(Collectors.toUnmodifiableSet());
   }
 
   private RecordLogger getEventsLogger(Set<Class<? extends LogRecord>> loggable) {
