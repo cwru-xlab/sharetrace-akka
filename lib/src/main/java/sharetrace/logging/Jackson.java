@@ -42,9 +42,9 @@ public final class Jackson {
 
     private static Module shareTraceModule() {
       return new SimpleModule()
-          .addSerializer(InstantSource.class, ToStringSerializer.instance)
-          .addSerializer(RandomGenerator.class, ToClassNameSerializer.INSTANCE)
-          .addSerializer(Class.class, ClassSerializer.INSTANCE);
+          .addSerializer(InstantSource.class, new ToStringSerializer())
+          .addSerializer(RandomGenerator.class, new ToClassNameSerializer())
+          .addSerializer(Class.class, new ClassSerializer());
     }
   }
 }

@@ -8,9 +8,7 @@ import java.io.IOException;
 @SuppressWarnings("rawtypes")
 final class ClassSerializer extends StdSerializer<Class> {
 
-  public static final ClassSerializer INSTANCE = new ClassSerializer();
-
-  private ClassSerializer() {
+  public ClassSerializer() {
     super(Class.class);
   }
 
