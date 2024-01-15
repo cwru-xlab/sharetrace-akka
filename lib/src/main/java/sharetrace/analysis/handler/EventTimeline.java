@@ -10,6 +10,7 @@ import sharetrace.logging.event.Event;
 public final class EventTimeline implements EventHandler {
 
   private final List<LoggedEvent> timeline;
+
   private long min;
 
   public EventTimeline() {

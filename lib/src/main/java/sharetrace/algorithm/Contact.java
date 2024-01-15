@@ -22,6 +22,7 @@ final class Contact implements Expirable, Comparable<Contact> {
   private final double sendCoefficient;
   private final Cache<RiskScoreMessage> scores;
   private final InstantSource timeSource;
+
   private TemporalScore sendThreshold;
 
   public Contact(

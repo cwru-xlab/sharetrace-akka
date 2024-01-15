@@ -18,6 +18,7 @@ final class ContactCache implements Cache<Contact> {
   private final Map<Contact, Contact> cache;
   private final Comparator<Contact> comparator;
   private final BinaryOperator<Contact> merger;
+
   private long min;
 
   public ContactCache(InstantSource timeSource) {

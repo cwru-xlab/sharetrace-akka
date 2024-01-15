@@ -19,6 +19,7 @@ final class TemopralScoreCache<V extends TemporalScore> implements Cache<V> {
   private final RangeMap<Long, V> cache;
   private final Comparator<? super V> comparator;
   private final BinaryOperator<V> merger;
+
   private Range<Long> min;
 
   public TemopralScoreCache(InstantSource timeSource) {
