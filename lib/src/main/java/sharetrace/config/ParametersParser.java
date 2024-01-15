@@ -11,7 +11,7 @@ public record ParametersParser() implements ConfigParser<Parameters> {
     return ParametersBuilder.create()
         .contactExpiry(config.getDuration("contact-expiry").toMillis())
         .scoreExpiry(config.getDuration("score-expiry").toMillis())
-        .idleTimeout(config.getDuration("idle-timeout").toMillis())
+        .timeout(config.getDuration("timeout").toMillis())
         .timeBuffer(config.getDuration("time-buffer").toMillis())
         .sendCoefficient(config.getDouble("send-coefficient"))
         .transmissionRate(config.getDouble("transmission-rate"))

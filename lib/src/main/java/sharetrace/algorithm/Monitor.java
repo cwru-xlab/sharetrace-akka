@@ -23,10 +23,10 @@ import sharetrace.logging.event.SendRiskScoresStart;
 import sharetrace.model.Parameters;
 import sharetrace.model.factory.RiskScoreFactory;
 import sharetrace.model.message.ContactMessage;
-import sharetrace.model.message.IdleTimeout;
 import sharetrace.model.message.MonitorMessage;
 import sharetrace.model.message.RiskScoreMessage;
-import sharetrace.model.message.Run;
+import sharetrace.model.message.RunMessage;
+import sharetrace.model.message.TimeoutMessage;
 import sharetrace.model.message.UserMessage;
 import sharetrace.util.Context;
 
@@ -77,12 +77,12 @@ final class Monitor extends AbstractBehavior<MonitorMessage> {
   @Override
   public Receive<MonitorMessage> createReceive() {
     return newReceiveBuilder()
-        .onMessage(Run.class, this::handle)
-        .onMessage(IdleTimeout.class, this::handle)
+        .onMessage(RunMessage.class, this::handle)
+        .onMessage(TimeoutMessage.class, this::handle)
         .build();
   }
 
-  private Behavior<MonitorMessage> handle(Run run) {
+  private Behavior<MonitorMessage> handle(RunMessage message) {
     if (userCount < 1) {
       return Behaviors.stopped();
     }
@@ -93,8 +93,8 @@ final class Monitor extends AbstractBehavior<MonitorMessage> {
     return this;
   }
 
-  private Behavior<MonitorMessage> handle(IdleTimeout timeout) {
-    timeouts.set(timeout.key());
+  private Behavior<MonitorMessage> handle(TimeoutMessage message) {
+    timeouts.set(message.key());
     if (timeouts.cardinality() < userCount) {
       return this;
     }
@@ -107,7 +107,7 @@ final class Monitor extends AbstractBehavior<MonitorMessage> {
     logEvent(CreateUsersStart.class, CreateUsersStart::new);
     var users = new ActorRef[userCount];
     for (int i : contactNetwork.vertexSet()) {
-      var user = User.of(i, context, parameters, getContext().getSelf(), new IdleTimeout(i));
+      var user = User.of(i, context, parameters, getContext().getSelf());
       users[i] = getContext().spawn(user, String.valueOf(i), User.props());
       getContext().watch(users[i]);
     }

@@ -11,7 +11,7 @@ public record Parameters(
     long timeBuffer,
     long scoreExpiry,
     long contactExpiry,
-    long idleTimeout) {
+    long timeout) {
 
   public Parameters {
     // Greater than 0 to avoid divide-by-zero errors; less than 1 to ensure finite runtime.
@@ -21,6 +21,6 @@ public record Parameters(
     Ranges.check("scoreExpiry", scoreExpiry, Range.greaterThan(0L));
     Ranges.check("contactExpiry", contactExpiry, Range.greaterThan(0L));
     // 1 millisecond is the minimum duration supported by Akka for scheduled messages.
-    Ranges.check("idleTimeout", idleTimeout, Range.atLeast(1L));
+    Ranges.check("timeout", timeout, Range.atLeast(1L));
   }
 }

@@ -13,7 +13,7 @@ import sharetrace.logging.Settings;
 import sharetrace.logging.SettingsBuilder;
 import sharetrace.model.Parameters;
 import sharetrace.model.factory.RiskScoreFactory;
-import sharetrace.model.message.Run;
+import sharetrace.model.message.RunMessage;
 import sharetrace.util.Context;
 import sharetrace.util.ContextBuilder;
 import sharetrace.util.KeyFactory;
@@ -75,7 +75,7 @@ public record RiskPropagation(
           var monitor = Monitor.of(context, parameters, riskScoreFactory, contactNetwork);
           var ref = ctx.spawn(monitor, Monitor.name(), Monitor.props());
           ctx.watch(ref);
-          ref.tell(Run.INSTANCE);
+          ref.tell(RunMessage.INSTANCE);
           return Behaviors.receive(Void.class)
               .onSignal(Terminated.class, x -> Behaviors.stopped())
               .build();

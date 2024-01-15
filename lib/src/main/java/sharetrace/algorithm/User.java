@@ -22,9 +22,9 @@ import sharetrace.logging.event.UpdateEvent;
 import sharetrace.model.Parameters;
 import sharetrace.model.RiskScore;
 import sharetrace.model.message.ContactMessage;
-import sharetrace.model.message.IdleTimeout;
 import sharetrace.model.message.MonitorMessage;
 import sharetrace.model.message.RiskScoreMessage;
+import sharetrace.model.message.TimeoutMessage;
 import sharetrace.model.message.UserMessage;
 import sharetrace.util.Cache;
 import sharetrace.util.Context;
@@ -35,8 +35,9 @@ final class User extends AbstractBehavior<UserMessage> {
   private final Context context;
   private final Parameters parameters;
   private final ActorRef<MonitorMessage> monitor;
-  private final IdleTimeout idleTimeout;
   private final TimerScheduler<UserMessage> timers;
+  private final Duration timeout;
+  private final TimeoutMessage timeoutMessage;
   private final Cache<RiskScoreMessage> scores;
   private final Cache<Contact> contacts;
 
@@ -49,31 +50,27 @@ final class User extends AbstractBehavior<UserMessage> {
       Context context,
       Parameters parameters,
       ActorRef<MonitorMessage> monitor,
-      IdleTimeout idleTimeout,
       TimerScheduler<UserMessage> timers) {
     super(actorContext);
     this.id = id;
     this.context = context;
     this.parameters = parameters;
     this.monitor = monitor;
-    this.idleTimeout = idleTimeout;
     this.timers = timers;
+    this.timeoutMessage = new TimeoutMessage(id);
+    this.timeout = Duration.ofMillis(parameters.timeout());
     this.scores = new TemopralScoreCache<>(context.timeSource());
     this.contacts = new ContactCache(context.timeSource());
     this.currentScore = defaultScore();
   }
 
   public static Behavior<UserMessage> of(
-      int id,
-      Context context,
-      Parameters parameters,
-      ActorRef<MonitorMessage> monitor,
-      IdleTimeout idleTimeout) {
+      int id, Context context, Parameters parameters, ActorRef<MonitorMessage> monitor) {
     return Behaviors.setup(
         ctx -> {
           var user =
               Behaviors.<UserMessage>withTimers(
-                  timers -> new User(id, ctx, context, parameters, monitor, idleTimeout, timers));
+                  timers -> new User(id, ctx, context, parameters, monitor, timers));
           return Behaviors.withMdc(UserMessage.class, context.mdc(), user);
         });
   }
@@ -87,7 +84,7 @@ final class User extends AbstractBehavior<UserMessage> {
     return newReceiveBuilder()
         .onMessage(ContactMessage.class, this::handle)
         .onMessage(RiskScoreMessage.class, this::handle)
-        .onMessage(IdleTimeout.class, this::handle)
+        .onMessage(TimeoutMessage.class, this::handle)
         .onSignal(PostStop.class, this::handle)
         .build();
   }
@@ -112,7 +109,7 @@ final class User extends AbstractBehavior<UserMessage> {
       updateExposureScore(message);
       contacts.refresh().forEach(contact -> contact.tell(transmitted));
     }
-    timers.startSingleTimer(idleTimeout, Duration.ofMillis(parameters.idleTimeout()));
+    timers.startSingleTimer(timeoutMessage, timeout);
     return this;
   }
 
@@ -128,8 +125,8 @@ final class User extends AbstractBehavior<UserMessage> {
     }
   }
 
-  private Behavior<UserMessage> handle(IdleTimeout timeout) {
-    monitor.tell(timeout);
+  private Behavior<UserMessage> handle(TimeoutMessage message) {
+    monitor.tell(message);
     return this;
   }
 
