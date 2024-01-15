@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.fasterxml.jackson.dataformat.ion.IonFactory;
 import com.fasterxml.jackson.dataformat.ion.IonObjectMapper;
-import com.fasterxml.jackson.dataformat.ion.jsr310.IonJavaTimeModule;
 import java.time.InstantSource;
 import org.apache.commons.math3.random.RandomGenerator;
 
@@ -34,10 +33,7 @@ public final class Jackson {
     public static final JsonFactory ION_JSON_FACTORY = new IonFactory(ION_OBJECT_MAPPER);
 
     private static ObjectMapper configured(ObjectMapper mapper) {
-      return mapper
-          .findAndRegisterModules()
-          .registerModule(shareTraceModule())
-          .registerModule(new IonJavaTimeModule());
+      return mapper.findAndRegisterModules().registerModule(shareTraceModule());
     }
 
     private static Module shareTraceModule() {
