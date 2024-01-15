@@ -15,10 +15,6 @@ public interface Expirable extends Timestamped {
   @JsonIgnore
   long expiryTime();
 
-  default boolean isAlive(long currentTime) {
-    return !isExpired(currentTime);
-  }
-
   default boolean isExpired(long currentTime) {
     return expiryTime() < currentTime;
   }

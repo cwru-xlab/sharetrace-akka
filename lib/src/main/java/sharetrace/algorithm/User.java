@@ -94,7 +94,7 @@ final class User extends AbstractBehavior<UserMessage> {
 
   private Behavior<UserMessage> handle(ContactMessage message) {
     var contact = new Contact(message, parameters, scores, context.timeSource());
-    if (contact.isAlive(currentTime())) {
+    if (!contact.isExpired(currentTime())) {
       contacts.add(contact);
       logContactEvent(contact);
     }
@@ -106,7 +106,7 @@ final class User extends AbstractBehavior<UserMessage> {
 
   private Behavior<UserMessage> handle(RiskScoreMessage message) {
     logReceiveEvent(message);
-    if (message.isAlive(currentTime())) {
+    if (!message.isExpired(currentTime())) {
       var transmitted = transmitted(message);
       scores.add(transmitted);
       updateExposureScore(message);
