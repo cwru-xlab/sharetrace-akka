@@ -9,10 +9,10 @@ public record ParametersParser() implements ConfigParser<Parameters> {
   @Override
   public Parameters parse(Config config) {
     return ParametersBuilder.create()
-        .contactExpiry(config.getDuration("contact-expiry"))
-        .scoreExpiry(config.getDuration("score-expiry"))
-        .idleTimeout(config.getDuration("idle-timeout"))
-        .timeBuffer(config.getDuration("time-buffer"))
+        .contactExpiry(config.getDuration("contact-expiry").toMillis())
+        .scoreExpiry(config.getDuration("score-expiry").toMillis())
+        .idleTimeout(config.getDuration("idle-timeout").toMillis())
+        .timeBuffer(config.getDuration("time-buffer").toMillis())
         .sendCoefficient(config.getDouble("send-coefficient"))
         .transmissionRate(config.getDouble("transmission-rate"))
         .build();

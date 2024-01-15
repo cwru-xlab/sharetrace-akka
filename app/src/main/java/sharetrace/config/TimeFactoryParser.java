@@ -13,7 +13,7 @@ public record TimeFactoryParser(Context context, ConfigParser<DistributedRandom>
   public TimeFactory parse(Config config) {
     return RandomTimeFactoryBuilder.create()
         .referenceTime(context.referenceTime())
-        .period(config.getDuration("time-period"))
+        .period(config.getDuration("time-period").toMillis())
         .random(randomParser.parse(config.getConfig("time-distribution")))
         .build();
   }

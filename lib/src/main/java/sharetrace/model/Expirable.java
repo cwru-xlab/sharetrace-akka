@@ -6,21 +6,20 @@ import java.util.Comparator;
 public interface Expirable extends Timestamped {
 
   Comparator<Expirable> COMPARATOR =
-      Comparator.comparing(Expirable::timestamp).thenComparing(Expirable::expiryTime);
+      Comparator.comparingLong(Expirable::timestamp).thenComparingLong(Expirable::expiryTime);
 
   static int compare(Expirable left, Expirable right) {
     return COMPARATOR.compare(left, right);
   }
 
   @JsonIgnore
-  Timestamp expiryTime();
+  long expiryTime();
 
-  default boolean isAlive(Timestamp currentTime) {
-
+  default boolean isAlive(long currentTime) {
     return !isExpired(currentTime);
   }
 
-  default boolean isExpired(Timestamp currentTime) {
-    return expiryTime().isBefore(currentTime);
+  default boolean isExpired(long currentTime) {
+    return expiryTime() < currentTime;
   }
 }

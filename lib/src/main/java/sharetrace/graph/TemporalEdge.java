@@ -1,31 +1,32 @@
 package sharetrace.graph;
 
-import java.util.function.BinaryOperator;
-import java.util.function.UnaryOperator;
+import java.util.function.LongBinaryOperator;
+import java.util.function.LongUnaryOperator;
 import org.jgrapht.graph.DefaultWeightedEdge;
-import sharetrace.model.Timestamp;
 
 public final class TemporalEdge extends DefaultWeightedEdge {
 
-  private Timestamp time;
+  private static final long UNSET = -1;
 
-  public void updateTime(Timestamp time, BinaryOperator<Timestamp> merger) {
-    updateTime(t -> t == null ? time : merger.apply(t, time));
+  private long time = UNSET;
+
+  public void updateTime(long time, LongBinaryOperator merger) {
+    updateTime(t -> t == UNSET ? time : merger.applyAsLong(t, time));
   }
 
-  public void updateTime(UnaryOperator<Timestamp> mapper) {
-    setTime(mapper.apply(time));
+  public void updateTime(LongUnaryOperator mapper) {
+    setTime(mapper.applyAsLong(time));
   }
 
   public double weight() {
-    return time.toEpochMillis();
-  }
-
-  public Timestamp getTime() {
     return time;
   }
 
-  public void setTime(Timestamp time) {
+  public long getTime() {
+    return time;
+  }
+
+  public void setTime(long time) {
     this.time = time;
   }
 }

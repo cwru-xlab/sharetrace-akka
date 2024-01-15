@@ -1,8 +1,7 @@
 package sharetrace.analysis.handler;
 
-import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
+import it.unimi.dsi.fastutil.objects.Object2LongMap;
+import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import java.util.stream.Stream;
 import sharetrace.analysis.results.Results;
 import sharetrace.logging.event.CreateUsersEnd;
@@ -16,17 +15,18 @@ import sharetrace.logging.event.SendContactsStart;
 import sharetrace.logging.event.SendRiskScoresEnd;
 import sharetrace.logging.event.SendRiskScoresStart;
 import sharetrace.logging.event.UserEvent;
-import sharetrace.model.Timestamp;
 
 public final class Runtimes implements EventHandler {
 
   private static final Object UNKNOWN_RUNTIME = "unknown";
-  private final Map<Class<?>, Timestamp> events;
-  private Timestamp lastEventTime;
+
+  private final Object2LongMap<Class<?>> events;
+
+  private long lastEventTime;
 
   public Runtimes() {
-    events = new HashMap<>();
-    lastEventTime = Timestamp.MIN;
+    events = new Object2LongOpenHashMap<>();
+    lastEventTime = Long.MIN_VALUE;
   }
 
   @Override
@@ -34,7 +34,7 @@ public final class Runtimes implements EventHandler {
     if (event instanceof RiskPropagationEvent) {
       events.put(event.getClass(), event.timestamp());
     } else if (event instanceof UserEvent) {
-      lastEventTime = Timestamp.max(lastEventTime, event.timestamp());
+      lastEventTime = Math.max(lastEventTime, event.timestamp());
     }
   }
 
@@ -51,13 +51,15 @@ public final class Runtimes implements EventHandler {
 
   private Object getRuntime(Class<?> start, Class<?> end) {
     return isLogged(start, end)
-        ? Duration.between(events.get(start), events.get(end))
+        ? Math.subtractExact(events.getLong(end), events.getLong(start))
         : UNKNOWN_RUNTIME;
   }
 
   private Object messagePassingRuntime() {
     var start = SendRiskScoresStart.class;
-    return isLogged(start) ? Duration.between(events.get(start), lastEventTime) : UNKNOWN_RUNTIME;
+    return isLogged(start)
+        ? Math.subtractExact(lastEventTime, events.getLong(start))
+        : UNKNOWN_RUNTIME;
   }
 
   private boolean isLogged(Class<?>... types) {

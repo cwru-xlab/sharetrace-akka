@@ -1,25 +1,15 @@
 package sharetrace.model;
 
-import com.google.common.collect.Range;
-import java.time.Duration;
 import java.util.function.DoubleUnaryOperator;
-import sharetrace.util.Ranges;
 
-public record RiskScore(double value, Timestamp timestamp, Timestamp expiryTime)
-    implements TemporalScore {
+public record RiskScore(double value, long timestamp, long expiryTime) implements TemporalScore {
 
-  private static final Range<Double> VALUE_RANGE = Range.closed(0d, 1d);
+  public static final double MIN_VALUE = 0d;
+  public static final double MAX_VALUE = 1d;
+  public static final RiskScore MIN = new RiskScore(MIN_VALUE, 0L, 0L);
 
-  public static final double MIN_VALUE = VALUE_RANGE.lowerEndpoint();
-  public static final double MAX_VALUE = VALUE_RANGE.upperEndpoint();
-  public static final RiskScore MIN = new RiskScore(MIN_VALUE, Timestamp.MIN, Timestamp.MIN);
-
-  public RiskScore {
-    Ranges.check("value", value, VALUE_RANGE);
-  }
-
-  public RiskScore(double value, Timestamp timestamp, Duration expiry) {
-    this(value, timestamp, timestamp.plus(expiry));
+  public static RiskScore fromExpiry(double value, long timestamp, long expiry) {
+    return new RiskScore(value, timestamp, Math.addExact(timestamp, expiry));
   }
 
   public RiskScore mapValue(DoubleUnaryOperator mapper) {

@@ -4,7 +4,6 @@ import akka.actor.typed.ActorRef;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import sharetrace.model.RiskScore;
 import sharetrace.model.TemporalScore;
-import sharetrace.model.Timestamp;
 
 public record RiskScoreMessage(@JsonIgnore ActorRef<UserMessage> sender, RiskScore score, int id)
     implements TemporalScore, UserMessage {
@@ -15,12 +14,12 @@ public record RiskScoreMessage(@JsonIgnore ActorRef<UserMessage> sender, RiskSco
   }
 
   @Override
-  public Timestamp timestamp() {
+  public long timestamp() {
     return score.timestamp();
   }
 
   @Override
-  public Timestamp expiryTime() {
+  public long expiryTime() {
     return score.expiryTime();
   }
 }

@@ -8,21 +8,20 @@ import org.jgrapht.GraphType;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.DefaultGraphType;
 import org.jgrapht.opt.graph.fastutil.FastutilMapIntVertexGraph;
-import sharetrace.model.Timestamp;
 
 public final class Graphs {
 
   private Graphs() {}
 
   public static void addTemporalEdge(
-      Graph<Integer, TemporalEdge> graph, int source, int target, Timestamp time) {
+      Graph<Integer, TemporalEdge> graph, int source, int target, long time) {
     graph.addVertex(source);
     graph.addVertex(target);
     var edge = graph.getEdge(source, target);
     if (edge == null) {
       edge = graph.addEdge(source, target);
     }
-    edge.updateTime(time, Timestamp::max);
+    edge.updateTime(time, Math::max);
     if (graph.getType().isWeighted()) {
       graph.setEdgeWeight(edge, edge.weight());
     }

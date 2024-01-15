@@ -1,5 +1,3 @@
 package sharetrace.logging.event;
 
-import sharetrace.model.Timestamp;
-
-public record RiskPropagationEnd(Timestamp timestamp) implements RiskPropagationEvent {}
+public record RiskPropagationEnd(long timestamp) implements RiskPropagationEvent {}

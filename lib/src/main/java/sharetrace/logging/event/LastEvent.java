@@ -1,11 +1,10 @@
 package sharetrace.logging.event;
 
 import akka.actor.typed.ActorRef;
-import sharetrace.model.Timestamp;
 
-public record LastEvent(int self, Timestamp timestamp) implements UserEvent {
+public record LastEvent(int self, long timestamp) implements UserEvent {
 
-  public LastEvent(ActorRef<?> self, Timestamp timestamp) {
+  public LastEvent(ActorRef<?> self, long timestamp) {
     this(UserEvent.toInt(self), timestamp);
   }
 }

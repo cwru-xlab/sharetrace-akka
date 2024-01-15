@@ -10,7 +10,8 @@ import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import akka.actor.typed.javadsl.TimerScheduler;
-import java.util.function.Function;
+import java.time.Duration;
+import java.util.function.LongFunction;
 import sharetrace.logging.RecordLogger;
 import sharetrace.logging.event.ContactEvent;
 import sharetrace.logging.event.Event;
@@ -20,7 +21,6 @@ import sharetrace.logging.event.SendEvent;
 import sharetrace.logging.event.UpdateEvent;
 import sharetrace.model.Parameters;
 import sharetrace.model.RiskScore;
-import sharetrace.model.Timestamp;
 import sharetrace.model.message.ContactMessage;
 import sharetrace.model.message.IdleTimeout;
 import sharetrace.model.message.MonitorMessage;
@@ -40,7 +40,7 @@ final class User extends AbstractBehavior<UserMessage> {
   private final Cache<RiskScoreMessage> scores;
   private final Cache<Contact> contacts;
   private RiskScoreMessage currentScore;
-  private Timestamp lastEventTime;
+  private long lastEventTime;
 
   private User(
       int id,
@@ -60,7 +60,6 @@ final class User extends AbstractBehavior<UserMessage> {
     this.scores = new TemopralScoreCache<>(context.timeSource());
     this.contacts = new ContactCache(context.timeSource());
     this.currentScore = defaultScore();
-    this.lastEventTime = Timestamp.MIN;
   }
 
   public static Behavior<UserMessage> of(
@@ -112,7 +111,7 @@ final class User extends AbstractBehavior<UserMessage> {
       updateExposureScore(message);
       contacts.refresh().forEach(contact -> contact.tell(transmitted));
     }
-    timers.startSingleTimer(idleTimeout, parameters.idleTimeout());
+    timers.startSingleTimer(idleTimeout, Duration.ofMillis(parameters.idleTimeout()));
     return this;
   }
 
@@ -174,7 +173,7 @@ final class User extends AbstractBehavior<UserMessage> {
     logger().log(LastEvent.class, () -> new LastEvent(self(), lastEventTime));
   }
 
-  private <T extends Event> void logEvent(Class<T> type, Function<Timestamp, T> factory) {
+  private <T extends Event> void logEvent(Class<T> type, LongFunction<T> factory) {
     lastEventTime = currentTime();
     logger().log(type, () -> factory.apply(lastEventTime));
   }
@@ -187,7 +186,7 @@ final class User extends AbstractBehavior<UserMessage> {
     return context.eventsLogger();
   }
 
-  private Timestamp currentTime() {
-    return context.timeSource().timestamp();
+  private long currentTime() {
+    return context.timeSource().millis();
   }
 }

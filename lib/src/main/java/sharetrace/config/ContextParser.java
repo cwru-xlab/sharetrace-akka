@@ -1,6 +1,8 @@
 package sharetrace.config;
 
 import com.typesafe.config.Config;
+
+import java.time.Instant;
 import java.time.InstantSource;
 import java.time.ZoneId;
 import java.util.HashMap;
@@ -12,10 +14,8 @@ import org.apache.commons.math3.random.RandomGenerator;
 import org.slf4j.LoggerFactory;
 import sharetrace.logging.LogRecord;
 import sharetrace.logging.RecordLogger;
-import sharetrace.model.Timestamp;
 import sharetrace.util.Context;
 import sharetrace.util.ContextBuilder;
-import sharetrace.util.TimeSource;
 
 public record ContextParser(Config contextConfig) implements ConfigParser<Context> {
 
@@ -44,9 +44,9 @@ public record ContextParser(Config contextConfig) implements ConfigParser<Contex
     return Map.copyOf(mdc);
   }
 
-  private TimeSource getTimeSource(Config config) {
+  private InstantSource getTimeSource(Config config) {
     var timezone = ZoneId.of(config.getString("timezone"));
-    return TimeSource.from(InstantSource.system().withZone(timezone));
+    return InstantSource.system().withZone(timezone);
   }
 
   private long getSeed(Config config) {
@@ -55,9 +55,9 @@ public record ContextParser(Config contextConfig) implements ConfigParser<Contex
     return seed.equals("any") ? random : Long.parseLong(seed);
   }
 
-  private Timestamp getReferenceTime(Config config, TimeSource timeSource) {
+  private long getReferenceTime(Config config, InstantSource timeSource) {
     var string = config.getString("reference-time");
-    return string.equals("now") ? timeSource.timestamp() : Timestamp.parse(string);
+    return string.equals("now") ? timeSource.millis() : Instant.parse(string).toEpochMilli();
   }
 
   private RandomGenerator getRandomGenerator(Config config, long seed) {

@@ -1,28 +1,26 @@
 package sharetrace.analysis.handler;
 
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import sharetrace.analysis.model.LoggedEvent;
 import sharetrace.analysis.results.Results;
 import sharetrace.logging.event.Event;
-import sharetrace.model.Timestamp;
 
 public final class EventTimeline implements EventHandler {
 
   private final List<LoggedEvent> timeline;
-  private Timestamp min;
+  private long min;
 
   public EventTimeline() {
     timeline = new ArrayList<>();
-    min = Timestamp.MAX;
+    min = Long.MAX_VALUE;
   }
 
   @Override
   public void onNext(Event event) {
     var logged = LoggedEvent.from(event);
-    min = Timestamp.min(min, logged.timestamp());
+    min = Math.min(min, logged.timestamp());
     timeline.add(logged);
   }
 
@@ -34,7 +32,7 @@ public final class EventTimeline implements EventHandler {
   }
 
   private LoggedEvent adjustTimestamp(LoggedEvent event) {
-    var offset = Duration.between(min, event.timestamp());
-    return new LoggedEvent(event.type(), Timestamp.MIN.plus(offset));
+    var offset = Math.subtractExact(event.timestamp(), min);
+    return new LoggedEvent(event.type(), offset);
   }
 }

@@ -9,7 +9,7 @@ import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import java.util.BitSet;
-import java.util.function.Function;
+import java.util.function.LongFunction;
 import sharetrace.graph.ContactNetwork;
 import sharetrace.logging.event.CreateUsersEnd;
 import sharetrace.logging.event.CreateUsersStart;
@@ -21,7 +21,6 @@ import sharetrace.logging.event.SendContactsStart;
 import sharetrace.logging.event.SendRiskScoresEnd;
 import sharetrace.logging.event.SendRiskScoresStart;
 import sharetrace.model.Parameters;
-import sharetrace.model.Timestamp;
 import sharetrace.model.factory.RiskScoreFactory;
 import sharetrace.model.message.ContactMessage;
 import sharetrace.model.message.IdleTimeout;
@@ -121,8 +120,8 @@ final class Monitor extends AbstractBehavior<MonitorMessage> {
     for (var edge : contactNetwork.edgeSet()) {
       var user1 = users[contactNetwork.getEdgeSource(edge)];
       var user2 = users[contactNetwork.getEdgeTarget(edge)];
-      user1.tell(new ContactMessage(user2, edge.getTime(), parameters.contactExpiry()));
-      user2.tell(new ContactMessage(user1, edge.getTime(), parameters.contactExpiry()));
+      user1.tell(ContactMessage.fromExpiry(user2, edge.getTime(), parameters.contactExpiry()));
+      user2.tell(ContactMessage.fromExpiry(user1, edge.getTime(), parameters.contactExpiry()));
     }
     logEvent(SendContactsEnd.class, SendContactsEnd::new);
   }
@@ -136,7 +135,7 @@ final class Monitor extends AbstractBehavior<MonitorMessage> {
     logEvent(SendRiskScoresEnd.class, SendRiskScoresEnd::new);
   }
 
-  private <T extends Event> void logEvent(Class<T> type, Function<Timestamp, T> factory) {
-    context.eventsLogger().log(type, () -> factory.apply(context.timeSource().timestamp()));
+  private <T extends Event> void logEvent(Class<T> type, LongFunction<T> factory) {
+    context.eventsLogger().log(type, () -> factory.apply(context.timeSource().millis()));
   }
 }

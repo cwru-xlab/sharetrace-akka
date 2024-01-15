@@ -1,13 +1,12 @@
 package sharetrace.util;
 
 import java.util.Optional;
-import sharetrace.model.Timestamp;
 
 public interface Cache<V> extends Iterable<V> {
 
   Optional<V> max();
 
-  Optional<V> max(Timestamp atMost);
+  Optional<V> max(long atMost);
 
   Cache<V> refresh();
 
