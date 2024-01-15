@@ -20,14 +20,14 @@ final class TemopralScoreCache<V extends TemporalScore> implements Cache<V> {
   private final Comparator<? super V> comparator;
   private final BinaryOperator<V> merger;
 
-  private Range<Long> min;
+  private Range<Long> minKey;
 
   public TemopralScoreCache(InstantSource timeSource) {
     this.timeSource = timeSource;
     this.comparator = Comparator.naturalOrder();
     this.merger = BinaryOperator.maxBy(comparator);
     this.cache = TreeRangeMap.create();
-    updateMin();
+    updateMinKey();
   }
 
   @Override
@@ -43,9 +43,9 @@ final class TemopralScoreCache<V extends TemporalScore> implements Cache<V> {
   @Override
   public TemopralScoreCache<V> refresh() {
     var currentTime = timeSource.millis();
-    if (!min.contains(currentTime)) {
+    if (!minKey.contains(currentTime)) {
       cache.remove(Range.lessThan(currentTime));
-      updateMin();
+      updateMinKey();
     }
     return this;
   }
@@ -54,7 +54,7 @@ final class TemopralScoreCache<V extends TemporalScore> implements Cache<V> {
   public void add(V value) {
     var key = Range.closedOpen(value.timestamp(), value.expiryTime());
     cache.merge(key, value, merger);
-    updateMin();
+    updateMinKey();
   }
 
   @Override
@@ -67,7 +67,7 @@ final class TemopralScoreCache<V extends TemporalScore> implements Cache<V> {
     return cache.subRangeMap(range).asMapOfRanges().values().stream().max(comparator);
   }
 
-  private void updateMin() {
-    min = Iterables.getFirst(cache.asMapOfRanges().keySet(), Range.all());
+  private void updateMinKey() {
+    minKey = Iterables.getFirst(cache.asMapOfRanges().keySet(), Range.all());
   }
 }

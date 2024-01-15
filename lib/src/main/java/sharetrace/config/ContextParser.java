@@ -1,7 +1,6 @@
 package sharetrace.config;
 
 import com.typesafe.config.Config;
-
 import java.time.Instant;
 import java.time.InstantSource;
 import java.time.ZoneId;

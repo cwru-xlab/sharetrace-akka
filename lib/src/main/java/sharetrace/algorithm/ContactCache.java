@@ -19,14 +19,14 @@ final class ContactCache implements Cache<Contact> {
   private final Comparator<Contact> comparator;
   private final BinaryOperator<Contact> merger;
 
-  private long min;
+  private long minExpiryTime;
 
   public ContactCache(InstantSource timeSource) {
     this.timeSource = timeSource;
     this.comparator = Comparator.naturalOrder();
     this.merger = BinaryOperator.maxBy(comparator);
     this.cache = new HashMap<>();
-    updateMin();
+    updateMinExpiryTime();
   }
 
   @Override
@@ -42,15 +42,15 @@ final class ContactCache implements Cache<Contact> {
   @Override
   public void add(Contact contact) {
     cache.merge(contact, contact, merger);
-    updateMin(contact);
+    updateMinExpiryTime(contact);
   }
 
   @Override
   public ContactCache refresh() {
     var currentTime = timeSource.millis();
-    if (min < currentTime) {
+    if (minExpiryTime < currentTime) {
       values().removeIf(value -> value.isExpired(currentTime));
-      updateMin();
+      updateMinExpiryTime();
     }
     return this;
   }
@@ -61,12 +61,12 @@ final class ContactCache implements Cache<Contact> {
     return Iterators.unmodifiableIterator(values().iterator());
   }
 
-  private void updateMin(Contact contact) {
-    min = Math.min(min, contact.expiryTime());
+  private void updateMinExpiryTime(Contact contact) {
+    minExpiryTime = Math.min(minExpiryTime, contact.expiryTime());
   }
 
-  private void updateMin() {
-    min = stream().map(Contact::expiryTime).min(Long::compareTo).orElse(Long.MAX_VALUE);
+  private void updateMinExpiryTime() {
+    minExpiryTime = stream().map(Contact::expiryTime).min(Long::compareTo).orElse(Long.MAX_VALUE);
   }
 
   private Stream<Contact> stream() {

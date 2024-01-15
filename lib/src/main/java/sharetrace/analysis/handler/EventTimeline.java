@@ -11,17 +11,17 @@ public final class EventTimeline implements EventHandler {
 
   private final List<LoggedEvent> timeline;
 
-  private long min;
+  private long minTimestamp;
 
   public EventTimeline() {
     timeline = new ArrayList<>();
-    min = Long.MAX_VALUE;
+    minTimestamp = Long.MAX_VALUE;
   }
 
   @Override
   public void onNext(Event event) {
     var logged = LoggedEvent.from(event);
-    min = Math.min(min, logged.timestamp());
+    minTimestamp = Math.min(minTimestamp, logged.timestamp());
     timeline.add(logged);
   }
 
@@ -33,7 +33,7 @@ public final class EventTimeline implements EventHandler {
   }
 
   private LoggedEvent adjustTimestamp(LoggedEvent event) {
-    var offset = Math.subtractExact(event.timestamp(), min);
+    var offset = Math.subtractExact(event.timestamp(), minTimestamp);
     return new LoggedEvent(event.type(), offset);
   }
 }
