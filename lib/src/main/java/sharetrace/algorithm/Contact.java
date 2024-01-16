@@ -19,7 +19,7 @@ final class Contact implements Expirable, Comparable<Contact> {
   private final long timestamp;
   private final long bufferedTimestamp;
   private final long expiryTime;
-  private final double sendCoefficient;
+  private final Parameters parameters;
   private final Cache<RiskScoreMessage> scores;
   private final InstantSource timeSource;
 
@@ -34,7 +34,7 @@ final class Contact implements Expirable, Comparable<Contact> {
     this.timestamp = message.timestamp();
     this.bufferedTimestamp = Math.addExact(message.timestamp(), parameters.timeBuffer());
     this.expiryTime = message.expiryTime();
-    this.sendCoefficient = parameters.sendCoefficient();
+    this.parameters = parameters;
     this.scores = scores;
     this.timeSource = timeSource;
     resetThreshold();
@@ -42,6 +42,12 @@ final class Contact implements Expirable, Comparable<Contact> {
 
   public void tell(RiskScoreMessage message) {
     tell(message, (self, msg) -> {});
+  }
+
+  public void tellInitialMessage(BiConsumer<ActorRef<?>, RiskScoreMessage> logEvent) {
+    /* Always try to send a new contact a risk score. An expired contact may still receive a risk
+    score if it is "relevant" (i.e., within the time buffer of the contact time). */
+    maxRelevantMessageInCache().ifPresent(msg -> tell(msg, logEvent));
   }
 
   public void tell(RiskScoreMessage message, BiConsumer<ActorRef<?>, RiskScoreMessage> logEvent) {
@@ -53,13 +59,9 @@ final class Contact implements Expirable, Comparable<Contact> {
     }
   }
 
-  public Optional<RiskScoreMessage> maxRelevantMessageInCache() {
-    return scores.refresh().max(bufferedTimestamp);
-  }
-
   @Override
   public long expiryTime() {
-    return expiryTime;
+    return parameters.contactExpiry();
   }
 
   @Override
@@ -109,8 +111,12 @@ final class Contact implements Expirable, Comparable<Contact> {
     }
   }
 
+  private Optional<RiskScoreMessage> maxRelevantMessageInCache() {
+    return scores.refresh().max(bufferedTimestamp);
+  }
+
   private void setThreshold(RiskScoreMessage message) {
-    sendThreshold = message.score().mapValue(value -> value * sendCoefficient);
+    sendThreshold = message.score().mapValue(value -> value * parameters.sendCoefficient());
   }
 
   private void resetThreshold() {

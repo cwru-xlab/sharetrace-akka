@@ -95,9 +95,7 @@ final class User extends AbstractBehavior<UserMessage> {
       contacts.add(contact);
       logContactEvent(contact);
     }
-    /* Always try to send a new contact a risk score. An expired contact may still receive a risk
-    score if it is "relevant" (i.e., within the time buffer of the contact time). */
-    contact.maxRelevantMessageInCache().ifPresent(msg -> contact.tell(msg, this::logSendEvent));
+    contact.tellInitialMessage(this::logSendEvent);
     return this;
   }
 
