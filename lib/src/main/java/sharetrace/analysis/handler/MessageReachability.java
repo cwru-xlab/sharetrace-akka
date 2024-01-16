@@ -4,12 +4,14 @@ import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 import org.jgrapht.Graph;
 import org.jgrapht.GraphPath;
 import org.jgrapht.alg.shortestpath.IntVertexDijkstraShortestPath;
@@ -21,7 +23,7 @@ import sharetrace.logging.event.ReceiveEvent;
 
 public final class MessageReachability implements EventHandler {
 
-  private final Int2ObjectMap<List<int[]>> edges;
+  private final Int2ObjectMap<Set<IntList>> edges;
 
   public MessageReachability() {
     edges = new Int2ObjectOpenHashMap<>();
@@ -34,7 +36,7 @@ public final class MessageReachability implements EventHandler {
       var target = receive.self();
       if (source != target) {
         var origin = receive.message().id();
-        edges.computeIfAbsent(origin, x -> new ArrayList<>()).add(new int[] {source, target});
+        edges.computeIfAbsent(origin, x -> new HashSet<>()).add(IntArrayList.of(source, target));
       }
     }
   }
@@ -51,36 +53,36 @@ public final class MessageReachability implements EventHandler {
       var graph = reachabilityGraph(edges);
       influence.put(origin, targets.size());
       targets.forEach(target -> source.mergeInt(target, 1, Integer::sum));
-      reachability.put(origin, computeMessageReachability(origin, graph));
+      reachability.put(origin, messageReachability(origin, graph));
     }
     results
         .withScope("reachability")
         .put("influence", influence)
         .put("source", source)
         .put("message", reachability)
-        .put("ratio", computeReachabilityRatio(influence));
+        .put("ratio", reachabilityRatio(influence));
   }
 
-  private IntSet targetsOfOrigin(int origin, Collection<int[]> edges) {
-    var targets = new IntOpenHashSet(edges.size());
-    for (var edge : edges) {
-      if (edge[0] != origin) targets.add(edge[0]);
-      if (edge[1] != origin) targets.add(edge[1]);
-    }
+  private IntSet targetsOfOrigin(int origin, Collection<IntList> edges) {
+    var targets = new IntOpenHashSet();
+    edges.forEach(targets::addAll);
+    targets.remove(origin);
     return targets;
   }
 
-  private Graph<Integer, DefaultEdge> reachabilityGraph(Iterable<int[]> edges) {
+  private Graph<Integer, DefaultEdge> reachabilityGraph(Iterable<IntList> edges) {
     var graph = Graphs.newDirectedGraph();
     for (var edge : edges) {
-      graph.addVertex(edge[0]);
-      graph.addVertex(edge[1]);
-      graph.addEdge(edge[0], edge[1]);
+      var source = edge.getInt(0);
+      var target = edge.getInt(1);
+      graph.addVertex(source);
+      graph.addVertex(target);
+      graph.addEdge(source, target);
     }
     return graph;
   }
 
-  private int computeMessageReachability(int origin, Graph<Integer, ?> graph) {
+  private int messageReachability(int origin, Graph<Integer, ?> graph) {
     return graph.vertexSet().stream()
         .map(new IntVertexDijkstraShortestPath<>(graph).getPaths(origin)::getPath)
         .filter(Objects::nonNull)
@@ -89,7 +91,7 @@ public final class MessageReachability implements EventHandler {
         .orElse(0);
   }
 
-  private double computeReachabilityRatio(Int2IntMap influence) {
+  private double reachabilityRatio(Int2IntMap influence) {
     return influence.values().intStream().summaryStatistics().getAverage();
   }
 }
