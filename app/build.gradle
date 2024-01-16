@@ -25,6 +25,6 @@ tasks.register("analyze", JavaExec) {
 }
 
 dependencies {
-    annotationProcessor "io.soabase.record-builder:record-builder-processor:37"
+    annotationProcessor "io.soabase.record-builder:record-builder-processor:40"
     implementation project(":lib")
 }
