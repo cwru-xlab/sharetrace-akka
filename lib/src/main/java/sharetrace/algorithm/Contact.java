@@ -61,7 +61,7 @@ final class Contact implements Expirable, Comparable<Contact> {
 
   @Override
   public long expiryTime() {
-    return parameters.contactExpiry();
+    return expiryTime;
   }
 
   @Override
