@@ -1,6 +1,5 @@
 package sharetrace.util;
 
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.typesafe.config.Config;
 import java.time.InstantSource;
@@ -19,6 +18,7 @@ public record Context(
     long seed,
     RandomGenerator randomGenerator,
     Set<Class<? extends LogRecord>> loggable,
-    @JsonAnyGetter Map<String, String> mdc,
-    @JsonIgnore RecordLogger eventsLogger,
-    @JsonIgnore RecordLogger settingsLogger) {}
+    Map<String, String> tags,
+    @JsonIgnore Map<String, String> mdc,
+    @JsonIgnore RecordLogger logger,
+    @JsonIgnore RecordLogger eventLogger) {}

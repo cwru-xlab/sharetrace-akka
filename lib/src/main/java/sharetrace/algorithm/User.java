@@ -13,8 +13,8 @@ import akka.actor.typed.javadsl.TimerScheduler;
 import java.time.Duration;
 import java.util.function.LongFunction;
 import sharetrace.logging.RecordLogger;
-import sharetrace.logging.event.user.ContactEvent;
 import sharetrace.logging.event.Event;
+import sharetrace.logging.event.user.ContactEvent;
 import sharetrace.logging.event.user.LastEvent;
 import sharetrace.logging.event.user.ReceiveEvent;
 import sharetrace.logging.event.user.SendEvent;
@@ -179,7 +179,7 @@ final class User extends AbstractBehavior<UserMessage> {
   }
 
   private RecordLogger logger() {
-    return context.eventsLogger();
+    return context.eventLogger();
   }
 
   private long currentTime() {

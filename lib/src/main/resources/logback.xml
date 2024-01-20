@@ -33,7 +33,7 @@
         <appender-ref ref="BaseConsoleAppender"/>
     </appender>
 
-    <appender name="BaseFileAppender" class="RollingFileAppender">
+    <appender name="BaseEventAppender" class="RollingFileAppender">
         <file>${logDirectory}/events.log</file>
         <encoder class="LogstashEncoder">
             <fieldNames class="ShortenedFieldNames">
@@ -59,12 +59,12 @@
         </triggeringPolicy>
     </appender>
 
-    <appender name="EventsAppender" class="LoggingEventAsyncDisruptorAppender">
-        <appender-ref ref="BaseFileAppender"/>
+    <appender name="EventAppender" class="LoggingEventAsyncDisruptorAppender">
+        <appender-ref ref="BaseEventAppender"/>
         <appendTimeout>-1</appendTimeout>
     </appender>
 
-    <appender name="SettingsFileAppender" class="FileAppender">
+    <appender name="BaseLoggerAppender" class="FileAppender">
         <encoder class="LogstashEncoder">
             <fieldNames class="ShortenedFieldNames">
                 <level>[ignore]</level>
@@ -78,22 +78,22 @@
             <includeContext>false</includeContext>
             <jsonFactoryDecorator class="sharetrace.logging.ShareTraceJsonFactoryDecorator"/>
         </encoder>
-        <file>${logDirectory}/settings.log</file>
+        <file>${logDirectory}/data.log</file>
         <immediateFlush>false</immediateFlush>
     </appender>
 
-    <appender name="SettingsAppender" class="LoggingEventAsyncDisruptorAppender">
+    <appender name="LoggerAppender" class="LoggingEventAsyncDisruptorAppender">
         <appendTimeout>-1</appendTimeout>
-        <appender-ref ref="SettingsFileAppender"/>
+        <appender-ref ref="BaseLoggerAppender"/>
     </appender>
 
     <root level="info">
         <appender-ref ref="ConsoleAppender"/>
     </root>
-    <logger name="EventsLogger" level="info" additivity="false">
-        <appender-ref ref="EventsAppender"/>
+    <logger name="EventLogger" level="info" additivity="false">
+        <appender-ref ref="EventAppender"/>
     </logger>
-    <logger name="SettingsLogger" level="info" additivity="false">
-        <appender-ref ref="SettingsAppender"/>
+    <logger name="Logger" level="info" additivity="false">
+        <appender-ref ref="LoggerAppender"/>
     </logger>
 </configuration>

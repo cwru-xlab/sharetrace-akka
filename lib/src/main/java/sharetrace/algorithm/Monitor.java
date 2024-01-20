@@ -11,9 +11,9 @@ import akka.actor.typed.javadsl.Receive;
 import java.util.BitSet;
 import java.util.function.LongFunction;
 import sharetrace.graph.ContactNetwork;
+import sharetrace.logging.event.Event;
 import sharetrace.logging.event.lifecycle.CreateUsersEnd;
 import sharetrace.logging.event.lifecycle.CreateUsersStart;
-import sharetrace.logging.event.Event;
 import sharetrace.logging.event.lifecycle.RiskPropagationEnd;
 import sharetrace.logging.event.lifecycle.RiskPropagationStart;
 import sharetrace.logging.event.lifecycle.SendContactsEnd;
@@ -136,6 +136,6 @@ final class Monitor extends AbstractBehavior<MonitorMessage> {
   }
 
   private <T extends Event> void logEvent(Class<T> type, LongFunction<T> factory) {
-    context.eventsLogger().log(type, () -> factory.apply(context.timeSource().millis()));
+    context.eventLogger().log(type, () -> factory.apply(context.timeSource().millis()));
   }
 }

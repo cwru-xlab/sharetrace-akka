@@ -12,8 +12,8 @@ import org.jgrapht.alg.shortestpath.IntVertexDijkstraShortestPath;
 import sharetrace.analysis.results.Results;
 import sharetrace.graph.Graphs;
 import sharetrace.graph.TemporalEdge;
-import sharetrace.logging.event.user.ContactEvent;
 import sharetrace.logging.event.Event;
+import sharetrace.logging.event.user.ContactEvent;
 
 public final class GraphHandler implements EventHandler {
 

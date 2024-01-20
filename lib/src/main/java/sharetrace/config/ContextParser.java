@@ -4,8 +4,6 @@ import com.typesafe.config.Config;
 import java.time.Instant;
 import java.time.InstantSource;
 import java.time.ZoneId;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
@@ -24,23 +22,15 @@ public record ContextParser(Config contextConfig) implements ConfigParser<Contex
     var seed = getSeed(config);
     var loggable = getLoggable(config);
     return ContextBuilder.create()
-        .mdc(getMdc(config))
         .config(contextConfig)
         .timeSource(timeSource)
         .seed(seed)
         .referenceTime(getReferenceTime(config, timeSource))
         .randomGenerator(getRandomGenerator(config, seed))
         .loggable(loggable)
-        .eventsLogger(getEventsLogger(loggable))
-        .settingsLogger(getSettingsLogger(loggable))
+        .logger(getLogger(loggable))
+        .eventLogger(getEventLogger(loggable))
         .build();
-  }
-
-  private Map<String, String> getMdc(Config config) {
-    var map = config.getObject("mdc").unwrapped();
-    var mdc = new HashMap<String, String>(map.size());
-    map.forEach((k, v) -> mdc.put(k, (String) v));
-    return Map.copyOf(mdc);
   }
 
   private InstantSource getTimeSource(Config config) {
@@ -50,7 +40,7 @@ public record ContextParser(Config contextConfig) implements ConfigParser<Contex
 
   private long getSeed(Config config) {
     var seed = config.getString("seed");
-    var random = ThreadLocalRandom.current().nextLong(Long.MAX_VALUE);
+    var random = ThreadLocalRandom.current().nextLong(0, Long.MAX_VALUE);
     return seed.equals("any") ? random : Long.parseLong(seed);
   }
 
@@ -70,11 +60,11 @@ public record ContextParser(Config contextConfig) implements ConfigParser<Contex
         .collect(Collectors.toUnmodifiableSet());
   }
 
-  private RecordLogger getEventsLogger(Set<Class<? extends LogRecord>> loggable) {
-    return new RecordLogger(LoggerFactory.getLogger("EventsLogger"), "event", loggable);
+  private RecordLogger getEventLogger(Set<Class<? extends LogRecord>> loggable) {
+    return new RecordLogger(LoggerFactory.getLogger("EventLogger"), "event", loggable);
   }
 
-  private RecordLogger getSettingsLogger(Set<Class<? extends LogRecord>> loggable) {
-    return new RecordLogger(LoggerFactory.getLogger("SettingsLogger"), "setting", loggable);
+  private RecordLogger getLogger(Set<Class<? extends LogRecord>> loggable) {
+    return new RecordLogger(LoggerFactory.getLogger("Logger"), "data", loggable);
   }
 }

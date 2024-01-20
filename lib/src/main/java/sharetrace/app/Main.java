@@ -25,18 +25,14 @@ public final class Main {
   }
 
   private static Runner getRunner(Config config) {
-    var classPath = config.getString("runner.type");
-    return InstanceFactory.getInstance(Runner.class, classPath);
+    return InstanceFactory.getInstance(Runner.class, config.getString("runner.type"));
   }
 
   private static Parameters getParameters(Config config) {
-    var parameters = config.getConfig("parameters");
-    return new ParametersParser().parse(parameters);
+    return new ParametersParser().parse(config.getConfig("parameters"));
   }
 
   private static Context getContext(Config config) {
-    var runner = config.getConfig("runner");
-    var context = config.getConfig("context");
-    return new ContextParser(runner).parse(context);
+    return new ContextParser(config.getConfig("runner")).parse(config.getConfig("context"));
   }
 }
