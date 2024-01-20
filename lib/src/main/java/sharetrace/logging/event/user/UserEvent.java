@@ -1,6 +1,7 @@
-package sharetrace.logging.event;
+package sharetrace.logging.event.user;
 
 import akka.actor.typed.ActorRef;
+import sharetrace.logging.event.Event;
 
 public interface UserEvent extends Event {
 

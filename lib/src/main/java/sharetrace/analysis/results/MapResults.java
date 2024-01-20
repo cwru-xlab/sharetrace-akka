@@ -30,7 +30,8 @@ public final class MapResults implements Results {
   }
 
   @Override
-  public Results withScope(String scope) {
+  public Results withScope(String... path) {
+    var scope = String.join(delimiter, path);
     return new MapResults(results, join(this.scope, scope), delimiter);
   }
 

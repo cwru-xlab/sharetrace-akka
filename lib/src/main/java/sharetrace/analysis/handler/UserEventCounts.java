@@ -6,7 +6,7 @@ import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import sharetrace.analysis.results.Results;
 import sharetrace.logging.event.Event;
-import sharetrace.logging.event.UserEvent;
+import sharetrace.logging.event.user.UserEvent;
 
 public final class UserEventCounts implements EventHandler {
 

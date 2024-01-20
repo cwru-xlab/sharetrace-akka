@@ -7,7 +7,7 @@ import java.util.Comparator;
 import java.util.List;
 import sharetrace.analysis.results.Results;
 import sharetrace.logging.event.Event;
-import sharetrace.logging.event.UpdateEvent;
+import sharetrace.logging.event.user.UpdateEvent;
 import sharetrace.model.RiskScore;
 import sharetrace.model.message.RiskScoreMessage;
 

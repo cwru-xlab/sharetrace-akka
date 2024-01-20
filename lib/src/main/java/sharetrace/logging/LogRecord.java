@@ -3,19 +3,19 @@ package sharetrace.logging;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import sharetrace.logging.event.ContactEvent;
-import sharetrace.logging.event.CreateUsersEnd;
-import sharetrace.logging.event.CreateUsersStart;
-import sharetrace.logging.event.LastEvent;
-import sharetrace.logging.event.ReceiveEvent;
-import sharetrace.logging.event.RiskPropagationEnd;
-import sharetrace.logging.event.RiskPropagationStart;
-import sharetrace.logging.event.SendContactsEnd;
-import sharetrace.logging.event.SendContactsStart;
-import sharetrace.logging.event.SendEvent;
-import sharetrace.logging.event.SendRiskScoresEnd;
-import sharetrace.logging.event.SendRiskScoresStart;
-import sharetrace.logging.event.UpdateEvent;
+import sharetrace.logging.event.user.ContactEvent;
+import sharetrace.logging.event.lifecycle.CreateUsersEnd;
+import sharetrace.logging.event.lifecycle.CreateUsersStart;
+import sharetrace.logging.event.user.LastEvent;
+import sharetrace.logging.event.user.ReceiveEvent;
+import sharetrace.logging.event.lifecycle.RiskPropagationEnd;
+import sharetrace.logging.event.lifecycle.RiskPropagationStart;
+import sharetrace.logging.event.lifecycle.SendContactsEnd;
+import sharetrace.logging.event.lifecycle.SendContactsStart;
+import sharetrace.logging.event.user.SendEvent;
+import sharetrace.logging.event.lifecycle.SendRiskScoresEnd;
+import sharetrace.logging.event.lifecycle.SendRiskScoresStart;
+import sharetrace.logging.event.user.UpdateEvent;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({

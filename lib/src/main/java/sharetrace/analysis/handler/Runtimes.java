@@ -4,17 +4,17 @@ import it.unimi.dsi.fastutil.objects.Object2LongMap;
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import java.util.stream.Stream;
 import sharetrace.analysis.results.Results;
-import sharetrace.logging.event.CreateUsersEnd;
-import sharetrace.logging.event.CreateUsersStart;
+import sharetrace.logging.event.lifecycle.CreateUsersEnd;
+import sharetrace.logging.event.lifecycle.CreateUsersStart;
 import sharetrace.logging.event.Event;
-import sharetrace.logging.event.RiskPropagationEnd;
-import sharetrace.logging.event.RiskPropagationEvent;
-import sharetrace.logging.event.RiskPropagationStart;
-import sharetrace.logging.event.SendContactsEnd;
-import sharetrace.logging.event.SendContactsStart;
-import sharetrace.logging.event.SendRiskScoresEnd;
-import sharetrace.logging.event.SendRiskScoresStart;
-import sharetrace.logging.event.UserEvent;
+import sharetrace.logging.event.lifecycle.RiskPropagationEnd;
+import sharetrace.logging.event.lifecycle.LifecycleEvent;
+import sharetrace.logging.event.lifecycle.RiskPropagationStart;
+import sharetrace.logging.event.lifecycle.SendContactsEnd;
+import sharetrace.logging.event.lifecycle.SendContactsStart;
+import sharetrace.logging.event.lifecycle.SendRiskScoresEnd;
+import sharetrace.logging.event.lifecycle.SendRiskScoresStart;
+import sharetrace.logging.event.user.UserEvent;
 
 public final class Runtimes implements EventHandler {
 
@@ -31,7 +31,7 @@ public final class Runtimes implements EventHandler {
 
   @Override
   public void onNext(Event event) {
-    if (event instanceof RiskPropagationEvent) {
+    if (event instanceof LifecycleEvent) {
       events.put(event.getClass(), event.timestamp());
     } else if (event instanceof UserEvent) {
       lastEventTime = Math.max(lastEventTime, event.timestamp());

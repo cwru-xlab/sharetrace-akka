@@ -8,7 +8,7 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
-import java.util.Collection;
+
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -19,7 +19,7 @@ import org.jgrapht.graph.DefaultEdge;
 import sharetrace.analysis.results.Results;
 import sharetrace.graph.Graphs;
 import sharetrace.logging.event.Event;
-import sharetrace.logging.event.ReceiveEvent;
+import sharetrace.logging.event.user.ReceiveEvent;
 
 public final class MessageReachability implements EventHandler {
 

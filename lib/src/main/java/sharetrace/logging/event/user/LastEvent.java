@@ -1,4 +1,4 @@
-package sharetrace.logging.event;
+package sharetrace.logging.event.user;
 
 import akka.actor.typed.ActorRef;
 
