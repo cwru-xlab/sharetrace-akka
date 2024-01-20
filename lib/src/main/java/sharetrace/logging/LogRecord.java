@@ -25,7 +25,7 @@ import sharetrace.logging.event.user.UpdateEvent;
   @Type(value = SendEvent.class, name = "S"),
   @Type(value = UpdateEvent.class, name = "U"),
   @Type(value = LastEvent.class, name = "L"),
-  // Risk propagation events
+  // Lifecycle events
   @Type(value = CreateUsersStart.class, name = "CUS"),
   @Type(value = CreateUsersEnd.class, name = "CUE"),
   @Type(value = SendContactsStart.class, name = "SCS"),
