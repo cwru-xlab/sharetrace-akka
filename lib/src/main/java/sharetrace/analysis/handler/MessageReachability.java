@@ -63,7 +63,7 @@ public final class MessageReachability implements EventHandler {
         .put("ratio", reachabilityRatio(influence));
   }
 
-  private IntSet targetsOfOrigin(int origin, Collection<IntList> edges) {
+  private IntSet targetsOfOrigin(int origin, Iterable<IntList> edges) {
     var targets = new IntOpenHashSet();
     edges.forEach(targets::addAll);
     targets.remove(origin);
