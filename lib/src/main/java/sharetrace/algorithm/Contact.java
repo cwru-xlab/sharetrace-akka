@@ -3,7 +3,6 @@ package sharetrace.algorithm;
 import akka.actor.typed.ActorRef;
 import java.time.InstantSource;
 import java.util.Optional;
-import java.util.function.BiConsumer;
 import sharetrace.model.Expirable;
 import sharetrace.model.Parameters;
 import sharetrace.model.RiskScore;
@@ -12,10 +11,12 @@ import sharetrace.model.message.ContactMessage;
 import sharetrace.model.message.RiskScoreMessage;
 import sharetrace.model.message.UserMessage;
 import sharetrace.util.Cache;
+import sharetrace.util.IntObjectConsumer;
 
 final class Contact implements Expirable, Comparable<Contact> {
 
-  private final ActorRef<UserMessage> self;
+  private final int id;
+  private final ActorRef<UserMessage> ref;
   private final long timestamp;
   private final long bufferedTimestamp;
   private final long expiryTime;
@@ -30,7 +31,8 @@ final class Contact implements Expirable, Comparable<Contact> {
       Parameters parameters,
       Cache<RiskScoreMessage> scores,
       InstantSource timeSource) {
-    this.self = message.contact();
+    this.id = message.id();
+    this.ref = message.contact();
     this.timestamp = message.timestamp();
     this.bufferedTimestamp = Math.addExact(message.timestamp(), parameters.timeBuffer());
     this.expiryTime = message.expiryTime();
@@ -44,17 +46,17 @@ final class Contact implements Expirable, Comparable<Contact> {
     tell(message, (self, msg) -> {});
   }
 
-  public void tellInitialMessage(BiConsumer<ActorRef<?>, RiskScoreMessage> logEvent) {
+  public void tellInitialMessage(IntObjectConsumer<RiskScoreMessage> logEvent) {
     /* Always try to send a new contact a risk score. An expired contact may still receive a risk
     score if it is "relevant" (i.e., within the time buffer of the contact time). */
     maxRelevantMessageInCache().ifPresent(msg -> tell(msg, logEvent));
   }
 
-  public void tell(RiskScoreMessage message, BiConsumer<ActorRef<?>, RiskScoreMessage> logEvent) {
+  public void tell(RiskScoreMessage message, IntObjectConsumer<RiskScoreMessage> logEvent) {
     refreshThreshold();
     if (shouldReceive(message)) {
-      self.tell(message);
-      logEvent.accept(self, message);
+      ref.tell(message);
+      logEvent.accept(id, message);
       setThreshold(message);
     }
   }
@@ -69,18 +71,8 @@ final class Contact implements Expirable, Comparable<Contact> {
     return timestamp;
   }
 
-  public ActorRef<UserMessage> self() {
-    return self;
-  }
-
-  @Override
-  public int hashCode() {
-    return self.hashCode();
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    return obj instanceof Contact contact && self.equals(contact.self);
+  public int id() {
+    return id;
   }
 
   @Override
@@ -92,7 +84,7 @@ final class Contact implements Expirable, Comparable<Contact> {
   private boolean shouldReceive(RiskScoreMessage message) {
     return message.value() > sendThreshold.value()
         && message.timestamp() < bufferedTimestamp
-        && !message.sender().equals(self);
+        && message.sender() != id;
   }
 
   private void refreshThreshold() {

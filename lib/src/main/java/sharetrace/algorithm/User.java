@@ -135,47 +135,43 @@ final class User extends AbstractBehavior<UserMessage> {
 
   private RiskScoreMessage transmitted(RiskScoreMessage message) {
     var score = message.score().mapValue(value -> value * parameters.transmissionRate());
-    return new RiskScoreMessage(self(), score, message.id());
+    return new RiskScoreMessage(score, id, message.origin());
   }
 
   @SuppressWarnings("SpellCheckingInspection")
   private RiskScoreMessage untransmitted(RiskScoreMessage message) {
     var score = message.score().mapValue(value -> value / parameters.transmissionRate());
-    return new RiskScoreMessage(message.sender(), score, message.id());
+    return new RiskScoreMessage(score, message.sender(), message.origin());
   }
 
   private RiskScoreMessage defaultScore() {
-    return new RiskScoreMessage(self(), RiskScore.MIN, id);
+    return new RiskScoreMessage(RiskScore.MIN, id, id);
   }
 
   private void logContactEvent(Contact contact) {
     var contactTime = contact.timestamp();
-    logEvent(ContactEvent.class, t -> new ContactEvent(self(), contact.self(), contactTime, t));
+    logEvent(ContactEvent.class, t -> new ContactEvent(id, contact.id(), contactTime, t));
   }
 
-  private void logSendEvent(ActorRef<?> contact, RiskScoreMessage message) {
-    logEvent(SendEvent.class, t -> new SendEvent(self(), contact, message, t));
+  private void logSendEvent(int contactId, RiskScoreMessage message) {
+    logEvent(SendEvent.class, t -> new SendEvent(id, contactId, message, t));
   }
 
   private void logReceiveEvent(RiskScoreMessage message) {
-    logEvent(ReceiveEvent.class, t -> new ReceiveEvent(self(), message, t));
+    logEvent(ReceiveEvent.class, t -> new ReceiveEvent(id, message, t));
   }
 
   private void logUpdateEvent(RiskScoreMessage previous, RiskScoreMessage current) {
-    logEvent(UpdateEvent.class, t -> new UpdateEvent(self(), previous, current, t));
+    logEvent(UpdateEvent.class, t -> new UpdateEvent(id, previous, current, t));
   }
 
   private void logLastEvent() {
-    logger().log(LastEvent.class, () -> new LastEvent(self(), lastEventTime));
+    logger().log(LastEvent.class, () -> new LastEvent(id, lastEventTime));
   }
 
   private <T extends Event> void logEvent(Class<T> type, LongFunction<T> factory) {
     lastEventTime = currentTime();
     logger().log(type, () -> factory.apply(lastEventTime));
-  }
-
-  private ActorRef<UserMessage> self() {
-    return getContext().getSelf();
   }
 
   private RecordLogger logger() {

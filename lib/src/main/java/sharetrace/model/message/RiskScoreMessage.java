@@ -1,11 +1,10 @@
 package sharetrace.model.message;
 
-import akka.actor.typed.ActorRef;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import sharetrace.model.RiskScore;
 import sharetrace.model.TemporalScore;
 
-public record RiskScoreMessage(@JsonIgnore ActorRef<UserMessage> sender, RiskScore score, int id)
+public record RiskScoreMessage(RiskScore score, @JsonIgnore int sender, int origin)
     implements TemporalScore, UserMessage {
 
   @Override

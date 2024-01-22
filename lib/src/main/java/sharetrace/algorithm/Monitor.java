@@ -108,7 +108,7 @@ final class Monitor extends AbstractBehavior<MonitorMessage> {
     var users = new ActorRef[userCount];
     for (int i : contactNetwork.vertexSet()) {
       var user = User.of(i, context, parameters, getContext().getSelf());
-      users[i] = getContext().spawn(user, String.valueOf(i), User.props());
+      users[i] = getContext().spawnAnonymous(user, User.props());
       getContext().watch(users[i]);
     }
     logEvent(CreateUsersEnd.class, CreateUsersEnd::new);
@@ -118,10 +118,12 @@ final class Monitor extends AbstractBehavior<MonitorMessage> {
   private void sendContacts(ActorRef<UserMessage>[] users) {
     logEvent(SendContactsStart.class, SendContactsStart::new);
     for (var edge : contactNetwork.edgeSet()) {
-      var user1 = users[contactNetwork.getEdgeSource(edge)];
-      var user2 = users[contactNetwork.getEdgeTarget(edge)];
-      user1.tell(ContactMessage.fromExpiry(user2, edge.getTime(), parameters.contactExpiry()));
-      user2.tell(ContactMessage.fromExpiry(user1, edge.getTime(), parameters.contactExpiry()));
+      int id1 = contactNetwork.getEdgeSource(edge);
+      int id2 = contactNetwork.getEdgeTarget(edge);
+      var user1 = users[id1];
+      var user2 = users[id2];
+      user1.tell(ContactMessage.fromExpiry(user2, id2, edge.getTime(), parameters.contactExpiry()));
+      user2.tell(ContactMessage.fromExpiry(user1, id1, edge.getTime(), parameters.contactExpiry()));
     }
     logEvent(SendContactsEnd.class, SendContactsEnd::new);
   }
@@ -130,7 +132,7 @@ final class Monitor extends AbstractBehavior<MonitorMessage> {
     logEvent(SendRiskScoresStart.class, SendRiskScoresStart::new);
     for (var i = 0; i < userCount; i++) {
       var score = scoreFactory.getRiskScore(i);
-      users[i].tell(new RiskScoreMessage(users[i], score, i));
+      users[i].tell(new RiskScoreMessage(score, i, i));
     }
     logEvent(SendRiskScoresEnd.class, SendRiskScoresEnd::new);
   }

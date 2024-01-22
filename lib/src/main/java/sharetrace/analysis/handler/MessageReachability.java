@@ -34,7 +34,7 @@ public final class MessageReachability implements EventHandler {
       var source = receive.contact();
       var target = receive.self();
       if (source != target) {
-        var origin = receive.message().id();
+        var origin = receive.message().origin();
         edges.computeIfAbsent(origin, x -> new HashSet<>()).add(IntArrayList.of(source, target));
       }
     }
