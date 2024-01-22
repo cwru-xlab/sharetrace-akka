@@ -99,6 +99,7 @@ final class User extends AbstractBehavior<UserMessage> {
     return this;
   }
 
+  // TODO Implement batching https://doc.akka.io/docs/akka/current/typed/interaction-patterns.html
   private Behavior<UserMessage> handle(RiskScoreMessage message) {
     logReceiveEvent(message);
     if (!message.isExpired(currentTime())) {
