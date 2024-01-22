@@ -158,7 +158,7 @@ final class User extends AbstractBehavior<UserMessage> {
   }
 
   private void logReceiveEvent(RiskScoreMessage message) {
-    logEvent(ReceiveEvent.class, t -> new ReceiveEvent(id, message, t));
+    logEvent(ReceiveEvent.class, t -> new ReceiveEvent(id, message.sender(), message, t));
   }
 
   private void logUpdateEvent(RiskScoreMessage previous, RiskScoreMessage current) {
