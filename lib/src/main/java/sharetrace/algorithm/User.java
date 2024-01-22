@@ -153,8 +153,8 @@ final class User extends AbstractBehavior<UserMessage> {
     logEvent(ContactEvent.class, t -> new ContactEvent(id, contact.id(), contactTime, t));
   }
 
-  private void logSendEvent(int contactId, RiskScoreMessage message) {
-    logEvent(SendEvent.class, t -> new SendEvent(id, contactId, message, t));
+  private void logSendEvent(int contact, RiskScoreMessage message) {
+    logEvent(SendEvent.class, t -> new SendEvent(id, contact, message, t));
   }
 
   private void logReceiveEvent(RiskScoreMessage message) {
