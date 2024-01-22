@@ -149,8 +149,7 @@ final class User extends AbstractBehavior<UserMessage> {
   }
 
   private void logContactEvent(Contact contact) {
-    var contactTime = contact.timestamp();
-    logEvent(ContactEvent.class, t -> new ContactEvent(id, contact.id(), contactTime, t));
+    logEvent(ContactEvent.class, t -> new ContactEvent(id, contact.id(), contact.timestamp(), t));
   }
 
   private void logSendEvent(int contact, RiskScoreMessage message) {
