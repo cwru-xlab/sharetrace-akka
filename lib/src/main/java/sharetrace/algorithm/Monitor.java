@@ -132,7 +132,7 @@ final class Monitor extends AbstractBehavior<MonitorMessage> {
     logEvent(SendRiskScoresStart.class, SendRiskScoresStart::new);
     for (var i = 0; i < userCount; i++) {
       var score = scoreFactory.getRiskScore(i);
-      users[i].tell(new RiskScoreMessage(score, i, i));
+      users[i].tell(RiskScoreMessage.ofOrigin(score, i));
     }
     logEvent(SendRiskScoresEnd.class, SendRiskScoresEnd::new);
   }

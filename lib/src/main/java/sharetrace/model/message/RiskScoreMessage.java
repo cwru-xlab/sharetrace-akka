@@ -7,6 +7,10 @@ import sharetrace.model.TemporalScore;
 public record RiskScoreMessage(RiskScore score, @JsonIgnore int sender, int origin)
     implements TemporalScore, UserMessage {
 
+  public static RiskScoreMessage ofOrigin(RiskScore score, int origin) {
+    return new RiskScoreMessage(score, origin, origin);
+  }
+
   @Override
   public double value() {
     return score.value();

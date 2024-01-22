@@ -145,7 +145,7 @@ final class User extends AbstractBehavior<UserMessage> {
   }
 
   private RiskScoreMessage defaultScore() {
-    return new RiskScoreMessage(RiskScore.MIN, id, id);
+    return RiskScoreMessage.ofOrigin(RiskScore.MIN, id);
   }
 
   private void logContactEvent(Contact contact) {
