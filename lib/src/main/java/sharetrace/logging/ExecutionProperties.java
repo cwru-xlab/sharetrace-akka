@@ -6,5 +6,5 @@ import sharetrace.model.Parameters;
 import sharetrace.util.Context;
 
 @Buildable
-public record Instance(Context context, Parameters parameters, ContactNetwork contactNetwork)
-    implements LogRecord {}
+public record ExecutionProperties(
+    Context context, Parameters parameters, ContactNetwork contactNetwork) implements LogRecord {}

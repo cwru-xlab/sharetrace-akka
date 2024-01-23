@@ -20,5 +20,5 @@ public record Context(
     Set<Class<? extends LogRecord>> loggable,
     Map<String, String> tags,
     @JsonIgnore Map<String, String> mdc,
-    @JsonIgnore RecordLogger logger,
+    @JsonIgnore RecordLogger propertiesLogger,
     @JsonIgnore RecordLogger eventLogger) {}

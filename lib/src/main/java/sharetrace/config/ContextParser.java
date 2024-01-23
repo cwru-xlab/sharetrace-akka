@@ -28,7 +28,7 @@ public record ContextParser(Config contextConfig) implements ConfigParser<Contex
         .referenceTime(getReferenceTime(config, timeSource))
         .randomGenerator(getRandomGenerator(config, seed))
         .loggable(loggable)
-        .logger(getLogger(loggable))
+        .propertiesLogger(getPropertiesLogger(loggable))
         .eventLogger(getEventLogger(loggable))
         .build();
   }
@@ -64,7 +64,7 @@ public record ContextParser(Config contextConfig) implements ConfigParser<Contex
     return new RecordLogger(LoggerFactory.getLogger("EventLogger"), "event", loggable);
   }
 
-  private RecordLogger getLogger(Set<Class<? extends LogRecord>> loggable) {
-    return new RecordLogger(LoggerFactory.getLogger("Logger"), "data", loggable);
+  private RecordLogger getPropertiesLogger(Set<Class<? extends LogRecord>> loggable) {
+    return new RecordLogger(LoggerFactory.getLogger("PropertiesLogger"), "properties", loggable);
   }
 }

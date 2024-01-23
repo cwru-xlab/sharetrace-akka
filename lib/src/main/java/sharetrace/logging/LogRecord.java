@@ -30,6 +30,6 @@ import sharetrace.logging.event.user.UpdateEvent;
   @Type(value = SendRiskScoresEnd.class, name = "SSE"),
   @Type(value = RiskPropagationStart.class, name = "RPS"),
   @Type(value = RiskPropagationEnd.class, name = "RPE"),
-  @Type(value = Instance.class)
+  @Type(value = ExecutionProperties.class)
 })
 public interface LogRecord {}

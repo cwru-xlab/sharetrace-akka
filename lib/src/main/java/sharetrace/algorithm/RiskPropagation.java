@@ -9,8 +9,8 @@ import java.util.stream.IntStream;
 import org.slf4j.MDC;
 import sharetrace.Buildable;
 import sharetrace.graph.ContactNetwork;
-import sharetrace.logging.Instance;
-import sharetrace.logging.InstanceBuilder;
+import sharetrace.logging.ExecutionProperties;
+import sharetrace.logging.ExecutionPropertiesBuilder;
 import sharetrace.model.Parameters;
 import sharetrace.model.factory.RiskScoreFactory;
 import sharetrace.model.message.RunMessage;
@@ -35,7 +35,7 @@ public record RiskPropagation(
   public void run() {
     var context = contextWithMdc();
     MDC.setContextMap(context.mdc());
-    logInstance(context);
+    logProperties(context);
     run(context);
   }
 
@@ -43,12 +43,12 @@ public record RiskPropagation(
     return ContextBuilder.builder(context).addMdc("key", keyFactory.getKey()).build();
   }
 
-  private void logInstance(Context context) {
-    context.logger().log(Instance.class, () -> instance(context));
+  private void logProperties(Context context) {
+    context.propertiesLogger().log(ExecutionProperties.class, () -> properties(context));
   }
 
-  private Instance instance(Context context) {
-    return InstanceBuilder.create()
+  private ExecutionProperties properties(Context context) {
+    return ExecutionPropertiesBuilder.create()
         .context(context)
         .parameters(parameters)
         .contactNetwork(contactNetwork)
