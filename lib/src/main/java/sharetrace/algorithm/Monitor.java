@@ -117,12 +117,12 @@ final class Monitor extends AbstractBehavior<MonitorMessage> {
 
   private void sendContacts(ActorRef<UserMessage>[] users) {
     logEvent(SendContactsStart.class, SendContactsStart::new);
-    var contactExpiry = parameters.contactExpiry();
+    var expiry = parameters.contactExpiry();
     for (var edge : contactNetwork.edgeSet()) {
       int i = contactNetwork.getEdgeSource(edge);
       int j = contactNetwork.getEdgeTarget(edge);
-      users[i].tell(ContactMessage.fromExpiry(users[j], j, edge.getTime(), contactExpiry));
-      users[j].tell(ContactMessage.fromExpiry(users[i], i, edge.getTime(), contactExpiry));
+      users[i].tell(ContactMessage.fromExpiry(users[j], j, edge.getTime(), expiry));
+      users[j].tell(ContactMessage.fromExpiry(users[i], i, edge.getTime(), expiry));
     }
     logEvent(SendContactsEnd.class, SendContactsEnd::new);
   }
