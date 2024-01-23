@@ -16,6 +16,7 @@ public final class InstanceFactory {
     }
   }
 
+  @SuppressWarnings("unused")
   private static Class<?> getClass(Object obj) {
       return switch (obj) {
           case Boolean b -> boolean.class;
