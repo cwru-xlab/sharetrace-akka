@@ -90,12 +90,12 @@ final class User extends AbstractBehavior<UserMessage> {
   }
 
   private Behavior<UserMessage> handle(ContactMessage message) {
-    var contact = new Contact(message, parameters, context.timeSource());
-    if (!contact.isExpired(currentTime())) {
+    if (!message.isExpired(currentTime())) {
+      var contact = new Contact(message, parameters, context.timeSource());
       contacts.add(contact);
+      contact.applyCached(scores);
       logContactEvent(contact);
     }
-    contact.applyCached(scores);
     return this;
   }
 
