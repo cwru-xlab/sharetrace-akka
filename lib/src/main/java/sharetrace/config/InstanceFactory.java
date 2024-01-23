@@ -18,16 +18,16 @@ public final class InstanceFactory {
 
   @SuppressWarnings("unused")
   private static Class<?> getClass(Object obj) {
-      return switch (obj) {
-          case Boolean b -> boolean.class;
-          case Byte b -> byte.class;
-          case Short i -> short.class;
-          case Character c -> char.class;
-          case Integer i -> int.class;
-          case Long l -> long.class;
-          case Float v -> float.class;
-          case Double v -> double.class;
-          default -> obj.getClass();
-      };
+    return switch (obj) {
+      case Boolean b -> boolean.class;
+      case Byte b -> byte.class;
+      case Short i -> short.class;
+      case Character c -> char.class;
+      case Integer i -> int.class;
+      case Long l -> long.class;
+      case Float v -> float.class;
+      case Double v -> double.class;
+      default -> obj.getClass();
+    };
   }
 }
