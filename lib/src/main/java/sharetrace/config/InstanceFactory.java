@@ -17,14 +17,16 @@ public final class InstanceFactory {
   }
 
   private static Class<?> getClass(Object obj) {
-    if (obj instanceof Boolean) return boolean.class;
-    else if (obj instanceof Byte) return byte.class;
-    else if (obj instanceof Short) return short.class;
-    else if (obj instanceof Character) return char.class;
-    else if (obj instanceof Integer) return int.class;
-    else if (obj instanceof Long) return long.class;
-    else if (obj instanceof Float) return float.class;
-    else if (obj instanceof Double) return double.class;
-    else return obj.getClass();
+      return switch (obj) {
+          case Boolean b -> boolean.class;
+          case Byte b -> byte.class;
+          case Short i -> short.class;
+          case Character c -> char.class;
+          case Integer i -> int.class;
+          case Long l -> long.class;
+          case Float v -> float.class;
+          case Double v -> double.class;
+          default -> obj.getClass();
+      };
   }
 }
