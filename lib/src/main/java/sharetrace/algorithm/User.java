@@ -40,7 +40,7 @@ final class User extends AbstractBehavior<UserMessage> {
   private final Cache<Contact> contacts;
   private final RiskScoreMessage defaultScore;
 
-  private RiskScoreMessage currentScore;
+  private RiskScoreMessage exposureScore;
   private long lastEventTime;
 
   private User(
@@ -60,7 +60,7 @@ final class User extends AbstractBehavior<UserMessage> {
     this.scores = new TemopralScoreCache<>(context.timeSource());
     this.contacts = new ContactCache(context.timeSource());
     this.defaultScore = RiskScoreMessage.ofOrigin(RiskScore.MIN, id);
-    this.currentScore = defaultScore;
+    this.exposureScore = defaultScore;
   }
 
   public static Behavior<UserMessage> of(
@@ -112,14 +112,14 @@ final class User extends AbstractBehavior<UserMessage> {
   }
 
   private void updateExposureScore(RiskScoreMessage message) {
-    if (currentScore.value() < message.value()) {
-      var previousScore = currentScore;
-      currentScore = message;
-      logUpdateEvent(previousScore, currentScore);
-    } else if (currentScore.isExpired(currentTime())) {
-      var previousScore = currentScore;
-      currentScore = scores.refresh().max().map(this::untransmitted).orElse(this.defaultScore);
-      logUpdateEvent(previousScore, currentScore);
+    if (exposureScore.value() < message.value()) {
+      var previous = exposureScore;
+      exposureScore = message;
+      logUpdateEvent(previous, exposureScore);
+    } else if (exposureScore.isExpired(currentTime())) {
+      var previous = exposureScore;
+      exposureScore = scores.refresh().max().map(this::untransmitted).orElse(this.defaultScore);
+      logUpdateEvent(previous, exposureScore);
     }
   }
 
