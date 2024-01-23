@@ -107,8 +107,7 @@ final class User extends AbstractBehavior<UserMessage> {
       updateExposureScore(message);
       contacts.forEach(contact -> contact.apply(transmitted, scores));
     }
-    startBatchTimerIfInactive();
-    timers.startSingleTimer(idleTimeoutMessage, parameters.idleTimeout());
+    startTimers();
     return this;
   }
 
@@ -124,17 +123,17 @@ final class User extends AbstractBehavior<UserMessage> {
     }
   }
 
+  private void startTimers() {
+    if (!timers.isTimerActive(BatchTimeoutMessage.INSTANCE)) {
+      timers.startTimerWithFixedDelay(BatchTimeoutMessage.INSTANCE, parameters.batchTimeout());
+    }
+    timers.startSingleTimer(idleTimeoutMessage, parameters.idleTimeout());
+  }
+
   private Behavior<UserMessage> handle(BatchTimeoutMessage message) {
     contacts.forEach(Contact::flush);
     contacts.refresh();
-    startBatchTimerIfInactive();
     return this;
-  }
-
-  private void startBatchTimerIfInactive() {
-    if (!timers.isTimerActive(BatchTimeoutMessage.INSTANCE)) {
-      timers.startSingleTimer(BatchTimeoutMessage.INSTANCE, parameters.batchTimeout());
-    }
   }
 
   private Behavior<UserMessage> handle(IdleTimeoutMessage message) {
