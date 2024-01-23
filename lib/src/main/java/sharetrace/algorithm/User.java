@@ -10,21 +10,20 @@ import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import akka.actor.typed.javadsl.TimerScheduler;
-import java.time.Duration;
 import java.util.function.LongFunction;
 import sharetrace.logging.RecordLogger;
 import sharetrace.logging.event.Event;
 import sharetrace.logging.event.user.ContactEvent;
 import sharetrace.logging.event.user.LastEvent;
 import sharetrace.logging.event.user.ReceiveEvent;
-import sharetrace.logging.event.user.SendEvent;
 import sharetrace.logging.event.user.UpdateEvent;
 import sharetrace.model.Parameters;
 import sharetrace.model.RiskScore;
+import sharetrace.model.message.BatchTimeoutMessage;
 import sharetrace.model.message.ContactMessage;
+import sharetrace.model.message.IdleTimeoutMessage;
 import sharetrace.model.message.MonitorMessage;
 import sharetrace.model.message.RiskScoreMessage;
-import sharetrace.model.message.TimeoutMessage;
 import sharetrace.model.message.UserMessage;
 import sharetrace.util.Cache;
 import sharetrace.util.Context;
@@ -36,10 +35,10 @@ final class User extends AbstractBehavior<UserMessage> {
   private final Parameters parameters;
   private final ActorRef<MonitorMessage> monitor;
   private final TimerScheduler<UserMessage> timers;
-  private final Duration timeout;
-  private final TimeoutMessage timeoutMessage;
+  private final IdleTimeoutMessage idleTimeoutMessage;
   private final Cache<RiskScoreMessage> scores;
   private final Cache<Contact> contacts;
+  private final RiskScoreMessage defaultScore;
 
   private RiskScoreMessage currentScore;
   private long lastEventTime;
@@ -57,11 +56,11 @@ final class User extends AbstractBehavior<UserMessage> {
     this.parameters = parameters;
     this.monitor = monitor;
     this.timers = timers;
-    this.timeoutMessage = new TimeoutMessage(id);
-    this.timeout = Duration.ofMillis(parameters.timeout());
+    this.idleTimeoutMessage = new IdleTimeoutMessage(id);
     this.scores = new TemopralScoreCache<>(context.timeSource());
     this.contacts = new ContactCache(context.timeSource());
-    this.currentScore = defaultScore();
+    this.defaultScore = RiskScoreMessage.ofOrigin(RiskScore.MIN, id);
+    this.currentScore = defaultScore;
   }
 
   public static Behavior<UserMessage> of(
@@ -84,32 +83,32 @@ final class User extends AbstractBehavior<UserMessage> {
     return newReceiveBuilder()
         .onMessage(ContactMessage.class, this::handle)
         .onMessage(RiskScoreMessage.class, this::handle)
-        .onMessage(TimeoutMessage.class, this::handle)
+        .onMessage(BatchTimeoutMessage.class, this::handle)
+        .onMessage(IdleTimeoutMessage.class, this::handle)
         .onSignal(PostStop.class, this::handle)
         .build();
   }
 
   private Behavior<UserMessage> handle(ContactMessage message) {
-    var contact = new Contact(message, parameters, scores, context.timeSource());
+    var contact = new Contact(message, parameters, context.timeSource());
     if (!contact.isExpired(currentTime())) {
       contacts.add(contact);
       logContactEvent(contact);
     }
-    contact.tellInitialMessage(this::logSendEvent);
+    contact.applyCached(scores);
     return this;
   }
 
-  // TODO Implement batching:
-  //  https://doc.akka.io/docs/akka/current/typed/interaction-patterns.html#scheduling-messages-to-self
   private Behavior<UserMessage> handle(RiskScoreMessage message) {
     logReceiveEvent(message);
     if (!message.isExpired(currentTime())) {
       var transmitted = transmitted(message);
       scores.add(transmitted);
       updateExposureScore(message);
-      contacts.refresh().forEach(contact -> contact.tell(transmitted));
+      contacts.forEach(contact -> contact.apply(transmitted, scores));
     }
-    timers.startSingleTimer(timeoutMessage, timeout);
+    startBatchTimerIfInactive();
+    timers.startSingleTimer(idleTimeoutMessage, parameters.idleTimeout());
     return this;
   }
 
@@ -120,12 +119,25 @@ final class User extends AbstractBehavior<UserMessage> {
       logUpdateEvent(previousScore, currentScore);
     } else if (currentScore.isExpired(currentTime())) {
       var previousScore = currentScore;
-      currentScore = scores.refresh().max().map(this::untransmitted).orElseGet(this::defaultScore);
+      currentScore = scores.refresh().max().map(this::untransmitted).orElse(this.defaultScore);
       logUpdateEvent(previousScore, currentScore);
     }
   }
 
-  private Behavior<UserMessage> handle(TimeoutMessage message) {
+  private Behavior<UserMessage> handle(BatchTimeoutMessage message) {
+    contacts.forEach(Contact::flush);
+    contacts.refresh();
+    startBatchTimerIfInactive();
+    return this;
+  }
+
+  private void startBatchTimerIfInactive() {
+    if (!timers.isTimerActive(BatchTimeoutMessage.INSTANCE)) {
+      timers.startSingleTimer(BatchTimeoutMessage.INSTANCE, parameters.batchTimeout());
+    }
+  }
+
+  private Behavior<UserMessage> handle(IdleTimeoutMessage message) {
     monitor.tell(message);
     return this;
   }
@@ -146,16 +158,8 @@ final class User extends AbstractBehavior<UserMessage> {
     return new RiskScoreMessage(score, message.sender(), message.origin());
   }
 
-  private RiskScoreMessage defaultScore() {
-    return RiskScoreMessage.ofOrigin(RiskScore.MIN, id);
-  }
-
   private void logContactEvent(Contact contact) {
     logEvent(ContactEvent.class, t -> new ContactEvent(id, contact.id(), contact.timestamp(), t));
-  }
-
-  private void logSendEvent(int contact, RiskScoreMessage message) {
-    logEvent(SendEvent.class, t -> new SendEvent(id, contact, message, t));
   }
 
   private void logReceiveEvent(RiskScoreMessage message) {

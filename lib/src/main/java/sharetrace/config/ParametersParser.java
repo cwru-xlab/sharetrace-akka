@@ -10,12 +10,13 @@ public record ParametersParser() implements ConfigParser<Parameters> {
   @Override
   public Parameters parse(Config config) {
     return ParametersBuilder.create()
-        .contactExpiry(parseDuration(config, "contact-expiry"))
-        .scoreExpiry(parseDuration(config, "score-expiry"))
-        .timeout(parseDuration(config, "timeout"))
-        .timeBuffer(parseDuration(config, "time-buffer"))
-        .sendCoefficient(config.getDouble("send-coefficient"))
         .transmissionRate(config.getDouble("transmission-rate"))
+        .sendCoefficient(config.getDouble("send-coefficient"))
+        .timeBuffer(parseDuration(config, "time-buffer"))
+        .scoreExpiry(parseDuration(config, "score-expiry"))
+        .contactExpiry(parseDuration(config, "contact-expiry"))
+        .batchTimeout(config.getDuration("batch-timeout"))
+        .idleTimeout(config.getDuration("idle-timeout"))
         .build();
   }
 

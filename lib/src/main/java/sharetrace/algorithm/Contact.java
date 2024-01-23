@@ -11,7 +11,6 @@ import sharetrace.model.message.ContactMessage;
 import sharetrace.model.message.RiskScoreMessage;
 import sharetrace.model.message.UserMessage;
 import sharetrace.util.Cache;
-import sharetrace.util.IntObjectConsumer;
 
 final class Contact implements Expirable, Comparable<Contact> {
 
@@ -21,43 +20,38 @@ final class Contact implements Expirable, Comparable<Contact> {
   private final long bufferedTimestamp;
   private final long expiryTime;
   private final Parameters parameters;
-  private final Cache<RiskScoreMessage> scores;
   private final InstantSource timeSource;
 
   private TemporalScore sendThreshold;
+  private RiskScoreMessage sent;
 
-  public Contact(
-      ContactMessage message,
-      Parameters parameters,
-      Cache<RiskScoreMessage> scores,
-      InstantSource timeSource) {
+  public Contact(ContactMessage message, Parameters parameters, InstantSource timeSource) {
     this.id = message.id();
     this.ref = message.contact();
     this.timestamp = message.timestamp();
     this.bufferedTimestamp = Math.addExact(message.timestamp(), parameters.timeBuffer());
     this.expiryTime = message.expiryTime();
     this.parameters = parameters;
-    this.scores = scores;
     this.timeSource = timeSource;
     resetThreshold();
   }
 
-  public void tell(RiskScoreMessage message) {
-    tell(message, (self, msg) -> {});
-  }
-
-  public void tellInitialMessage(IntObjectConsumer<RiskScoreMessage> logEvent) {
-    /* Always try to send a new contact a risk score. An expired contact may still receive a risk
-    score if it is "relevant" (i.e., within the time buffer of the contact time). */
-    maxRelevantMessageInCache().ifPresent(msg -> tell(msg, logEvent));
-  }
-
-  public void tell(RiskScoreMessage message, IntObjectConsumer<RiskScoreMessage> logEvent) {
-    refreshThreshold();
+  public void apply(RiskScoreMessage message, Cache<RiskScoreMessage> cache) {
+    refreshThreshold(cache);
     if (shouldReceive(message)) {
-      ref.tell(message);
-      logEvent.accept(id, message);
+      sent = message;
       setThreshold(message);
+    }
+  }
+
+  public void applyCached(Cache<RiskScoreMessage> cache) {
+    maxRelevantMessage(cache).ifPresent(message -> apply(message, cache));
+  }
+
+  public void flush() {
+    if (sent != null) {
+      ref.tell(sent);
+      sent = null;
     }
   }
 
@@ -87,7 +81,7 @@ final class Contact implements Expirable, Comparable<Contact> {
         && message.sender() != id;
   }
 
-  private void refreshThreshold() {
+  private void refreshThreshold(Cache<RiskScoreMessage> cache) {
     /*
      If this contact's send threshold is the minimum risk score, then either
        1. no messages have been sent to this contact; or
@@ -99,12 +93,12 @@ final class Contact implements Expirable, Comparable<Contact> {
      entire contact network, this would prevent all propagation of messages.
     */
     if (sendThreshold != RiskScore.MIN && sendThreshold.isExpired(timeSource.millis())) {
-      maxRelevantMessageInCache().ifPresentOrElse(this::setThreshold, this::resetThreshold);
+      maxRelevantMessage(cache).ifPresentOrElse(this::setThreshold, this::resetThreshold);
     }
   }
 
-  private Optional<RiskScoreMessage> maxRelevantMessageInCache() {
-    return scores.refresh().max(bufferedTimestamp);
+  private Optional<RiskScoreMessage> maxRelevantMessage(Cache<RiskScoreMessage> cache) {
+    return cache.refresh().max(bufferedTimestamp);
   }
 
   private void setThreshold(RiskScoreMessage message) {

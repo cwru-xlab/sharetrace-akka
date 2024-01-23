@@ -23,10 +23,10 @@ import sharetrace.logging.event.lifecycle.SendRiskScoresStart;
 import sharetrace.model.Parameters;
 import sharetrace.model.factory.RiskScoreFactory;
 import sharetrace.model.message.ContactMessage;
+import sharetrace.model.message.IdleTimeoutMessage;
 import sharetrace.model.message.MonitorMessage;
 import sharetrace.model.message.RiskScoreMessage;
 import sharetrace.model.message.RunMessage;
-import sharetrace.model.message.TimeoutMessage;
 import sharetrace.model.message.UserMessage;
 import sharetrace.util.Context;
 
@@ -78,7 +78,7 @@ final class Monitor extends AbstractBehavior<MonitorMessage> {
   public Receive<MonitorMessage> createReceive() {
     return newReceiveBuilder()
         .onMessage(RunMessage.class, this::handle)
-        .onMessage(TimeoutMessage.class, this::handle)
+        .onMessage(IdleTimeoutMessage.class, this::handle)
         .build();
   }
 
@@ -93,8 +93,8 @@ final class Monitor extends AbstractBehavior<MonitorMessage> {
     return this;
   }
 
-  private Behavior<MonitorMessage> handle(TimeoutMessage message) {
-    timeouts.set(message.key());
+  private Behavior<MonitorMessage> handle(IdleTimeoutMessage message) {
+    timeouts.set(message.id());
     if (timeouts.cardinality() < userCount) {
       return this;
     }
@@ -117,13 +117,12 @@ final class Monitor extends AbstractBehavior<MonitorMessage> {
 
   private void sendContacts(ActorRef<UserMessage>[] users) {
     logEvent(SendContactsStart.class, SendContactsStart::new);
+    var contactExpiry = parameters.contactExpiry();
     for (var edge : contactNetwork.edgeSet()) {
-      int id1 = contactNetwork.getEdgeSource(edge);
-      int id2 = contactNetwork.getEdgeTarget(edge);
-      var user1 = users[id1];
-      var user2 = users[id2];
-      user1.tell(ContactMessage.fromExpiry(user2, id2, edge.getTime(), parameters.contactExpiry()));
-      user2.tell(ContactMessage.fromExpiry(user1, id1, edge.getTime(), parameters.contactExpiry()));
+      int i = contactNetwork.getEdgeSource(edge);
+      int j = contactNetwork.getEdgeTarget(edge);
+      users[i].tell(ContactMessage.fromExpiry(users[j], j, edge.getTime(), contactExpiry));
+      users[j].tell(ContactMessage.fromExpiry(users[i], i, edge.getTime(), contactExpiry));
     }
     logEvent(SendContactsEnd.class, SendContactsEnd::new);
   }
