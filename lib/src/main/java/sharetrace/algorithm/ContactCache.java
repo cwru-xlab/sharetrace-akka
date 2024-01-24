@@ -14,34 +14,33 @@ import sharetrace.util.Cache;
 
 final class ContactCache implements Cache<Contact> {
 
+  private static final Comparator<Contact> COMPARATOR = Comparator.naturalOrder();
+  private static final BinaryOperator<Contact> MERGER = BinaryOperator.maxBy(COMPARATOR);
+
   private final InstantSource timeSource;
   private final Int2ObjectMap<Contact> cache;
-  private final Comparator<Contact> comparator;
-  private final BinaryOperator<Contact> merger;
 
   private long minExpiryTime;
 
   public ContactCache(InstantSource timeSource) {
     this.timeSource = timeSource;
-    this.comparator = Comparator.naturalOrder();
-    this.merger = BinaryOperator.maxBy(comparator);
     this.cache = new Int2ObjectOpenHashMap<>();
     updateMinExpiryTime();
   }
 
   @Override
   public Optional<Contact> max() {
-    return stream().max(comparator);
+    return stream().max(COMPARATOR);
   }
 
   @Override
   public Optional<Contact> max(long atMost) {
-    return stream().filter(value -> value.timestamp() <= atMost).max(comparator);
+    return stream().filter(value -> value.timestamp() <= atMost).max(COMPARATOR);
   }
 
   @Override
   public void add(Contact contact) {
-    cache.merge(contact.id(), contact, merger);
+    cache.merge(contact.id(), contact, MERGER);
     updateMinExpiryTime(contact);
   }
 

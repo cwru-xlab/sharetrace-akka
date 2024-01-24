@@ -10,38 +10,37 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Optional;
 import java.util.function.BinaryOperator;
-import sharetrace.model.TemporalScore;
+import sharetrace.model.message.RiskScoreMessage;
 import sharetrace.util.Cache;
 
-final class TemopralScoreCache<V extends TemporalScore> implements Cache<V> {
+final class RiskScoreMessageCache implements Cache<RiskScoreMessage> {
+
+  private static final Comparator<RiskScoreMessage> COMPARATOR = Comparator.naturalOrder();
+  private static final BinaryOperator<RiskScoreMessage> MERGER = BinaryOperator.maxBy(COMPARATOR);
 
   private final InstantSource timeSource;
-  private final RangeMap<Long, V> cache;
-  private final Comparator<? super V> comparator;
-  private final BinaryOperator<V> merger;
+  private final RangeMap<Long, RiskScoreMessage> cache;
 
   private Range<Long> minKey;
 
-  public TemopralScoreCache(InstantSource timeSource) {
+  public RiskScoreMessageCache(InstantSource timeSource) {
     this.timeSource = timeSource;
-    this.comparator = Comparator.naturalOrder();
-    this.merger = BinaryOperator.maxBy(comparator);
     this.cache = TreeRangeMap.create();
     updateMinKey();
   }
 
   @Override
-  public Optional<V> max() {
+  public Optional<RiskScoreMessage> max() {
     return max(Range.all());
   }
 
   @Override
-  public Optional<V> max(long atMost) {
+  public Optional<RiskScoreMessage> max(long atMost) {
     return max(Range.atMost(atMost));
   }
 
   @Override
-  public TemopralScoreCache<V> refresh() {
+  public RiskScoreMessageCache refresh() {
     var currentTime = timeSource.millis();
     if (!minKey.contains(currentTime)) {
       cache.remove(Range.lessThan(currentTime));
@@ -51,20 +50,20 @@ final class TemopralScoreCache<V extends TemporalScore> implements Cache<V> {
   }
 
   @Override
-  public void add(V value) {
+  public void add(RiskScoreMessage value) {
     var key = Range.closedOpen(value.timestamp(), value.expiryTime());
-    cache.merge(key, value, merger);
+    cache.merge(key, value, MERGER);
     updateMinKey();
   }
 
   @Override
   @SuppressWarnings("NullableProblems")
-  public Iterator<V> iterator() {
+  public Iterator<RiskScoreMessage> iterator() {
     return Iterators.unmodifiableIterator(cache.asMapOfRanges().values().iterator());
   }
 
-  private Optional<V> max(Range<Long> range) {
-    return cache.subRangeMap(range).asMapOfRanges().values().stream().max(comparator);
+  private Optional<RiskScoreMessage> max(Range<Long> range) {
+    return cache.subRangeMap(range).asMapOfRanges().values().stream().max(COMPARATOR);
   }
 
   private void updateMinKey() {
