@@ -50,9 +50,9 @@ final class RiskScoreMessageCache implements Cache<RiskScoreMessage> {
   }
 
   @Override
-  public void add(RiskScoreMessage value) {
-    var key = Range.closedOpen(value.timestamp(), value.expiryTime());
-    cache.merge(key, value, MERGER);
+  public void add(RiskScoreMessage message) {
+    var key = Range.closedOpen(message.timestamp(), message.expiryTime());
+    cache.merge(key, message, MERGER);
     updateMinKey();
   }
 
