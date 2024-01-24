@@ -11,20 +11,20 @@ import org.jgrapht.graph.GraphDelegator;
 public final class SimpleContactNetwork extends GraphDelegator<Integer, TemporalEdge>
     implements ContactNetwork {
 
-  private final Map<String, ?> props;
+  private final Map<String, Object> properties;
 
   public SimpleContactNetwork(
-      Graph<Integer, TemporalEdge> target, String type, Map<String, ?> props) {
+      Graph<Integer, TemporalEdge> target, String type, Map<String, ?> properties) {
     super(target);
-    this.props = addDefaultProps(target, type, props);
+    this.properties = addDefaultProperties(target, type, properties);
   }
 
-  private Map<String, ?> addDefaultProps(Graph<?, ?> target, String type, Map<String, ?> props) {
-    var newProps = new HashMap<String, Object>(props);
-    newProps.put("type", type);
-    newProps.put("nodes", target.vertexSet().size());
-    newProps.put("edges", target.edgeSet().size());
-    return Map.copyOf(newProps);
+  private Map<String, Object> addDefaultProperties(Graph<?, ?> target, String type, Map<String, ?> properties) {
+    var props = new HashMap<String, Object>(properties);
+    props.put("type", type);
+    props.put("nodes", target.vertexSet().size());
+    props.put("edges", target.edgeSet().size());
+    return Map.copyOf(props);
   }
 
   public SimpleContactNetwork(Graph<Integer, TemporalEdge> target, String type) {
@@ -32,7 +32,7 @@ public final class SimpleContactNetwork extends GraphDelegator<Integer, Temporal
   }
 
   @JsonAnyGetter
-  public Map<String, ?> props() {
-    return props;
+  public Map<String, Object> properties() {
+    return properties;
   }
 }
