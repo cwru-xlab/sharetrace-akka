@@ -19,7 +19,8 @@ public final class SimpleContactNetwork extends GraphDelegator<Integer, Temporal
     this.properties = addDefaultProperties(target, type, properties);
   }
 
-  private Map<String, Object> addDefaultProperties(Graph<?, ?> target, String type, Map<String, ?> properties) {
+  private Map<String, Object> addDefaultProperties(
+      Graph<?, ?> target, String type, Map<String, ?> properties) {
     var props = new HashMap<String, Object>(properties);
     props.put("type", type);
     props.put("nodes", target.vertexSet().size());
