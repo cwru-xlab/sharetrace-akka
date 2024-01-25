@@ -78,7 +78,7 @@
             <includeContext>false</includeContext>
             <jsonFactoryDecorator class="sharetrace.logging.ShareTraceJsonFactoryDecorator"/>
         </encoder>
-        <file>${logDirectory}/data.log</file>
+        <file>${logDirectory}/properties.log</file>
         <immediateFlush>false</immediateFlush>
     </appender>
 
