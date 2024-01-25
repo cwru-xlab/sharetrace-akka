@@ -7,24 +7,24 @@ import org.apache.commons.math3.distribution.RealDistribution;
 public interface DistributedRandom {
 
   static DistributedRandom from(RealDistribution distribution) {
-    var min = distribution.getSupportLowerBound();
-    var max = distribution.getSupportUpperBound();
-    return () -> Ranges.normalized(distribution.sample(), min, max);
+    return () -> distribution.cumulativeProbability(distribution.sample());
   }
 
   static DistributedRandom from(IntegerDistribution distribution) {
-    var min = distribution.getSupportLowerBound();
-    var max = distribution.getSupportUpperBound();
-    return () -> Ranges.normalized(distribution.sample(), min, max);
+    return () -> distribution.cumulativeProbability(distribution.sample());
   }
 
   double nextDouble();
 
-  default double nextDouble(double scale) {
-    return nextDouble() * scale;
+  default double nextDouble(double bound) {
+    return nextDouble() * bound;
   }
 
-  default long nextLong(double scale) {
-    return Math.round(nextDouble(scale));
+  default double nextDouble(double origin, double bound) {
+    return nextDouble() * (bound - origin) + origin;
+  }
+
+  default long nextLong(double bound) {
+    return Math.round(nextDouble(bound));
   }
 }
