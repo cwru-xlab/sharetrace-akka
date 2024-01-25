@@ -21,7 +21,7 @@ public interface DistributedRandom {
   }
 
   default double nextDouble(double origin, double bound) {
-    return nextDouble() * (bound - origin) + origin;
+    return nextDouble(bound - origin) + origin;
   }
 
   default long nextLong(double bound) {
