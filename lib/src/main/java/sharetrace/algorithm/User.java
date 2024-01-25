@@ -57,7 +57,7 @@ final class User extends AbstractBehavior<UserMessage> {
     this.monitor = monitor;
     this.timers = timers;
     this.idleTimeoutMessage = new IdleTimeoutMessage(id);
-    this.scores = new TemopralScoreCache<>(context.timeSource());
+    this.scores = new RiskScoreMessageCache(context.timeSource());
     this.contacts = new ContactCache(context.timeSource());
     this.defaultScore = RiskScoreMessage.ofOrigin(RiskScore.MIN, id);
     this.exposureScore = defaultScore;
