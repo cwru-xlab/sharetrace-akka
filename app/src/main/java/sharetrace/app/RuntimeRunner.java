@@ -1,9 +1,9 @@
 package sharetrace.app;
 
-import sharetrace.algorithm.KeyFactory;
 import sharetrace.algorithm.RiskPropagationBuilder;
 import sharetrace.config.Parsed;
 import sharetrace.model.Context;
+import sharetrace.model.KeyFactory;
 import sharetrace.model.Parameters;
 
 public record RuntimeRunner() implements Runner {
