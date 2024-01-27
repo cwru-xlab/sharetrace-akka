@@ -1,7 +1,7 @@
 package sharetrace.app;
 
+import sharetrace.model.Context;
 import sharetrace.model.Parameters;
-import sharetrace.util.Context;
 
 @FunctionalInterface
 public interface Runner {

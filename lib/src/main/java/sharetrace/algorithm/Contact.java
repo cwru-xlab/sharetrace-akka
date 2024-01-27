@@ -10,7 +10,6 @@ import sharetrace.model.TemporalScore;
 import sharetrace.model.message.ContactMessage;
 import sharetrace.model.message.RiskScoreMessage;
 import sharetrace.model.message.UserMessage;
-import sharetrace.util.Cache;
 
 final class Contact implements Expirable, Comparable<Contact> {
 

@@ -2,10 +2,10 @@ package sharetrace.config;
 
 import com.typesafe.config.Config;
 import java.util.concurrent.TimeUnit;
+import sharetrace.model.Context;
+import sharetrace.model.DistributedRandom;
 import sharetrace.model.factory.RandomTimeFactoryBuilder;
 import sharetrace.model.factory.TimeFactory;
-import sharetrace.util.Context;
-import sharetrace.util.DistributedRandom;
 
 public record TimeFactoryParser(Context context, ConfigParser<DistributedRandom> randomParser)
     implements ConfigParser<TimeFactory> {

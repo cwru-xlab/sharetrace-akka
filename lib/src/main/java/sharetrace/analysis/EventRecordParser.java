@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import sharetrace.analysis.model.EventRecord;
-import sharetrace.util.Parser;
+import sharetrace.config.Parser;
 
 public record EventRecordParser(ObjectReader reader) implements Parser<String, EventRecord> {
 

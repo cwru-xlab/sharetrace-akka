@@ -9,8 +9,8 @@ import sharetrace.graph.GnmRandomContactNetworkFactoryBuilder;
 import sharetrace.graph.RandomRegularContactNetworkFactoryBuilder;
 import sharetrace.graph.ScaleFreeContactNetworkFactoryBuilder;
 import sharetrace.graph.WattsStrogatzContactNetworkFactoryBuilder;
+import sharetrace.model.Context;
 import sharetrace.model.factory.TimeFactory;
-import sharetrace.util.Context;
 
 public record ContactNetworkFactoryParser(
     Context context, ConfigParser<TimeFactory> timeFactoryParser)

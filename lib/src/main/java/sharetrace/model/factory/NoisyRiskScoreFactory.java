@@ -1,7 +1,7 @@
 package sharetrace.model.factory;
 
+import sharetrace.model.DistributedRandom;
 import sharetrace.model.RiskScore;
-import sharetrace.util.DistributedRandom;
 
 public record NoisyRiskScoreFactory(RiskScoreFactory scoreFactory, DistributedRandom random)
     implements RiskScoreFactory {

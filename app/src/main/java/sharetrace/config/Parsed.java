@@ -5,10 +5,10 @@ import java.util.List;
 import sharetrace.Buildable;
 import sharetrace.graph.ContactNetwork;
 import sharetrace.graph.ContactNetworkFactory;
+import sharetrace.model.Context;
+import sharetrace.model.DistributedRandom;
 import sharetrace.model.Parameters;
 import sharetrace.model.factory.RiskScoreFactory;
-import sharetrace.util.Context;
-import sharetrace.util.DistributedRandom;
 
 @Buildable
 public record Parsed(

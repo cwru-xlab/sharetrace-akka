@@ -2,8 +2,8 @@ package sharetrace.logging;
 
 import sharetrace.Buildable;
 import sharetrace.graph.ContactNetwork;
+import sharetrace.model.Context;
 import sharetrace.model.Parameters;
-import sharetrace.util.Context;
 
 @Buildable
 public record ExecutionProperties(

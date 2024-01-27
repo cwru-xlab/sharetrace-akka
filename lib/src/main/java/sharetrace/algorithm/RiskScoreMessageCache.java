@@ -11,7 +11,6 @@ import java.util.Iterator;
 import java.util.Optional;
 import java.util.function.BinaryOperator;
 import sharetrace.model.message.RiskScoreMessage;
-import sharetrace.util.Cache;
 
 final class RiskScoreMessageCache implements Cache<RiskScoreMessage> {
 

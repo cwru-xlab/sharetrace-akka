@@ -11,12 +11,11 @@ import sharetrace.Buildable;
 import sharetrace.graph.ContactNetwork;
 import sharetrace.logging.ExecutionProperties;
 import sharetrace.logging.ExecutionPropertiesBuilder;
+import sharetrace.model.Context;
+import sharetrace.model.ContextBuilder;
 import sharetrace.model.Parameters;
 import sharetrace.model.factory.RiskScoreFactory;
 import sharetrace.model.message.RunMessage;
-import sharetrace.util.Context;
-import sharetrace.util.ContextBuilder;
-import sharetrace.util.KeyFactory;
 
 @Buildable
 public record RiskPropagation(

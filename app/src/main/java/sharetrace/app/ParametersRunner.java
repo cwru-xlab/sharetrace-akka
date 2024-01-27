@@ -1,11 +1,11 @@
 package sharetrace.app;
 
+import sharetrace.algorithm.KeyFactory;
 import sharetrace.algorithm.RiskPropagationBuilder;
 import sharetrace.config.Parsed;
+import sharetrace.model.Context;
 import sharetrace.model.Parameters;
 import sharetrace.model.ParametersBuilder;
-import sharetrace.util.Context;
-import sharetrace.util.KeyFactory;
 
 public record ParametersRunner() implements Runner {
 

@@ -1,4 +1,4 @@
-package sharetrace.util;
+package sharetrace.algorithm;
 
 import java.util.concurrent.atomic.AtomicLong;
 

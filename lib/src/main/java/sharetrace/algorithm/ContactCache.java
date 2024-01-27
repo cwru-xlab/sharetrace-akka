@@ -1,8 +1,8 @@
 package sharetrace.algorithm;
 
 import com.google.common.collect.Iterators;
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.ints.Int2ReferenceMap;
+import it.unimi.dsi.fastutil.ints.Int2ReferenceOpenHashMap;
 import java.time.InstantSource;
 import java.util.Collection;
 import java.util.Comparator;
@@ -10,7 +10,6 @@ import java.util.Iterator;
 import java.util.Optional;
 import java.util.function.BinaryOperator;
 import java.util.stream.Stream;
-import sharetrace.util.Cache;
 
 final class ContactCache implements Cache<Contact> {
 
@@ -18,13 +17,13 @@ final class ContactCache implements Cache<Contact> {
   private static final BinaryOperator<Contact> MERGER = BinaryOperator.maxBy(COMPARATOR);
 
   private final InstantSource timeSource;
-  private final Int2ObjectMap<Contact> cache;
+  private final Int2ReferenceMap<Contact> cache;
 
   private long minExpiryTime;
 
   public ContactCache(InstantSource timeSource) {
     this.timeSource = timeSource;
-    this.cache = new Int2ObjectOpenHashMap<>();
+    this.cache = new Int2ReferenceOpenHashMap<>();
     updateMinExpiryTime();
   }
 

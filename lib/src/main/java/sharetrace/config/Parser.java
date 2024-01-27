@@ -1,4 +1,4 @@
-package sharetrace.util;
+package sharetrace.config;
 
 @FunctionalInterface
 public interface Parser<I, O> {

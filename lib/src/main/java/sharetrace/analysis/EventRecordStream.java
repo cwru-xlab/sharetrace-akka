@@ -9,7 +9,7 @@ import java.nio.file.Path;
 import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 import sharetrace.analysis.model.EventRecord;
-import sharetrace.util.Parser;
+import sharetrace.config.Parser;
 
 public record EventRecordStream(Parser<String, EventRecord> parser) {
 

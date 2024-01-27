@@ -11,8 +11,8 @@ import org.apache.commons.math3.random.RandomGenerator;
 import org.slf4j.LoggerFactory;
 import sharetrace.logging.LogRecord;
 import sharetrace.logging.RecordLogger;
-import sharetrace.util.Context;
-import sharetrace.util.ContextBuilder;
+import sharetrace.model.Context;
+import sharetrace.model.ContextBuilder;
 
 public record ContextParser(Config contextConfig) implements ConfigParser<Context> {
 

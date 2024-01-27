@@ -1,4 +1,4 @@
-package sharetrace.util;
+package sharetrace.model;
 
 import com.google.common.collect.Range;
 

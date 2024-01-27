@@ -1,8 +1,8 @@
-package sharetrace.util;
+package sharetrace.algorithm;
 
 import java.util.Optional;
 
-public interface Cache<V> extends Iterable<V> {
+interface Cache<V> extends Iterable<V> {
 
   Optional<V> max();
 

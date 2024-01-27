@@ -5,7 +5,7 @@ import org.apache.commons.math3.distribution.BetaDistribution;
 import org.apache.commons.math3.distribution.NormalDistribution;
 import org.apache.commons.math3.distribution.UniformRealDistribution;
 import org.apache.commons.math3.random.RandomGenerator;
-import sharetrace.util.DistributedRandom;
+import sharetrace.model.DistributedRandom;
 
 public record DistributedRandomParser(RandomGenerator randomGenerator)
     implements ConfigParser<DistributedRandom> {

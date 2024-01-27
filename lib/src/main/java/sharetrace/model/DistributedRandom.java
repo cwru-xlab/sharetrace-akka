@@ -1,4 +1,4 @@
-package sharetrace.util;
+package sharetrace.model;
 
 import org.apache.commons.math3.distribution.IntegerDistribution;
 import org.apache.commons.math3.distribution.RealDistribution;

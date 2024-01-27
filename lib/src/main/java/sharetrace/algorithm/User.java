@@ -17,6 +17,7 @@ import sharetrace.logging.event.user.ContactEvent;
 import sharetrace.logging.event.user.LastEvent;
 import sharetrace.logging.event.user.ReceiveEvent;
 import sharetrace.logging.event.user.UpdateEvent;
+import sharetrace.model.Context;
 import sharetrace.model.Parameters;
 import sharetrace.model.RiskScore;
 import sharetrace.model.message.BatchTimeoutMessage;
@@ -25,8 +26,6 @@ import sharetrace.model.message.IdleTimeoutMessage;
 import sharetrace.model.message.MonitorMessage;
 import sharetrace.model.message.RiskScoreMessage;
 import sharetrace.model.message.UserMessage;
-import sharetrace.util.Cache;
-import sharetrace.util.Context;
 
 final class User extends AbstractBehavior<UserMessage> {
 

@@ -5,8 +5,8 @@ import com.typesafe.config.ConfigFactory;
 import sharetrace.config.ContextParser;
 import sharetrace.config.InstanceFactory;
 import sharetrace.config.ParametersParser;
+import sharetrace.model.Context;
 import sharetrace.model.Parameters;
-import sharetrace.util.Context;
 
 public final class Main {
 

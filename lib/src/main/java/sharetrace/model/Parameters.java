@@ -3,7 +3,6 @@ package sharetrace.model;
 import com.google.common.collect.Range;
 import java.time.Duration;
 import sharetrace.Buildable;
-import sharetrace.util.Ranges;
 
 @Buildable
 public record Parameters(

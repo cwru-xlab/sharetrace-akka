@@ -1,4 +1,4 @@
-package sharetrace.util;
+package sharetrace.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.typesafe.config.Config;

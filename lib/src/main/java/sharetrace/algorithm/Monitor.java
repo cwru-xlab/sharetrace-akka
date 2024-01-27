@@ -20,6 +20,7 @@ import sharetrace.logging.event.lifecycle.SendContactsEnd;
 import sharetrace.logging.event.lifecycle.SendContactsStart;
 import sharetrace.logging.event.lifecycle.SendRiskScoresEnd;
 import sharetrace.logging.event.lifecycle.SendRiskScoresStart;
+import sharetrace.model.Context;
 import sharetrace.model.Parameters;
 import sharetrace.model.factory.RiskScoreFactory;
 import sharetrace.model.message.ContactMessage;
@@ -28,7 +29,6 @@ import sharetrace.model.message.MonitorMessage;
 import sharetrace.model.message.RiskScoreMessage;
 import sharetrace.model.message.RunMessage;
 import sharetrace.model.message.UserMessage;
-import sharetrace.util.Context;
 
 final class Monitor extends AbstractBehavior<MonitorMessage> {
 
