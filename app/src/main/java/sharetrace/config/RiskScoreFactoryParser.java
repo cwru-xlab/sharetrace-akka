@@ -16,7 +16,7 @@ public record RiskScoreFactoryParser(
   @Override
   public RiskScoreFactory parse(Config config) {
     return RandomRiskScoreFactoryBuilder.create()
-        .random(randomParser.parse(config.getConfig("value-distribution")))
+        .random(randomParser.parse(config.getConfig("distribution")))
         .timeFactory(timeFactoryParser.parse(config.getConfig("time-factory")))
         .scoreExpiry(parameters.scoreExpiry())
         .build();

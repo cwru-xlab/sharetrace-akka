@@ -1,7 +1,6 @@
 package sharetrace.config;
 
 import com.typesafe.config.Config;
-import java.util.concurrent.TimeUnit;
 import sharetrace.model.Context;
 import sharetrace.model.DistributedRandom;
 import sharetrace.model.factory.RandomTimeFactoryBuilder;
@@ -14,8 +13,8 @@ public record TimeFactoryParser(Context context, ConfigParser<DistributedRandom>
   public TimeFactory parse(Config config) {
     return RandomTimeFactoryBuilder.create()
         .referenceTime(context.referenceTime())
-        .period(config.getDuration("time-period", TimeUnit.MILLISECONDS))
-        .random(randomParser.parse(config.getConfig("time-distribution")))
+        .period(ConfigSupport.getMillisDuration(config, "period"))
+        .random(randomParser.parse(config.getConfig("distribution")))
         .build();
   }
 }
