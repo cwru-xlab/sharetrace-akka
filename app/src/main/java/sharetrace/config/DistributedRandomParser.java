@@ -17,7 +17,7 @@ public record DistributedRandomParser(RandomGenerator randomGenerator)
       case ("normal") -> normalRandom(config);
       case ("beta") -> betaRandom(config);
       case ("uniform") -> uniformRandom(config);
-      default -> throw new ConfigParseException("distribution type " + type, config);
+      default -> throw new IllegalArgumentException(type);
     };
   }
 

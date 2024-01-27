@@ -26,7 +26,7 @@ public record ContactNetworkFactoryParser(
       case ("watts-strogatz") -> wattsStrogatzFactory(config);
       case ("scale-free") -> scaleFreeFactory(config);
       case ("file") -> fileFactory(config);
-      default -> throw new ConfigParseException("network type " + type, config);
+      default -> throw new IllegalArgumentException(type);
     };
   }
 
