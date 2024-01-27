@@ -2,7 +2,7 @@ package sharetrace.analysis.handler;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
-import java.util.ArrayList;
+import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
 import java.util.Comparator;
 import java.util.List;
 import sharetrace.analysis.results.Results;
@@ -23,7 +23,7 @@ public final class UserUpdates implements EventHandler {
   @Override
   public void onNext(Event event) {
     if (event instanceof UpdateEvent update) {
-      updates.computeIfAbsent(update.self(), x -> new ArrayList<>()).add(update);
+      updates.computeIfAbsent(update.self(), x -> new ReferenceArrayList()).add(update);
     }
   }
 
@@ -40,6 +40,6 @@ public final class UserUpdates implements EventHandler {
         .skip(1) // First update is trivial: default risk score -> initial non-zero risk score
         .map(UpdateEvent::current)
         .map(RiskScoreMessage::score)
-        .toList();
+        .collect(ReferenceArrayList.toList());
   }
 }

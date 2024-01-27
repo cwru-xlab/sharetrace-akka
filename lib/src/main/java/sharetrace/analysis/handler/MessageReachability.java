@@ -2,13 +2,12 @@ package sharetrace.analysis.handler;
 
 import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.ints.IntList;
+import it.unimi.dsi.fastutil.ints.Int2ReferenceMap;
+import it.unimi.dsi.fastutil.ints.Int2ReferenceOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntIntPair;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
-import java.util.HashSet;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import java.util.Objects;
 import java.util.Set;
 import org.jgrapht.Graph;
@@ -22,10 +21,10 @@ import sharetrace.logging.event.user.ReceiveEvent;
 
 public final class MessageReachability implements EventHandler {
 
-  private final Int2ObjectMap<Set<IntList>> edges;
+  private final Int2ReferenceMap<Set<IntIntPair>> edges;
 
   public MessageReachability() {
-    edges = new Int2ObjectOpenHashMap<>();
+    edges = new Int2ReferenceOpenHashMap<>();
   }
 
   @Override
@@ -35,7 +34,9 @@ public final class MessageReachability implements EventHandler {
       var target = receive.self();
       if (source != target) {
         var origin = receive.message().origin();
-        edges.computeIfAbsent(origin, x -> new HashSet<>()).add(IntArrayList.of(source, target));
+        edges
+            .computeIfAbsent(origin, x -> new ObjectOpenHashSet<>())
+            .add(IntIntPair.of(source, target));
       }
     }
   }
@@ -45,13 +46,13 @@ public final class MessageReachability implements EventHandler {
     var influence = new Int2IntOpenHashMap(edges.size());
     var source = new Int2IntOpenHashMap(edges.size());
     var reachability = new Int2IntOpenHashMap(edges.size());
-    for (var entry : edges.int2ObjectEntrySet()) {
+    for (var entry : edges.int2ReferenceEntrySet()) {
       var origin = entry.getIntKey();
       var edges = entry.getValue();
       var targets = targetsOfOrigin(origin, edges);
       var graph = reachabilityGraph(edges);
       influence.put(origin, targets.size());
-      targets.forEach(target -> source.mergeInt(target, 1, Integer::sum));
+      targets.forEach(target -> source.addTo(target, 1));
       reachability.put(origin, messageReachability(origin, graph));
     }
     results
@@ -62,18 +63,21 @@ public final class MessageReachability implements EventHandler {
         .put("ratio", reachabilityRatio(influence));
   }
 
-  private IntSet targetsOfOrigin(int origin, Iterable<IntList> edges) {
+  private IntSet targetsOfOrigin(int origin, Iterable<IntIntPair> edges) {
     var targets = new IntOpenHashSet();
-    edges.forEach(targets::addAll);
+    for (var edge : edges) {
+      targets.add(edge.leftInt());
+      targets.add(edge.rightInt());
+    }
     targets.remove(origin);
     return targets;
   }
 
-  private Graph<Integer, DefaultEdge> reachabilityGraph(Iterable<IntList> edges) {
+  private Graph<Integer, DefaultEdge> reachabilityGraph(Iterable<IntIntPair> edges) {
     var graph = Graphs.newDirectedGraph();
     for (var edge : edges) {
-      var source = edge.getInt(0);
-      var target = edge.getInt(1);
+      var source = edge.leftInt();
+      var target = edge.rightInt();
       graph.addVertex(source);
       graph.addVertex(target);
       graph.addEdge(source, target);

@@ -1,6 +1,6 @@
 package sharetrace.analysis.handler;
 
-import java.util.ArrayList;
+import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
 import java.util.Comparator;
 import java.util.List;
 import sharetrace.analysis.model.LoggedEvent;
@@ -14,7 +14,7 @@ public final class EventTimeline implements EventHandler {
   private long minTimestamp;
 
   public EventTimeline() {
-    timeline = new ArrayList<>();
+    timeline = new ReferenceArrayList<>();
     minTimestamp = Long.MAX_VALUE;
   }
 
