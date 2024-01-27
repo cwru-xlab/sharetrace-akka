@@ -22,7 +22,7 @@ final class Contact implements Expirable, Comparable<Contact> {
   private final InstantSource timeSource;
 
   private TemporalScore sendThreshold;
-  private RiskScoreMessage sent;
+  private RiskScoreMessage buffered;
 
   public Contact(ContactMessage message, Parameters parameters, InstantSource timeSource) {
     this.id = message.id();
@@ -38,7 +38,7 @@ final class Contact implements Expirable, Comparable<Contact> {
   public void apply(RiskScoreMessage message, Cache<RiskScoreMessage> cache) {
     refreshThreshold(cache);
     if (shouldReceive(message)) {
-      sent = message;
+      buffered = message;
       setThreshold(message);
     }
   }
@@ -48,9 +48,9 @@ final class Contact implements Expirable, Comparable<Contact> {
   }
 
   public void flush() {
-    if (sent != null) {
-      ref.tell(sent);
-      sent = null;
+    if (buffered != null) {
+      ref.tell(buffered);
+      buffered = null;
     }
   }
 
