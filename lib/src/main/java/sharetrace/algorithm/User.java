@@ -91,7 +91,7 @@ final class User extends AbstractBehavior<UserMessage> {
     if (!message.isExpired(context.timeSource())) {
       var contact = new Contact(message, parameters, context.timeSource());
       contacts.add(contact);
-      contact.applyCached(scores);
+      contact.apply(scores);
       logContactEvent(contact);
     }
     return this;
@@ -100,9 +100,9 @@ final class User extends AbstractBehavior<UserMessage> {
   private Behavior<UserMessage> handle(RiskScoreMessage message) {
     logReceiveEvent(message);
     if (!message.isExpired(context.timeSource())) {
+      updateExposureScore(message);
       var transmitted = transmitted(message);
       scores.add(transmitted);
-      updateExposureScore(message);
       contacts.forEach(contact -> contact.apply(transmitted, scores));
     }
     startTimers();

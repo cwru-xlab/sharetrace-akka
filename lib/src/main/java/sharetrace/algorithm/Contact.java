@@ -43,7 +43,7 @@ final class Contact implements Expirable, Comparable<Contact> {
     }
   }
 
-  public void applyCached(RiskScoreMessageCache cache) {
+  public void apply(RiskScoreMessageCache cache) {
     maxRelevantMessage(cache).ifPresent(message -> apply(message, cache));
   }
 
