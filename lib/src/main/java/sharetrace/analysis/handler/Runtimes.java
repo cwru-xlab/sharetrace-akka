@@ -50,16 +50,12 @@ public final class Runtimes implements EventHandler {
   }
 
   private Object getRuntime(Class<?> start, Class<?> end) {
-    return isLogged(start, end)
-        ? Math.subtractExact(events.getLong(end), events.getLong(start))
-        : UNKNOWN_RUNTIME;
+    return isLogged(start, end) ? events.getLong(end) - events.getLong(start) : UNKNOWN_RUNTIME;
   }
 
   private Object messagePassingRuntime() {
     var start = SendRiskScoresStart.class;
-    return isLogged(start)
-        ? Math.subtractExact(lastEventTime, events.getLong(start))
-        : UNKNOWN_RUNTIME;
+    return isLogged(start) ? lastEventTime - events.getLong(start) : UNKNOWN_RUNTIME;
   }
 
   private boolean isLogged(Class<?>... types) {

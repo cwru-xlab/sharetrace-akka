@@ -35,7 +35,7 @@ final class Contact implements Expirable, Comparable<Contact> {
     resetThreshold();
   }
 
-  public void apply(RiskScoreMessage message, Cache<RiskScoreMessage> cache) {
+  public void apply(RiskScoreMessage message, RiskScoreMessageCache cache) {
     refreshThreshold(cache);
     if (shouldReceive(message)) {
       buffered = message;
@@ -43,7 +43,7 @@ final class Contact implements Expirable, Comparable<Contact> {
     }
   }
 
-  public void applyCached(Cache<RiskScoreMessage> cache) {
+  public void applyCached(RiskScoreMessageCache cache) {
     maxRelevantMessage(cache).ifPresent(message -> apply(message, cache));
   }
 
@@ -80,7 +80,7 @@ final class Contact implements Expirable, Comparable<Contact> {
         && message.sender() != id;
   }
 
-  private void refreshThreshold(Cache<RiskScoreMessage> cache) {
+  private void refreshThreshold(RiskScoreMessageCache cache) {
     /*
      If this contact's send threshold is the minimum risk score, then either
        1. no messages have been sent to this contact; or
@@ -91,12 +91,12 @@ final class Contact implements Expirable, Comparable<Contact> {
      with a value *greater* than the threshold are eligible. Considering this in the context of the
      entire contact network, this would prevent all propagation of messages.
     */
-    if (sendThreshold != RiskScore.MIN && sendThreshold.isExpired(timeSource.millis())) {
+    if (sendThreshold != RiskScore.MIN && sendThreshold.isExpired(timeSource)) {
       maxRelevantMessage(cache).ifPresentOrElse(this::setThreshold, this::resetThreshold);
     }
   }
 
-  private Optional<RiskScoreMessage> maxRelevantMessage(Cache<RiskScoreMessage> cache) {
+  private Optional<RiskScoreMessage> maxRelevantMessage(RiskScoreMessageCache cache) {
     return cache.refresh().max(bufferedTimestamp);
   }
 

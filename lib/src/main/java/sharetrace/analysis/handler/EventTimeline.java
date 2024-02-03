@@ -33,7 +33,6 @@ public final class EventTimeline implements EventHandler {
   }
 
   private LoggedEvent adjustTimestamp(LoggedEvent event) {
-    var offset = Math.subtractExact(event.timestamp(), minTimestamp);
-    return new LoggedEvent(event.type(), offset);
+    return new LoggedEvent(event.type(), event.timestamp() - minTimestamp);
   }
 }

@@ -12,7 +12,7 @@ import java.util.Optional;
 import java.util.function.BinaryOperator;
 import sharetrace.model.message.RiskScoreMessage;
 
-final class RiskScoreMessageCache implements Cache<RiskScoreMessage> {
+final class RiskScoreMessageCache implements Iterable<RiskScoreMessage> {
 
   private static final Comparator<RiskScoreMessage> COMPARATOR = Comparator.naturalOrder();
   private static final BinaryOperator<RiskScoreMessage> MERGER = BinaryOperator.maxBy(COMPARATOR);
@@ -28,17 +28,14 @@ final class RiskScoreMessageCache implements Cache<RiskScoreMessage> {
     updateMinKey();
   }
 
-  @Override
   public Optional<RiskScoreMessage> max() {
     return max(Range.all());
   }
 
-  @Override
   public Optional<RiskScoreMessage> max(long atMost) {
     return max(Range.atMost(atMost));
   }
 
-  @Override
   public RiskScoreMessageCache refresh() {
     var currentTime = timeSource.millis();
     if (!minKey.contains(currentTime)) {
@@ -48,7 +45,6 @@ final class RiskScoreMessageCache implements Cache<RiskScoreMessage> {
     return this;
   }
 
-  @Override
   public void add(RiskScoreMessage message) {
     var key = Range.closedOpen(message.timestamp(), message.expiryTime());
     cache.merge(key, message, MERGER);

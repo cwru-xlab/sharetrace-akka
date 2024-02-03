@@ -11,7 +11,6 @@ import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import akka.actor.typed.javadsl.TimerScheduler;
 import java.util.function.LongFunction;
-import sharetrace.logging.RecordLogger;
 import sharetrace.logging.event.Event;
 import sharetrace.logging.event.user.ContactEvent;
 import sharetrace.logging.event.user.LastEvent;
@@ -35,8 +34,8 @@ final class User extends AbstractBehavior<UserMessage> {
   private final ActorRef<MonitorMessage> monitor;
   private final TimerScheduler<UserMessage> timers;
   private final IdleTimeoutMessage idleTimeoutMessage;
-  private final Cache<RiskScoreMessage> scores;
-  private final Cache<Contact> contacts;
+  private final RiskScoreMessageCache scores;
+  private final ContactCache contacts;
   private final RiskScoreMessage defaultScore;
 
   private RiskScoreMessage exposureScore;
@@ -89,7 +88,7 @@ final class User extends AbstractBehavior<UserMessage> {
   }
 
   private Behavior<UserMessage> handle(ContactMessage message) {
-    if (!message.isExpired(currentTime())) {
+    if (!message.isExpired(context.timeSource())) {
       var contact = new Contact(message, parameters, context.timeSource());
       contacts.add(contact);
       contact.applyCached(scores);
@@ -100,7 +99,7 @@ final class User extends AbstractBehavior<UserMessage> {
 
   private Behavior<UserMessage> handle(RiskScoreMessage message) {
     logReceiveEvent(message);
-    if (!message.isExpired(currentTime())) {
+    if (!message.isExpired(context.timeSource())) {
       var transmitted = transmitted(message);
       scores.add(transmitted);
       updateExposureScore(message);
@@ -115,7 +114,7 @@ final class User extends AbstractBehavior<UserMessage> {
       var previous = exposureScore;
       exposureScore = message;
       logUpdateEvent(previous, exposureScore);
-    } else if (exposureScore.isExpired(currentTime())) {
+    } else if (exposureScore.isExpired(context.timeSource())) {
       var previous = exposureScore;
       exposureScore = scores.refresh().max().map(this::untransmitted).orElse(this.defaultScore);
       logUpdateEvent(previous, exposureScore);
@@ -169,19 +168,11 @@ final class User extends AbstractBehavior<UserMessage> {
   }
 
   private void logLastEvent() {
-    logger().log(LastEvent.class, () -> new LastEvent(id, lastEventTime));
+    context.eventLogger().log(LastEvent.class, () -> new LastEvent(id, lastEventTime));
   }
 
   private <T extends Event> void logEvent(Class<T> type, LongFunction<T> factory) {
-    lastEventTime = currentTime();
-    logger().log(type, () -> factory.apply(lastEventTime));
-  }
-
-  private RecordLogger logger() {
-    return context.eventLogger();
-  }
-
-  private long currentTime() {
-    return context.timeSource().millis();
+    lastEventTime = context.timeSource().millis();
+    context.eventLogger().log(type, () -> factory.apply(lastEventTime));
   }
 }
