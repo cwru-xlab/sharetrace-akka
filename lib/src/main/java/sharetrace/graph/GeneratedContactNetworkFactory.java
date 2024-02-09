@@ -9,7 +9,11 @@ public interface GeneratedContactNetworkFactory extends ContactNetworkFactory {
   @Override
   default ContactNetwork getContactNetwork() {
     var network = ContactNetworkFactory.super.getContactNetwork();
-    network.edgeSet().forEach(e -> e.setTime(timeFactory().getTime()));
+    for (var edge : network.edgeSet()) {
+      int source = network.getEdgeSource(edge);
+      int target = network.getEdgeTarget(edge);
+      Graphs.addTemporalEdge(network, source, target, timeFactory().getTime());
+    }
     return network;
   }
 }
