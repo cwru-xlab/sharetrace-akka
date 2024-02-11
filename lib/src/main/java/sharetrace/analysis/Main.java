@@ -6,7 +6,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -37,7 +36,7 @@ public final class Main {
     } catch (IOException exception) {
       throw new UncheckedIOException(exception);
     }
-    return Collections.unmodifiableMap(handlers);
+    return handlers;
   }
 
   private static Config getConfig() {
