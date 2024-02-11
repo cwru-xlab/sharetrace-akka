@@ -4,5 +4,5 @@ public interface Results {
 
   Results put(String key, Object result);
 
-  Results withScope(String scope);
+  Results withScope(Object scope);
 }
