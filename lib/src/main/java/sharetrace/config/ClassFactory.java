@@ -6,18 +6,18 @@ public final class ClassFactory {
 
   public static <T> Class<T> getClass(Class<T> expected, String name) {
     try {
-      return checkType(Class.forName(name), expected);
+      return checkType(expected, Class.forName(name));
     } catch (ClassNotFoundException exception) {
       throw new RuntimeException(exception);
     }
   }
 
   @SuppressWarnings("unchecked")
-  private static <T> Class<T> checkType(Class<?> clazz, Class<? super T> expected) {
-    if (!expected.isAssignableFrom(clazz)) {
+  private static <T> Class<T> checkType(Class<? super T> expected, Class<?> actual) {
+    if (!expected.isAssignableFrom(actual)) {
       throw new IllegalArgumentException(
-          "%s must be of type %s".formatted(clazz.getName(), expected.getName()));
+          "%s must be of type %s".formatted(actual.getName(), expected.getName()));
     }
-    return (Class<T>) clazz;
+    return (Class<T>) actual;
   }
 }

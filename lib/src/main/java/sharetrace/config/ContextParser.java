@@ -1,12 +1,12 @@
 package sharetrace.config;
 
 import com.typesafe.config.Config;
+import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import java.time.Instant;
 import java.time.InstantSource;
 import java.time.ZoneId;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.stream.Collectors;
 import org.apache.commons.math3.random.RandomGenerator;
 import org.slf4j.LoggerFactory;
 import sharetrace.logging.LogRecord;
@@ -20,16 +20,16 @@ public record ContextParser(Config contextConfig) implements ConfigParser<Contex
   public Context parse(Config config) {
     var timeSource = getTimeSource(config);
     var seed = getSeed(config);
-    var loggable = getLoggable(config);
+    var logged = getLogged(config);
     return ContextBuilder.create()
         .config(contextConfig)
         .timeSource(timeSource)
         .seed(seed)
         .referenceTime(getReferenceTime(config, timeSource))
         .randomGenerator(getRandomGenerator(config, seed))
-        .loggable(loggable)
-        .propertiesLogger(getPropertiesLogger(loggable))
-        .eventLogger(getEventLogger(loggable))
+        .logged(logged)
+        .propertyLogger(getPropertyLogger(logged))
+        .eventLogger(getEventLogger(logged))
         .build();
   }
 
@@ -54,17 +54,17 @@ public record ContextParser(Config contextConfig) implements ConfigParser<Contex
     return InstanceFactory.getInstance(RandomGenerator.class, className, seed);
   }
 
-  private Set<Class<? extends LogRecord>> getLoggable(Config config) {
-    return config.getStringList("loggable").stream()
+  private Set<Class<? extends LogRecord>> getLogged(Config config) {
+    return config.getStringList("logged").stream()
         .map(className -> ClassFactory.getClass(LogRecord.class, className))
-        .collect(Collectors.toUnmodifiableSet());
+        .collect(ReferenceOpenHashSet.toSet());
   }
 
-  private RecordLogger getEventLogger(Set<Class<? extends LogRecord>> loggable) {
-    return new RecordLogger(LoggerFactory.getLogger("EventLogger"), "event", loggable);
+  private RecordLogger getEventLogger(Set<Class<? extends LogRecord>> logged) {
+    return new RecordLogger(LoggerFactory.getLogger("EventLogger"), "event", logged);
   }
 
-  private RecordLogger getPropertiesLogger(Set<Class<? extends LogRecord>> loggable) {
-    return new RecordLogger(LoggerFactory.getLogger("PropertiesLogger"), "properties", loggable);
+  private RecordLogger getPropertyLogger(Set<Class<? extends LogRecord>> logged) {
+    return new RecordLogger(LoggerFactory.getLogger("PropertyLogger"), "property", logged);
   }
 }

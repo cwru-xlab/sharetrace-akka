@@ -17,8 +17,8 @@ public record Context(
     long referenceTime,
     long seed,
     RandomGenerator randomGenerator,
-    Set<Class<? extends LogRecord>> loggable,
+    Set<Class<? extends LogRecord>> logged,
     Map<String, String> tags,
     @JsonIgnore Map<String, String> mdc,
-    @JsonIgnore RecordLogger propertiesLogger,
+    @JsonIgnore RecordLogger propertyLogger,
     @JsonIgnore RecordLogger eventLogger) {}

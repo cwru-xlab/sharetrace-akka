@@ -1,9 +1,8 @@
 package sharetrace.model.factory;
 
 import it.unimi.dsi.fastutil.ints.Int2ReferenceOpenHashMap;
-import sharetrace.model.RiskScore;
-
 import java.util.Map;
+import sharetrace.model.RiskScore;
 
 public record CachedRiskScoreFactory(RiskScoreFactory scoreFactory, Map<Integer, RiskScore> cache)
     implements RiskScoreFactory {

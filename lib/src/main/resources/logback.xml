@@ -64,7 +64,7 @@
         <appendTimeout>-1</appendTimeout>
     </appender>
 
-    <appender name="BasePropertiesAppender" class="FileAppender">
+    <appender name="BasePropertyAppender" class="FileAppender">
         <encoder class="LogstashEncoder">
             <fieldNames class="ShortenedFieldNames">
                 <level>[ignore]</level>
@@ -82,9 +82,9 @@
         <immediateFlush>false</immediateFlush>
     </appender>
 
-    <appender name="PropertiesAppender" class="LoggingEventAsyncDisruptorAppender">
+    <appender name="PropertyAppender" class="LoggingEventAsyncDisruptorAppender">
         <appendTimeout>-1</appendTimeout>
-        <appender-ref ref="BasePropertiesAppender"/>
+        <appender-ref ref="BasePropertyAppender"/>
     </appender>
 
     <root level="info">
@@ -93,7 +93,7 @@
     <logger name="EventLogger" level="info" additivity="false">
         <appender-ref ref="EventAppender"/>
     </logger>
-    <logger name="PropertiesLogger" level="info" additivity="false">
-        <appender-ref ref="PropertiesAppender"/>
+    <logger name="PropertyLogger" level="info" additivity="false">
+        <appender-ref ref="PropertyAppender"/>
     </logger>
 </configuration>

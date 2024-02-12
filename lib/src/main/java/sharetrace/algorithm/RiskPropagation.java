@@ -44,7 +44,7 @@ public record RiskPropagation(
   }
 
   private void logProperties(Context context) {
-    context.propertiesLogger().log(ExecutionProperties.class, () -> properties(context));
+    context.propertyLogger().log(ExecutionProperties.class, () -> properties(context));
   }
 
   private ExecutionProperties properties(Context context) {

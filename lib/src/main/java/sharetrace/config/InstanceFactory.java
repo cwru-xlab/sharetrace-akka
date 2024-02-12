@@ -1,6 +1,7 @@
 package sharetrace.config;
 
 import java.util.Arrays;
+import java.util.stream.Stream;
 
 public final class InstanceFactory {
 
@@ -8,7 +9,7 @@ public final class InstanceFactory {
 
   public static <T> T getInstance(Class<T> type, String name, Object... parameters) {
     try {
-      var types = Arrays.stream(parameters).map(InstanceFactory::getClass).toArray(Class[]::new);
+      var types = Stream.of(parameters).map(InstanceFactory::getClass).toArray(Class[]::new);
       var clazz = ClassFactory.getClass(type, name);
       return clazz.getConstructor(types).newInstance(parameters);
     } catch (Exception exception) {
@@ -21,12 +22,12 @@ public final class InstanceFactory {
     return switch (obj) {
       case Boolean b -> boolean.class;
       case Byte b -> byte.class;
-      case Short i -> short.class;
+      case Short s -> short.class;
       case Character c -> char.class;
       case Integer i -> int.class;
       case Long l -> long.class;
-      case Float v -> float.class;
-      case Double v -> double.class;
+      case Float f -> float.class;
+      case Double d -> double.class;
       default -> obj.getClass();
     };
   }
