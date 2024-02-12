@@ -61,10 +61,10 @@ public record ContextParser(Config contextConfig) implements ConfigParser<Contex
   }
 
   private RecordLogger getEventLogger(Set<Class<? extends LogRecord>> logged) {
-    return new RecordLogger(LoggerFactory.getLogger("EventLogger"), "event", logged);
+    return new RecordLogger(LoggerFactory.getLogger("EventLogger"), "e", logged);
   }
 
   private RecordLogger getPropertyLogger(Set<Class<? extends LogRecord>> logged) {
-    return new RecordLogger(LoggerFactory.getLogger("PropertyLogger"), "property", logged);
+    return new RecordLogger(LoggerFactory.getLogger("PropertyLogger"), "p", logged);
   }
 }

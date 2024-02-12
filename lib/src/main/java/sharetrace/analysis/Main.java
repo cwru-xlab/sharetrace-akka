@@ -2,10 +2,16 @@ package sharetrace.analysis;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -16,7 +22,7 @@ import sharetrace.analysis.model.EventRecord;
 import sharetrace.analysis.results.MapResults;
 import sharetrace.analysis.results.Results;
 import sharetrace.config.InstanceFactory;
-import sharetrace.logging.Jackson;
+import sharetrace.logging.jackson.Jackson;
 
 public final class Main {
 
@@ -44,9 +50,8 @@ public final class Main {
   }
 
   private static Stream<EventRecord> eventRecords() throws IOException {
-    var directory = Path.of(System.getProperty("analysis.logs"));
     var parser = new EventRecordParser(Jackson.ionObjectMapper());
-    return new EventRecordStream(parser).open(directory);
+    return new EventRecordStream(parser).open(logsDirectory());
   }
 
   private static void processRecord(
@@ -61,18 +66,25 @@ public final class Main {
   }
 
   private static Results collectResults(Map<String, EventHandler> handlers) {
-    var results = new MapResults(".");
+    var results = new MapResults();
     handlers.forEach((key, handler) -> handler.onComplete(results.withScope(key)));
     return results;
   }
 
   private static void saveResults(Results results) {
     try {
-      Jackson.objectMapper()
-          .writerWithDefaultPrettyPrinter()
-          .writeValue(new File("test.json"), results);
+      Jackson.objectMapper().writerWithDefaultPrettyPrinter().writeValue(resultsFile(), results);
     } catch (IOException exception) {
       throw new UncheckedIOException(exception);
     }
+  }
+
+  private static File resultsFile() {
+    var filename = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
+    return logsDirectory().resolve(filename + ".json").toFile();
+  }
+
+  private static Path logsDirectory() {
+    return Path.of(System.getProperty("analysis.logs"));
   }
 }

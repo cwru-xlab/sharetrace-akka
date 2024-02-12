@@ -46,7 +46,7 @@
                 <version>[ignore]</version>
             </fieldNames>
             <includeContext>false</includeContext>
-            <jsonFactoryDecorator class="sharetrace.logging.ShareTraceJsonFactoryDecorator"/>
+            <jsonFactoryDecorator class="sharetrace.logging.logback.IonJsonFactoryDecorator"/>
         </encoder>
         <immediateFlush>false</immediateFlush>
         <rollingPolicy class="FixedWindowRollingPolicy">
@@ -76,7 +76,7 @@
                 <version>[ignore]</version>
             </fieldNames>
             <includeContext>false</includeContext>
-            <jsonFactoryDecorator class="sharetrace.logging.ShareTraceJsonFactoryDecorator"/>
+            <jsonFactoryDecorator class="sharetrace.logging.logback.IonJsonFactoryDecorator"/>
         </encoder>
         <file>${logDirectory}/settings.log</file>
         <immediateFlush>false</immediateFlush>

@@ -1,4 +1,4 @@
-package sharetrace.logging;
+package sharetrace.logging.jackson;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.Module;
@@ -18,6 +18,10 @@ public final class Jackson {
     return InstanceHolder.ION_JSON_FACTORY;
   }
 
+  public static JsonFactory jsonFactory() {
+    return InstanceHolder.JSON_FACTORY;
+  }
+
   public static ObjectMapper ionObjectMapper() {
     return InstanceHolder.ION_OBJECT_MAPPER;
   }
@@ -31,6 +35,7 @@ public final class Jackson {
     public static final ObjectMapper ION_OBJECT_MAPPER = configured(new IonObjectMapper());
     public static final ObjectMapper OBJECT_MAPPER = configured(new ObjectMapper());
     public static final JsonFactory ION_JSON_FACTORY = new IonFactory(ION_OBJECT_MAPPER);
+    public static final JsonFactory JSON_FACTORY = new JsonFactory(OBJECT_MAPPER);
 
     private static ObjectMapper configured(ObjectMapper mapper) {
       return mapper.findAndRegisterModules().registerModule(shareTraceModule());

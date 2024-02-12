@@ -1,9 +1,10 @@
-package sharetrace.logging;
+package sharetrace.logging.logback;
 
 import com.fasterxml.jackson.core.JsonFactory;
 import net.logstash.logback.decorate.JsonFactoryDecorator;
+import sharetrace.logging.jackson.Jackson;
 
-public record ShareTraceJsonFactoryDecorator() implements JsonFactoryDecorator {
+public record IonJsonFactoryDecorator() implements JsonFactoryDecorator {
 
   @Override
   public JsonFactory decorate(JsonFactory factory) {

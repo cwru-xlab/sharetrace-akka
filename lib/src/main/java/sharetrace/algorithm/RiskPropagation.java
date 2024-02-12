@@ -40,7 +40,7 @@ public record RiskPropagation(
   }
 
   private Context contextWithMdc() {
-    return ContextBuilder.builder(context).addMdc("key", keyFactory.getKey()).build();
+    return ContextBuilder.builder(context).addMdc("k", keyFactory.getKey()).build();
   }
 
   private void logProperties(Context context) {

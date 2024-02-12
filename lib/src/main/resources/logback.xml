@@ -10,6 +10,8 @@
     <import class="net.logstash.logback.appender.LoggingEventAsyncDisruptorAppender"/>
     <import class="net.logstash.logback.encoder.LogstashEncoder"/>
     <import class="net.logstash.logback.fieldnames.ShortenedFieldNames"/>
+    <import class="sharetrace.logging.logback.IonJsonFactoryDecorator"/>
+    <import class="sharetrace.logging.logback.StandardJsonFactoryDecorator"/>
 
     <timestamp key="bySecond" datePattern="yyyyMMddHHmmss"/>
     <variable name="logDirectory" value="logs/${bySecond}" scope="context"/>
@@ -46,7 +48,7 @@
                 <version>[ignore]</version>
             </fieldNames>
             <includeContext>false</includeContext>
-            <jsonFactoryDecorator class="sharetrace.logging.ShareTraceJsonFactoryDecorator"/>
+            <jsonFactoryDecorator class="IonJsonFactoryDecorator"/>
         </encoder>
         <immediateFlush>false</immediateFlush>
         <rollingPolicy class="FixedWindowRollingPolicy">
@@ -76,7 +78,7 @@
                 <version>[ignore]</version>
             </fieldNames>
             <includeContext>false</includeContext>
-            <jsonFactoryDecorator class="sharetrace.logging.ShareTraceJsonFactoryDecorator"/>
+            <jsonFactoryDecorator class="StandardJsonFactoryDecorator"/>
         </encoder>
         <file>${logDirectory}/properties.log</file>
         <immediateFlush>false</immediateFlush>
