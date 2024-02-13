@@ -1,7 +1,7 @@
 package sharetrace.analysis.handler;
 
-import it.unimi.dsi.fastutil.objects.Object2LongMap;
-import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Reference2LongMap;
+import it.unimi.dsi.fastutil.objects.Reference2LongOpenHashMap;
 import java.util.stream.Stream;
 import sharetrace.analysis.results.Results;
 import sharetrace.logging.event.Event;
@@ -20,12 +20,12 @@ public final class Runtimes implements EventHandler {
 
   private static final Object UNKNOWN_RUNTIME = "unknown";
 
-  private final Object2LongMap<Class<?>> events;
+  private final Reference2LongMap<Class<?>> events;
 
   private long lastEventTime;
 
   public Runtimes() {
-    events = new Object2LongOpenHashMap<>();
+    events = new Reference2LongOpenHashMap<>();
     lastEventTime = Long.MIN_VALUE;
   }
 

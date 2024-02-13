@@ -14,28 +14,28 @@ public final class Jackson {
 
   private Jackson() {}
 
-  public static JsonFactory ionJsonFactory() {
-    return InstanceHolder.ION_JSON_FACTORY;
-  }
-
-  public static JsonFactory jsonFactory() {
-    return InstanceHolder.JSON_FACTORY;
+  public static ObjectMapper objectMapper() {
+    return InstanceHolder.OBJECT_MAPPER;
   }
 
   public static ObjectMapper ionObjectMapper() {
     return InstanceHolder.ION_OBJECT_MAPPER;
   }
 
-  public static ObjectMapper objectMapper() {
-    return InstanceHolder.OBJECT_MAPPER;
+  public static JsonFactory jsonFactory() {
+    return InstanceHolder.JSON_FACTORY;
+  }
+
+  public static JsonFactory ionJsonFactory() {
+    return InstanceHolder.ION_JSON_FACTORY;
   }
 
   private static class InstanceHolder {
 
-    public static final ObjectMapper ION_OBJECT_MAPPER = configured(new IonObjectMapper());
     public static final ObjectMapper OBJECT_MAPPER = configured(new ObjectMapper());
-    public static final JsonFactory ION_JSON_FACTORY = new IonFactory(ION_OBJECT_MAPPER);
+    public static final ObjectMapper ION_OBJECT_MAPPER = configured(new IonObjectMapper());
     public static final JsonFactory JSON_FACTORY = new JsonFactory(OBJECT_MAPPER);
+    public static final JsonFactory ION_JSON_FACTORY = new IonFactory(ION_OBJECT_MAPPER);
 
     private static ObjectMapper configured(ObjectMapper mapper) {
       return mapper.findAndRegisterModules().registerModule(shareTraceModule());
