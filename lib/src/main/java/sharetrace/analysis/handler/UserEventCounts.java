@@ -3,11 +3,10 @@ package sharetrace.analysis.handler;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Reference2IntMap;
 import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap;
+import java.util.Map;
 import sharetrace.analysis.results.Results;
 import sharetrace.logging.event.Event;
 import sharetrace.logging.event.user.UserEvent;
-
-import java.util.Map;
 
 public final class UserEventCounts implements EventHandler {
 

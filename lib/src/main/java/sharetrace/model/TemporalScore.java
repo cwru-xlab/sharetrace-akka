@@ -1,7 +1,6 @@
 package sharetrace.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import java.util.Comparator;
 
 public interface TemporalScore extends Expirable, Comparable<TemporalScore> {

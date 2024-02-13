@@ -1,7 +1,6 @@
 package sharetrace.analysis.results;
 
 import com.fasterxml.jackson.annotation.JsonValue;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -29,6 +28,7 @@ public final class MapResults implements Results {
   }
 
   @JsonValue
+  @SuppressWarnings("unused")
   private Map<String, Object> value() {
     return results;
   }

@@ -2,15 +2,11 @@ package sharetrace.analysis;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.SimpleDateFormat;
-import java.time.Instant;
-import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
