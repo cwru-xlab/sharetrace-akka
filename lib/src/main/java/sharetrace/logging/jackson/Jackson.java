@@ -45,7 +45,8 @@ public final class Jackson {
       return new SimpleModule()
           .addSerializer(InstantSource.class, new ToStringSerializer())
           .addSerializer(RandomGenerator.class, new ToClassNameSerializer())
-          .addSerializer(Class.class, new ClassSerializer());
+          .addSerializer(Class.class, new ClassSerializer())
+          .addKeySerializer(Class.class, new ClassKeySerializer());
     }
   }
 }
