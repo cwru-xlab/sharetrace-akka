@@ -69,7 +69,7 @@ public final class Main {
 
   private static void saveResults(Results results) {
     try {
-      Jackson.objectMapper().writerWithDefaultPrettyPrinter().writeValue(resultsFile(), results);
+      Jackson.objectMapper().writeValue(resultsFile(), results);
     } catch (IOException exception) {
       throw new UncheckedIOException(exception);
     }
