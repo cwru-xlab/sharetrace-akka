@@ -32,8 +32,8 @@ final class RiskScoreMessageCache implements Iterable<RiskScoreMessage> {
     return max(Range.all());
   }
 
-  public Optional<RiskScoreMessage> max(long atMost) {
-    return max(Range.atMost(atMost));
+  public Optional<RiskScoreMessage> max(long olderThan) {
+    return max(Range.lessThan(olderThan));
   }
 
   public RiskScoreMessageCache refresh() {
