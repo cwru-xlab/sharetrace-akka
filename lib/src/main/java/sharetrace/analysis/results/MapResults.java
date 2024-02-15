@@ -1,6 +1,8 @@
 package sharetrace.analysis.results;
 
 import com.fasterxml.jackson.annotation.JsonValue;
+import it.unimi.dsi.fastutil.objects.Object2ReferenceOpenHashMap;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -13,7 +15,7 @@ public final class MapResults implements Results {
   }
 
   public MapResults() {
-    this(new HashMap<>());
+    this(new Object2ReferenceOpenHashMap<>());
   }
 
   @Override
