@@ -26,14 +26,15 @@ final class RiskScoreMessageCache extends Cache<RiskScoreMessage> {
   }
 
   @Override
-  public RiskScoreMessageCache refresh() {
-    return (RiskScoreMessageCache) super.refresh();
+  public boolean add(RiskScoreMessage value) {
+    var key = Range.closedOpen(value.timestamp(), value.expiryTime());
+    cache.merge(key, value, merger);
+    return super.add(value);
   }
 
   @Override
-  protected void doAdd(RiskScoreMessage value) {
-    var key = Range.closedOpen(value.timestamp(), value.expiryTime());
-    cache.merge(key, value, merger);
+  public RiskScoreMessageCache refresh() {
+    return (RiskScoreMessageCache) super.refresh();
   }
 
   @Override
