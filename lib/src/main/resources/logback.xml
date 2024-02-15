@@ -13,8 +13,8 @@
     <import class="sharetrace.logging.logback.IonJsonFactoryDecorator"/>
     <import class="sharetrace.logging.logback.StandardJsonFactoryDecorator"/>
 
-    <timestamp key="bySecond" datePattern="yyyyMMddHHmmss"/>
-    <variable name="logDirectory" value="logs/${bySecond}" scope="context"/>
+    <timestamp key="byMillis" datePattern="yyyyMMddHHmmssSSS"/>
+    <variable name="logDirectory" value="logs/${byMillis}" scope="context"/>
 
     <appender name="BaseConsoleAppender" class="ConsoleAppender">
         <encoder class="LogstashEncoder">
