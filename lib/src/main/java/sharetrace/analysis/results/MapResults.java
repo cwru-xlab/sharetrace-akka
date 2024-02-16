@@ -8,12 +8,8 @@ public final class MapResults implements Results {
 
   private final Map<String, Object> results;
 
-  private MapResults(Map<String, Object> results) {
-    this.results = results;
-  }
-
   public MapResults() {
-    this(new Object2ReferenceOpenHashMap<>());
+    results = new Object2ReferenceOpenHashMap<>();
   }
 
   @Override
