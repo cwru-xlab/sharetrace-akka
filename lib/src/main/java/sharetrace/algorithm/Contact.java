@@ -1,6 +1,7 @@
 package sharetrace.algorithm;
 
 import akka.actor.typed.ActorRef;
+import com.google.common.collect.Range;
 import java.time.InstantSource;
 import java.util.Optional;
 import sharetrace.model.Expirable;
@@ -16,7 +17,7 @@ final class Contact implements Expirable, Comparable<Contact> {
   private final int id;
   private final ActorRef<UserMessage> ref;
   private final long timestamp;
-  private final long bufferedTimestamp;
+  private final Range<Long> relevantTimeRange;
   private final long expiryTime;
   private final Parameters parameters;
   private final InstantSource timeSource;
@@ -28,7 +29,7 @@ final class Contact implements Expirable, Comparable<Contact> {
     this.id = message.id();
     this.ref = message.contact();
     this.timestamp = message.timestamp();
-    this.bufferedTimestamp = Math.addExact(message.timestamp(), parameters.timeBuffer());
+    this.relevantTimeRange = Range.lessThan(message.timestamp() + parameters.timeBuffer());
     this.expiryTime = message.expiryTime();
     this.parameters = parameters;
     this.timeSource = timeSource;
@@ -76,7 +77,7 @@ final class Contact implements Expirable, Comparable<Contact> {
 
   private boolean shouldReceive(RiskScoreMessage message) {
     return message.value() > sendThreshold.value()
-        && message.timestamp() < bufferedTimestamp
+        && relevantTimeRange.contains(message.timestamp())
         && message.sender() != id;
   }
 
@@ -97,7 +98,7 @@ final class Contact implements Expirable, Comparable<Contact> {
   }
 
   private Optional<RiskScoreMessage> maxRelevantMessage(RiskScoreMessageCache cache) {
-    return cache.refresh().max(bufferedTimestamp);
+    return cache.refresh().max(relevantTimeRange);
   }
 
   private void setThreshold(RiskScoreMessage message) {

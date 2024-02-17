@@ -17,12 +17,8 @@ final class RiskScoreMessageCache extends Cache<RiskScoreMessage> {
     this.cache = TreeRangeMap.create();
   }
 
-  public Optional<RiskScoreMessage> max() {
-    return max(Range.all());
-  }
-
-  public Optional<RiskScoreMessage> max(long olderThan) {
-    return max(Range.lessThan(olderThan));
+  public Optional<RiskScoreMessage> max(Range<Long> range) {
+    return values(cache.subRangeMap(range)).stream().max(comparator);
   }
 
   @Override
@@ -40,10 +36,6 @@ final class RiskScoreMessageCache extends Cache<RiskScoreMessage> {
   @Override
   protected Collection<RiskScoreMessage> values() {
     return values(cache);
-  }
-
-  private Optional<RiskScoreMessage> max(Range<Long> range) {
-    return values(cache.subRangeMap(range)).stream().max(comparator);
   }
 
   private Collection<RiskScoreMessage> values(RangeMap<Long, RiskScoreMessage> cache) {

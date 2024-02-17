@@ -10,6 +10,7 @@ import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import akka.actor.typed.javadsl.TimerScheduler;
+import com.google.common.collect.Range;
 import java.util.function.LongFunction;
 import sharetrace.logging.event.Event;
 import sharetrace.logging.event.user.ContactEvent;
@@ -116,7 +117,8 @@ final class User extends AbstractBehavior<UserMessage> {
       logUpdateEvent(previous, exposureScore);
     } else if (exposureScore.isExpired(context.timeSource())) {
       var previous = exposureScore;
-      exposureScore = scores.refresh().max().map(this::untransmitted).orElse(this.defaultScore);
+      exposureScore =
+          scores.refresh().max(Range.all()).map(this::untransmitted).orElse(this.defaultScore);
       logUpdateEvent(previous, exposureScore);
     }
   }
