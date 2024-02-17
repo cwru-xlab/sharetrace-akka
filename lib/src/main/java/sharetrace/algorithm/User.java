@@ -18,6 +18,7 @@ import sharetrace.logging.event.user.LastEvent;
 import sharetrace.logging.event.user.ReceiveEvent;
 import sharetrace.logging.event.user.UpdateEvent;
 import sharetrace.model.Context;
+import sharetrace.model.Expirable;
 import sharetrace.model.Parameters;
 import sharetrace.model.RiskScore;
 import sharetrace.model.message.BatchTimeoutMessage;
@@ -89,7 +90,7 @@ final class User extends AbstractBehavior<UserMessage> {
   }
 
   private Behavior<UserMessage> handle(ContactMessage message) {
-    if (!message.isExpired(context.timeSource())) {
+    if (!isExpired(message)) {
       var contact = new Contact(message, parameters, context.timeSource());
       contacts.add(contact);
       contact.apply(scores);
@@ -100,7 +101,7 @@ final class User extends AbstractBehavior<UserMessage> {
 
   private Behavior<UserMessage> handle(RiskScoreMessage message) {
     logReceiveEvent(message);
-    if (!message.isExpired(context.timeSource())) {
+    if (!isExpired(message)) {
       updateExposureScore(message);
       var transmitted = transmitted(message);
       scores.add(transmitted);
@@ -115,7 +116,7 @@ final class User extends AbstractBehavior<UserMessage> {
       var previous = exposureScore;
       exposureScore = message;
       logUpdateEvent(previous, exposureScore);
-    } else if (exposureScore.isExpired(context.timeSource())) {
+    } else if (isExpired(exposureScore)) {
       var previous = exposureScore;
       exposureScore =
           scores.refresh().max(Range.all()).map(this::untransmitted).orElse(this.defaultScore);
@@ -144,6 +145,10 @@ final class User extends AbstractBehavior<UserMessage> {
   private Behavior<UserMessage> handle(PostStop stop) {
     logLastEvent();
     return this;
+  }
+
+  private boolean isExpired(Expirable expirable) {
+    return expirable.isExpired(context.timeSource());
   }
 
   private RiskScoreMessage transmitted(RiskScoreMessage message) {
