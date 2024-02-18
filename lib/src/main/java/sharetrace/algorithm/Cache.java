@@ -1,6 +1,5 @@
 package sharetrace.algorithm;
 
-import com.google.common.collect.Iterators;
 import java.time.InstantSource;
 import java.util.AbstractCollection;
 import java.util.Collection;
@@ -27,7 +26,7 @@ abstract class Cache<V extends Expirable & Comparable<? super V>> extends Abstra
   @Override
   @SuppressWarnings("NullableProblems")
   public Iterator<V> iterator() {
-    return Iterators.unmodifiableIterator(values().iterator());
+    return values().iterator();
   }
 
   @Override
