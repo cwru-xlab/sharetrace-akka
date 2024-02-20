@@ -1,13 +1,12 @@
 package sharetrace.graph;
 
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.HashMap;
 import java.util.Map;
+
+import com.fasterxml.jackson.annotation.JsonValue;
 import org.jgrapht.Graph;
 import org.jgrapht.graph.GraphDelegator;
 
-@JsonIgnoreProperties({"type", "vertexSupplier", "edgeSupplier"})
 public final class SimpleContactNetwork extends GraphDelegator<Integer, TemporalEdge>
     implements ContactNetwork {
 
@@ -32,8 +31,9 @@ public final class SimpleContactNetwork extends GraphDelegator<Integer, Temporal
     this(target, type, Map.of());
   }
 
-  @JsonAnyGetter
-  public Map<String, Object> properties() {
+  @JsonValue
+  @SuppressWarnings("unused")
+  private Map<String, Object> properties() {
     return properties;
   }
 }
