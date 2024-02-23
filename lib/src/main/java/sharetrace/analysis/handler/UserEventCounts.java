@@ -1,6 +1,7 @@
 package sharetrace.analysis.handler;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.ints.Int2ReferenceOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Reference2IntMap;
 import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap;
 import java.util.Map;
@@ -13,7 +14,7 @@ public final class UserEventCounts implements EventHandler {
   private final Map<Integer, Reference2IntMap<Class<? extends UserEvent>>> counts;
 
   public UserEventCounts() {
-    counts = new Int2ObjectOpenHashMap<>();
+    counts = new Int2ReferenceOpenHashMap<>();
   }
 
   @Override
