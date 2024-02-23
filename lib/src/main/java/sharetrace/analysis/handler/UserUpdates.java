@@ -31,7 +31,7 @@ public final class UserUpdates implements EventHandler {
   @Override
   public void onComplete(Results results) {
     updates.replaceAll((user, updates) -> scores(updates));
-    updates.values().removeIf(List::isEmpty);
+    updates.values().removeIf(Collection::isEmpty);
     results.withScope("user").put("updates", updates);
   }
 
