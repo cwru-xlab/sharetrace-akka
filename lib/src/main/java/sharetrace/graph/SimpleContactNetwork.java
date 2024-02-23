@@ -1,9 +1,8 @@
 package sharetrace.graph;
 
+import com.fasterxml.jackson.annotation.JsonValue;
 import java.util.HashMap;
 import java.util.Map;
-
-import com.fasterxml.jackson.annotation.JsonValue;
 import org.jgrapht.Graph;
 import org.jgrapht.graph.GraphDelegator;
 

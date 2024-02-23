@@ -15,6 +15,6 @@ public record RandomTimeFactory(DistributedRandom random, long period, long refe
 
   @Override
   public long getTime() {
-      return Math.subtractExact(referenceTime, random.nextLong(period));
+    return Math.subtractExact(referenceTime, random.nextLong(period));
   }
 }
