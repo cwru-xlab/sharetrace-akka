@@ -11,7 +11,7 @@ public record Parameters(
     long timeBuffer,
     long scoreExpiry,
     long contactExpiry,
-    Duration batchTimeout,
+    Duration flushTimeout,
     Duration idleTimeout) {
 
   public Parameters {
@@ -22,7 +22,7 @@ public record Parameters(
     Ranges.check("scoreExpiry", scoreExpiry, Range.atLeast(1L));
     Ranges.check("contactExpiry", contactExpiry, Range.atLeast(1L));
     // 1 millisecond is the minimum duration supported by Akka for scheduled messages.
-    Ranges.check("batchTimeout", batchTimeout, Range.atLeast(Duration.ofMillis(1L)));
+    Ranges.check("flushTimeout", flushTimeout, Range.atLeast(Duration.ofMillis(1L)));
     Ranges.check("idleTimeout", idleTimeout, Range.atLeast(Duration.ofMillis(1L)));
   }
 }

@@ -14,7 +14,7 @@ public record ParametersParser() implements ConfigParser<Parameters> {
         .timeBuffer(getMillisDuration(config, "time-buffer"))
         .scoreExpiry(getMillisDuration(config, "score-expiry"))
         .contactExpiry(getMillisDuration(config, "contact-expiry"))
-        .batchTimeout(config.getDuration("batch-timeout"))
+        .flushTimeout(config.getDuration("flush-timeout"))
         .idleTimeout(config.getDuration("idle-timeout"))
         .build();
   }

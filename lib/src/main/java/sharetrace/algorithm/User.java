@@ -21,8 +21,8 @@ import sharetrace.model.Context;
 import sharetrace.model.Expirable;
 import sharetrace.model.Parameters;
 import sharetrace.model.RiskScore;
-import sharetrace.model.message.BatchTimeoutMessage;
 import sharetrace.model.message.ContactMessage;
+import sharetrace.model.message.FlushTimeoutMessage;
 import sharetrace.model.message.IdleTimeoutMessage;
 import sharetrace.model.message.MonitorMessage;
 import sharetrace.model.message.RiskScoreMessage;
@@ -83,7 +83,7 @@ final class User extends AbstractBehavior<UserMessage> {
     return newReceiveBuilder()
         .onMessage(ContactMessage.class, this::handle)
         .onMessage(RiskScoreMessage.class, this::handle)
-        .onMessage(BatchTimeoutMessage.class, this::handle)
+        .onMessage(FlushTimeoutMessage.class, this::handle)
         .onMessage(IdleTimeoutMessage.class, this::handle)
         .onSignal(PostStop.class, this::handle)
         .build();
@@ -124,13 +124,13 @@ final class User extends AbstractBehavior<UserMessage> {
   }
 
   private void startTimers() {
-    if (!timers.isTimerActive(BatchTimeoutMessage.INSTANCE)) {
-      timers.startTimerWithFixedDelay(BatchTimeoutMessage.INSTANCE, parameters.batchTimeout());
+    if (!timers.isTimerActive(FlushTimeoutMessage.INSTANCE)) {
+      timers.startTimerWithFixedDelay(FlushTimeoutMessage.INSTANCE, parameters.flushTimeout());
     }
     timers.startSingleTimer(idleTimeoutMessage, parameters.idleTimeout());
   }
 
-  private Behavior<UserMessage> handle(BatchTimeoutMessage message) {
+  private Behavior<UserMessage> handle(FlushTimeoutMessage message) {
     contacts.forEach(Contact::flush);
     contacts.refresh();
     return this;
