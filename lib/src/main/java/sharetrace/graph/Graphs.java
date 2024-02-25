@@ -23,7 +23,7 @@ public final class Graphs {
     }
     edge.updateTime(time, Math::max);
     if (graph.getType().isWeighted()) {
-      graph.setEdgeWeight(edge, edge.weight());
+      graph.setEdgeWeight(edge, edge.getTime());
     }
   }
 

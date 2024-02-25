@@ -18,10 +18,6 @@ public final class TemporalEdge extends DefaultWeightedEdge {
     setTime(mapper.applyAsLong(time));
   }
 
-  public double weight() {
-    return time;
-  }
-
   public long getTime() {
     return time;
   }
