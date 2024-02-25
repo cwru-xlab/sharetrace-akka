@@ -28,10 +28,10 @@ final class RiskScoreMessageCache extends Cache<RiskScoreMessage> {
   }
 
   @Override
-  public boolean add(RiskScoreMessage value) {
+  public void add(RiskScoreMessage value) {
     var key = Range.closedOpen(value.timestamp(), value.expiryTime());
     cache.merge(key, value, MERGER);
-    return super.add(value);
+    super.add(value);
   }
 
   @Override

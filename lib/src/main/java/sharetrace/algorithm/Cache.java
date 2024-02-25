@@ -1,12 +1,11 @@
 package sharetrace.algorithm;
 
 import java.time.InstantSource;
-import java.util.AbstractCollection;
 import java.util.Collection;
 import java.util.Iterator;
 import sharetrace.model.Expirable;
 
-abstract class Cache<V extends Expirable & Comparable<? super V>> extends AbstractCollection<V> {
+abstract class Cache<V extends Expirable & Comparable<? super V>> implements Iterable<V> {
 
   private final InstantSource timeSource;
 
@@ -23,22 +22,16 @@ abstract class Cache<V extends Expirable & Comparable<? super V>> extends Abstra
     return values().iterator();
   }
 
-  @Override
-  public int size() {
-    return values().size();
-  }
-
-  @Override
-  public boolean add(V value) {
+  public void add(V value) {
     minExpiryTime = Math.min(minExpiryTime, value.expiryTime());
-    return true;
   }
 
   public void refresh() {
     var currentTime = timeSource.millis();
     if (minExpiryTime < currentTime) {
-      removeIf(value -> value.isExpired(currentTime));
-      minExpiryTime = stream().map(Expirable::expiryTime).min(Long::compare).orElse(Long.MAX_VALUE);
+      values().removeIf(value -> value.isExpired(currentTime));
+      minExpiryTime =
+          values().stream().map(Expirable::expiryTime).min(Long::compare).orElse(Long.MAX_VALUE);
     }
   }
 

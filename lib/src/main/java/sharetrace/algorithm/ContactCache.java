@@ -18,9 +18,9 @@ final class ContactCache extends Cache<Contact> {
   }
 
   @Override
-  public boolean add(Contact value) {
+  public void add(Contact value) {
     cache.merge(value.id(), value, MERGER);
-    return super.add(value);
+    super.add(value);
   }
 
   @Override
