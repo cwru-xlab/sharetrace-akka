@@ -98,7 +98,7 @@ final class Contact implements Expirable, Comparable<Contact> {
   }
 
   private Optional<RiskScoreMessage> maxRelevantMessage(RiskScoreMessageCache cache) {
-    return cache.refresh().max(relevantTimeRange);
+    return cache.max(relevantTimeRange);
   }
 
   private void setThreshold(RiskScoreMessage message) {

@@ -4,8 +4,11 @@ import it.unimi.dsi.fastutil.ints.Int2ReferenceOpenHashMap;
 import java.time.InstantSource;
 import java.util.Collection;
 import java.util.Map;
+import java.util.function.BinaryOperator;
 
 final class ContactCache extends Cache<Contact> {
+
+  private static final BinaryOperator<Contact> MERGER = BinaryOperator.maxBy(Contact::compareTo);
 
   private final Map<Integer, Contact> cache;
 
@@ -16,7 +19,7 @@ final class ContactCache extends Cache<Contact> {
 
   @Override
   public boolean add(Contact value) {
-    cache.merge(value.id(), value, merger);
+    cache.merge(value.id(), value, MERGER);
     return super.add(value);
   }
 

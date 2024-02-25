@@ -118,8 +118,7 @@ final class User extends AbstractBehavior<UserMessage> {
       logUpdateEvent(previous, exposureScore);
     } else if (isExpired(exposureScore)) {
       var previous = exposureScore;
-      exposureScore =
-          scores.refresh().max(Range.all()).map(this::untransmitted).orElse(this.defaultScore);
+      exposureScore = scores.max(Range.all()).map(this::untransmitted).orElse(this.defaultScore);
       logUpdateEvent(previous, exposureScore);
     }
   }

@@ -5,10 +5,15 @@ import com.google.common.collect.RangeMap;
 import com.google.common.collect.TreeRangeMap;
 import java.time.InstantSource;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Optional;
+import java.util.function.BinaryOperator;
 import sharetrace.model.message.RiskScoreMessage;
 
 final class RiskScoreMessageCache extends Cache<RiskScoreMessage> {
+
+  private static final Comparator<RiskScoreMessage> COMPARATOR = Comparator.naturalOrder();
+  private static final BinaryOperator<RiskScoreMessage> MERGER = BinaryOperator.maxBy(COMPARATOR);
 
   private final RangeMap<Long, RiskScoreMessage> cache;
 
@@ -18,19 +23,15 @@ final class RiskScoreMessageCache extends Cache<RiskScoreMessage> {
   }
 
   public Optional<RiskScoreMessage> max(Range<Long> range) {
-    return values(cache.subRangeMap(range)).stream().max(comparator);
+    refresh();
+    return values(cache.subRangeMap(range)).stream().max(COMPARATOR);
   }
 
   @Override
   public boolean add(RiskScoreMessage value) {
     var key = Range.closedOpen(value.timestamp(), value.expiryTime());
-    cache.merge(key, value, merger);
+    cache.merge(key, value, MERGER);
     return super.add(value);
-  }
-
-  @Override
-  public RiskScoreMessageCache refresh() {
-    return (RiskScoreMessageCache) super.refresh();
   }
 
   @Override

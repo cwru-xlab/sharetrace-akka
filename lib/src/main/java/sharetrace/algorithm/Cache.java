@@ -3,23 +3,17 @@ package sharetrace.algorithm;
 import java.time.InstantSource;
 import java.util.AbstractCollection;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.Iterator;
-import java.util.function.BinaryOperator;
 import sharetrace.model.Expirable;
 
 abstract class Cache<V extends Expirable & Comparable<? super V>> extends AbstractCollection<V> {
 
-  protected final Comparator<V> comparator;
-  protected final BinaryOperator<V> merger;
-  protected final InstantSource timeSource;
+  private final InstantSource timeSource;
 
   private long minExpiryTime;
 
   public Cache(InstantSource timeSource) {
     this.timeSource = timeSource;
-    this.comparator = Comparator.naturalOrder();
-    this.merger = BinaryOperator.maxBy(comparator);
     this.minExpiryTime = Long.MAX_VALUE;
   }
 
@@ -40,13 +34,12 @@ abstract class Cache<V extends Expirable & Comparable<? super V>> extends Abstra
     return true;
   }
 
-  public Cache<V> refresh() {
+  public void refresh() {
     var currentTime = timeSource.millis();
     if (minExpiryTime < currentTime) {
       removeIf(value -> value.isExpired(currentTime));
       minExpiryTime = stream().map(Expirable::expiryTime).min(Long::compare).orElse(Long.MAX_VALUE);
     }
-    return this;
   }
 
   protected abstract Collection<V> values();
