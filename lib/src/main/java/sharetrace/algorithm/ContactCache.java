@@ -5,10 +5,11 @@ import java.time.InstantSource;
 import java.util.Collection;
 import java.util.Map;
 import java.util.function.BinaryOperator;
+import sharetrace.model.Expirable;
 
 final class ContactCache extends Cache<Contact> {
 
-  private static final BinaryOperator<Contact> MERGER = BinaryOperator.maxBy(Contact::compareTo);
+  private static final BinaryOperator<Contact> MERGER = BinaryOperator.maxBy(Expirable::compare);
 
   private final Map<Integer, Contact> cache;
 

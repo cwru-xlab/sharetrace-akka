@@ -5,7 +5,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import sharetrace.model.Expirable;
 
-abstract class Cache<V extends Expirable & Comparable<? super V>> implements Iterable<V> {
+abstract class Cache<V extends Expirable> implements Iterable<V> {
 
   private final InstantSource timeSource;
 

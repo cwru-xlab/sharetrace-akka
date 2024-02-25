@@ -2,6 +2,7 @@ package sharetrace.algorithm;
 
 import akka.actor.typed.ActorRef;
 import com.google.common.collect.Range;
+import java.io.Flushable;
 import java.time.InstantSource;
 import java.util.Optional;
 import sharetrace.model.Expirable;
@@ -12,7 +13,7 @@ import sharetrace.model.message.ContactMessage;
 import sharetrace.model.message.RiskScoreMessage;
 import sharetrace.model.message.UserMessage;
 
-final class Contact implements Expirable, Comparable<Contact> {
+final class Contact implements Expirable, Flushable {
 
   private final int id;
   private final ActorRef<UserMessage> ref;
@@ -48,6 +49,7 @@ final class Contact implements Expirable, Comparable<Contact> {
     maxRelevantMessage(cache).ifPresent(message -> apply(message, cache));
   }
 
+  @Override
   public void flush() {
     if (buffered != null) {
       ref.tell(buffered);
@@ -67,12 +69,6 @@ final class Contact implements Expirable, Comparable<Contact> {
 
   public int id() {
     return id;
-  }
-
-  @Override
-  @SuppressWarnings("NullableProblems")
-  public int compareTo(Contact contact) {
-    return Expirable.compare(this, contact);
   }
 
   private boolean shouldReceive(RiskScoreMessage message) {
