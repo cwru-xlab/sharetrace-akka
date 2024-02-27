@@ -39,9 +39,11 @@ final class Contact implements Expirable, Flushable {
 
   public void apply(RiskScoreMessage message, RiskScoreMessageCache cache) {
     refreshThreshold(cache);
-    if (shouldReceive(message)) {
-      buffered = message;
+    if (isApplicable(message)) {
       setThreshold(message);
+      if (message.sender() != id) {
+        buffered = message;
+      }
     }
   }
 
@@ -71,10 +73,9 @@ final class Contact implements Expirable, Flushable {
     return id;
   }
 
-  private boolean shouldReceive(RiskScoreMessage message) {
+  private boolean isApplicable(RiskScoreMessage message) {
     return message.value() > sendThreshold.value()
-        && relevantTimeRange.contains(message.timestamp())
-        && message.sender() != id;
+            && relevantTimeRange.contains(message.timestamp());
   }
 
   private void refreshThreshold(RiskScoreMessageCache cache) {
