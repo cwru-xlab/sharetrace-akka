@@ -36,7 +36,6 @@ final class Monitor extends AbstractBehavior<MonitorMessage> {
   private final Parameters parameters;
   private final RiskScoreFactory scoreFactory;
   private final ContactNetwork contactNetwork;
-  private final int userCount;
   private final BitSet timeouts;
 
   private Monitor(
@@ -50,8 +49,7 @@ final class Monitor extends AbstractBehavior<MonitorMessage> {
     this.parameters = parameters;
     this.scoreFactory = scoreFactory;
     this.contactNetwork = contactNetwork;
-    this.userCount = contactNetwork.vertexSet().size();
-    this.timeouts = new BitSet(userCount);
+    this.timeouts = new BitSet(userCount());
   }
 
   public static Behavior<MonitorMessage> of(
@@ -83,7 +81,7 @@ final class Monitor extends AbstractBehavior<MonitorMessage> {
   }
 
   private Behavior<MonitorMessage> handle(RunMessage message) {
-    if (userCount < 1) {
+    if (userCount() < 1) {
       return Behaviors.stopped();
     }
     logEvent(RiskPropagationStart.class, RiskPropagationStart::new);
@@ -95,7 +93,7 @@ final class Monitor extends AbstractBehavior<MonitorMessage> {
 
   private Behavior<MonitorMessage> handle(IdleTimeoutMessage message) {
     timeouts.set(message.id());
-    if (timeouts.cardinality() < userCount) {
+    if (timeouts.cardinality() < userCount()) {
       return this;
     }
     logEvent(RiskPropagationEnd.class, RiskPropagationEnd::new);
@@ -105,7 +103,7 @@ final class Monitor extends AbstractBehavior<MonitorMessage> {
   @SuppressWarnings("unchecked")
   private ActorRef<UserMessage>[] newUsers() {
     logEvent(CreateUsersStart.class, CreateUsersStart::new);
-    var users = new ActorRef[userCount];
+    var users = new ActorRef[userCount()];
     for (int i : contactNetwork.vertexSet()) {
       var user = User.of(i, context, parameters, getContext().getSelf());
       users[i] = getContext().spawnAnonymous(user, User.props());
@@ -129,11 +127,15 @@ final class Monitor extends AbstractBehavior<MonitorMessage> {
 
   private void sendRiskScores(ActorRef<UserMessage>[] users) {
     logEvent(SendRiskScoresStart.class, SendRiskScoresStart::new);
-    for (var i = 0; i < userCount; i++) {
+    for (var i = 0; i < userCount(); i++) {
       var score = scoreFactory.getRiskScore(i);
       users[i].tell(RiskScoreMessage.ofOrigin(score, i));
     }
     logEvent(SendRiskScoresEnd.class, SendRiskScoresEnd::new);
+  }
+
+  private int userCount() {
+    return contactNetwork.vertexSet().size();
   }
 
   private <T extends Event> void logEvent(Class<T> type, LongFunction<T> factory) {
