@@ -20,7 +20,6 @@ import sharetrace.logging.event.user.UpdateEvent;
 import sharetrace.model.Context;
 import sharetrace.model.Expirable;
 import sharetrace.model.Parameters;
-import sharetrace.model.RiskScore;
 import sharetrace.model.message.ContactMessage;
 import sharetrace.model.message.FlushTimeoutMessage;
 import sharetrace.model.message.IdleTimeoutMessage;
@@ -38,7 +37,6 @@ final class User extends AbstractBehavior<UserMessage> {
   private final IdleTimeoutMessage idleTimeoutMessage;
   private final RiskScoreMessageCache scores;
   private final ContactCache contacts;
-  private final RiskScoreMessage defaultScore;
 
   private RiskScoreMessage exposureScore;
   private long lastEventTime;
@@ -59,8 +57,7 @@ final class User extends AbstractBehavior<UserMessage> {
     this.idleTimeoutMessage = new IdleTimeoutMessage(id);
     this.scores = new RiskScoreMessageCache(context.timeSource());
     this.contacts = new ContactCache(context.timeSource());
-    this.defaultScore = RiskScoreMessage.ofOrigin(RiskScore.MIN, id);
-    this.exposureScore = defaultScore;
+    this.exposureScore = RiskScoreMessage.NULL;
   }
 
   public static Behavior<UserMessage> of(
@@ -103,7 +100,7 @@ final class User extends AbstractBehavior<UserMessage> {
     logReceiveEvent(message);
     if (!isExpired(message)) {
       updateExposureScore(message);
-      var transmitted = transmitted(message);
+      var transmitted = transmit(message);
       scores.add(transmitted);
       contacts.forEach(contact -> contact.apply(transmitted, scores));
     }
@@ -118,7 +115,7 @@ final class User extends AbstractBehavior<UserMessage> {
       logUpdateEvent(previous, exposureScore);
     } else if (isExpired(exposureScore)) {
       var previous = exposureScore;
-      exposureScore = scores.max(Range.all()).map(this::untransmitted).orElse(this.defaultScore);
+      exposureScore = scores.max(Range.all()).map(this::untransmit).orElse(RiskScoreMessage.NULL);
       logUpdateEvent(previous, exposureScore);
     }
   }
@@ -150,13 +147,13 @@ final class User extends AbstractBehavior<UserMessage> {
     return expirable.isExpired(context.timeSource());
   }
 
-  private RiskScoreMessage transmitted(RiskScoreMessage message) {
+  private RiskScoreMessage transmit(RiskScoreMessage message) {
     var score = message.score().mapValue(value -> value * parameters.transmissionRate());
     return new RiskScoreMessage(score, id, message.origin());
   }
 
   @SuppressWarnings("SpellCheckingInspection")
-  private RiskScoreMessage untransmitted(RiskScoreMessage message) {
+  private RiskScoreMessage untransmit(RiskScoreMessage message) {
     var score = message.score().mapValue(value -> value / parameters.transmissionRate());
     return new RiskScoreMessage(score, message.sender(), message.origin());
   }

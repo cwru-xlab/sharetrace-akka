@@ -9,6 +9,8 @@ public record RiskScoreMessage(
     @JsonProperty("s") RiskScore score, @JsonIgnore int sender, @JsonProperty("o") int origin)
     implements TemporalScore, UserMessage {
 
+  public static final RiskScoreMessage NULL = ofOrigin(RiskScore.MIN, -1);
+
   public static RiskScoreMessage ofOrigin(RiskScore score, int origin) {
     return new RiskScoreMessage(score, origin, origin);
   }

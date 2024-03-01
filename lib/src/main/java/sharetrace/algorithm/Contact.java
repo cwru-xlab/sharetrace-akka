@@ -75,7 +75,7 @@ final class Contact implements Expirable, Flushable {
 
   private boolean isApplicable(RiskScoreMessage message) {
     return message.value() > sendThreshold.value()
-            && relevantTimeRange.contains(message.timestamp());
+        && relevantTimeRange.contains(message.timestamp());
   }
 
   private void refreshThreshold(RiskScoreMessageCache cache) {
