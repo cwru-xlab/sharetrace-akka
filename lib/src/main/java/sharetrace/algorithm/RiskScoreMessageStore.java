@@ -10,36 +10,36 @@ import java.util.Optional;
 import java.util.function.BinaryOperator;
 import sharetrace.model.message.RiskScoreMessage;
 
-final class RiskScoreMessageCache extends Cache<RiskScoreMessage> {
+final class RiskScoreMessageStore extends ExpirableStore<RiskScoreMessage> {
 
   private static final Comparator<RiskScoreMessage> COMPARATOR = Comparator.naturalOrder();
   private static final BinaryOperator<RiskScoreMessage> MERGER = BinaryOperator.maxBy(COMPARATOR);
 
-  private final RangeMap<Long, RiskScoreMessage> cache;
+  private final RangeMap<Long, RiskScoreMessage> store;
 
-  public RiskScoreMessageCache(InstantSource timeSource) {
+  public RiskScoreMessageStore(InstantSource timeSource) {
     super(timeSource);
-    this.cache = TreeRangeMap.create();
+    store = TreeRangeMap.create();
   }
 
   public Optional<RiskScoreMessage> max(Range<Long> range) {
     refresh();
-    return values(cache.subRangeMap(range)).stream().max(COMPARATOR);
+    return values(store.subRangeMap(range)).stream().max(COMPARATOR);
   }
 
   @Override
-  public void add(RiskScoreMessage value) {
-    var key = Range.closedOpen(value.timestamp(), value.expiryTime());
-    cache.merge(key, value, MERGER);
-    super.add(value);
+  public void add(RiskScoreMessage message) {
+    var key = Range.closedOpen(message.timestamp(), message.expiryTime());
+    store.merge(key, message, MERGER);
+    super.add(message);
   }
 
   @Override
   protected Collection<RiskScoreMessage> values() {
-    return values(cache);
+    return values(store);
   }
 
-  private Collection<RiskScoreMessage> values(RangeMap<Long, RiskScoreMessage> cache) {
-    return cache.asMapOfRanges().values();
+  private Collection<RiskScoreMessage> values(RangeMap<Long, RiskScoreMessage> store) {
+    return store.asMapOfRanges().values();
   }
 }

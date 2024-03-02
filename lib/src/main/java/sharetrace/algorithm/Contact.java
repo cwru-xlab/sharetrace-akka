@@ -37,8 +37,8 @@ final class Contact implements Expirable, Flushable {
     resetThreshold();
   }
 
-  public void apply(RiskScoreMessage message, RiskScoreMessageCache cache) {
-    refreshThreshold(cache);
+  public void apply(RiskScoreMessage message, RiskScoreMessageStore store) {
+    refreshThreshold(store);
     if (isApplicable(message)) {
       setThreshold(message);
       if (message.sender() != id) {
@@ -47,8 +47,8 @@ final class Contact implements Expirable, Flushable {
     }
   }
 
-  public void apply(RiskScoreMessageCache cache) {
-    maxRelevantMessage(cache).ifPresent(message -> apply(message, cache));
+  public void apply(RiskScoreMessageStore store) {
+    maxRelevantMessage(store).ifPresent(message -> apply(message, store));
   }
 
   @Override
@@ -78,7 +78,7 @@ final class Contact implements Expirable, Flushable {
         && relevantTimeRange.contains(message.timestamp());
   }
 
-  private void refreshThreshold(RiskScoreMessageCache cache) {
+  private void refreshThreshold(RiskScoreMessageStore cache) {
     /*
      If this contact's send threshold is the minimum risk score, then either
        1. no messages have been sent to this contact; or
@@ -94,8 +94,8 @@ final class Contact implements Expirable, Flushable {
     }
   }
 
-  private Optional<RiskScoreMessage> maxRelevantMessage(RiskScoreMessageCache cache) {
-    return cache.max(relevantTimeRange);
+  private Optional<RiskScoreMessage> maxRelevantMessage(RiskScoreMessageStore store) {
+    return store.max(relevantTimeRange);
   }
 
   private void setThreshold(RiskScoreMessage message) {

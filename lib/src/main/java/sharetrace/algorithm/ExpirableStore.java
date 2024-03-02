@@ -5,13 +5,13 @@ import java.util.Collection;
 import java.util.Iterator;
 import sharetrace.model.Expirable;
 
-abstract class Cache<V extends Expirable> implements Iterable<V> {
+abstract class ExpirableStore<V extends Expirable> implements Iterable<V> {
 
   private final InstantSource timeSource;
 
   private long minExpiryTime;
 
-  public Cache(InstantSource timeSource) {
+  public ExpirableStore(InstantSource timeSource) {
     this.timeSource = timeSource;
     this.minExpiryTime = Long.MAX_VALUE;
   }

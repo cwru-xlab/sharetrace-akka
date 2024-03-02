@@ -7,25 +7,25 @@ import java.util.Map;
 import java.util.function.BinaryOperator;
 import sharetrace.model.Expirable;
 
-final class ContactCache extends Cache<Contact> {
+final class ContactStore extends ExpirableStore<Contact> {
 
   private static final BinaryOperator<Contact> MERGER = BinaryOperator.maxBy(Expirable::compare);
 
-  private final Map<Integer, Contact> cache;
+  private final Map<Integer, Contact> store;
 
-  public ContactCache(InstantSource timeSource) {
+  public ContactStore(InstantSource timeSource) {
     super(timeSource);
-    this.cache = new Int2ReferenceOpenHashMap<>();
+    store = new Int2ReferenceOpenHashMap<>();
   }
 
   @Override
-  public void add(Contact value) {
-    cache.merge(value.id(), value, MERGER);
-    super.add(value);
+  public void add(Contact contact) {
+    store.merge(contact.id(), contact, MERGER);
+    super.add(contact);
   }
 
   @Override
   protected Collection<Contact> values() {
-    return cache.values();
+    return store.values();
   }
 }

@@ -35,8 +35,8 @@ final class User extends AbstractBehavior<UserMessage> {
   private final ActorRef<MonitorMessage> monitor;
   private final TimerScheduler<UserMessage> timers;
   private final IdleTimeoutMessage idleTimeoutMessage;
-  private final RiskScoreMessageCache scores;
-  private final ContactCache contacts;
+  private final RiskScoreMessageStore scores;
+  private final ContactStore contacts;
 
   private RiskScoreMessage exposureScore;
   private long lastEventTime;
@@ -55,8 +55,8 @@ final class User extends AbstractBehavior<UserMessage> {
     this.monitor = monitor;
     this.timers = timers;
     this.idleTimeoutMessage = new IdleTimeoutMessage(id);
-    this.scores = new RiskScoreMessageCache(context.timeSource());
-    this.contacts = new ContactCache(context.timeSource());
+    this.scores = new RiskScoreMessageStore(context.timeSource());
+    this.contacts = new ContactStore(context.timeSource());
     this.exposureScore = RiskScoreMessage.NULL;
   }
 
