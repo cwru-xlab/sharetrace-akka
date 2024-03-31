@@ -13,9 +13,6 @@
     <import class="sharetrace.logging.logback.IonJsonFactoryDecorator"/>
     <import class="sharetrace.logging.logback.StandardJsonFactoryDecorator"/>
 
-    <timestamp key="byMillis" datePattern="yyyyMMddHHmmssSSS"/>
-    <variable name="logDirectory" value="logs/${byMillis}" scope="context"/>
-
     <appender name="BaseConsoleAppender" class="ConsoleAppender">
         <encoder class="LogstashEncoder">
             <fieldNames class="ShortenedFieldNames">
@@ -36,7 +33,7 @@
     </appender>
 
     <appender name="BaseEventAppender" class="RollingFileAppender">
-        <file>${logDirectory}/events.log</file>
+        <file>${logs.dir}/events.log</file>
         <encoder class="LogstashEncoder">
             <fieldNames class="ShortenedFieldNames">
                 <level>[ignore]</level>
@@ -52,7 +49,7 @@
         </encoder>
         <immediateFlush>false</immediateFlush>
         <rollingPolicy class="FixedWindowRollingPolicy">
-            <fileNamePattern>${logDirectory}/events-%i.log.gz</fileNamePattern>
+            <fileNamePattern>${logs.dir}/events-%i.log.gz</fileNamePattern>
             <minIndex>1</minIndex>
             <maxIndex>20</maxIndex>
         </rollingPolicy>
@@ -80,7 +77,7 @@
             <includeContext>false</includeContext>
             <jsonFactoryDecorator class="StandardJsonFactoryDecorator"/>
         </encoder>
-        <file>${logDirectory}/properties.log</file>
+        <file>${logs.dir}/properties.log</file>
         <immediateFlush>false</immediateFlush>
     </appender>
 
@@ -89,7 +86,7 @@
         <appender-ref ref="BasePropertyAppender"/>
     </appender>
 
-    <root level="info">
+    <root level="error">
         <appender-ref ref="ConsoleAppender"/>
     </root>
     <logger name="EventLogger" level="info" additivity="false">

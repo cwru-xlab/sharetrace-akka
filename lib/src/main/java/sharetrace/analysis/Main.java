@@ -81,6 +81,6 @@ public final class Main {
   }
 
   private static Path logsDirectory() {
-    return Path.of(System.getProperty("analysis.logs"));
+    return Path.of(System.getProperty("logs.dir"));
   }
 }
