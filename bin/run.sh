@@ -4,8 +4,8 @@ echo "RUN STARTED"
 
 cd app
 
-configFile=$1
-logsDirectory=logs/$(date +%s)
+configFile="$1"
+logsDirectory="logs/$(date +%s)"
 
 echo "Config file: $configFile"
 echo "Logs directory: $logsDirectory"
@@ -16,7 +16,11 @@ echo "Running..."
 echo "Analyzing..."
 ../gradlew :app:analyze -Dconfig.resource=$configFile -Dlogs.dir=$logsDirectory
 
-echo "Cleaning up event logs..."
-rm -f $logsDirectory/event*.log*
+if [ "$2" = "--no-clean-up" ]; then
+  echo "Skipping event log cleanup"
+else
+  echo "Cleaning up event logs..."
+  rm -f $logsDirectory/event*.log*
+fi
 
 echo "RUN COMPLETE"
