@@ -43,7 +43,7 @@ public record FileContactNetworkFactory(Path path, String delimiter, long refere
     var v2 = Integer.parseInt(args[2]);
     if (v1 != v2) {
       // Assumes the contact times are stored in seconds.
-      var contactTime = Long.parseLong(args[0]) * 1000L;
+      var contactTime = Long.parseLong(args[0]) * 1000;
       Graphs.addTemporalEdge(target, v1, v2, contactTime);
       maxContactTime.updateAndGet(t -> Math.max(t, contactTime));
     }
