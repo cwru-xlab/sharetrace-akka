@@ -25,24 +25,27 @@ public record FileContactNetworkFactory(Path path, String delimiter, long refere
   }
 
   private void generateGraph(Graph<Integer, TemporalEdge> target, Map<String, ?> resultMap) {
-    var max = new AtomicLong();
+    var maxContactTime = new AtomicLong();
     try (var edges = Files.lines(path)) {
-      edges.forEach(edge -> processEdge(edge, target, max));
+      edges.forEach(edge -> processEdge(edge, target, maxContactTime));
     } catch (IOException exception) {
       throw new UncheckedIOException(exception);
     }
-    var offset = Math.subtractExact(referenceTime, max.get());
+    // Newest contact time = reference time.
+    var offset = Math.subtractExact(referenceTime, maxContactTime.get());
     target.edgeSet().forEach(edge -> edge.updateTime(t -> Math.addExact(t, offset)));
   }
 
-  private void processEdge(String edge, Graph<Integer, TemporalEdge> target, AtomicLong max) {
+  private void processEdge(
+      String edge, Graph<Integer, TemporalEdge> target, AtomicLong maxContactTime) {
     var args = edge.split(delimiter);
     var v1 = Integer.parseInt(args[1]);
     var v2 = Integer.parseInt(args[2]);
     if (v1 != v2) {
+      // Assumes the contact times are stored in seconds.
       var contactTime = Long.parseLong(args[0]) * 1000L;
       Graphs.addTemporalEdge(target, v1, v2, contactTime);
-      max.updateAndGet(t -> Math.max(t, contactTime));
+      maxContactTime.updateAndGet(t -> Math.max(t, contactTime));
     }
   }
 }
