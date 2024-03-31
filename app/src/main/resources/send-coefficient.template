@@ -47,6 +47,7 @@ sharetrace {
       type = ""
       nodes = 10000
       time-factory = $${sharetrace.runner.contact-time-factory}
+      cached = ${cache_network}
     }
 
     gnm-random-network-factory = $${sharetrace.runner.network-factory-defaults}
@@ -79,11 +80,11 @@ sharetrace {
     scale-free-network-factory = $${sharetrace.runner.network-factory-defaults}
     scale-free-network-factory.type = scale-free
 
+    file-network-factory-defaults = $${sharetrace.runner.network-factory-defaults}
     file-network-factory-defaults = {
       type = file
       path = ""
       delimiter = "\\s+"
-      time-factory = $${sharetrace.runner.contact-time-factory}
     }
 
     invs13-network-factory = $${sharetrace.runner.file-network-factory-defaults}
@@ -108,9 +109,6 @@ sharetrace {
     thiers12-network-factory.path = "lib/src/main/resources/datasets/Thiers12.txt"
 
     network-factory = $${${network_factory}}
-    network-factory {
-      cached = ${cache_network}
-    }
   }
 
   parameters.send-coefficient = ${send_coefficient}
@@ -118,6 +116,6 @@ sharetrace {
   analysis.handlers = [
     sharetrace.analysis.handler.Runtimes
     sharetrace.analysis.handler.UserEventCounts
-    sharetrace.analysis.handler.UserUpdates
+    sharetrace.analysis.handler.MessageReachability
   ]
 }
