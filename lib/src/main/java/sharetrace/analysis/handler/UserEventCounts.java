@@ -6,7 +6,6 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.objects.Reference2IntMap;
 import it.unimi.dsi.fastutil.objects.Reference2IntOpenHashMap;
-import java.util.Map;
 import sharetrace.analysis.results.Results;
 import sharetrace.logging.event.Event;
 import sharetrace.logging.event.user.UserEvent;
@@ -24,11 +23,25 @@ public final class UserEventCounts implements EventHandler {
   @Override
   public void onNext(Event event) {
     if (event instanceof UserEvent e) {
-      var index = encoding.computeIfAbsent(e.getClass(), x -> encoding.size());
-      var userCounts = counts.computeIfAbsent(e.self(), x -> new IntArrayList());
-      userCounts.size(index + 1);
-      userCounts.set(index, userCounts.getInt(index) + 1);
+      var index = updateAndGetIndex(e);
+      var userCounts = updateAndGetCounts(e);
+      updateCounts(userCounts, index);
     }
+  }
+
+  private int updateAndGetIndex(UserEvent event) {
+    return encoding.computeIfAbsent(event.getClass(), x -> encoding.size());
+  }
+
+  private IntList updateAndGetCounts(UserEvent event) {
+    return counts.computeIfAbsent(event.self(), x -> new IntArrayList());
+  }
+
+  private void updateCounts(IntList counts, int event) {
+    if (counts.size() <= event) {
+      counts.size(event + 1);
+    }
+    counts.set(event, counts.getInt(event) + 1);
   }
 
   @Override
