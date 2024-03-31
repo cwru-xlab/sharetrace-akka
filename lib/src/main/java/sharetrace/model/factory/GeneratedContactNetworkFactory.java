@@ -1,6 +1,7 @@
-package sharetrace.graph;
+package sharetrace.model.factory;
 
-import sharetrace.model.factory.TimeFactory;
+import sharetrace.model.graph.ContactNetwork;
+import sharetrace.model.graph.Graphs;
 
 public interface GeneratedContactNetworkFactory extends ContactNetworkFactory {
 

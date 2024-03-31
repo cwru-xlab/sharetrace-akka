@@ -1,11 +1,12 @@
 package sharetrace.model.factory;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import sharetrace.model.RiskScore;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @FunctionalInterface
-public interface RiskScoreFactory {
+public interface KeyFactory {
 
-  RiskScore getRiskScore(int key);
+  @JsonIgnore
+  String getKey();
 }

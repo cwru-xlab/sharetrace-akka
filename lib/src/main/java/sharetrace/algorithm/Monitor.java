@@ -10,7 +10,6 @@ import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import java.util.BitSet;
 import java.util.function.LongFunction;
-import sharetrace.graph.ContactNetwork;
 import sharetrace.logging.event.Event;
 import sharetrace.logging.event.lifecycle.CreateUsersEnd;
 import sharetrace.logging.event.lifecycle.CreateUsersStart;
@@ -23,6 +22,7 @@ import sharetrace.logging.event.lifecycle.SendRiskScoresStart;
 import sharetrace.model.Context;
 import sharetrace.model.Parameters;
 import sharetrace.model.factory.RiskScoreFactory;
+import sharetrace.model.graph.ContactNetwork;
 import sharetrace.model.message.ContactMessage;
 import sharetrace.model.message.IdleTimeoutMessage;
 import sharetrace.model.message.MonitorMessage;
@@ -35,20 +35,20 @@ final class Monitor extends AbstractBehavior<MonitorMessage> {
   private final Context context;
   private final Parameters parameters;
   private final RiskScoreFactory scoreFactory;
-  private final ContactNetwork contactNetwork;
+  private final ContactNetwork network;
   private final BitSet timeouts;
 
   private Monitor(
-      ActorContext<MonitorMessage> ctx,
+      ActorContext<MonitorMessage> actorContext,
       Context context,
       Parameters parameters,
       RiskScoreFactory scoreFactory,
-      ContactNetwork contactNetwork) {
-    super(ctx);
+      ContactNetwork network) {
+    super(actorContext);
     this.context = context;
     this.parameters = parameters;
     this.scoreFactory = scoreFactory;
-    this.contactNetwork = contactNetwork;
+    this.network = network;
     this.timeouts = new BitSet(userCount());
   }
 
@@ -56,10 +56,10 @@ final class Monitor extends AbstractBehavior<MonitorMessage> {
       Context context,
       Parameters parameters,
       RiskScoreFactory scoreFactory,
-      ContactNetwork contactNetwork) {
+      ContactNetwork network) {
     return Behaviors.setup(
-        ctx -> {
-          var monitor = new Monitor(ctx, context, parameters, scoreFactory, contactNetwork);
+        actorContext -> {
+          var monitor = new Monitor(actorContext, context, parameters, scoreFactory, network);
           return Behaviors.withMdc(MonitorMessage.class, context.mdc(), monitor);
         });
   }
@@ -104,7 +104,7 @@ final class Monitor extends AbstractBehavior<MonitorMessage> {
   private ActorRef<UserMessage>[] newUsers() {
     logEvent(CreateUsersStart.class, CreateUsersStart::new);
     var users = new ActorRef[userCount()];
-    for (int i : contactNetwork.vertexSet()) {
+    for (int i : network.vertexSet()) {
       var user = User.of(i, context, parameters, getContext().getSelf());
       users[i] = getContext().spawnAnonymous(user, User.props());
       getContext().watch(users[i]);
@@ -116,9 +116,9 @@ final class Monitor extends AbstractBehavior<MonitorMessage> {
   private void sendContacts(ActorRef<UserMessage>[] users) {
     logEvent(SendContactsStart.class, SendContactsStart::new);
     var expiry = parameters.contactExpiry();
-    for (var edge : contactNetwork.edgeSet()) {
-      int i = contactNetwork.getEdgeSource(edge);
-      int j = contactNetwork.getEdgeTarget(edge);
+    for (var edge : network.edgeSet()) {
+      int i = network.getEdgeSource(edge);
+      int j = network.getEdgeTarget(edge);
       users[i].tell(ContactMessage.fromExpiry(users[j], j, edge.getTime(), expiry));
       users[j].tell(ContactMessage.fromExpiry(users[i], i, edge.getTime(), expiry));
     }
@@ -135,7 +135,7 @@ final class Monitor extends AbstractBehavior<MonitorMessage> {
   }
 
   private int userCount() {
-    return contactNetwork.vertexSet().size();
+    return network.vertexSet().size();
   }
 
   private <T extends Event> void logEvent(Class<T> type, LongFunction<T> factory) {

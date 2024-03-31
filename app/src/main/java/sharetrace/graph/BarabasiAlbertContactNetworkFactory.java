@@ -1,14 +1,16 @@
 package sharetrace.graph;
 
-import java.util.Map;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.apache.commons.math3.random.RandomAdaptor;
 import org.apache.commons.math3.random.RandomGenerator;
-import org.jgrapht.Graph;
 import org.jgrapht.generate.BarabasiAlbertGraphGenerator;
 import org.jgrapht.generate.GraphGenerator;
 import sharetrace.Buildable;
+import sharetrace.model.factory.GeneratedContactNetworkFactory;
 import sharetrace.model.factory.TimeFactory;
+import sharetrace.model.graph.TemporalEdge;
 
+@JsonTypeName("BarabasiAlbert")
 @Buildable
 public record BarabasiAlbertContactNetworkFactory(
     int nodes,
@@ -22,11 +24,5 @@ public record BarabasiAlbertContactNetworkFactory(
   public GraphGenerator<Integer, TemporalEdge, Integer> graphGenerator() {
     var random = RandomAdaptor.createAdaptor(randomGenerator);
     return new BarabasiAlbertGraphGenerator<>(initialNodes, newEdges, nodes, random);
-  }
-
-  @Override
-  public ContactNetwork newContactNetwork(Graph<Integer, TemporalEdge> target) {
-    var props = Map.of("initialNodes", initialNodes, "newEdges", newEdges);
-    return new SimpleContactNetwork(target, "BarabasiAlbert", props);
   }
 }

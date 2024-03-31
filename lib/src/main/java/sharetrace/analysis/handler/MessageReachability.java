@@ -15,9 +15,9 @@ import org.jgrapht.GraphPath;
 import org.jgrapht.alg.shortestpath.IntVertexDijkstraShortestPath;
 import org.jgrapht.graph.DefaultEdge;
 import sharetrace.analysis.results.Results;
-import sharetrace.graph.Graphs;
 import sharetrace.logging.event.Event;
 import sharetrace.logging.event.user.ReceiveEvent;
+import sharetrace.model.graph.Graphs;
 
 public final class MessageReachability implements EventHandler {
 

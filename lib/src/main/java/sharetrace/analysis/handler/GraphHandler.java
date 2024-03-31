@@ -10,10 +10,10 @@ import org.jgrapht.alg.scoring.KatzCentrality;
 import org.jgrapht.alg.shortestpath.GraphMeasurer;
 import org.jgrapht.alg.shortestpath.IntVertexDijkstraShortestPath;
 import sharetrace.analysis.results.Results;
-import sharetrace.graph.Graphs;
-import sharetrace.graph.TemporalEdge;
 import sharetrace.logging.event.Event;
 import sharetrace.logging.event.user.ContactEvent;
+import sharetrace.model.graph.Graphs;
+import sharetrace.model.graph.TemporalEdge;
 
 public final class GraphHandler implements EventHandler {
 

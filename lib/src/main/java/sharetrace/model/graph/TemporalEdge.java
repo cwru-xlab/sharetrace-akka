@@ -1,4 +1,4 @@
-package sharetrace.graph;
+package sharetrace.model.graph;
 
 import java.util.function.LongBinaryOperator;
 import java.util.function.LongUnaryOperator;

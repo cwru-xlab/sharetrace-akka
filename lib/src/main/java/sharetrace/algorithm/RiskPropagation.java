@@ -8,13 +8,13 @@ import java.util.concurrent.ExecutionException;
 import java.util.stream.IntStream;
 import org.slf4j.MDC;
 import sharetrace.Buildable;
-import sharetrace.graph.ContactNetwork;
 import sharetrace.logging.ExecutionProperties;
 import sharetrace.logging.ExecutionPropertiesBuilder;
 import sharetrace.model.Context;
 import sharetrace.model.ContextBuilder;
-import sharetrace.model.KeyFactory;
 import sharetrace.model.Parameters;
+import sharetrace.model.factory.ContactNetworkFactory;
+import sharetrace.model.factory.KeyFactory;
 import sharetrace.model.factory.RiskScoreFactory;
 import sharetrace.model.message.RunMessage;
 
@@ -22,8 +22,8 @@ import sharetrace.model.message.RunMessage;
 public record RiskPropagation(
     Context context,
     Parameters parameters,
-    RiskScoreFactory riskScoreFactory,
-    ContactNetwork contactNetwork,
+    RiskScoreFactory scoreFactory,
+    ContactNetworkFactory networkFactory,
     KeyFactory keyFactory)
     implements Runnable {
 
@@ -33,31 +33,30 @@ public record RiskPropagation(
 
   @Override
   public void run() {
-    var context = contextWithMdc();
-    MDC.setContextMap(context.mdc());
-    logProperties(context);
-    run(context);
+    var properties = getExecutionProperties();
+    MDC.setContextMap(properties.context().mdc());
+    logProperties(properties);
+    run(properties);
   }
 
-  private Context contextWithMdc() {
-    return ContextBuilder.builder(context).addMdc("k", keyFactory.getKey()).build();
+  private void logProperties(ExecutionProperties properties) {
+    context.propertyLogger().log(ExecutionProperties.class, () -> properties);
   }
 
-  private void logProperties(Context context) {
-    context.propertyLogger().log(ExecutionProperties.class, () -> properties(context));
-  }
-
-  private ExecutionProperties properties(Context context) {
+  private ExecutionProperties getExecutionProperties() {
     return ExecutionPropertiesBuilder.create()
-        .context(context)
+        .context(ContextBuilder.builder(context).addMdc("k", keyFactory.getKey()).build())
         .parameters(parameters)
-        .contactNetwork(contactNetwork)
+        .scoreFactory(scoreFactory)
+        .network(networkFactory.getContactNetwork())
+        .networkFactory(networkFactory)
+        .keyFactory(keyFactory)
         .build();
   }
 
-  private void run(Context context) {
+  private void run(ExecutionProperties properties) {
     try {
-      ActorSystem.create(behavior(context), getClass().getSimpleName())
+      ActorSystem.create(behavior(properties), getClass().getSimpleName())
           .getWhenTerminated()
           .toCompletableFuture()
           .get();
@@ -69,10 +68,15 @@ public record RiskPropagation(
     }
   }
 
-  private Behavior<Void> behavior(Context context) {
+  private Behavior<Void> behavior(ExecutionProperties properties) {
     return Behaviors.setup(
         ctx -> {
-          var monitor = Monitor.of(context, parameters, riskScoreFactory, contactNetwork);
+          var monitor =
+              Monitor.of(
+                  properties.context(),
+                  properties.parameters(),
+                  properties.scoreFactory(),
+                  properties.network());
           var ref = ctx.spawn(monitor, Monitor.name(), Monitor.props());
           ctx.watch(ref);
           ref.tell(RunMessage.INSTANCE);

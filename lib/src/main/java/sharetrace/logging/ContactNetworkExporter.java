@@ -1,20 +1,22 @@
-package sharetrace.graph;
+package sharetrace.logging;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import org.jgrapht.Graph;
 import org.jgrapht.nio.GraphExporter;
 import org.jgrapht.nio.graphml.GraphMLExporter;
 import sharetrace.Buildable;
+import sharetrace.model.graph.ContactNetwork;
+import sharetrace.model.graph.TemporalEdge;
 
+@SuppressWarnings("unused")
 @Buildable
-public record TemporalGraphExporter(Path directory, String filename) {
+public record ContactNetworkExporter(Path directory, String filename) {
 
-  public void export(Graph<Integer, TemporalEdge> graph) {
-    exporter().exportGraph(graph, file(directory, filename));
+  public void export(ContactNetwork network) {
+    exporter().exportGraph(network, file(directory, filename));
   }
 
   private GraphExporter<Integer, TemporalEdge> exporter() {

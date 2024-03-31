@@ -6,13 +6,13 @@ plugins {
 dependencies {
     annotationProcessor "io.soabase.record-builder:record-builder-processor:40"
 
+    api "com.fasterxml.jackson.core:jackson-databind:2.16.1"
     api "com.typesafe:config:1.4.3"
     api "io.soabase.record-builder:record-builder-processor:40"
     api "org.apache.commons:commons-math3:3.6.1"
     api "org.jgrapht:jgrapht-core:1.5.2"
 
     implementation "ch.qos.logback:logback-classic:1.4.14"
-    implementation "com.fasterxml.jackson.core:jackson-databind:2.16.1"
     implementation "com.fasterxml.jackson.dataformat:jackson-dataformat-ion:2.16.1"
     implementation "com.google.guava:guava:33.0.0-jre"
     implementation "com.typesafe.akka:akka-actor-typed_3:2.8.5"

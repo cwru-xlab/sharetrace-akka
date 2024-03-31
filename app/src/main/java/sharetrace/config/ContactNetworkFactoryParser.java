@@ -3,13 +3,14 @@ package sharetrace.config;
 import com.typesafe.config.Config;
 import java.nio.file.Path;
 import sharetrace.graph.BarabasiAlbertContactNetworkFactoryBuilder;
-import sharetrace.graph.ContactNetworkFactory;
 import sharetrace.graph.FileContactNetworkFactoryBuilder;
 import sharetrace.graph.GnmRandomContactNetworkFactoryBuilder;
 import sharetrace.graph.RandomRegularContactNetworkFactoryBuilder;
 import sharetrace.graph.ScaleFreeContactNetworkFactoryBuilder;
 import sharetrace.graph.WattsStrogatzContactNetworkFactoryBuilder;
 import sharetrace.model.Context;
+import sharetrace.model.factory.CachedContactNetworkFactory;
+import sharetrace.model.factory.ContactNetworkFactory;
 import sharetrace.model.factory.TimeFactory;
 
 public record ContactNetworkFactoryParser(
@@ -18,28 +19,38 @@ public record ContactNetworkFactoryParser(
 
   @Override
   public ContactNetworkFactory parse(Config config) {
+    return decorated(baseFactory(config), config);
+  }
+
+  private ContactNetworkFactory baseFactory(Config config) {
     var type = config.getString("type");
     return switch (type) {
-      case ("gnm-random") -> gnmRandomFactory(config);
-      case ("random-regular") -> randomRegularFactory(config);
-      case ("barabasi-albert") -> barabasiAlbertFactory(config);
-      case ("watts-strogatz") -> wattsStrogatzFactory(config);
-      case ("scale-free") -> scaleFreeFactory(config);
-      case ("file") -> fileFactory(config);
+      case ("gnm-random") -> gnmRandom(config);
+      case ("random-regular") -> randomRegular(config);
+      case ("barabasi-albert") -> barabasiAlbert(config);
+      case ("watts-strogatz") -> wattsStrogatz(config);
+      case ("scale-free") -> scaleFree(config);
+      case ("file") -> file(config);
       default -> throw new IllegalArgumentException(type);
     };
   }
 
-  private ContactNetworkFactory gnmRandomFactory(Config config) {
+  private ContactNetworkFactory decorated(ContactNetworkFactory factory, Config config) {
+    return config.getBoolean("cached") ? new CachedContactNetworkFactory(factory) : factory;
+  }
+
+  private ContactNetworkFactory gnmRandom(Config config) {
     return GnmRandomContactNetworkFactoryBuilder.create()
         .nodes(config.getInt("nodes"))
         .edges(config.getInt("edges"))
+        .loops(false)
+        .multipleEdges(false)
         .timeFactory(timeFactory(config))
         .randomGenerator(context.randomGenerator())
         .build();
   }
 
-  private ContactNetworkFactory randomRegularFactory(Config config) {
+  private ContactNetworkFactory randomRegular(Config config) {
     return RandomRegularContactNetworkFactoryBuilder.create()
         .nodes(config.getInt("nodes"))
         .degree(config.getInt("degree"))
@@ -48,7 +59,7 @@ public record ContactNetworkFactoryParser(
         .build();
   }
 
-  private ContactNetworkFactory barabasiAlbertFactory(Config config) {
+  private ContactNetworkFactory barabasiAlbert(Config config) {
     return BarabasiAlbertContactNetworkFactoryBuilder.create()
         .initialNodes(config.getInt("initial-nodes"))
         .newEdges(config.getInt("new-edges"))
@@ -58,17 +69,18 @@ public record ContactNetworkFactoryParser(
         .build();
   }
 
-  private ContactNetworkFactory wattsStrogatzFactory(Config config) {
+  private ContactNetworkFactory wattsStrogatz(Config config) {
     return WattsStrogatzContactNetworkFactoryBuilder.create()
         .nodes(config.getInt("nodes"))
         .nearestNeighbors(config.getInt("nearest-neighbors"))
         .rewiringProbability(config.getDouble("rewiring-probability"))
+        .addInsteadOfRewire(false)
         .timeFactory(timeFactory(config))
         .randomGenerator(context.randomGenerator())
         .build();
   }
 
-  private ContactNetworkFactory scaleFreeFactory(Config config) {
+  private ContactNetworkFactory scaleFree(Config config) {
     return ScaleFreeContactNetworkFactoryBuilder.create()
         .nodes(config.getInt("nodes"))
         .timeFactory(timeFactory(config))
@@ -76,7 +88,7 @@ public record ContactNetworkFactoryParser(
         .build();
   }
 
-  private ContactNetworkFactory fileFactory(Config config) {
+  private ContactNetworkFactory file(Config config) {
     return FileContactNetworkFactoryBuilder.create()
         .path(Path.of(config.getString("path")))
         .delimiter(config.getString("delimiter"))

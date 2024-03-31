@@ -1,7 +1,9 @@
 package sharetrace.model.factory;
 
-@FunctionalInterface
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 public interface TimeFactory {
 
+  @JsonIgnore
   long getTime();
 }

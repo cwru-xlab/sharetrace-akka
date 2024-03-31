@@ -1,4 +1,4 @@
-package sharetrace.graph;
+package sharetrace.model.graph;
 
 import org.jgrapht.Graph;
 

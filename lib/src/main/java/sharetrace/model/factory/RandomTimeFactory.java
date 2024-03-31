@@ -2,11 +2,11 @@ package sharetrace.model.factory;
 
 import com.google.common.collect.Range;
 import sharetrace.Buildable;
-import sharetrace.model.DistributedRandom;
 import sharetrace.model.Ranges;
+import sharetrace.model.random.DistributedRandom;
 
 @Buildable
-public record RandomTimeFactory(DistributedRandom random, long period, long referenceTime)
+public record RandomTimeFactory(DistributedRandom distribution, long period, long referenceTime)
     implements TimeFactory {
 
   public RandomTimeFactory {
@@ -15,6 +15,6 @@ public record RandomTimeFactory(DistributedRandom random, long period, long refe
 
   @Override
   public long getTime() {
-    return Math.subtractExact(referenceTime, random.nextLong(period));
+    return Math.subtractExact(referenceTime, distribution.nextLong(period));
   }
 }

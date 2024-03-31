@@ -1,4 +1,4 @@
-package sharetrace.graph;
+package sharetrace.model.graph;
 
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
@@ -9,6 +9,7 @@ import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.DefaultGraphType;
 import org.jgrapht.opt.graph.fastutil.FastutilMapIntVertexGraph;
 
+@SuppressWarnings("unused")
 public final class Graphs {
 
   private Graphs() {}
