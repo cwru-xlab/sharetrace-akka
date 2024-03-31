@@ -4,8 +4,8 @@ echo "RUN STARTED"
 
 cd app
 
-logsDirectory=logs/$(date +%s)
 configFile=$1
+logsDirectory=logs/$(date +%s)
 
 echo "Config file: $configFile"
 echo "Logs directory: $logsDirectory"
