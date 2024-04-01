@@ -5,7 +5,7 @@ plugins {
 
 java {
     toolchain {
-        applicationDefaultJvmArgs = ["-Xms8g", "-Xmx8g", "-XX:+UseZGC"]
+        applicationDefaultJvmArgs = ["-Xms8g", "-XX:+UseZGC"]
     }
 }
 
