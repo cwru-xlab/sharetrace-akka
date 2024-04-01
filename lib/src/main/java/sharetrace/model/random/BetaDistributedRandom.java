@@ -7,7 +7,8 @@ import org.apache.commons.math3.distribution.BetaDistribution;
 
 @SuppressWarnings("unused")
 @JsonTypeName("Beta")
-public record BetaDistributedRandom(@JsonIgnore BetaDistribution distribution) implements DistributedRandom {
+public record BetaDistributedRandom(@JsonIgnore BetaDistribution distribution)
+    implements DistributedRandom {
 
   @Override
   public double nextDouble() {
