@@ -63,10 +63,10 @@ final class User extends AbstractBehavior<UserMessage> {
   public static Behavior<UserMessage> of(
       int id, Context context, Parameters parameters, ActorRef<MonitorMessage> monitor) {
     return Behaviors.setup(
-        ctx -> {
+        actorContext -> {
           var user =
               Behaviors.<UserMessage>withTimers(
-                  timers -> new User(id, ctx, context, parameters, monitor, timers));
+                  timers -> new User(id, actorContext, context, parameters, monitor, timers));
           return Behaviors.withMdc(UserMessage.class, context.mdc(), user);
         });
   }
