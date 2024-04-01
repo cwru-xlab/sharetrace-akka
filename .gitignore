@@ -1,12 +1,10 @@
-**/logs
-
 ### Java ####
 
 # Compiled class file
 *.class
 
 # Log file
-**/*.log
+# **/*.log
 
 # BlueJ files
 *.ctxt
@@ -37,10 +35,10 @@ replay_pid*
 gradle-app.setting
 
 # Avoid ignoring Gradle wrapper jar file (.jar files are usually ignored)
-**/gradle-wrapper.jar
+# **/gradle-wrapper.jar
 
 # Avoid ignore Gradle wrappper properties
-**/gradle-wrapper.properties
+# **/gradle-wrapper.properties
 
 # Cache of project
 **/.gradletasknamecache
@@ -110,7 +108,7 @@ cover/
 *.pot
 
 # Django stuff:
-*.log
+# *.log
 local_settings.py
 db.sqlite3
 db.sqlite3-journal
