@@ -108,7 +108,7 @@ sharetrace {
     thiers12-network-factory = $${sharetrace.runner.file-network-factory-defaults}
     thiers12-network-factory.path = "lib/src/main/resources/datasets/Thiers12.txt"
 
-    network-factory = sharetrace.runner.${network_factory}-network-factory
+    network-factory = $${sharetrace.runner.${network_factory}-network-factory}
   }
 
   parameters.send-coefficient = ${send_coefficient}

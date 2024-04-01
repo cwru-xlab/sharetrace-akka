@@ -4,9 +4,16 @@ import collections
 import itertools
 import string
 
-common_network_config = {
+network_config_defaults = {
+    "cache_network": "false",
+    "degree": -1,
+    "edges": -1,
+    "initial_nodes": -1,
+    "nearest_neighbors": -1,
+    "network_factory": "missing",
+    "new_edges": -1,
     "nodes": 10_000,
-    "cache_network": "false"
+    "rewiring_probability": -1,
 }
 
 distributions = [
@@ -18,13 +25,13 @@ distributions = [
 
 
 def gnm_random_configs():
-    nodes = common_network_config["nodes"]
+    nodes = network_config_defaults["nodes"]
     max_nodes = nodes * (nodes - 1) / 2
     for edges in (int(0.1 * p * max_nodes) for p in range(2, 11, 2)):
         yield {
+            **network_config_defaults,
             "edges": edges,
-            "network_factory": "gnm-random",
-            **common_network_config
+            "network_factory": "gnm-random"
         }
 
 
@@ -33,19 +40,19 @@ def barabasi_albert_configs():
     new_edges = [5, 10, 15, 20]
     for nodes, edges in zip(initial_nodes, new_edges):
         yield {
+            **network_config_defaults,
             "initial_nodes": nodes,
             "new_edges": edges,
-            "network_factory": "barabasi-albert",
-            **common_network_config
+            "network_factory": "barabasi-albert"
         }
 
 
 def random_regular_configs():
     for degree in [20, 40, 80]:
         yield {
+            **network_config_defaults,
             "degree": degree,
-            "network_factory": "random-regular",
-            **common_network_config
+            "network_factory": "random-regular"
         }
 
 
@@ -54,16 +61,16 @@ def watts_strogatz_configs():
     rewiring_probability = [0.2, 0.4, 0.8]
     for nn, rp in itertools.product(nearest_neighbors, rewiring_probability):
         yield {
+            **network_config_defaults,
             "nearest_neighbors": nn,
             "rewiring_probability": rp,
-            "network_factory": "watts-strogatz",
-            **common_network_config
+            "network_factory": "watts-strogatz"
         }
 
 
 def scale_free_configs():
     yield {
-        "nodes": common_network_config["nodes"],
+        **network_config_defaults,
         "network_factory": "scale-free"
     }
 
