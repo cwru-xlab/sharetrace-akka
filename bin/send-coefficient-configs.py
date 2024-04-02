@@ -4,18 +4,6 @@ import collections
 import itertools
 import string
 
-network_config_defaults = {
-    "cache_network": "false",
-    "degree": -1,
-    "edges": -1,
-    "initial_nodes": -1,
-    "nearest_neighbors": -1,
-    "network_factory": "missing",
-    "new_edges": -1,
-    "nodes": 10_000,
-    "rewiring_probability": -1,
-}
-
 distributions = [
     "standard-normal",
     "uniform",
@@ -24,65 +12,47 @@ distributions = [
 ]
 
 
-def gnm_random_configs():
-    nodes = network_config_defaults["nodes"]
-    max_nodes = nodes * (nodes - 1) / 2
-    for edges in (int(0.1 * p * max_nodes) for p in range(2, 11, 2)):
-        yield {
-            **network_config_defaults,
-            "edges": edges,
-            "network_factory": "gnm-random"
-        }
-
-
-def barabasi_albert_configs():
-    initial_nodes = [10, 15, 20, 25]
-    new_edges = [5, 10, 15, 20]
-    for nodes, edges in zip(initial_nodes, new_edges):
-        yield {
-            **network_config_defaults,
-            "initial_nodes": nodes,
-            "new_edges": edges,
-            "network_factory": "barabasi-albert"
-        }
-
-
-def random_regular_configs():
-    for degree in [20, 40, 80]:
-        yield {
-            **network_config_defaults,
-            "degree": degree,
-            "network_factory": "random-regular"
-        }
-
-
-def watts_strogatz_configs():
-    nearest_neighbors = [20, 40, 80]
-    rewiring_probability = [0.2, 0.4, 0.8]
-    for nn, rp in itertools.product(nearest_neighbors, rewiring_probability):
-        yield {
-            **network_config_defaults,
-            "nearest_neighbors": nn,
-            "rewiring_probability": rp,
-            "network_factory": "watts-strogatz"
-        }
-
-
-def scale_free_configs():
-    yield {
-        **network_config_defaults,
-        "network_factory": "scale-free"
-    }
-
-
 def network_configs():
-    return itertools.chain(
-        gnm_random_configs(),
-        barabasi_albert_configs(),
-        random_regular_configs(),
-        watts_strogatz_configs(),
-        scale_free_configs()
-    )
+    defaults = {
+        "cache_network": "false",
+        "degree": -1,
+        "edges": -1,
+        "initial_nodes": -1,
+        "nearest_neighbors": -1,
+        "network_factory": "missing",
+        "new_edges": -1,
+        "nodes": 10_000,
+        "rewiring_probability": -1,
+    }
+    nodes = defaults["nodes"]
+    return [
+        {
+            **defaults,
+            "edges": 0.04 * nodes * (nodes - 1) / 2,
+            "network_factory": "gnm-random"
+        },
+        {
+            **defaults,
+            "initial_nodes": 10,
+            "new_edges": 5,
+            "network_factory": "barabasi-albert"
+        },
+        {
+            **defaults,
+            "degree": 40,
+            "network_factory": "random-regular"
+        },
+        {
+            **defaults,
+            "nearest_neighbors": 40,
+            "rewiring_probability": 0.4,
+            "network_factory": "watts-strogatz"
+        },
+        {
+            **defaults,
+            "network_factory": "scale-free"
+        }
+    ]
 
 
 def contact_time_factory_configs():
@@ -124,12 +94,12 @@ def generate_configs():
     for values in template_values():
         sc = format(int(values["send_coefficient"] * 100), "03d")
         factory = values["network_factory"]
-        score_value_dist = values["score_value_distribution"]
-        score_time_dist = values["score_time_distribution"]
-        contact_time_dist = values["contact_time_distribution"]
-        config_name = "_".join(("send-coefficient", sc, factory, score_value_dist, score_time_dist, contact_time_dist))
-        with open(f"./app/src/main/resources/{config_name}.conf", "w") as f:
-            f.write(template.safe_substitute(values))
+        sv_dist = values["score_value_distribution"]
+        st_dist = values["score_time_distribution"]
+        ct_dist = values["contact_time_distribution"]
+        filename = "_".join(("send-coefficient", sc, factory, sv_dist, st_dist, ct_dist))
+        with open(f"./app/src/main/resources/{filename}.conf", "w") as f:
+            f.write(template.substitute(values))
 
 
 if __name__ == '__main__':
