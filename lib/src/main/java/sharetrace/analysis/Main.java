@@ -76,8 +76,7 @@ public final class Main {
   }
 
   private static File resultsFile() {
-    var filename = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
-    return logsDirectory().resolve(filename + ".json").toFile();
+    return logsDirectory().resolve("results-" + System.currentTimeMillis() + ".json").toFile();
   }
 
   private static Path logsDirectory() {
