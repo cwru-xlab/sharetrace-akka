@@ -11,12 +11,7 @@ run-all:
 	nohup bash bin/run-all.sh $(configs) > nohup-$$(date +"%s%3N").out 2>&1 < /dev/null &
 
 run-send-coefficient-experiments:
-	run-all configs="send-coefficient_barabasi-albert*.conf"
-	sleep 1
-	run-all configs="send-coefficient_gnm-random*.conf"
-	sleep 1
-	run-all configs="send-coefficient_random-regular*.conf"
-	sleep 1
-	run-all configs="send-coefficient_scale-free*.conf"
-	sleep 1
-	run-all configs="send-coefficient_watts-strogatz*.conf"
+	for network in "barabasi-albert" "gnm-random" "random-regular" "scale-free" "watts-strogatz"; do
+		run-all configs="send-coefficient_${network}*.conf"
+		sleep 0.1
+	done
