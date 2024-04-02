@@ -1,6 +1,6 @@
 sharetrace {
   runner {
-    type = sharetrace.app.StandardRunner
+    type = sharetrace.app.ParametersExperimentRunner
 
     iterations = 3
     repeats = 3

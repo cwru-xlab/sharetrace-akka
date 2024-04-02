@@ -1,6 +1,7 @@
 package sharetrace.config;
 
 import com.typesafe.config.Config;
+import java.util.List;
 import sharetrace.Buildable;
 import sharetrace.model.Context;
 import sharetrace.model.Parameters;
@@ -32,6 +33,10 @@ public record AppConfig(
 
   public int getRepeats() {
     return config.getInt("repeats");
+  }
+
+  public List<Double> getSendCoefficients() {
+    return config.getDoubleList("send-coefficients");
   }
 
   public RiskScoreFactory getScoreFactory() {

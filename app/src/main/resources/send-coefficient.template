@@ -2,10 +2,12 @@ include "distributions.conf"
 
 sharetrace {
   runner {
-    type = sharetrace.app.StandardRunner
+    type = sharetrace.app.ParametersExperimentRunner
 
     iterations = 3
     repeats = 3
+
+    send-coefficients = ${send_coefficients}
 
     contact-time-factory {
       period = $${sharetrace.parameters.contact-expiry}
@@ -13,7 +15,7 @@ sharetrace {
     }
 
     score-factory = {
-      cached = ${cache_scores}
+      cached = true
       distribution = $${sharetrace.runner.${score_value_distribution}-distribution}
       time-factory = {
         period = $${sharetrace.parameters.score-expiry}
@@ -25,7 +27,7 @@ sharetrace {
       type = ""
       nodes = ${nodes}
       time-factory = $${sharetrace.runner.contact-time-factory}
-      cached = ${cache_network}
+      cached = true
     }
 
     gnm-random-network-factory = $${sharetrace.runner.network-factory-defaults}
@@ -60,8 +62,6 @@ sharetrace {
 
     network-factory = $${sharetrace.runner.${network_factory}-network-factory}
   }
-
-  parameters.send-coefficient = ${send_coefficient}
 
   analysis.handlers = [
     sharetrace.analysis.handler.Runtimes
