@@ -8,4 +8,4 @@ run:
 	bash bin/run.sh $(config)
 
 run-all:
-	nohup bash bin/run-all.sh $(configs) > nohup-$(date +%s).out 2>&1 < /dev/null &
+	nohup bash bin/run-all.sh $(configs) > nohup-$$(date +%s).out 2>&1 < /dev/null &
