@@ -8,7 +8,7 @@ import sharetrace.model.random.DistributedRandom;
 @JsonTypeName("Random")
 @Buildable
 public record RandomRiskScoreFactory(
-    long scoreExpiry, DistributedRandom distribution, TimeFactory timeFactory)
+    String id, long scoreExpiry, DistributedRandom distribution, TimeFactory timeFactory)
     implements RiskScoreFactory {
 
   @Override

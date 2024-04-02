@@ -3,6 +3,7 @@ package sharetrace.config;
 import com.typesafe.config.Config;
 import sharetrace.model.Parameters;
 import sharetrace.model.factory.CachedRiskScoreFactory;
+import sharetrace.model.factory.IdFactory;
 import sharetrace.model.factory.RandomRiskScoreFactoryBuilder;
 import sharetrace.model.factory.RiskScoreFactory;
 import sharetrace.model.factory.TimeFactory;
@@ -21,6 +22,7 @@ public record RiskScoreFactoryParser(
 
   private RiskScoreFactory baseFactory(Config config) {
     return RandomRiskScoreFactoryBuilder.create()
+        .id(IdFactory.newId())
         .distribution(randomParser.parse(config.getConfig("distribution")))
         .timeFactory(timeFactoryParser.parse(config.getConfig("time-factory")))
         .scoreExpiry(parameters.scoreExpiry())

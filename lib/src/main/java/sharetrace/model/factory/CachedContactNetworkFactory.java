@@ -24,8 +24,8 @@ public final class CachedContactNetworkFactory implements ContactNetworkFactory 
   }
 
   @Override
-  public ContactNetwork newContactNetwork(Graph<Integer, TemporalEdge> target) {
-    return factory.newContactNetwork(target);
+  public ContactNetwork newContactNetwork(String id, Graph<Integer, TemporalEdge> target) {
+    return factory.newContactNetwork(id, target);
   }
 
   @Override

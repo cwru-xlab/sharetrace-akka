@@ -16,6 +16,11 @@ public record CachedRiskScoreFactory(
   }
 
   @Override
+  public String id() {
+    return factory.id();
+  }
+
+  @Override
   public RiskScore getRiskScore(int key) {
     return cache.computeIfAbsent(key, factory::getRiskScore);
   }

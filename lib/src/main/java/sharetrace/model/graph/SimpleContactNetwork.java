@@ -10,8 +10,16 @@ import org.jgrapht.graph.GraphDelegator;
 public final class SimpleContactNetwork extends GraphDelegator<Integer, TemporalEdge>
     implements ContactNetwork {
 
-  public SimpleContactNetwork(Graph<Integer, TemporalEdge> target) {
+  private final String id;
+
+  public SimpleContactNetwork(String id, Graph<Integer, TemporalEdge> target) {
     super(target);
+    this.id = id;
+  }
+
+  @Override
+  public String id() {
+    return id;
   }
 
   @JsonProperty

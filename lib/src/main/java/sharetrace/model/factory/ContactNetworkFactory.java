@@ -20,14 +20,14 @@ public interface ContactNetworkFactory {
   @JsonIgnore
   GraphGenerator<Integer, TemporalEdge, ?> graphGenerator();
 
-  default ContactNetwork newContactNetwork(Graph<Integer, TemporalEdge> target) {
-    return new SimpleContactNetwork(target);
+  default ContactNetwork newContactNetwork(String id, Graph<Integer, TemporalEdge> target) {
+    return new SimpleContactNetwork(id, target);
   }
 
   @JsonIgnore
   default ContactNetwork getContactNetwork() {
     var target = newTarget();
     graphGenerator().generateGraph(target);
-    return newContactNetwork(target);
+    return newContactNetwork(IdFactory.newId(), target);
   }
 }
