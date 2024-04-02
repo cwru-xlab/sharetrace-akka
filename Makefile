@@ -8,6 +8,7 @@ run:
 	bash bin/run.sh $(config) $$([ "$(cleanup)" = "false" ] && echo "--no-clean-up" || echo "")
 
 run-all:
+	# Ref: https://stackoverflow.com/a/51633521
 	nohup bash bin/run-all.sh $(configs) > nohup-$$(date +"%s%3N").out 2>&1 < /dev/null &
 
 run-send-coefficient-experiments:
