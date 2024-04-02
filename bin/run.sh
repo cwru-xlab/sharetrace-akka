@@ -11,10 +11,10 @@ echo "Config file: $configFile"
 echo "Logs directory: $logsDirectory"
 
 echo "Running..."
-../gradlew :app:run -Dconfig.resource=$configFile -Dlogs.dir=$logsDirectory
+../gradlew run -Dconfig.resource=$configFile -Dlogs.dir=$logsDirectory
 
 echo "Analyzing..."
-../gradlew :app:analyze -Dconfig.resource=$configFile -Dlogs.dir=$logsDirectory
+../gradlew analyze -Dconfig.resource=$configFile -Dlogs.dir=$logsDirectory
 
 if [ "$2" = "--no-clean-up" ]; then
   echo "Skipping event log cleanup"
