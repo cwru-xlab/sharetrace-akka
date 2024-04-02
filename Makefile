@@ -12,7 +12,7 @@ run-all:
 	nohup bash bin/run-all.sh $(configs) > nohup-$$(date +"%s%3N").out 2>&1 < /dev/null &
 
 run-send-coefficient-experiments:
-	for network in "barabasi-albert" "gnm-random" "random-regular" "scale-free" "watts-strogatz"; do
-		run-all configs="send-coefficient_${network}*.conf"
-		sleep 0.1
+	for network in "barabasi-albert" "gnm-random" "random-regular" "scale-free" "watts-strogatz"; do \
+		make run-all configs="send-coefficient_${network}*.conf"; \
+		sleep 0.1; \
 	done
