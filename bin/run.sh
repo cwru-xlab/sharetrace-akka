@@ -5,7 +5,7 @@ echo "RUN STARTED"
 cd app
 
 configFile="$1"
-logsDirectory="logs/$(date +%s)"
+logsDirectory="logs/$(uuidgen)"
 
 echo "Config file: $configFile"
 echo "Logs directory: $logsDirectory"
