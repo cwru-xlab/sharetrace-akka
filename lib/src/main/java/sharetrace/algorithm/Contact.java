@@ -78,7 +78,7 @@ final class Contact implements Expirable, Flushable {
         && relevantTimeRange.contains(message.timestamp());
   }
 
-  private void refreshThreshold(RiskScoreMessageStore cache) {
+  private void refreshThreshold(RiskScoreMessageStore store) {
     /*
      If this contact's send threshold is the minimum risk score, then either
        1. no messages have been sent to this contact; or
@@ -90,7 +90,7 @@ final class Contact implements Expirable, Flushable {
      entire contact network, this would prevent all propagation of messages.
     */
     if (sendThreshold != RiskScore.MIN && sendThreshold.isExpired(timeSource)) {
-      maxRelevantMessage(cache).ifPresentOrElse(this::setThreshold, this::resetThreshold);
+      maxRelevantMessage(store).ifPresentOrElse(this::setThreshold, this::resetThreshold);
     }
   }
 
