@@ -6,8 +6,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
-import java.time.Instant;
-import java.time.InstantSource;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -19,7 +17,6 @@ import sharetrace.analysis.results.MapResults;
 import sharetrace.analysis.results.Results;
 import sharetrace.config.InstanceFactory;
 import sharetrace.logging.jackson.Jackson;
-import sharetrace.model.factory.IdFactory;
 
 public final class Main {
 
