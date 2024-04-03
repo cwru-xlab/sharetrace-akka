@@ -53,42 +53,22 @@ sharetrace {
     scale-free-network-factory = $${sharetrace.runner.network-factory-defaults}
     scale-free-network-factory.type = scale-free
 
-    file-network-factory-defaults = $${sharetrace.runner.network-factory-defaults}
-    file-network-factory-defaults = {
-      type = file
-      path = ""
-      delimiter = "\\s+"
-    }
-
-    invs13-network-factory = $${sharetrace.runner.file-network-factory-defaults}
-    invs13-network-factory.path = "lib/src/main/resources/datasets/InVS13.txt"
-
-    invs15-network-factory = $${sharetrace.runner.file-network-factory-defaults}
-    invs15-network-factory.path = "lib/src/main/resources/datasets/InVS15.txt"
-
-    lh10-network-factory = $${sharetrace.runner.file-network-factory-defaults}
-    lh10-network-factory.path = "lib/src/main/resources/datasets/LH10.txt"
-
-    lyon-school-network-factory = $${sharetrace.runner.file-network-factory-defaults}
-    lyon-school-network-factory.path = "lib/src/main/resources/datasets/LyonSchool.txt"
-
-    sfhh-network-factory = $${sharetrace.runner.file-network-factory-defaults}
-    sfhh-network-factory.path = "lib/src/main/resources/datasets/SFHH.txt"
-
-    thiers11-network-factory = $${sharetrace.runner.file-network-factory-defaults}
-    thiers11-network-factory.path = "lib/src/main/resources/datasets/Thiers11.txt"
-
-    thiers12-network-factory = $${sharetrace.runner.file-network-factory-defaults}
-    thiers12-network-factory.path = "lib/src/main/resources/datasets/Thiers12.txt"
-
     network-factory = $${sharetrace.runner.${network_factory}-network-factory}
   }
 
+  context.logged = [
+    sharetrace.logging.event.lifecycle.CreateUsersStart
+    sharetrace.logging.event.lifecycle.CreateUsersEnd
+    sharetrace.logging.event.lifecycle.SendContactsStart
+    sharetrace.logging.event.lifecycle.SendContactsEnd
+    sharetrace.logging.event.lifecycle.SendRiskScoresStart
+    sharetrace.logging.event.lifecycle.SendRiskScoresEnd
+    sharetrace.logging.event.lifecycle.RiskPropagationStart
+    sharetrace.logging.event.lifecycle.RiskPropagationEnd
+    sharetrace.logging.ExecutionProperties
+  ]
+
   analysis.handlers = [
-    sharetrace.analysis.handler.EventTimeline
-    sharetrace.analysis.handler.MessageReachability
     sharetrace.analysis.handler.Runtimes
-    sharetrace.analysis.handler.UserEventCounts
-    sharetrace.analysis.handler.UserUpdates
   ]
 }
