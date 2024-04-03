@@ -14,7 +14,7 @@ def print_dataset_time_ranges():
                 min_time = min(min_time, int(t))
                 max_time = max(max_time, int(t))
             range_days = round((max_time - min_time) / 86400, 2)
-            print(f"{path.name.split()[0]}: {range_days} days")
+            print(f"{path.stem}: {range_days} days")
 
 
 if __name__ == '__main__':
