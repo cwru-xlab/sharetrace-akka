@@ -1,8 +1,8 @@
 package sharetrace.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import java.time.InstantSource;
 import java.util.Comparator;
+import sharetrace.model.factory.TimeFactory;
 
 public interface Expirable extends Timestamped {
 
@@ -20,7 +20,7 @@ public interface Expirable extends Timestamped {
     return expiryTime() < currentTime;
   }
 
-  default boolean isExpired(InstantSource timeSource) {
-    return isExpired(timeSource.millis());
+  default boolean isExpired(TimeFactory timeFactory) {
+    return isExpired(timeFactory.getTime());
   }
 }

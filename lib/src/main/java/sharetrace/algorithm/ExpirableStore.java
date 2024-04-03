@@ -1,18 +1,18 @@
 package sharetrace.algorithm;
 
-import java.time.InstantSource;
 import java.util.Collection;
 import java.util.Iterator;
 import sharetrace.model.Expirable;
+import sharetrace.model.factory.TimeFactory;
 
 abstract class ExpirableStore<V extends Expirable> implements Iterable<V> {
 
-  private final InstantSource timeSource;
+  private final TimeFactory timeFactory;
 
   private long minExpiryTime;
 
-  public ExpirableStore(InstantSource timeSource) {
-    this.timeSource = timeSource;
+  public ExpirableStore(TimeFactory timeFactory) {
+    this.timeFactory = timeFactory;
     this.minExpiryTime = Long.MAX_VALUE;
   }
 
@@ -27,7 +27,7 @@ abstract class ExpirableStore<V extends Expirable> implements Iterable<V> {
   }
 
   public void refresh() {
-    var currentTime = timeSource.millis();
+    var currentTime = timeFactory.getTime();
     if (minExpiryTime < currentTime) {
       values().removeIf(value -> value.isExpired(currentTime));
       minExpiryTime =

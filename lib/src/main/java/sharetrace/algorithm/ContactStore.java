@@ -1,11 +1,11 @@
 package sharetrace.algorithm;
 
 import it.unimi.dsi.fastutil.ints.Int2ReferenceOpenHashMap;
-import java.time.InstantSource;
 import java.util.Collection;
 import java.util.Map;
 import java.util.function.BinaryOperator;
 import sharetrace.model.Expirable;
+import sharetrace.model.factory.TimeFactory;
 
 final class ContactStore extends ExpirableStore<Contact> {
 
@@ -13,8 +13,8 @@ final class ContactStore extends ExpirableStore<Contact> {
 
   private final Map<Integer, Contact> store;
 
-  public ContactStore(InstantSource timeSource) {
-    super(timeSource);
+  public ContactStore(TimeFactory timeFactory) {
+    super(timeFactory);
     store = new Int2ReferenceOpenHashMap<>();
   }
 

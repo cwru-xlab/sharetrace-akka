@@ -3,12 +3,12 @@ package sharetrace.algorithm;
 import akka.actor.typed.ActorRef;
 import com.google.common.collect.Range;
 import java.io.Flushable;
-import java.time.InstantSource;
 import java.util.Optional;
 import sharetrace.model.Expirable;
 import sharetrace.model.Parameters;
 import sharetrace.model.RiskScore;
 import sharetrace.model.TemporalScore;
+import sharetrace.model.factory.TimeFactory;
 import sharetrace.model.message.ContactMessage;
 import sharetrace.model.message.RiskScoreMessage;
 import sharetrace.model.message.UserMessage;
@@ -21,19 +21,19 @@ final class Contact implements Expirable, Flushable {
   private final Range<Long> relevantTimeRange;
   private final long expiryTime;
   private final Parameters parameters;
-  private final InstantSource timeSource;
+  private final TimeFactory timeFactory;
 
   private TemporalScore sendThreshold;
   private RiskScoreMessage buffered;
 
-  public Contact(ContactMessage message, Parameters parameters, InstantSource timeSource) {
+  public Contact(ContactMessage message, Parameters parameters, TimeFactory timeFactory) {
     this.id = message.id();
     this.ref = message.contact();
     this.timestamp = message.timestamp();
     this.relevantTimeRange = Range.lessThan(message.timestamp() + parameters.timeBuffer());
     this.expiryTime = message.expiryTime();
     this.parameters = parameters;
-    this.timeSource = timeSource;
+    this.timeFactory = timeFactory;
     resetThreshold();
   }
 
@@ -89,7 +89,7 @@ final class Contact implements Expirable, Flushable {
      with a value *greater* than the threshold are eligible. Considering this in the context of the
      entire contact network, this would prevent all propagation of messages.
     */
-    if (sendThreshold != RiskScore.MIN && sendThreshold.isExpired(timeSource)) {
+    if (sendThreshold != RiskScore.MIN && sendThreshold.isExpired(timeFactory.getTime())) {
       maxRelevantMessage(store).ifPresentOrElse(this::setThreshold, this::resetThreshold);
     }
   }

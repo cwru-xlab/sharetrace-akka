@@ -3,11 +3,11 @@ package sharetrace.algorithm;
 import com.google.common.collect.Range;
 import com.google.common.collect.RangeMap;
 import com.google.common.collect.TreeRangeMap;
-import java.time.InstantSource;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Optional;
 import java.util.function.BinaryOperator;
+import sharetrace.model.factory.TimeFactory;
 import sharetrace.model.message.RiskScoreMessage;
 
 final class RiskScoreMessageStore extends ExpirableStore<RiskScoreMessage> {
@@ -17,8 +17,8 @@ final class RiskScoreMessageStore extends ExpirableStore<RiskScoreMessage> {
 
   private final RangeMap<Long, RiskScoreMessage> store;
 
-  public RiskScoreMessageStore(InstantSource timeSource) {
-    super(timeSource);
+  public RiskScoreMessageStore(TimeFactory timeFactory) {
+    super(timeFactory);
     store = TreeRangeMap.create();
   }
 

@@ -2,7 +2,6 @@ package sharetrace.config;
 
 import com.typesafe.config.Config;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
-import java.time.Instant;
 import java.time.InstantSource;
 import java.time.ZoneId;
 import java.util.Set;
@@ -13,19 +12,20 @@ import sharetrace.logging.LogRecord;
 import sharetrace.logging.RecordLogger;
 import sharetrace.model.Context;
 import sharetrace.model.ContextBuilder;
+import sharetrace.model.factory.TimeFactory;
 
 public record ContextParser(Config contextConfig) implements ConfigParser<Context> {
 
   @Override
   public Context parse(Config config) {
-    var timeSource = getTimeSource(config);
+    var timeFactory = getTimeFactory(config);
     var seed = getSeed(config);
     var logged = getLogged(config);
     return ContextBuilder.create()
         .config(contextConfig)
-        .timeSource(timeSource)
+        .timeFactory(timeFactory)
         .seed(seed)
-        .referenceTime(getReferenceTime(config, timeSource))
+        .referenceTime(getReferenceTime(config, timeFactory))
         .randomGenerator(getRandomGenerator(config, seed))
         .logged(logged)
         .propertyLogger(getPropertyLogger(logged))
@@ -33,20 +33,20 @@ public record ContextParser(Config contextConfig) implements ConfigParser<Contex
         .build();
   }
 
-  private InstantSource getTimeSource(Config config) {
+  private TimeFactory getTimeFactory(Config config) {
     var timezone = ZoneId.of(config.getString("timezone"));
-    return InstantSource.system().withZone(timezone);
+    return TimeFactory.from(InstantSource.system().withZone(timezone));
   }
 
   private long getSeed(Config config) {
     var seed = config.getString("seed");
-    var random = ThreadLocalRandom.current().nextLong(0, Long.MAX_VALUE);
-    return seed.equals("any") ? random : Long.parseLong(seed);
+    var random = ThreadLocalRandom.current().nextInt(0, Integer.MAX_VALUE);
+    return seed.equals("any") ? random : Integer.parseInt(seed);
   }
 
-  private long getReferenceTime(Config config, InstantSource timeSource) {
+  private long getReferenceTime(Config config, TimeFactory timeFactory) {
     var string = config.getString("reference-time");
-    return string.equals("now") ? timeSource.millis() : Instant.parse(string).toEpochMilli();
+    return string.equals("now") ? timeFactory.getTime() : timeFactory.parseTime(string);
   }
 
   private RandomGenerator getRandomGenerator(Config config, long seed) {

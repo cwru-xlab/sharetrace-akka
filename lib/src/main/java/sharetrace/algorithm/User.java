@@ -55,8 +55,8 @@ final class User extends AbstractBehavior<UserMessage> {
     this.monitor = monitor;
     this.timers = timers;
     this.idleTimeoutMessage = new IdleTimeoutMessage(id);
-    this.scores = new RiskScoreMessageStore(context.timeSource());
-    this.contacts = new ContactStore(context.timeSource());
+    this.scores = new RiskScoreMessageStore(context);
+    this.contacts = new ContactStore(context);
     this.exposureScore = RiskScoreMessage.NULL;
   }
 
@@ -88,7 +88,7 @@ final class User extends AbstractBehavior<UserMessage> {
 
   private Behavior<UserMessage> handle(ContactMessage message) {
     if (!isExpired(message)) {
-      var contact = new Contact(message, parameters, context.timeSource());
+      var contact = new Contact(message, parameters, context);
       contacts.add(contact);
       contact.apply(scores);
       logContactEvent(contact);
@@ -144,7 +144,7 @@ final class User extends AbstractBehavior<UserMessage> {
   }
 
   private boolean isExpired(Expirable expirable) {
-    return expirable.isExpired(context.timeSource());
+    return expirable.isExpired(context);
   }
 
   private RiskScoreMessage transmit(RiskScoreMessage message) {
@@ -171,11 +171,11 @@ final class User extends AbstractBehavior<UserMessage> {
   }
 
   private void logLastEvent() {
-    context.eventLogger().log(LastEvent.class, () -> new LastEvent(id, lastEventTime));
+    context.logEvent(LastEvent.class, () -> new LastEvent(id, lastEventTime));
   }
 
   private <T extends Event> void logEvent(Class<T> type, LongFunction<T> factory) {
-    lastEventTime = context.timeSource().millis();
-    context.eventLogger().log(type, () -> factory.apply(lastEventTime));
+    lastEventTime = context.getTime();
+    context.logEvent(type, () -> factory.apply(lastEventTime));
   }
 }
