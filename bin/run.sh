@@ -1,14 +1,14 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 echo "RUN STARTED"
 
-cd app
-
 configFile="$1"
-logsDirectory="logs/$(date +"%s%3N")"
+logsDirectory="logs/$(date +"%s")"
 
 echo "Config file: $configFile"
 echo "Logs directory: $logsDirectory"
+
+cd app
 
 echo "Running..."
 ../gradlew run -Dconfig.resource=$configFile -Dlogs.dir=$logsDirectory
@@ -23,4 +23,4 @@ else
   rm -f $logsDirectory/event*.log*
 fi
 
-echo "RUN COMPLETE"
+echo "RUN COMPLETED"

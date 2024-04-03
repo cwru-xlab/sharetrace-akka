@@ -1,7 +1,9 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-trap "exit" INT
+# Ref: https://stackoverflow.com/a/54688673
 
-for filename in $(cd ./app/src/main/resources && ls $1); do
-  bin/run.sh $filename
-done
+(trap '' HUP INT
+  for filename in $(cd ./app/src/main/resources && ls | grep "$1"); do
+    bin/run.sh "$filename" "$2"
+  done
+) > nohup-$(date +"%s%").out 2>&1 < /dev/null &
