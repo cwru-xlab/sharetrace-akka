@@ -6,4 +6,4 @@
   for filename in $(cd ./app/src/main/resources && ls | grep "$1"); do
     bin/run.sh "$filename" "$2"
   done
-) > nohup-$(date +"%s").out 2>&1 < /dev/null &
+) </dev/null 1>nohup-$(date +"%s").out 2>&1 &
