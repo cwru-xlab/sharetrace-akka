@@ -3,7 +3,7 @@
 echo "RUN STARTED"
 
 configFile="$1"
-logsDirectory="logs/$(date +"%s")"
+logsDirectory="logs/$(date +"%s%3N")"
 
 echo "Config file: $configFile"
 echo "Logs directory: $logsDirectory"

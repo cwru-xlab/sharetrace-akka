@@ -17,6 +17,7 @@ import sharetrace.analysis.results.MapResults;
 import sharetrace.analysis.results.Results;
 import sharetrace.config.InstanceFactory;
 import sharetrace.logging.jackson.Jackson;
+import sharetrace.model.factory.IdFactory;
 
 public final class Main {
 
@@ -74,8 +75,7 @@ public final class Main {
   }
 
   private static File resultsFile() {
-    var currentTime = System.currentTimeMillis() / 1000;
-    return logsDirectory().resolve("results-" + currentTime + ".json").toFile();
+    return logsDirectory().resolve("results-" + IdFactory.newId() + ".json").toFile();
   }
 
   private static Path logsDirectory() {
