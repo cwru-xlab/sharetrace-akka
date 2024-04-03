@@ -21,6 +21,8 @@ if [ "$2" = "--no-clean-up" ]; then
 else
   echo "Cleaning up event logs..."
   rm -f $logsDirectory/event*.log*
+  echo "Renaming results file..."
+  mv $logsDirectory/results*.json $logsDirectory/results.json
 fi
 
 echo "RUN COMPLETED"

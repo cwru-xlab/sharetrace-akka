@@ -1,14 +1,12 @@
 package sharetrace.model.factory;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.annotation.JsonValue;
 import it.unimi.dsi.fastutil.ints.Int2ReferenceOpenHashMap;
 import java.util.Map;
 import sharetrace.model.RiskScore;
 
-@JsonTypeName("Cached")
 public record CachedRiskScoreFactory(
-    RiskScoreFactory factory, @JsonIgnore Map<Integer, RiskScore> cache)
+    @JsonValue RiskScoreFactory factory, Map<Integer, RiskScore> cache)
     implements RiskScoreFactory {
 
   public CachedRiskScoreFactory(RiskScoreFactory factory) {
@@ -18,6 +16,11 @@ public record CachedRiskScoreFactory(
   @Override
   public String id() {
     return factory.id();
+  }
+
+  @Override
+  public String type() {
+    return factory.type();
   }
 
   @Override

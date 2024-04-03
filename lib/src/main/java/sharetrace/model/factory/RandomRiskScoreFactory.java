@@ -1,11 +1,9 @@
 package sharetrace.model.factory;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import sharetrace.Buildable;
 import sharetrace.model.RiskScore;
 import sharetrace.model.random.DistributedRandom;
 
-@JsonTypeName("Random")
 @Buildable
 public record RandomRiskScoreFactory(
     String id, long scoreExpiry, DistributedRandom distribution, TimeFactory timeFactory)
@@ -14,5 +12,10 @@ public record RandomRiskScoreFactory(
   @Override
   public RiskScore getRiskScore(int key) {
     return RiskScore.fromExpiry(distribution.nextDouble(), timeFactory.getTime(), scoreExpiry);
+  }
+
+  @Override
+  public String type() {
+    return "Random";
   }
 }

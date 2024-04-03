@@ -1,6 +1,5 @@
 package sharetrace.graph;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
@@ -14,10 +13,14 @@ import sharetrace.model.factory.ContactNetworkFactory;
 import sharetrace.model.graph.Graphs;
 import sharetrace.model.graph.TemporalEdge;
 
-@JsonTypeName("File")
 @Buildable
 public record FileContactNetworkFactory(Path path, String delimiter, long referenceTime)
     implements ContactNetworkFactory {
+
+  @Override
+  public String type() {
+    return "File";
+  }
 
   @Override
   public GraphGenerator<Integer, TemporalEdge, ?> graphGenerator() {
