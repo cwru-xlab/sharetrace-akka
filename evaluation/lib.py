@@ -25,15 +25,15 @@ def parse_properties(string: str) -> dotmap.DotMap:
 def query_properties(path: PathLike, query: Query) -> Iterable[tuple[pathlib.Path, DotMaps]]:
     for dataset in iterdir(path):
         with dataset.joinpath("properties.log").open() as f:
-            yield dataset, filter(query, map(parse_properties, f))
+            if properties := list(filter(query, map(parse_properties, f))):
+                yield dataset, properties
 
 
 def query_results(path: PathLike, query: Query) -> DotMaps:
     for dataset, properties in query_properties(path, query):
-        if properties := list(properties):
-            with dataset.joinpath("results.json").open() as f:
-                results = dotmap.DotMap(json.load(f))
-                for props in properties:
-                    results = copy.copy(results)
-                    results.properties = props
-                    yield results
+        with dataset.joinpath("results.json").open() as f:
+            results = dotmap.DotMap(json.load(f))
+            for props in properties:
+                results = copy.copy(results)
+                results.properties = props
+                yield results
