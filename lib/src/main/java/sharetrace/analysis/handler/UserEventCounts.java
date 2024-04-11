@@ -23,17 +23,17 @@ public final class UserEventCounts implements EventHandler {
   @Override
   public void onNext(Event event) {
     if (event instanceof UserEvent e) {
-      var index = updateAndGetIndex(e);
-      var userCounts = updateAndGetCounts(e);
+      var index = getEventIndex(e);
+      var userCounts = getUserCounts(e);
       updateCounts(userCounts, index);
     }
   }
 
-  private int updateAndGetIndex(UserEvent event) {
+  private int getEventIndex(UserEvent event) {
     return encoding.computeIfAbsent(event.getClass(), x -> encoding.size());
   }
 
-  private IntList updateAndGetCounts(UserEvent event) {
+  private IntList getUserCounts(UserEvent event) {
     return counts.computeIfAbsent(event.self(), x -> new IntArrayList());
   }
 
