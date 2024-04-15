@@ -25,7 +25,7 @@ def _iterdir(path: pathlib.Path) -> Iterable[pathlib.Path]:
 def _load_dataset(path: pathlib.Path) -> Iterable[dict[str, Any]]:
     results = _load_results(path)
     for props in _load_properties(path):
-        yield {"properties": props, "results": results[props["key"]]}
+        yield {"results": results[props["key"]], **props}
 
 
 def _load_results(dataset: pathlib.Path) -> dict[str, Any]:
