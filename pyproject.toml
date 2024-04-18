@@ -2,7 +2,7 @@
 name = "evaluation"
 version = "0.1.0"
 description = ""
-authors = ["rtatton <rdt17@proton.me>"]
+authors = ["rtatton <github893@proton.me>"]
 
 [tool.poetry.dependencies]
 python = ">=3.9,<3.12"  # Setup for scipy
