@@ -3,7 +3,6 @@ package sharetrace.config;
 import com.typesafe.config.Config;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import java.time.InstantSource;
-import java.time.ZoneId;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import org.apache.commons.math3.random.RandomGenerator;
@@ -18,7 +17,7 @@ public record ContextParser(Config contextConfig) implements ConfigParser<Contex
 
   @Override
   public Context parse(Config config) {
-    var timeFactory = getTimeFactory(config);
+    var timeFactory = getTimeFactory();
     var seed = getSeed(config);
     var logged = getLogged(config);
     return ContextBuilder.create()
@@ -27,15 +26,13 @@ public record ContextParser(Config contextConfig) implements ConfigParser<Contex
         .seed(seed)
         .referenceTime(getReferenceTime(config, timeFactory))
         .randomGenerator(getRandomGenerator(config, seed))
-        .logged(logged)
         .propertyLogger(getPropertyLogger(logged))
         .eventLogger(getEventLogger(logged))
         .build();
   }
 
-  private TimeFactory getTimeFactory(Config config) {
-    var timezone = ZoneId.of(config.getString("timezone"));
-    return TimeFactory.from(InstantSource.system().withZone(timezone));
+  private TimeFactory getTimeFactory() {
+    return TimeFactory.from(InstantSource.system());
   }
 
   private long getSeed(Config config) {

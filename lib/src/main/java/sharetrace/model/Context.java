@@ -3,7 +3,6 @@ package sharetrace.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.typesafe.config.Config;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.Supplier;
 import org.apache.commons.math3.random.RandomGenerator;
 import sharetrace.Buildable;
@@ -18,8 +17,6 @@ public record Context(
     long referenceTime,
     long seed,
     RandomGenerator randomGenerator,
-    Set<Class<? extends LogRecord>> logged,
-    Map<String, String> tags,
     @JsonIgnore Map<String, String> mdc,
     @JsonIgnore RecordLogger propertyLogger,
     @JsonIgnore RecordLogger eventLogger)
