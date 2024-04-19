@@ -1,6 +1,5 @@
 package sharetrace.analysis.handler;
 
-import it.unimi.dsi.fastutil.ints.Int2IntMap;
 import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ReferenceMap;
 import it.unimi.dsi.fastutil.ints.Int2ReferenceOpenHashMap;
@@ -59,8 +58,7 @@ public final class MessageReachability implements EventHandler {
         .withScope("reachability")
         .put("influence", influence)
         .put("source", source)
-        .put("message", reachability)
-        .put("ratio", reachabilityRatio(influence));
+        .put("message", reachability);
   }
 
   private IntSet targetsOfOrigin(int origin, Iterable<IntIntPair> edges) {
@@ -92,9 +90,5 @@ public final class MessageReachability implements EventHandler {
         .mapToInt(GraphPath::getLength)
         .max()
         .orElse(0);
-  }
-
-  private double reachabilityRatio(Int2IntMap influence) {
-    return influence.values().intStream().summaryStatistics().getAverage();
   }
 }
