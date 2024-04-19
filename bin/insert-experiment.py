@@ -25,7 +25,7 @@ def _iterdir(path: pathlib.Path) -> Iterable[pathlib.Path]:
 def _load_dataset(path: pathlib.Path) -> Iterable[dict[str, Any]]:
     results = _load_results(path)
     for props in _load_properties(path):
-        yield {"results": results[props["key"]], **props}
+        yield {"results": results[props["dataset"]["key"]], **props}
 
 
 def _load_results(path: pathlib.Path) -> dict[str, Any]:
@@ -37,7 +37,7 @@ def _load_properties(path: pathlib.Path) -> Iterable[dict[str, Any]]:
     with path.joinpath("properties.log").open() as f:
         for line in f:
             props = json.loads(line)
-            props.update(key=props.pop("k"), dataset=path.name, **props.pop("p"))
+            props.update(dataset={"id": path.name, "key": props.pop("k")}, **props.pop("p"))
             yield props
 
 
