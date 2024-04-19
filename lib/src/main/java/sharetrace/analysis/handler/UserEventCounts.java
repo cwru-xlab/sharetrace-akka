@@ -46,6 +46,16 @@ public final class UserEventCounts implements EventHandler {
 
   @Override
   public void onComplete(Results results) {
-    results.withScope("user").withScope("events").put("counts", counts).put("encoding", encoding);
+    results
+        .withScope("user")
+        .withScope("events")
+        .put("counts", counts)
+        .put("encoding", inverseEncoding());
+  }
+
+  private Class<?>[] inverseEncoding() {
+    var inverse = new Class[encoding.size()];
+    encoding.reference2IntEntrySet().forEach(e -> inverse[e.getIntValue()] = e.getKey());
+    return inverse;
   }
 }
