@@ -16,8 +16,7 @@ public final class UserUpdates implements EventHandler {
 
   private List[] updates;
 
-  public UserUpdates() {
-  }
+  public UserUpdates() {}
 
   @Override
   public void onNext(Event event, Context context) {

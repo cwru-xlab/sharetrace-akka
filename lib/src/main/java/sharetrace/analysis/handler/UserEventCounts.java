@@ -1,8 +1,7 @@
 package sharetrace.analysis.handler;
 
-import java.util.Map;
-
 import it.unimi.dsi.fastutil.objects.Object2ReferenceOpenHashMap;
+import java.util.Map;
 import sharetrace.analysis.model.Context;
 import sharetrace.analysis.model.Results;
 import sharetrace.logging.event.Event;
