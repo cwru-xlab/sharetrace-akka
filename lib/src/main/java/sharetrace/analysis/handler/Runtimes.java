@@ -3,7 +3,8 @@ package sharetrace.analysis.handler;
 import it.unimi.dsi.fastutil.objects.Reference2LongMap;
 import it.unimi.dsi.fastutil.objects.Reference2LongOpenHashMap;
 import java.util.stream.Stream;
-import sharetrace.analysis.results.Results;
+import sharetrace.analysis.model.Context;
+import sharetrace.analysis.model.Results;
 import sharetrace.logging.event.Event;
 import sharetrace.logging.event.lifecycle.CreateUsersEnd;
 import sharetrace.logging.event.lifecycle.CreateUsersStart;
@@ -30,7 +31,7 @@ public final class Runtimes implements EventHandler {
   }
 
   @Override
-  public void onNext(Event event) {
+  public void onNext(Event event, Context context) {
     if (event instanceof LifecycleEvent) {
       events.put(event.getClass(), event.timestamp());
     } else if (event instanceof UserEvent) {
@@ -39,14 +40,14 @@ public final class Runtimes implements EventHandler {
   }
 
   @Override
-  public void onComplete(Results results) {
+  public void onComplete(Results results, Context context) {
     results
         .withScope("runtime")
-        .put("createUsers", getRuntime(CreateUsersStart.class, CreateUsersEnd.class))
-        .put("sendContacts", getRuntime(SendContactsStart.class, SendContactsEnd.class))
-        .put("sendScores", getRuntime(SendRiskScoresStart.class, SendRiskScoresEnd.class))
-        .put("riskPropagation", getRuntime(RiskPropagationStart.class, RiskPropagationEnd.class))
-        .put("messagePassing", messagePassingRuntime());
+        .put("CreateUsers", getRuntime(CreateUsersStart.class, CreateUsersEnd.class))
+        .put("SendContacts", getRuntime(SendContactsStart.class, SendContactsEnd.class))
+        .put("SendScores", getRuntime(SendRiskScoresStart.class, SendRiskScoresEnd.class))
+        .put("RiskPropagation", getRuntime(RiskPropagationStart.class, RiskPropagationEnd.class))
+        .put("MessagePassing", messagePassingRuntime());
   }
 
   private Object getRuntime(Class<?> start, Class<?> end) {

@@ -7,8 +7,8 @@ public final class ClassFactory {
   public static <T> Class<T> getClass(Class<T> expected, String name) {
     try {
       return checkType(expected, Class.forName(name));
-    } catch (ClassNotFoundException exception) {
-      throw new RuntimeException(exception);
+    } catch (ClassNotFoundException e) {
+      throw new RuntimeException(e);
     }
   }
 

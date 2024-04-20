@@ -11,8 +11,8 @@ public final class InstanceFactory {
       var types = Stream.of(parameters).map(InstanceFactory::getClass).toArray(Class[]::new);
       var clazz = ClassFactory.getClass(type, name);
       return clazz.getConstructor(types).newInstance(parameters);
-    } catch (Exception exception) {
-      throw new RuntimeException(exception);
+    } catch (Exception e) {
+      throw new RuntimeException(e);
     }
   }
 

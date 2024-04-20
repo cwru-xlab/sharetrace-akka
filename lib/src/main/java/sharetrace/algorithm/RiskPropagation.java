@@ -60,11 +60,11 @@ public record RiskPropagation(
           .getWhenTerminated()
           .toCompletableFuture()
           .get();
-    } catch (InterruptedException exception) {
+    } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
-      throw new RuntimeException(exception);
-    } catch (ExecutionException exception) {
-      throw new RuntimeException(exception);
+      throw new RuntimeException(e);
+    } catch (ExecutionException e) {
+      throw new RuntimeException(e);
     }
   }
 

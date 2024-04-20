@@ -1,5 +1,7 @@
 package sharetrace.analysis;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectReader;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -9,21 +11,20 @@ import java.nio.file.Path;
 import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 import sharetrace.analysis.model.EventRecord;
-import sharetrace.config.Parser;
 
-public record EventRecordStream(Parser<String, EventRecord> parser) {
+public record EventRecordsLoader(ObjectMapper mapper) {
 
   @SuppressWarnings("resource")
-  public Stream<EventRecord> open(Path directory) throws IOException {
+  public Stream<EventRecord> loadEventRecords(Path directory) throws IOException {
     return Files.list(directory)
         .filter(this::isEventLog)
         .sorted(this::compare)
-        .flatMap(this::records)
-        .map(parser::parse);
+        .flatMap(this::lines)
+        .map(new EventRecordParser(mapper)::parse);
   }
 
   private boolean isEventLog(Path path) {
-    return filename(path).startsWith("event") && (isCompressed(path) || isUncompressed(path));
+    return getFilename(path).startsWith("event") && (isCompressed(path) || isUncompressed(path));
   }
 
   private int compare(Path left, Path right) {
@@ -36,7 +37,7 @@ public record EventRecordStream(Parser<String, EventRecord> parser) {
     }
   }
 
-  private Stream<String> records(Path path) {
+  private Stream<String> lines(Path path) {
     var buffer = 8192; // Default buffer size used by BufferedReader
     try {
       var input = Files.newInputStream(path);
@@ -45,20 +46,35 @@ public record EventRecordStream(Parser<String, EventRecord> parser) {
         input = new GZIPInputStream(input, buffer);
       }
       return new BufferedReader(new InputStreamReader(input), buffer).lines();
-    } catch (IOException exception) {
-      throw new UncheckedIOException(exception);
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
     }
   }
 
   private boolean isCompressed(Path path) {
-    return filename(path).endsWith(".gz");
+    return getFilename(path).endsWith(".gz");
   }
 
   private boolean isUncompressed(Path path) {
-    return filename(path).endsWith(".log");
+    return getFilename(path).endsWith(".log");
   }
 
-  private String filename(Path path) {
+  private String getFilename(Path path) {
     return path.getFileName().toString();
+  }
+
+  private record EventRecordParser(ObjectReader reader) {
+
+    public EventRecordParser(ObjectMapper mapper) {
+      this(mapper.readerFor(EventRecord.class));
+    }
+
+    public EventRecord parse(String input) {
+      try {
+        return reader.readValue(input);
+      } catch (IOException e) {
+        throw new UncheckedIOException(e);
+      }
+    }
   }
 }

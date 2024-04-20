@@ -33,8 +33,8 @@ public record ContactNetworkExporter(Path directory, String filename) {
     if (Files.notExists(path)) {
       try {
         return Files.createDirectories(path);
-      } catch (IOException exception) {
-        throw new UncheckedIOException(exception);
+      } catch (IOException e) {
+        throw new UncheckedIOException(e);
       }
     }
     return path;

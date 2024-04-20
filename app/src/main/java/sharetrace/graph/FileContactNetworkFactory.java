@@ -31,8 +31,8 @@ public record FileContactNetworkFactory(Path path, String delimiter, long refere
     var maxContactTime = new AtomicLong();
     try (var edges = Files.lines(path)) {
       edges.forEach(edge -> processEdge(edge, target, maxContactTime));
-    } catch (IOException exception) {
-      throw new UncheckedIOException(exception);
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
     }
     // Newest contact time = reference time.
     var offset = Math.subtractExact(referenceTime, maxContactTime.get());

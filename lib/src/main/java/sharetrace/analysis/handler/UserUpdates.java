@@ -6,7 +6,8 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import sharetrace.analysis.results.Results;
+import sharetrace.analysis.model.Context;
+import sharetrace.analysis.model.Results;
 import sharetrace.logging.event.Event;
 import sharetrace.logging.event.user.UpdateEvent;
 import sharetrace.model.RiskScore;
@@ -22,14 +23,14 @@ public final class UserUpdates implements EventHandler {
   }
 
   @Override
-  public void onNext(Event event) {
+  public void onNext(Event event, Context context) {
     if (event instanceof UpdateEvent update) {
       updates.computeIfAbsent(update.self(), x -> new ReferenceArrayList<>()).add(update);
     }
   }
 
   @Override
-  public void onComplete(Results results) {
+  public void onComplete(Results results, Context context) {
     updates.replaceAll((user, updates) -> scores(updates));
     updates.values().removeIf(Collection::isEmpty);
     results.withScope("user").put("updates", updates);
@@ -38,7 +39,7 @@ public final class UserUpdates implements EventHandler {
   private List<RiskScore> scores(Collection<UpdateEvent> updates) {
     return updates.stream()
         .sorted(Comparator.comparing(UpdateEvent::timestamp))
-        .skip(1) // First update is trivial: default risk score -> initial non-zero risk score
+        .skip(1) // First update is trivial: default risk score -> initial risk score
         .map(UpdateEvent::current)
         .map(RiskScoreMessage::score)
         .collect(ReferenceArrayList.toList());

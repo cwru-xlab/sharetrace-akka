@@ -1,6 +1,5 @@
 package sharetrace.analysis.handler;
 
-import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ReferenceMap;
 import it.unimi.dsi.fastutil.ints.Int2ReferenceOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntIntPair;
@@ -13,21 +12,22 @@ import org.jgrapht.Graph;
 import org.jgrapht.GraphPath;
 import org.jgrapht.alg.shortestpath.IntVertexDijkstraShortestPath;
 import org.jgrapht.graph.DefaultEdge;
-import sharetrace.analysis.results.Results;
+import sharetrace.analysis.model.Context;
+import sharetrace.analysis.model.Results;
 import sharetrace.logging.event.Event;
 import sharetrace.logging.event.user.ReceiveEvent;
 import sharetrace.model.graph.Graphs;
 
-public final class MessageReachability implements EventHandler {
+public final class Reachability implements EventHandler {
 
   private final Int2ReferenceMap<Set<IntIntPair>> edges;
 
-  public MessageReachability() {
+  public Reachability() {
     edges = new Int2ReferenceOpenHashMap<>();
   }
 
   @Override
-  public void onNext(Event event) {
+  public void onNext(Event event, Context context) {
     if (event instanceof ReceiveEvent receive) {
       var source = receive.contact();
       var target = receive.self();
@@ -41,24 +41,24 @@ public final class MessageReachability implements EventHandler {
   }
 
   @Override
-  public void onComplete(Results results) {
-    var influence = new Int2IntOpenHashMap(edges.size());
-    var source = new Int2IntOpenHashMap(edges.size());
-    var reachability = new Int2IntOpenHashMap(edges.size());
+  public void onComplete(Results results, Context context) {
+    var influence = new int[context.nodes()];
+    var source = new int[context.nodes()];
+    var message = new int[context.nodes()];
     for (var entry : edges.int2ReferenceEntrySet()) {
       var origin = entry.getIntKey();
       var edges = entry.getValue();
       var targets = targetsOfOrigin(origin, edges);
       var graph = reachabilityGraph(edges);
-      influence.put(origin, targets.size());
-      targets.forEach(target -> source.addTo(target, 1));
-      reachability.put(origin, messageReachability(origin, graph));
+      influence[origin] = targets.size();
+      targets.forEach(target -> source[target]++);
+      message[origin] = messageReachability(origin, graph);
     }
     results
         .withScope("reachability")
         .put("influence", influence)
         .put("source", source)
-        .put("message", reachability);
+        .put("message", message);
   }
 
   private IntSet targetsOfOrigin(int origin, Iterable<IntIntPair> edges) {
