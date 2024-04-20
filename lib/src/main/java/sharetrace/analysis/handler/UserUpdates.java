@@ -1,11 +1,9 @@
 package sharetrace.analysis.handler;
 
-import it.unimi.dsi.fastutil.ints.Int2ReferenceOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import sharetrace.analysis.model.Context;
 import sharetrace.analysis.model.Results;
 import sharetrace.logging.event.Event;
@@ -16,23 +14,30 @@ import sharetrace.model.message.RiskScoreMessage;
 @SuppressWarnings({"rawtypes", "unchecked"})
 public final class UserUpdates implements EventHandler {
 
-  private final Map<Integer, List> updates;
+  private List[] updates;
 
   public UserUpdates() {
-    updates = new Int2ReferenceOpenHashMap<>();
   }
 
   @Override
   public void onNext(Event event, Context context) {
-    if (event instanceof UpdateEvent update) {
-      updates.computeIfAbsent(update.self(), x -> new ReferenceArrayList<>()).add(update);
+    if (event instanceof UpdateEvent e) {
+      if (updates == null) {
+        updates = new List[context.nodes()];
+      }
+      var index = e.self();
+      if (updates[index] == null) {
+        updates[index] = new ReferenceArrayList<>();
+      }
+      updates[index].add(e);
     }
   }
 
   @Override
   public void onComplete(Results results, Context context) {
-    updates.replaceAll((user, updates) -> scores(updates));
-    updates.values().removeIf(Collection::isEmpty);
+    for (var i = 0; i < updates.length; i++) {
+      updates[i] = scores(updates[i]);
+    }
     results.withScope("user").put("updates", updates);
   }
 
