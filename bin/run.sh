@@ -2,8 +2,14 @@
 
 echo "RUN STARTED"
 
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  currentTime=$(gdate "+%s%3N")
+else
+  currentTime=$(date +"%s%3N")
+fi
+
+logsDirectory="logs/$currentTime"
 configFile="$1"
-logsDirectory="logs/$(date +"%s%3N")"
 
 echo "Config file: $configFile"
 echo "Logs directory: $logsDirectory"
@@ -16,7 +22,7 @@ echo "Running..."
 echo "Analyzing..."
 ../gradlew analyze -Dconfig.resource=$configFile -Dlogs.dir=$logsDirectory
 
-if [ "$2" = "--no-clean-up" ]; then
+if [[ "$2" == "--no-clean-up" ]]; then
   echo "Skipping event log cleanup"
 else
   echo "Cleaning up event logs..."
