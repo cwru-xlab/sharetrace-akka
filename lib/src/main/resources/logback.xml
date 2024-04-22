@@ -47,7 +47,6 @@
             <includeContext>false</includeContext>
             <jsonFactoryDecorator class="IonJsonFactoryDecorator"/>
         </encoder>
-        <immediateFlush>false</immediateFlush>
         <rollingPolicy class="FixedWindowRollingPolicy">
             <fileNamePattern>${logs.dir}/events-%i.log.gz</fileNamePattern>
             <minIndex>1</minIndex>
@@ -78,7 +77,6 @@
             <jsonFactoryDecorator class="StandardJsonFactoryDecorator"/>
         </encoder>
         <file>${logs.dir}/properties.log</file>
-        <immediateFlush>false</immediateFlush>
     </appender>
 
     <appender name="PropertyAppender" class="LoggingEventAsyncDisruptorAppender">

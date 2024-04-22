@@ -3,12 +3,13 @@ package sharetrace.algorithm;
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
 import akka.actor.typed.DispatcherSelector;
+import akka.actor.typed.PostStop;
 import akka.actor.typed.Props;
 import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
-import java.util.BitSet;
+import akka.actor.typed.javadsl.TimerScheduler;
 import java.util.function.LongFunction;
 import sharetrace.logging.event.Event;
 import sharetrace.logging.event.lifecycle.CreateUsersEnd;
@@ -29,6 +30,7 @@ import sharetrace.model.message.MonitorMessage;
 import sharetrace.model.message.RiskScoreMessage;
 import sharetrace.model.message.RunMessage;
 import sharetrace.model.message.UserMessage;
+import sharetrace.model.message.UserUpdatedMessage;
 
 final class Monitor extends AbstractBehavior<MonitorMessage> {
 
@@ -36,20 +38,21 @@ final class Monitor extends AbstractBehavior<MonitorMessage> {
   private final Parameters parameters;
   private final RiskScoreFactory scoreFactory;
   private final ContactNetwork network;
-  private final BitSet timeouts;
+  private final TimerScheduler<MonitorMessage> timers;
 
   private Monitor(
       ActorContext<MonitorMessage> actorContext,
       Context context,
       Parameters parameters,
       RiskScoreFactory scoreFactory,
-      ContactNetwork network) {
+      ContactNetwork network,
+      TimerScheduler<MonitorMessage> timers) {
     super(actorContext);
     this.context = context;
     this.parameters = parameters;
     this.scoreFactory = scoreFactory;
     this.network = network;
-    this.timeouts = new BitSet(userCount());
+    this.timers = timers;
   }
 
   public static Behavior<MonitorMessage> of(
@@ -59,7 +62,11 @@ final class Monitor extends AbstractBehavior<MonitorMessage> {
       ContactNetwork network) {
     return Behaviors.setup(
         actorContext -> {
-          var monitor = new Monitor(actorContext, context, parameters, scoreFactory, network);
+          var monitor =
+              Behaviors.<MonitorMessage>withTimers(
+                  timers ->
+                      new Monitor(
+                          actorContext, context, parameters, scoreFactory, network, timers));
           return Behaviors.withMdc(MonitorMessage.class, context.mdc(), monitor);
         });
   }
@@ -76,25 +83,42 @@ final class Monitor extends AbstractBehavior<MonitorMessage> {
   public Receive<MonitorMessage> createReceive() {
     return newReceiveBuilder()
         .onMessage(RunMessage.class, this::handle)
+        .onMessage(UserUpdatedMessage.class, this::handle)
         .onMessage(IdleTimeoutMessage.class, this::handle)
+        .onSignal(PostStop.class, this::handle)
         .build();
   }
 
+  @SuppressWarnings("unused")
   private Behavior<MonitorMessage> handle(RunMessage message) {
     logEvent(RiskPropagationStart.class, RiskPropagationStart::new);
     var users = newUsers();
     sendContacts(users);
     sendRiskScores(users);
+    startIdleTimeoutTimer();
     return this;
   }
 
+  @SuppressWarnings("unused")
+  private Behavior<MonitorMessage> handle(UserUpdatedMessage message) {
+    startIdleTimeoutTimer();
+    return this;
+  }
+
+  private void startIdleTimeoutTimer() {
+    timers.startSingleTimer(IdleTimeoutMessage.INSTANCE, parameters.idleTimeout());
+  }
+
+  @SuppressWarnings("unused")
   private Behavior<MonitorMessage> handle(IdleTimeoutMessage message) {
-    timeouts.set(message.id());
-    if (timeouts.cardinality() < userCount()) {
-      return this;
-    }
-    logEvent(RiskPropagationEnd.class, RiskPropagationEnd::new);
     return Behaviors.stopped();
+  }
+
+  @SuppressWarnings("unused")
+  private Behavior<MonitorMessage> handle(PostStop stop) {
+    // Logging this in response to a PostStop signal is the only way that works.
+    logEvent(RiskPropagationEnd.class, RiskPropagationEnd::new);
+    return this;
   }
 
   @SuppressWarnings("unchecked")

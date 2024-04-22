@@ -22,10 +22,10 @@ import sharetrace.model.Expirable;
 import sharetrace.model.Parameters;
 import sharetrace.model.message.ContactMessage;
 import sharetrace.model.message.FlushTimeoutMessage;
-import sharetrace.model.message.IdleTimeoutMessage;
 import sharetrace.model.message.MonitorMessage;
 import sharetrace.model.message.RiskScoreMessage;
 import sharetrace.model.message.UserMessage;
+import sharetrace.model.message.UserUpdatedMessage;
 
 final class User extends AbstractBehavior<UserMessage> {
 
@@ -34,7 +34,6 @@ final class User extends AbstractBehavior<UserMessage> {
   private final Parameters parameters;
   private final ActorRef<MonitorMessage> monitor;
   private final TimerScheduler<UserMessage> timers;
-  private final IdleTimeoutMessage idleTimeoutMessage;
   private final RiskScoreMessageStore scores;
   private final ContactStore contacts;
 
@@ -54,7 +53,6 @@ final class User extends AbstractBehavior<UserMessage> {
     this.parameters = parameters;
     this.monitor = monitor;
     this.timers = timers;
-    this.idleTimeoutMessage = new IdleTimeoutMessage(id);
     this.scores = new RiskScoreMessageStore(context);
     this.contacts = new ContactStore(context);
     this.exposureScore = RiskScoreMessage.NULL;
@@ -81,7 +79,6 @@ final class User extends AbstractBehavior<UserMessage> {
         .onMessage(ContactMessage.class, this::handle)
         .onMessage(RiskScoreMessage.class, this::handle)
         .onMessage(FlushTimeoutMessage.class, this::handle)
-        .onMessage(IdleTimeoutMessage.class, this::handle)
         .onSignal(PostStop.class, this::handle)
         .build();
   }
@@ -104,7 +101,7 @@ final class User extends AbstractBehavior<UserMessage> {
       scores.add(transmitted);
       contacts.forEach(contact -> contact.apply(transmitted, scores));
     }
-    startTimers();
+    startFlushTimeoutTimer();
     return this;
   }
 
@@ -112,32 +109,33 @@ final class User extends AbstractBehavior<UserMessage> {
     if (exposureScore.value() < message.value()) {
       var previous = exposureScore;
       exposureScore = message;
-      logUpdateEvent(previous, exposureScore);
+      onUpdate(previous);
     } else if (isExpired(exposureScore)) {
       var previous = exposureScore;
       exposureScore = scores.max(Range.all()).map(this::original).orElse(RiskScoreMessage.NULL);
-      logUpdateEvent(previous, exposureScore);
+      onUpdate(previous);
     }
   }
 
-  private void startTimers() {
+  private void onUpdate(RiskScoreMessage previous) {
+    logUpdateEvent(previous, exposureScore);
+    monitor.tell(UserUpdatedMessage.INSTANCE);
+  }
+
+  private void startFlushTimeoutTimer() {
     if (!timers.isTimerActive(FlushTimeoutMessage.INSTANCE)) {
       timers.startTimerWithFixedDelay(FlushTimeoutMessage.INSTANCE, parameters.flushTimeout());
     }
-    timers.startSingleTimer(idleTimeoutMessage, parameters.idleTimeout());
   }
 
+  @SuppressWarnings("unused")
   private Behavior<UserMessage> handle(FlushTimeoutMessage message) {
     contacts.forEach(Contact::flush);
     contacts.refresh();
     return this;
   }
 
-  private Behavior<UserMessage> handle(IdleTimeoutMessage message) {
-    monitor.tell(message);
-    return this;
-  }
-
+  @SuppressWarnings("unused")
   private Behavior<UserMessage> handle(PostStop stop) {
     logLastEvent();
     return this;

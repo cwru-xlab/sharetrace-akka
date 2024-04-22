@@ -1,11 +1,9 @@
 package sharetrace.analysis.handler;
 
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
-
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
-
 import sharetrace.analysis.model.Context;
 import sharetrace.analysis.model.Results;
 import sharetrace.logging.event.Event;
