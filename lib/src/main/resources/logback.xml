@@ -84,7 +84,7 @@
         <appender-ref ref="BasePropertyAppender"/>
     </appender>
 
-    <root level="error">
+    <root>
         <appender-ref ref="ConsoleAppender"/>
     </root>
     <logger name="EventLogger" level="info" additivity="false">
