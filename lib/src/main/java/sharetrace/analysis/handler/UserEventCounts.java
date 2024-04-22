@@ -18,8 +18,7 @@ public final class UserEventCounts implements EventHandler {
   @Override
   public void onNext(Event event, Context context) {
     if (event instanceof UserEvent e) {
-      var eventCounts = counts.computeIfAbsent(e.getClass(), x -> new int[context.nodes()]);
-      eventCounts[e.self()]++;
+      counts.computeIfAbsent(e.getClass(), x -> new int[context.nodes()])[e.self()]++;
     }
   }
 

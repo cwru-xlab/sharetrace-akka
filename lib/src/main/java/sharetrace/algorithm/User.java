@@ -100,7 +100,7 @@ final class User extends AbstractBehavior<UserMessage> {
     logReceiveEvent(message);
     if (!isExpired(message)) {
       updateExposureScore(message);
-      var transmitted = transmit(message);
+      var transmitted = transmitted(message);
       scores.add(transmitted);
       contacts.forEach(contact -> contact.apply(transmitted, scores));
     }
@@ -115,7 +115,7 @@ final class User extends AbstractBehavior<UserMessage> {
       logUpdateEvent(previous, exposureScore);
     } else if (isExpired(exposureScore)) {
       var previous = exposureScore;
-      exposureScore = scores.max(Range.all()).map(this::untransmit).orElse(RiskScoreMessage.NULL);
+      exposureScore = scores.max(Range.all()).map(this::original).orElse(RiskScoreMessage.NULL);
       logUpdateEvent(previous, exposureScore);
     }
   }
@@ -147,13 +147,12 @@ final class User extends AbstractBehavior<UserMessage> {
     return expirable.isExpired(context);
   }
 
-  private RiskScoreMessage transmit(RiskScoreMessage message) {
+  private RiskScoreMessage transmitted(RiskScoreMessage message) {
     var score = message.score().mapValue(value -> value * parameters.transmissionRate());
     return new RiskScoreMessage(score, id, message.origin());
   }
 
-  @SuppressWarnings("SpellCheckingInspection")
-  private RiskScoreMessage untransmit(RiskScoreMessage message) {
+  private RiskScoreMessage original(RiskScoreMessage message) {
     var score = message.score().mapValue(value -> value / parameters.transmissionRate());
     return new RiskScoreMessage(score, message.sender(), message.origin());
   }

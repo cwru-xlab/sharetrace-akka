@@ -81,9 +81,6 @@ final class Monitor extends AbstractBehavior<MonitorMessage> {
   }
 
   private Behavior<MonitorMessage> handle(RunMessage message) {
-    if (userCount() < 1) {
-      return Behaviors.stopped();
-    }
     logEvent(RiskPropagationStart.class, RiskPropagationStart::new);
     var users = newUsers();
     sendContacts(users);
