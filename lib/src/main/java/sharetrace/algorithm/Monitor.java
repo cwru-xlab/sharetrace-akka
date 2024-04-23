@@ -160,6 +160,6 @@ final class Monitor extends AbstractBehavior<MonitorMessage> {
   }
 
   private <T extends Event> void logEvent(Class<T> type, LongFunction<T> factory) {
-    context.logEvent(type, () -> factory.apply(context.getTime()));
+    context.logEvent(type, () -> factory.apply(context.getSystemTime()));
   }
 }

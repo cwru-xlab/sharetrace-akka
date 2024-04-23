@@ -13,18 +13,21 @@ import sharetrace.model.factory.TimeFactory;
 @Buildable
 public record Context(
     @JsonIgnore Config config,
-    @JsonIgnore TimeFactory timeFactory,
+    @JsonIgnore TimeFactory systemTimeFactory,
+    @JsonIgnore TimeFactory dataTimeFactory,
     long referenceTime,
     long seed,
     RandomGenerator randomGenerator,
     @JsonIgnore Map<String, String> mdc,
     @JsonIgnore RecordLogger propertyLogger,
-    @JsonIgnore RecordLogger eventLogger)
-    implements TimeFactory {
+    @JsonIgnore RecordLogger eventLogger) {
 
-  @Override
-  public long getTime() {
-    return timeFactory.getTime();
+  public long getSystemTime() {
+    return systemTimeFactory.getTime();
+  }
+
+  public long getDataTime() {
+    return dataTimeFactory.getTime();
   }
 
   public <T extends LogRecord> void logEvent(Class<T> type, Supplier<T> record) {
