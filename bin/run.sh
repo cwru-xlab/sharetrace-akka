@@ -2,13 +2,7 @@
 
 echo "RUN STARTED"
 
-if [[ "$OSTYPE" == "darwin"* ]]; then
-  currentTime=$(gdate "+%s%3N")
-else
-  currentTime=$(date +"%s%3N")
-fi
-
-logsDirectory="logs/$currentTime"
+logsDirectory="logs/$(bin/current-time.sh)"
 configFile="$1"
 
 echo "Config file: $configFile"
