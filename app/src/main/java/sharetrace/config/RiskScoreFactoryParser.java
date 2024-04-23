@@ -23,7 +23,7 @@ public record RiskScoreFactoryParser(
   private RiskScoreFactory baseFactory(Config config) {
     return RandomRiskScoreFactoryBuilder.create()
         .id(IdFactory.newId())
-        .distribution(randomParser.parse(config.getConfig("distribution")))
+        .random(randomParser.parse(config.getConfig("random")))
         .timeFactory(timeFactoryParser.parse(config.getConfig("time-factory")))
         .scoreExpiry(parameters.scoreExpiry())
         .build();

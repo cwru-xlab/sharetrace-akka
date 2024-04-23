@@ -4,15 +4,15 @@ sharetrace {
   runner {
     contact-time-factory {
       period = $${sharetrace.parameters.contact-expiry}
-      distribution = $${sharetrace.runner.${contact_time_distribution}-distribution}
+      random = $${sharetrace.runner.${contact_time_distribution}-distribution}
     }
 
     score-factory = {
       cached = ${cache_scores}
-      distribution = $${sharetrace.runner.${score_value_distribution}-distribution}
+      random = $${sharetrace.runner.${score_value_distribution}-distribution}
       time-factory = {
         period = $${sharetrace.parameters.score-expiry}
-        distribution = $${sharetrace.runner.${score_time_distribution}-distribution}
+        random = $${sharetrace.runner.${score_time_distribution}-distribution}
       }
     }
 

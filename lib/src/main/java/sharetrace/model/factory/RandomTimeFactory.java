@@ -8,7 +8,7 @@ import sharetrace.model.random.DistributedRandom;
 
 @JsonTypeName("Random")
 @Buildable
-public record RandomTimeFactory(DistributedRandom distribution, long period, long referenceTime)
+public record RandomTimeFactory(DistributedRandom random, long period, long referenceTime)
     implements TimeFactory {
 
   public RandomTimeFactory {
@@ -18,6 +18,6 @@ public record RandomTimeFactory(DistributedRandom distribution, long period, lon
 
   @Override
   public long getTime() {
-    return Math.subtractExact(referenceTime, distribution.nextLong(period));
+    return Math.subtractExact(referenceTime, random.nextLong(period));
   }
 }
