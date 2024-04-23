@@ -4,7 +4,7 @@ import collections
 import itertools
 import string
 
-distributions = [
+randoms = [
     "standard-normal",
     "uniform"
 ]
@@ -53,17 +53,17 @@ def network_configs():
 
 
 def contact_time_factory_configs():
-    for dist in distributions:
+    for rand in randoms:
         yield {
-            "contact_time_distribution": dist
+            "contact_time_random": rand
         }
 
 
 def score_factory_configs():
-    for value_dist, time_dist in itertools.product(distributions, repeat=2):
+    for value_rand, time_rand in itertools.product(randoms, repeat=2):
         yield {
-            "score_value_distribution": value_dist,
-            "score_time_distribution": time_dist,
+            "score_value_random": value_rand,
+            "score_time_random": time_rand,
         }
 
 
@@ -87,10 +87,10 @@ def generate_configs():
         template = string.Template(f.read())
     for values in template_values():
         factory = values["network_factory"]
-        sv_dist = values["score_value_distribution"]
-        st_dist = values["score_time_distribution"]
-        ct_dist = values["contact_time_distribution"]
-        filename = "_".join(("send-coefficient", factory, sv_dist, st_dist, ct_dist))
+        sv_rand = values["score_value_random"]
+        st_rand = values["score_time_random"]
+        ct_rand = values["contact_time_random"]
+        filename = "_".join(("send-coefficient", factory, sv_rand, st_rand, ct_rand))
         with open(f"./app/src/main/resources/{filename}.conf", "w") as f:
             f.write(template.substitute(values))
 
