@@ -12,7 +12,7 @@ public record RandomTimeFactory(DistributedRandom distribution, long period, lon
     implements TimeFactory {
 
   public RandomTimeFactory {
-    Ranges.check("referenceTime", period, Range.atLeast(0L));
+    Ranges.check("referenceTime", referenceTime, Range.atLeast(0L));
     Ranges.check("period", period, Range.closed(0L, referenceTime));
   }
 
