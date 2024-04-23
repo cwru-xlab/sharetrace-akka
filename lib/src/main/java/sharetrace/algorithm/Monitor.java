@@ -99,28 +99,6 @@ final class Monitor extends AbstractBehavior<MonitorMessage> {
     return this;
   }
 
-  @SuppressWarnings("unused")
-  private Behavior<MonitorMessage> handle(UserUpdatedMessage message) {
-    startIdleTimeoutTimer();
-    return this;
-  }
-
-  private void startIdleTimeoutTimer() {
-    timers.startSingleTimer(IdleTimeoutMessage.INSTANCE, parameters.idleTimeout());
-  }
-
-  @SuppressWarnings("unused")
-  private Behavior<MonitorMessage> handle(IdleTimeoutMessage message) {
-    return Behaviors.stopped();
-  }
-
-  @SuppressWarnings("unused")
-  private Behavior<MonitorMessage> handle(PostStop stop) {
-    // Logging this in response to a PostStop signal is the only way that works.
-    logEvent(RiskPropagationEnd.class, RiskPropagationEnd::new);
-    return this;
-  }
-
   @SuppressWarnings("unchecked")
   private ActorRef<UserMessage>[] newUsers() {
     logEvent(CreateUsersStart.class, CreateUsersStart::new);
@@ -157,6 +135,28 @@ final class Monitor extends AbstractBehavior<MonitorMessage> {
 
   private int userCount() {
     return network.vertexSet().size();
+  }
+
+  @SuppressWarnings("unused")
+  private Behavior<MonitorMessage> handle(UserUpdatedMessage message) {
+    startIdleTimeoutTimer();
+    return this;
+  }
+
+  private void startIdleTimeoutTimer() {
+    timers.startSingleTimer(IdleTimeoutMessage.INSTANCE, parameters.idleTimeout());
+  }
+
+  @SuppressWarnings("unused")
+  private Behavior<MonitorMessage> handle(IdleTimeoutMessage message) {
+    return Behaviors.stopped();
+  }
+
+  @SuppressWarnings("unused")
+  private Behavior<MonitorMessage> handle(PostStop stop) {
+    // Logging this in response to a PostStop signal is the only way that works.
+    logEvent(RiskPropagationEnd.class, RiskPropagationEnd::new);
+    return this;
   }
 
   private <T extends Event> void logEvent(Class<T> type, LongFunction<T> factory) {
