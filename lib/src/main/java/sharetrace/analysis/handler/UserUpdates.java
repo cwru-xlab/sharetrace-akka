@@ -1,26 +1,18 @@
 package sharetrace.analysis.handler;
 
 import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import sharetrace.analysis.model.Context;
 import sharetrace.analysis.model.Results;
 import sharetrace.logging.event.Event;
 import sharetrace.logging.event.user.UpdateEvent;
-import sharetrace.model.RiskScore;
-import sharetrace.model.message.RiskScoreMessage;
 
-@SuppressWarnings({"rawtypes", "unchecked"})
 public final class UserUpdates implements EventHandler {
 
-  private final ReferenceArrayList<List> updates;
+  private List<List<UpdateEvent>> updates;
 
-  private boolean initialized;
-
-  public UserUpdates() {
-    updates = new ReferenceArrayList<>();
-  }
+  public UserUpdates() {}
 
   @Override
   public void onNext(Event event, Context context) {
@@ -29,27 +21,32 @@ public final class UserUpdates implements EventHandler {
     }
   }
 
-  private ReferenceArrayList<List> getUpdates(Context context) {
-    if (!initialized) {
-      updates.ensureCapacity(context.nodes());
-      updates.replaceAll(x -> new ReferenceArrayList<>());
-      initialized = true;
+  private List<List<UpdateEvent>> getUpdates(Context context) {
+    if (updates == null) {
+      var list = new ReferenceArrayList<List<UpdateEvent>>();
+      list.ensureCapacity(context.nodes());
+      list.replaceAll(x -> new ReferenceArrayList<>());
+      updates = list;
     }
     return updates;
   }
 
   @Override
   public void onComplete(Results results, Context context) {
-    updates.replaceAll(this::scores);
-    results.withScope("user").put("updates", updates);
+    results.withScope("user").put("updates", totalUpdates());
   }
 
-  private List<RiskScore> scores(Collection<UpdateEvent> updates) {
-    return updates.stream()
-        .sorted(Comparator.comparing(UpdateEvent::timestamp))
-        .skip(1) // First update is trivial: default risk score -> initial risk score
-        .map(UpdateEvent::current)
-        .map(RiskScoreMessage::score)
-        .collect(ReferenceArrayList.toList());
+  private double[] totalUpdates() {
+    var totals = new double[updates.size()];
+    for (var i = 0; i < updates.size(); i++) {
+      var iUpdates = updates.get(i);
+      if (iUpdates.size() > 1) {
+        iUpdates.sort(Comparator.comparing(UpdateEvent::timestamp));
+        var last = iUpdates.getLast().current().value();
+        var first = iUpdates.getFirst().current().value();
+        totals[i] = last - first;
+      }
+    }
+    return totals;
   }
 }
