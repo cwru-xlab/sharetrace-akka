@@ -107,18 +107,16 @@ final class User extends AbstractBehavior<UserMessage> {
 
   private void updateExposureScore(RiskScoreMessage message) {
     if (exposureScore.value() < message.value()) {
-      var previous = exposureScore;
-      exposureScore = message;
-      onUpdate(previous);
+      onUpdate(message);
     } else if (isExpired(exposureScore)) {
-      var previous = exposureScore;
-      exposureScore = scores.max(Range.all()).map(this::original).orElse(RiskScoreMessage.NULL);
-      onUpdate(previous);
+      onUpdate(scores.max(Range.all()).map(this::original).orElse(RiskScoreMessage.NULL));
     }
   }
 
-  private void onUpdate(RiskScoreMessage previous) {
-    logUpdateEvent(previous, exposureScore);
+  private void onUpdate(RiskScoreMessage newValue) {
+    var oldValue = exposureScore;
+    exposureScore = newValue;
+    logUpdateEvent(oldValue, newValue);
     monitor.tell(UserUpdatedMessage.INSTANCE);
   }
 
