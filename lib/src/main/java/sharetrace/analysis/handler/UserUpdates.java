@@ -24,7 +24,7 @@ public final class UserUpdates implements EventHandler {
   private List<List<UpdateEvent>> getUpdates(Context context) {
     if (updates == null) {
       var list = new ReferenceArrayList<List<UpdateEvent>>();
-      list.ensureCapacity(context.nodes());
+      list.size(context.nodes());
       list.replaceAll(x -> new ReferenceArrayList<>());
       updates = list;
     }
