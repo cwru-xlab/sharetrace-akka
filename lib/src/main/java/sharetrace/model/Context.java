@@ -22,10 +22,12 @@ public record Context(
     @JsonIgnore RecordLogger propertyLogger,
     @JsonIgnore RecordLogger eventLogger) {
 
+  @JsonIgnore
   public long getDataTime() {
     return dataTimeFactory.getTime();
   }
 
+  @JsonIgnore
   public long getSystemTime() {
     return systemTimeFactory.getTime();
   }

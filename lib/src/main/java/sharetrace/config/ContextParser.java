@@ -19,16 +19,17 @@ public record ContextParser(Config contextConfig) implements ConfigParser<Contex
   public Context parse(Config config) {
     var seed = getSeed(config);
     var logged = getLogged(config);
-    var dataTimeFactory = getDataTimeFactory(config);
+    var referenceTime = getReferenceTime(config);
+    var dataTimeFactory = getDataTimeFactory(config, referenceTime);
     return ContextBuilder.create()
         .config(contextConfig)
-        .systemTimeFactory(TimeFactory.system())
-        .dataTimeFactory(dataTimeFactory)
         .seed(seed)
-        .referenceTime(dataTimeFactory.getTime())
         .randomGenerator(getRandomGenerator(config, seed))
         .eventLogger(getEventLogger(logged))
         .propertyLogger(getPropertyLogger(logged))
+        .systemTimeFactory(getSystemTimeFactory())
+        .dataTimeFactory(dataTimeFactory)
+        .referenceTime(TimeFactory.fixed(referenceTime).getTime())
         .build();
   }
 
@@ -44,14 +45,17 @@ public record ContextParser(Config contextConfig) implements ConfigParser<Contex
         .collect(ReferenceOpenHashSet.toSet());
   }
 
-  private TimeFactory getDataTimeFactory(Config config) {
-    var referenceTime = getReferenceTime(config);
+  private TimeFactory getDataTimeFactory(Config config, Instant referenceTime) {
     var clock = config.getString("data-clock");
     return switch (clock) {
       case "fixed" -> TimeFactory.fixed(referenceTime);
-      case "system" -> TimeFactory.system();
+      case "system" -> getSystemTimeFactory();
       default -> throw new IllegalArgumentException(clock);
     };
+  }
+
+  private TimeFactory getSystemTimeFactory() {
+    return TimeFactory.system();
   }
 
   private Instant getReferenceTime(Config config) {
