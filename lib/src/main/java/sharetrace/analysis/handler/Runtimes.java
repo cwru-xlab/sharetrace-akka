@@ -4,8 +4,8 @@ import it.unimi.dsi.fastutil.objects.Reference2LongMap;
 import it.unimi.dsi.fastutil.objects.Reference2LongOpenHashMap;
 import java.util.stream.Stream;
 import sharetrace.analysis.model.Context;
+import sharetrace.analysis.model.EventRecord;
 import sharetrace.analysis.model.Results;
-import sharetrace.logging.event.Event;
 import sharetrace.logging.event.lifecycle.CreateUsersEnd;
 import sharetrace.logging.event.lifecycle.CreateUsersStart;
 import sharetrace.logging.event.lifecycle.LifecycleEvent;
@@ -31,11 +31,11 @@ public final class Runtimes implements EventHandler {
   }
 
   @Override
-  public void onNext(Event event, Context context) {
-    if (event instanceof LifecycleEvent) {
-      events.put(event.getClass(), event.timestamp());
-    } else if (event instanceof UserEvent) {
-      lastEventTime = Math.max(lastEventTime, event.timestamp());
+  public void onNext(EventRecord record, Context context) {
+    if (record.event() instanceof LifecycleEvent e) {
+      events.put(e.getClass(), record.timestamp());
+    } else if (record.event() instanceof UserEvent) {
+      lastEventTime = Math.max(lastEventTime, record.timestamp());
     }
   }
 

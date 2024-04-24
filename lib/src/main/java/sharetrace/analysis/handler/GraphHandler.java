@@ -10,8 +10,8 @@ import org.jgrapht.alg.scoring.KatzCentrality;
 import org.jgrapht.alg.shortestpath.GraphMeasurer;
 import org.jgrapht.alg.shortestpath.IntVertexDijkstraShortestPath;
 import sharetrace.analysis.model.Context;
+import sharetrace.analysis.model.EventRecord;
 import sharetrace.analysis.model.Results;
-import sharetrace.logging.event.Event;
 import sharetrace.logging.event.user.ContactEvent;
 import sharetrace.model.graph.Graphs;
 import sharetrace.model.graph.TemporalEdge;
@@ -25,8 +25,8 @@ public final class GraphHandler implements EventHandler {
   }
 
   @Override
-  public void onNext(Event event, Context context) {
-    if (event instanceof ContactEvent e) {
+  public void onNext(EventRecord record, Context context) {
+    if (record.event() instanceof ContactEvent e) {
       Graphs.addTemporalEdge(graph, e.self(), e.contact(), e.contactTime());
     }
   }

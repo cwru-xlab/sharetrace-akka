@@ -1,3 +1,3 @@
 package sharetrace.logging.event.lifecycle;
 
-public record CreateUsersStart(long timestamp) implements LifecycleEvent {}
+public record CreateUsersStart() implements LifecycleEvent {}

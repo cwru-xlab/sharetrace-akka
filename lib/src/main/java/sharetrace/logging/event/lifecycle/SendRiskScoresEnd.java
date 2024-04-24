@@ -1,3 +1,3 @@
 package sharetrace.logging.event.lifecycle;
 
-public record SendRiskScoresEnd(long timestamp) implements LifecycleEvent {}
+public record SendRiskScoresEnd() implements LifecycleEvent {}

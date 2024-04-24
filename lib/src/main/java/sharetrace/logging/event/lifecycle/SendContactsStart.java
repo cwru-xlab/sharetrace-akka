@@ -1,3 +1,3 @@
 package sharetrace.logging.event.lifecycle;
 
-public record SendContactsStart(long timestamp) implements LifecycleEvent {}
+public record SendContactsStart() implements LifecycleEvent {}

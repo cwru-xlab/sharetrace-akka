@@ -10,7 +10,7 @@ import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import akka.actor.typed.javadsl.TimerScheduler;
-import java.util.function.LongFunction;
+import java.util.function.Supplier;
 import sharetrace.logging.event.Event;
 import sharetrace.logging.event.lifecycle.CreateUsersEnd;
 import sharetrace.logging.event.lifecycle.CreateUsersStart;
@@ -159,7 +159,7 @@ final class Monitor extends AbstractBehavior<MonitorMessage> {
     return this;
   }
 
-  private <T extends Event> void logEvent(Class<T> type, LongFunction<T> factory) {
-    context.logEvent(type, () -> factory.apply(context.getSystemTime()));
+  private <T extends Event> void logEvent(Class<T> type, Supplier<T> factory) {
+    context.logEvent(type, factory);
   }
 }

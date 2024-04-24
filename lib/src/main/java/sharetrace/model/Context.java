@@ -12,22 +12,22 @@ import sharetrace.model.factory.TimeFactory;
 
 @Buildable
 public record Context(
-    @JsonIgnore Config config,
-    @JsonIgnore TimeFactory systemTimeFactory,
-    @JsonIgnore TimeFactory dataTimeFactory,
     long referenceTime,
     long seed,
     RandomGenerator randomGenerator,
+    @JsonIgnore Config config,
+    @JsonIgnore TimeFactory dataTimeFactory,
+    @JsonIgnore TimeFactory systemTimeFactory,
     @JsonIgnore Map<String, String> mdc,
     @JsonIgnore RecordLogger propertyLogger,
     @JsonIgnore RecordLogger eventLogger) {
 
-  public long getSystemTime() {
-    return systemTimeFactory.getTime();
-  }
-
   public long getDataTime() {
     return dataTimeFactory.getTime();
+  }
+
+  public long getSystemTime() {
+    return systemTimeFactory.getTime();
   }
 
   public <T extends LogRecord> void logEvent(Class<T> type, Supplier<T> record) {

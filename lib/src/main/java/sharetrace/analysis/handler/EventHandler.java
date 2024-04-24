@@ -1,12 +1,12 @@
 package sharetrace.analysis.handler;
 
 import sharetrace.analysis.model.Context;
+import sharetrace.analysis.model.EventRecord;
 import sharetrace.analysis.model.Results;
-import sharetrace.logging.event.Event;
 
 public interface EventHandler {
 
-  void onNext(Event event, Context context);
+  void onNext(EventRecord record, Context context);
 
   void onComplete(Results results, Context context);
 }

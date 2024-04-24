@@ -60,7 +60,7 @@ public final class Main {
       Config config) {
     handlers
         .computeIfAbsent(record.key(), x -> newEventHandler(config))
-        .onNext(record.event(), contexts.get(record.key()));
+        .onNext(record, contexts.get(record.key()));
   }
 
   private static EventHandler newEventHandler(Config config) {

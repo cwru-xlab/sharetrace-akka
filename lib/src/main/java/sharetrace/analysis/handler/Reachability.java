@@ -13,8 +13,8 @@ import org.jgrapht.GraphPath;
 import org.jgrapht.alg.shortestpath.IntVertexDijkstraShortestPath;
 import org.jgrapht.graph.DefaultEdge;
 import sharetrace.analysis.model.Context;
+import sharetrace.analysis.model.EventRecord;
 import sharetrace.analysis.model.Results;
-import sharetrace.logging.event.Event;
 import sharetrace.logging.event.user.ReceiveEvent;
 import sharetrace.model.graph.Graphs;
 
@@ -27,16 +27,11 @@ public final class Reachability implements EventHandler {
   }
 
   @Override
-  public void onNext(Event event, Context context) {
-    if (event instanceof ReceiveEvent receive) {
-      var source = receive.contact();
-      var target = receive.self();
-      if (source != target) {
-        var origin = receive.message().origin();
-        edges
-            .computeIfAbsent(origin, x -> new ObjectOpenHashSet<>())
-            .add(IntIntPair.of(source, target));
-      }
+  public void onNext(EventRecord record, Context context) {
+    if (record.event() instanceof ReceiveEvent e && e.contact() != e.self()) {
+      edges
+          .computeIfAbsent(e.message().origin(), x -> new ObjectOpenHashSet<>())
+          .add(IntIntPair.of(e.contact(), e.self()));
     }
   }
 

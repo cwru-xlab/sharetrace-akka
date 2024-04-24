@@ -1,3 +1,3 @@
 package sharetrace.logging.event.lifecycle;
 
-public record RiskPropagationStart(long timestamp) implements LifecycleEvent {}
+public record RiskPropagationStart() implements LifecycleEvent {}

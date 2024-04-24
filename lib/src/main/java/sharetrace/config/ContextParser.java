@@ -3,7 +3,6 @@ package sharetrace.config;
 import com.typesafe.config.Config;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 import java.time.Instant;
-import java.time.InstantSource;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import org.apache.commons.math3.random.RandomGenerator;
@@ -23,7 +22,7 @@ public record ContextParser(Config contextConfig) implements ConfigParser<Contex
     var dataTimeFactory = getDataTimeFactory(config);
     return ContextBuilder.create()
         .config(contextConfig)
-        .systemTimeFactory(getSystemTimeFactory())
+        .systemTimeFactory(TimeFactory.system())
         .dataTimeFactory(dataTimeFactory)
         .seed(seed)
         .referenceTime(dataTimeFactory.getTime())
@@ -49,8 +48,8 @@ public record ContextParser(Config contextConfig) implements ConfigParser<Contex
     var referenceTime = getReferenceTime(config);
     var clock = config.getString("data-clock");
     return switch (clock) {
-      case "fixed" -> TimeFactory.from(InstantSource.fixed(referenceTime));
-      case "system" -> getSystemTimeFactory();
+      case "fixed" -> TimeFactory.fixed(referenceTime);
+      case "system" -> TimeFactory.system();
       default -> throw new IllegalArgumentException(clock);
     };
   }
@@ -58,10 +57,6 @@ public record ContextParser(Config contextConfig) implements ConfigParser<Contex
   private Instant getReferenceTime(Config config) {
     var string = config.getString("reference-time");
     return string.equals("now") ? Instant.now() : Instant.parse(string);
-  }
-
-  private TimeFactory getSystemTimeFactory() {
-    return TimeFactory.from(InstantSource.system());
   }
 
   private RandomGenerator getRandomGenerator(Config config, long seed) {

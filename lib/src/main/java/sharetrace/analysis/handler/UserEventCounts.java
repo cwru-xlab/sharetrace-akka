@@ -3,8 +3,8 @@ package sharetrace.analysis.handler;
 import it.unimi.dsi.fastutil.objects.Object2ReferenceOpenHashMap;
 import java.util.Map;
 import sharetrace.analysis.model.Context;
+import sharetrace.analysis.model.EventRecord;
 import sharetrace.analysis.model.Results;
-import sharetrace.logging.event.Event;
 import sharetrace.logging.event.user.UserEvent;
 
 public final class UserEventCounts implements EventHandler {
@@ -16,8 +16,8 @@ public final class UserEventCounts implements EventHandler {
   }
 
   @Override
-  public void onNext(Event event, Context context) {
-    if (event instanceof UserEvent e) {
+  public void onNext(EventRecord record, Context context) {
+    if (record.event() instanceof UserEvent e) {
       counts.computeIfAbsent(e.getClass(), x -> new int[context.nodes()])[e.self()]++;
     }
   }

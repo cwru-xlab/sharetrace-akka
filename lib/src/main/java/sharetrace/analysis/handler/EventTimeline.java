@@ -4,9 +4,9 @@ import it.unimi.dsi.fastutil.objects.ReferenceArrayList;
 import java.util.Comparator;
 import java.util.List;
 import sharetrace.analysis.model.Context;
+import sharetrace.analysis.model.EventRecord;
 import sharetrace.analysis.model.Results;
 import sharetrace.analysis.model.TypedEvent;
-import sharetrace.logging.event.Event;
 
 public final class EventTimeline implements EventHandler {
 
@@ -20,9 +20,9 @@ public final class EventTimeline implements EventHandler {
   }
 
   @Override
-  public void onNext(Event event, Context context) {
-    minTimestamp = Math.min(minTimestamp, event.timestamp());
-    timeline.add(new TypedEvent(event.getClass(), event.timestamp()));
+  public void onNext(EventRecord record, Context context) {
+    minTimestamp = Math.min(minTimestamp, record.timestamp());
+    timeline.add(new TypedEvent(record.event().getClass(), record.timestamp()));
   }
 
   @Override

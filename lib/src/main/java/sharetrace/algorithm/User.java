@@ -11,7 +11,7 @@ import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import akka.actor.typed.javadsl.TimerScheduler;
 import com.google.common.collect.Range;
-import java.util.function.LongFunction;
+import java.util.function.Supplier;
 import sharetrace.logging.event.Event;
 import sharetrace.logging.event.user.ContactEvent;
 import sharetrace.logging.event.user.LastEvent;
@@ -154,23 +154,23 @@ final class User extends AbstractBehavior<UserMessage> {
   }
 
   private void logContactEvent(Contact contact) {
-    logEvent(ContactEvent.class, t -> new ContactEvent(id, contact.id(), contact.timestamp(), t));
+    logEvent(ContactEvent.class, () -> new ContactEvent(id, contact.id(), contact.timestamp()));
   }
 
   private void logReceiveEvent(RiskScoreMessage message) {
-    logEvent(ReceiveEvent.class, t -> new ReceiveEvent(id, message.sender(), message, t));
+    logEvent(ReceiveEvent.class, () -> new ReceiveEvent(id, message.sender(), message));
   }
 
   private void logUpdateEvent(RiskScoreMessage previous, RiskScoreMessage current) {
-    logEvent(UpdateEvent.class, t -> new UpdateEvent(id, previous, current, t));
+    logEvent(UpdateEvent.class, () -> new UpdateEvent(id, previous, current));
   }
 
   private void logLastEvent() {
     context.logEvent(LastEvent.class, () -> new LastEvent(id, lastEventTime));
   }
 
-  private <T extends Event> void logEvent(Class<T> type, LongFunction<T> factory) {
+  private <T extends Event> void logEvent(Class<T> type, Supplier<T> factory) {
     lastEventTime = context.getSystemTime();
-    context.logEvent(type, () -> factory.apply(lastEventTime));
+    context.logEvent(type, factory);
   }
 }

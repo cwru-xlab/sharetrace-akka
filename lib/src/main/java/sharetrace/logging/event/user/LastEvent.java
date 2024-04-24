@@ -1,3 +1,5 @@
 package sharetrace.logging.event.user;
 
-public record LastEvent(int self, long timestamp) implements UserEvent {}
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+public record LastEvent(int self, @JsonProperty("t") long timestamp) implements UserEvent {}
