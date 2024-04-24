@@ -1,10 +1,11 @@
 package sharetrace.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Comparator;
 import sharetrace.model.factory.TimeFactory;
 
-public interface Expirable extends Timestamped {
+public interface Expirable {
 
   Comparator<Expirable> COMPARATOR =
       Comparator.comparingLong(Expirable::timestamp).thenComparingLong(Expirable::expiryTime);
@@ -12,6 +13,9 @@ public interface Expirable extends Timestamped {
   static int compare(Expirable left, Expirable right) {
     return COMPARATOR.compare(left, right);
   }
+
+  @JsonProperty("t")
+  long timestamp();
 
   @JsonIgnore
   long expiryTime();
