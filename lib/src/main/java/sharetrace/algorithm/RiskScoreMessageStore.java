@@ -12,8 +12,8 @@ import sharetrace.model.message.RiskScoreMessage;
 
 final class RiskScoreMessageStore extends ExpirableStore<RiskScoreMessage> {
 
-  private static final Comparator<RiskScoreMessage> COMPARATOR = Comparator.naturalOrder();
-  private static final BinaryOperator<RiskScoreMessage> MERGER = BinaryOperator.maxBy(COMPARATOR);
+  private static final Comparator<RiskScoreMessage> COMPARATOR = comparator();
+  private static final BinaryOperator<RiskScoreMessage> MERGE_OPERATOR = mergeOperator();
 
   private final RangeMap<Long, RiskScoreMessage> store;
 
@@ -30,7 +30,7 @@ final class RiskScoreMessageStore extends ExpirableStore<RiskScoreMessage> {
   @Override
   public void add(RiskScoreMessage message) {
     var key = Range.closedOpen(message.timestamp(), message.expiryTime());
-    store.merge(key, message, MERGER);
+    store.merge(key, message, MERGE_OPERATOR);
     super.add(message);
   }
 
@@ -39,7 +39,16 @@ final class RiskScoreMessageStore extends ExpirableStore<RiskScoreMessage> {
     return values(store);
   }
 
-  private Collection<RiskScoreMessage> values(RangeMap<Long, RiskScoreMessage> store) {
+  private static Collection<RiskScoreMessage> values(RangeMap<Long, RiskScoreMessage> store) {
     return store.asMapOfRanges().values();
+  }
+
+  private static BinaryOperator<RiskScoreMessage> mergeOperator() {
+    return BinaryOperator.maxBy(comparator());
+  }
+
+  private static Comparator<RiskScoreMessage> comparator() {
+    return Comparator.comparingDouble(RiskScoreMessage::value)
+        .thenComparingLong(RiskScoreMessage::expiryTime);
   }
 }
