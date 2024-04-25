@@ -20,15 +20,14 @@ public record ContextParser(Config contextConfig) implements ConfigParser<Contex
     var seed = getSeed(config);
     var logged = getLogged(config);
     var referenceTime = getReferenceTime(config);
-    var dataTimeFactory = getDataTimeFactory(config, referenceTime);
-    return ContextBuilder.create()
+      return ContextBuilder.create()
         .config(contextConfig)
         .seed(seed)
         .randomGenerator(getRandomGenerator(config, seed))
         .eventLogger(getEventLogger(logged))
         .propertyLogger(getPropertyLogger(logged))
         .systemTimeFactory(getSystemTimeFactory())
-        .dataTimeFactory(dataTimeFactory)
+        .dataTimeFactory(getDataTimeFactory(config, referenceTime))
         .referenceTime(TimeFactory.fixed(referenceTime).getTime())
         .build();
   }
