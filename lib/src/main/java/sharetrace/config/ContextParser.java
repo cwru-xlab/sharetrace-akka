@@ -20,7 +20,7 @@ public record ContextParser(Config contextConfig) implements ConfigParser<Contex
     var seed = getSeed(config);
     var logged = getLogged(config);
     var referenceTime = getReferenceTime(config);
-      return ContextBuilder.create()
+    return ContextBuilder.create()
         .config(contextConfig)
         .seed(seed)
         .randomGenerator(getRandomGenerator(config, seed))

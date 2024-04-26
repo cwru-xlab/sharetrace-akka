@@ -140,7 +140,7 @@ final class User extends AbstractBehavior<UserMessage> {
   }
 
   private boolean isExpired(Expirable expirable) {
-    return expirable.isExpired(context::getDataTime);
+    return expirable.isExpired(context.getDataTime());
   }
 
   private RiskScoreMessage transmitted(RiskScoreMessage message) {
