@@ -22,7 +22,7 @@ def network_configs():
             {
                 **defaults,
                 "nodes": nodes,
-                "edges": int(0.005 * nodes * (nodes - 1) / 2),
+                "edges": int(0.0025 * nodes * (nodes - 1) / 2),
                 "network_type": "gnm-random"
             },
             {
