@@ -6,7 +6,7 @@ import sharetrace.model.Context;
 import sharetrace.model.Parameters;
 import sharetrace.model.ParametersBuilder;
 
-public record ParametersExperimentRunner() implements Runner {
+public class ParametersExperimentRunner implements Runner {
 
   @Override
   public void run(Parameters parameters, Context context) {

@@ -16,7 +16,7 @@ def network_configs():
         "edges": -1,
         "initial_nodes": -1,
         "nearest_neighbors": -1,
-        "network_factory": "missing",
+        "network_type": "missing",
         "new_edges": -1,
         "nodes": 5000,
         "rewiring_probability": -1,
@@ -26,28 +26,28 @@ def network_configs():
         {
             **defaults,
             "edges": int(0.005 * nodes * (nodes - 1) / 2),
-            "network_factory": "gnm-random"
+            "network_type": "gnm-random"
         },
         {
             **defaults,
             "initial_nodes": 10,
             "new_edges": 5,
-            "network_factory": "barabasi-albert"
+            "network_type": "barabasi-albert"
         },
         {
             **defaults,
             "degree": 20,
-            "network_factory": "random-regular"
+            "network_type": "random-regular"
         },
         {
             **defaults,
             "nearest_neighbors": 20,
             "rewiring_probability": 0.2,
-            "network_factory": "watts-strogatz"
+            "network_type": "watts-strogatz"
         },
         {
             **defaults,
-            "network_factory": "scale-free"
+            "network_type": "scale-free"
         }
     ]
 
@@ -86,7 +86,7 @@ def generate_configs():
     with open("./app/src/main/resources/send-coefficient.template") as f:
         template = string.Template(f.read())
     for values in template_values():
-        factory = values["network_factory"]
+        factory = values["network_type"]
         sv_rand = values["score_value_random"]
         st_rand = values["score_time_random"]
         ct_rand = values["contact_time_random"]

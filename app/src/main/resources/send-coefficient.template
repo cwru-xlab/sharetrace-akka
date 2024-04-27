@@ -1,12 +1,7 @@
-include "base.conf"
+include "send-coefficient-base.conf"
 
 sharetrace {
   runner {
-    type = sharetrace.app.ParametersExperimentRunner
-
-    iterations = 3
-    repeats = 3
-
     send-coefficients = ${send_coefficients}
 
     contact-time-factory {
@@ -60,13 +55,6 @@ sharetrace {
     scale-free-network-factory = $${sharetrace.runner.network-factory-defaults}
     scale-free-network-factory.type = scale-free
 
-    network-factory = $${sharetrace.runner.${network_factory}-network-factory}
+    network-factory = $${sharetrace.runner.${network_type}-network-factory}
   }
-
-  analysis.handlers = [
-    sharetrace.analysis.handler.Runtimes
-    sharetrace.analysis.handler.UserEventCounts
-    sharetrace.analysis.handler.Reachability
-    sharetrace.analysis.handler.UserUpdates
-  ]
 }
