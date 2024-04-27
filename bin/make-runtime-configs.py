@@ -8,49 +8,43 @@ randoms = ["standard-normal", "uniform"]
 
 
 def network_configs():
-    defaults = {
-        "degree": -1,
-        "edges": -1,
-        "initial_nodes": -1,
-        "nearest_neighbors": -1,
-        "network_type": "missing",
-        "new_edges": -1,
-        "rewiring_probability": -1,
-    }
     for nodes in range(100_000, 1_000_001, 100_000):
-        yield from [
-            {
-                **defaults,
-                "nodes": nodes,
-                "edges": int(0.0025 * nodes * (nodes - 1) / 2),
-                "network_type": "gnm-random"
-            },
-            {
-                **defaults,
-                "nodes": nodes,
-                "initial_nodes": 10,
-                "new_edges": 5,
-                "network_type": "barabasi-albert"
-            },
-            {
-                **defaults,
-                "nodes": nodes,
-                "degree": 20,
-                "network_type": "random-regular"
-            },
-            {
-                **defaults,
-                "nodes": nodes,
-                "nearest_neighbors": 20,
-                "rewiring_probability": 0.2,
-                "network_type": "watts-strogatz"
-            },
-            {
-                **defaults,
-                "nodes": nodes,
-                "network_type": "scale-free"
-            }
-        ]
+        defaults = {
+            "nodes": nodes,
+            "degree": -1,
+            "edges": -1,
+            "initial_nodes": -1,
+            "nearest_neighbors": -1,
+            "network_type": "missing",
+            "new_edges": -1,
+            "rewiring_probability": -1,
+        }
+        yield {
+            **defaults,
+            "edges": int(0.0025 * nodes * (nodes - 1) / 2),
+            "network_type": "gnm-random"
+        }
+        yield {
+            **defaults,
+            "initial_nodes": 10,
+            "new_edges": 5,
+            "network_type": "barabasi-albert"
+        }
+        yield {
+            **defaults,
+            "degree": 20,
+            "network_type": "random-regular"
+        }
+        yield {
+            **defaults,
+            "nearest_neighbors": 20,
+            "rewiring_probability": 0.2,
+            "network_type": "watts-strogatz"
+        }
+        yield {
+            **defaults,
+            "network_type": "scale-free"
+        }
 
 
 def contact_time_factory_configs():
