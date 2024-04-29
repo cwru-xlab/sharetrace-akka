@@ -18,10 +18,9 @@ def network_configs():
         "nearest_neighbors": -1,
         "network_type": "missing",
         "new_edges": -1,
-        "nodes": 5000,
+        "nodes": (nodes := 5000),
         "rewiring_probability": -1,
     }
-    nodes = defaults["nodes"]
     return [
         {
             **defaults,
@@ -53,17 +52,17 @@ def network_configs():
 
 
 def contact_time_factory_configs():
-    for rand in randoms:
+    for random in randoms:
         yield {
-            "contact_time_random": rand
+            "contact_time_random": random
         }
 
 
 def score_factory_configs():
-    for value_rand, time_rand in itertools.product(randoms, repeat=2):
+    for sv_random, st_random in itertools.product(randoms, repeat=2):
         yield {
-            "score_value_random": value_rand,
-            "score_time_random": time_rand,
+            "score_value_random": sv_random,
+            "score_time_random": st_random,
         }
 
 
@@ -83,15 +82,16 @@ def template_values():
 
 
 def generate_configs():
-    with open("./app/src/main/resources/send-coefficient.template") as f:
+    base_dir = "./app/src/main/resources"
+    with open(f"{base_dir}/send-coefficient.template") as f:
         template = string.Template(f.read())
     for values in template_values():
-        factory = values["network_type"]
-        sv_rand = values["score_value_random"]
-        st_rand = values["score_time_random"]
-        ct_rand = values["contact_time_random"]
-        filename = "_".join(("send-coefficient", factory, sv_rand, st_rand, ct_rand))
-        with open(f"./app/src/main/resources/{filename}.conf", "w") as f:
+        network = values["network_type"]
+        sv_random = values["score_value_random"]
+        st_random = values["score_time_random"]
+        ct_random = values["contact_time_random"]
+        filename = f"send-coefficient_{network}_{sv_random}_{st_random}_{ct_random}.conf"
+        with open(f"{base_dir}/{filename}", "w") as f:
             f.write(template.substitute(values))
 
 

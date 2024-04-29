@@ -8,43 +8,44 @@ randoms = ["standard-normal", "uniform"]
 
 
 def network_configs():
-    for nodes in range(100_000, 1_000_001, 100_000):
-        defaults = {
-            "nodes": nodes,
-            "degree": -1,
-            "edges": -1,
-            "initial_nodes": -1,
-            "nearest_neighbors": -1,
-            "network_type": "missing",
-            "new_edges": -1,
-            "rewiring_probability": -1,
-        }
-        yield {
-            **defaults,
-            "edges": int(0.0025 * nodes * (nodes - 1) / 2),
-            "network_type": "gnm-random"
-        }
-        yield {
-            **defaults,
-            "initial_nodes": 10,
-            "new_edges": 5,
-            "network_type": "barabasi-albert"
-        }
-        yield {
-            **defaults,
-            "degree": 20,
-            "network_type": "random-regular"
-        }
-        yield {
-            **defaults,
-            "nearest_neighbors": 20,
+    for p in frange(25, 76, 5):
+        base = {
+            "nodes": (nodes := 10_000),
+            # Random regular
+            "degree": round(0.1 * p * nodes),
+            # Gnm random
+            "edges": round(p * nodes * (nodes - 1) / 2),
+            # Barabasi Albert
+            "initial_nodes": (initial_nodes := round(nodes * 0.1)),
+            "new_edges": round(p * initial_nodes),
+            # Watts Strogatz
             "rewiring_probability": 0.2,
-            "network_type": "watts-strogatz"
+            "nearest_neighbors": round(0.1 * p * nodes),
         }
         yield {
-            **defaults,
-            "network_type": "scale-free"
+            **base,
+            "network_type": "gnm-random",
+            "qualifier": base["edges"]
         }
+        yield {
+            **base,
+            "network_type": "barabasi-albert",
+            "qualifier": base["new_edges"]
+        }
+        yield {
+            **base,
+            "network_type": "random-regular",
+            "qualifier": base["degree"]
+        }
+        yield {
+            **base,
+            "network_type": "watts-strogatz",
+            "qualifier": base["nearest_neighbors"]
+        }
+
+
+def frange(start, stop, step=1, scale=0.01):
+    return map(lambda n: n * scale, range(start, stop, step))
 
 
 def contact_time_factory_configs():
@@ -56,7 +57,7 @@ def score_factory_configs():
     for sv_random, st_random in itertools.product(randoms, repeat=2):
         yield {
             "score_value_random": sv_random,
-            "score_time_random": st_random,
+            "score_time_random": st_random
         }
 
 
@@ -69,16 +70,17 @@ def template_values():
 
 
 def generate_configs():
-    with open("./app/src/main/resources/runtime.template") as f:
+    base_dir = "./app/src/main/resources"
+    with open(f"{base_dir}/runtime.template") as f:
         template = string.Template(f.read())
     for values in template_values():
-        nodes = values["nodes"]
-        factory = values["network_type"]
+        network = values["network_type"]
+        qualifier = values["qualifier"]
         sv_random = values["score_value_random"]
         st_random = values["score_time_random"]
         ct_random = values["contact_time_random"]
-        filename = "_".join(("runtime", factory, f"{nodes}", sv_random, st_random, ct_random))
-        with open(f"./app/src/main/resources/{filename}.conf", "w") as f:
+        filename = f"runtime_{network}_{qualifier}_{sv_random}_{st_random}_{ct_random}.conf"
+        with open(f"{base_dir}/{filename}", "w") as f:
             f.write(template.substitute(values))
 
 
