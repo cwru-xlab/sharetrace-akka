@@ -5,7 +5,7 @@ plugins {
 
 java {
     toolchain {
-        applicationDefaultJvmArgs = ["-Xms8g", "-XX:+UseZGC"]
+        applicationDefaultJvmArgs = ["-XX:MaxRAMPercentage=75.0", "-XX:+UseZGC"]
     }
 }
 
