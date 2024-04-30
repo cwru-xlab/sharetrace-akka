@@ -33,19 +33,23 @@ public final class UserUpdates implements EventHandler {
 
   @Override
   public void onComplete(Results results, Context context) {
-    results.withScope("user").put("updates", totalUpdates());
-  }
-
-  private double[] totalUpdates() {
-    var totals = new double[updates.size()];
-    for (var i = 0; i < updates.size(); i++) {
+    var exposures = new double[updates.size()];
+    var diffs = new double[updates.size()];
+    for (int i = 0; i < updates.size(); i++) {
       var iUpdates = updates.get(i);
       if (iUpdates.size() > 1) {
         iUpdates.sort(Comparator.comparing(EventRecord::timestamp));
-        totals[i] = getValue(iUpdates.getLast()) - getValue(iUpdates.getFirst());
+        diffs[i] = getValue(iUpdates.getLast()) - getValue(iUpdates.getFirst());
+      }
+      if (!iUpdates.isEmpty()) {
+        exposures[i] = getValue(iUpdates.getLast());
       }
     }
-    return totals;
+    results
+        .withScope("user")
+        .withScope("updates")
+        .put("difference", diffs)
+        .put("exposure", exposures);
   }
 
   private double getValue(EventRecord record) {
