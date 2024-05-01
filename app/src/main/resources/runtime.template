@@ -50,9 +50,6 @@ sharetrace {
       rewiring-probability = ${rewiring_probability} # [0, 1]
     }
 
-    scale-free-network-factory = $${sharetrace.runner.network-factory-defaults}
-    scale-free-network-factory.type = scale-free
-
     network-factory = $${sharetrace.runner.${network_type}-network-factory}
   }
 }

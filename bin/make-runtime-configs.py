@@ -8,11 +8,11 @@ randoms = ["standard-normal", "uniform"]
 
 
 def network_configs():
-    for p in frange(25, 76, 5):
+    for p in frange(1, 11, scale=0.01):
         base = {
             "nodes": (nodes := 10_000),
             # Random regular
-            "degree": round(0.1 * p * nodes),
+            "degree": round(p * nodes),
             # Gnm random
             "edges": round(p * nodes * (nodes - 1) / 2),
             # Barabasi Albert
@@ -20,7 +20,7 @@ def network_configs():
             "new_edges": round(p * initial_nodes),
             # Watts Strogatz
             "rewiring_probability": 0.2,
-            "nearest_neighbors": round(0.1 * p * nodes),
+            "nearest_neighbors": round(p * nodes),
         }
         yield {
             **base,
@@ -44,7 +44,7 @@ def network_configs():
         }
 
 
-def frange(start, stop, step=1, scale=0.01):
+def frange(start, stop, step=1, scale=1.0):
     return map(lambda n: n * scale, range(start, stop, step))
 
 
