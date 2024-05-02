@@ -8,17 +8,31 @@ import string
 randoms = ["standard-normal", "uniform"]
 
 
+def best_barabasi_albert_config(n, m):
+    result = None
+    min_frac = math.inf
+    for n0 in range(1, n):
+        m0 = (m - (n0 * (n0 - 1) / 2)) / (n - n0)
+        if 0 < m0 <= n0 and (frac := m0 % 1) < min_frac:
+            result = (n0, math.floor(m0))
+            min_frac = frac
+    return result
+
+
 def network_configs():
     for i, (n, m) in enumerate(itertools.product(range(1, 11), repeat=2)):
+        n *= 10_000
+        m *= 1_000_000
+        n0, m0 = best_barabasi_albert_config(n, m)
         base = {
-            "nodes": (n := 10_000 * n),
+            "nodes": n,
             # Gnm random
-            "edges": (m := 1_000_000 * m),
+            "edges": m,
             # Random regular
             "degree": (k := math.floor(m / n)),
             # Barabasi Albert
-            "initial_nodes": (n0 := 10),
-            "new_edges": math.floor((m - (n0 * (n0 - 1) / 2)) / (n - n0)),
+            "initial_nodes": n0,
+            "new_edges": m0,
             # Watts Strogatz
             "rewiring_probability": 0.2,
             "nearest_neighbors": k,
