@@ -1,4 +1,4 @@
-include "send-coefficient-base.conf"
+include "parameter-experiment-base.conf"
 
 sharetrace {
   runner {

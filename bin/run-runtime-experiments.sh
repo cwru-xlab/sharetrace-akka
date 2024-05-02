@@ -2,7 +2,7 @@
 
 trap "exit" INT
 
-bin/make-runtime-configs.py
+bin/make-configs.py runtime
 
 for network in "barabasi-albert" "gnm-random" "random-regular" "watts-strogatz"; do
   # Ref: https://stackoverflow.com/a/54688673

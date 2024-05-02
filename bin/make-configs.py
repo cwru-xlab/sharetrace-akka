@@ -4,6 +4,7 @@ import collections
 import itertools
 import math
 import string
+import sys
 
 randoms = ["standard-normal", "uniform"]
 
@@ -19,10 +20,8 @@ def best_barabasi_albert_config(n, m):
     return result
 
 
-def network_configs():
-    for i, (n, m) in enumerate(itertools.product(range(1, 11), repeat=2)):
-        n *= 10_000
-        m *= 1_000_000
+def network_configs(network_sizes):
+    for i, (n, m) in enumerate(network_sizes):
         n0, m0 = best_barabasi_albert_config(n, m)
         base = {
             "nodes": n,
@@ -69,28 +68,52 @@ def score_factory_configs():
         }
 
 
-def template_values():
-    for configs in itertools.product(
-            network_configs(),
-            contact_time_factory_configs(),
-            score_factory_configs()):
+def parameter_experiment_configs():
+    def parameter_configs():
+        return [{
+            "send_coefficients": [0.01 * c for c in range(80, 121, 10)]
+        }]
+
+    yield from merge_configs(
+        network_configs([(5_000, 500_000)]),
+        contact_time_factory_configs(),
+        score_factory_configs(),
+        parameter_configs())
+
+
+def runtime_experiment_configs():
+    def runtime_network_sizes():
+        for n, m in itertools.product(range(1, 11), repeat=2):
+            yield n * 10_000, m * 1_000_000
+
+    yield from merge_configs(
+        network_configs(runtime_network_sizes()),
+        contact_time_factory_configs(),
+        score_factory_configs())
+
+
+def merge_configs(*configs):
+    for configs in itertools.product(*configs):
         yield collections.ChainMap(*configs)
 
 
-def generate_configs():
+def make_configs(template_values, experiment_type):
     base_dir = "./app/src/main/resources"
-    with open(f"{base_dir}/runtime.template") as f:
+    with open(f"{base_dir}/{experiment_type}-experiment-config.template") as f:
         template = string.Template(f.read())
-    for values in template_values():
+    for values in template_values:
         network = values["network_type"]
         qualifier = values["qualifier"]
         sv_random = values["score_value_random"]
         st_random = values["score_time_random"]
         ct_random = values["contact_time_random"]
-        filename = f"runtime_{network}_{qualifier}_{sv_random}_{st_random}_{ct_random}.conf"
+        filename = f"{experiment_type}_{network}_{qualifier}_{sv_random}_{st_random}_{ct_random}.conf"
         with open(f"{base_dir}/{filename}", "w") as f:
             f.write(template.substitute(values))
 
 
 if __name__ == '__main__':
-    generate_configs()
+    if (experiment := sys.argv[1]) == "parameter":
+        make_configs(parameter_experiment_configs(), "parameter")
+    elif experiment == "runtime":
+        make_configs(runtime_experiment_configs(), "runtime")
