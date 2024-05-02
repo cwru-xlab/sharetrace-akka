@@ -2,50 +2,44 @@
 
 import collections
 import itertools
+import math
 import string
 
 randoms = ["standard-normal", "uniform"]
 
 
 def network_configs():
-    for p in frange(1, 11, scale=0.01):
+    for i, (n, m) in enumerate(itertools.product(range(1, 11), repeat=2)):
         base = {
-            "nodes": (nodes := 10_000),
-            # Random regular
-            "degree": round(p * nodes),
+            "nodes": (n := 10_000 * n),
             # Gnm random
-            "edges": round(p * nodes * (nodes - 1) / 2),
+            "edges": (m := 1_000_000 * m),
+            # Random regular
+            "degree": (k := math.floor(m / n)),
             # Barabasi Albert
-            "initial_nodes": (initial_nodes := round(nodes * 0.1)),
-            "new_edges": round(p * initial_nodes),
+            "initial_nodes": (n0 := 10),
+            "new_edges": math.floor((m - (n0 * (n0 - 1) / 2)) / (n - n0)),
             # Watts Strogatz
             "rewiring_probability": 0.2,
-            "nearest_neighbors": round(p * nodes),
+            "nearest_neighbors": k,
+            "qualifier": i + 1
         }
         yield {
             **base,
             "network_type": "gnm-random",
-            "qualifier": base["edges"]
         }
         yield {
             **base,
             "network_type": "barabasi-albert",
-            "qualifier": base["new_edges"]
         }
         yield {
             **base,
             "network_type": "random-regular",
-            "qualifier": base["degree"]
         }
         yield {
             **base,
             "network_type": "watts-strogatz",
-            "qualifier": base["nearest_neighbors"]
         }
-
-
-def frange(start, stop, step=1, scale=1.0):
-    return map(lambda n: n * scale, range(start, stop, step))
 
 
 def contact_time_factory_configs():
