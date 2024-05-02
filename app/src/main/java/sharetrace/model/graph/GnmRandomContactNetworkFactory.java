@@ -7,7 +7,6 @@ import org.jgrapht.generate.GraphGenerator;
 import sharetrace.Buildable;
 import sharetrace.model.factory.GeneratedContactNetworkFactory;
 import sharetrace.model.factory.TimeFactory;
-import sharetrace.model.graph.TemporalEdge;
 
 @Buildable
 public record GnmRandomContactNetworkFactory(

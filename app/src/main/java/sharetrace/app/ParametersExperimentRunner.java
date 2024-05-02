@@ -12,7 +12,7 @@ public class ParametersExperimentRunner implements Runner {
   public void run(Parameters parameters, Context context) {
     var config = AppConfig.of(parameters, context);
     var keyFactory = config.getKeyFactory();
-    for (int i = 0; i < config.getIterations(); i++) {
+    for (var repeats : config.getIterations()) {
       var scoreFactory = config.getScoreFactory();
       var networkFactory = config.getNetworkFactory();
       for (double sc : config.getSendCoefficients()) {
@@ -23,7 +23,7 @@ public class ParametersExperimentRunner implements Runner {
             .networkFactory(networkFactory)
             .keyFactory(keyFactory)
             .build()
-            .run(config.getRepeats());
+            .run(repeats);
       }
     }
   }

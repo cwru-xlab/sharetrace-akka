@@ -27,12 +27,8 @@ public record AppConfig(
         .build();
   }
 
-  public int getIterations() {
-    return config.getInt("iterations");
-  }
-
-  public int getRepeats() {
-    return config.getInt("repeats");
+  public List<Integer> getIterations() {
+    return config.getIntList("iterations");
   }
 
   public List<Double> getSendCoefficients() {

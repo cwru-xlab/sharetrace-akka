@@ -11,7 +11,7 @@ public class StandardRunner implements Runner {
   public void run(Parameters parameters, Context context) {
     var config = AppConfig.of(parameters, context);
     var keyFactory = config.getKeyFactory();
-    for (int i = 0; i < config.getIterations(); i++) {
+    for (var repeats : config.getIterations()) {
       RiskPropagationBuilder.create()
           .context(context)
           .parameters(parameters)
@@ -19,7 +19,7 @@ public class StandardRunner implements Runner {
           .networkFactory(config.getNetworkFactory())
           .keyFactory(keyFactory)
           .build()
-          .run(config.getRepeats());
+          .run(repeats);
     }
   }
 }

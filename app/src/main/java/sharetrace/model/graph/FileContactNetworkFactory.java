@@ -10,8 +10,6 @@ import org.jgrapht.Graph;
 import org.jgrapht.generate.GraphGenerator;
 import sharetrace.Buildable;
 import sharetrace.model.factory.ContactNetworkFactory;
-import sharetrace.model.graph.Graphs;
-import sharetrace.model.graph.TemporalEdge;
 
 @Buildable
 public record FileContactNetworkFactory(Path path, String delimiter, long referenceTime)
