@@ -71,11 +71,11 @@ def score_factory_configs():
 def parameter_experiment_configs():
     def parameter_configs():
         return [{
-            "send_coefficients": [0.01 * c for c in range(80, 121, 10)]
+            "send_coefficients": [0.01 * c for c in range(80, 161, 10)]
         }]
 
     yield from merge_configs(
-        network_configs([(5_000, 500_000)]),
+        network_configs([(5_000, 50_000)]),
         contact_time_factory_configs(),
         score_factory_configs(),
         parameter_configs())
