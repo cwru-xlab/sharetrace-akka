@@ -1,4 +1,4 @@
-package sharetrace.graph;
+package sharetrace.model.graph;
 
 import org.apache.commons.math3.random.RandomAdaptor;
 import org.apache.commons.math3.random.RandomGenerator;

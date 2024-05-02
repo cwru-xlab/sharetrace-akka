@@ -1,26 +1,26 @@
-package sharetrace.graph;
+package sharetrace.model.graph;
 
 import org.apache.commons.math3.random.RandomAdaptor;
 import org.apache.commons.math3.random.RandomGenerator;
 import org.jgrapht.generate.GraphGenerator;
-import org.jgrapht.generate.ScaleFreeGraphGenerator;
+import org.jgrapht.generate.RandomRegularGraphGenerator;
 import sharetrace.Buildable;
 import sharetrace.model.factory.GeneratedContactNetworkFactory;
 import sharetrace.model.factory.TimeFactory;
-import sharetrace.model.graph.TemporalEdge;
 
 @Buildable
-public record ScaleFreeContactNetworkFactory(
-    int nodes, TimeFactory timeFactory, RandomGenerator randomGenerator)
+public record RandomRegularContactNetworkFactory(
+    int nodes, int degree, TimeFactory timeFactory, RandomGenerator randomGenerator)
     implements GeneratedContactNetworkFactory {
 
   @Override
   public String type() {
-    return "ScaleFree";
+    return "RandomRegular";
   }
 
   @Override
   public GraphGenerator<Integer, TemporalEdge, Integer> graphGenerator() {
-    return new ScaleFreeGraphGenerator<>(nodes, RandomAdaptor.createAdaptor(randomGenerator));
+    var random = RandomAdaptor.createAdaptor(randomGenerator);
+    return new RandomRegularGraphGenerator<>(nodes, degree, random);
   }
 }

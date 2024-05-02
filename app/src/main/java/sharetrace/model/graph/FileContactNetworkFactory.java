@@ -1,4 +1,4 @@
-package sharetrace.graph;
+package sharetrace.model.graph;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
