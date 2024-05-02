@@ -97,10 +97,18 @@ def merge_configs(*configs):
         yield collections.ChainMap(*configs)
 
 
-def make_configs(template_values, experiment_type):
+def make_configs(experiment_type):
+    if experiment_type == "parameter":
+        template_values = parameter_experiment_configs()
+    elif experiment_type == "runtime":
+        template_values = runtime_experiment_configs()
+    else:
+        raise ValueError(f"Invalid experiment type: {experiment_type}")
+
     base_dir = "./app/src/main/resources"
     with open(f"{base_dir}/{experiment_type}-experiment-config.template") as f:
         template = string.Template(f.read())
+
     for values in template_values:
         network = values["network_type"]
         qualifier = values["qualifier"]
@@ -113,7 +121,4 @@ def make_configs(template_values, experiment_type):
 
 
 if __name__ == '__main__':
-    if (experiment := sys.argv[1]) == "parameter":
-        make_configs(parameter_experiment_configs(), "parameter")
-    elif experiment == "runtime":
-        make_configs(runtime_experiment_configs(), "runtime")
+    make_configs(sys.argv[1])
