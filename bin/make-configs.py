@@ -24,6 +24,7 @@ def network_configs(network_sizes):
     for i, (n, m) in enumerate(network_sizes):
         n0, m0 = best_barabasi_albert_config(n, m)
         base = {
+            "qualifier": i + 1,
             "nodes": n,
             # Gnm random
             "edges": m,
@@ -35,7 +36,6 @@ def network_configs(network_sizes):
             # Watts Strogatz
             "rewiring_probability": 0.2,
             "nearest_neighbors": k,
-            "qualifier": i + 1
         }
         yield {
             **base,
@@ -81,9 +81,9 @@ def parameter_experiment_configs():
         parameter_configs())
 
 
-def runtime_experiment_configs():
+def runtime_experiment_configs(baseline=False):
     def runtime_network_sizes():
-        for n, m in itertools.product(range(1, 11), repeat=2):
+        for n, m in itertools.product(range(1, 2 if baseline else 11), repeat=2):
             yield n * 10_000, m * 1_000_000
 
     yield from merge_configs(
@@ -98,15 +98,19 @@ def merge_configs(*configs):
 
 
 def make_configs(experiment_type):
+    base_filename = experiment_type
     if experiment_type == "parameter":
         template_values = parameter_experiment_configs()
     elif experiment_type == "runtime":
         template_values = runtime_experiment_configs()
+    elif experiment_type == "runtime-baseline":
+        template_values = runtime_experiment_configs(baseline=True)
+        base_filename = "runtime"
     else:
         raise ValueError(f"Invalid experiment type: {experiment_type}")
 
     base_dir = "./app/src/main/resources"
-    with open(f"{base_dir}/{experiment_type}-experiment-config.template") as f:
+    with open(f"{base_dir}/{base_filename}-experiment-config.template") as f:
         template = string.Template(f.read())
 
     for values in template_values:
