@@ -28,7 +28,7 @@ def network_configs(network_sizes):
             # Gnm random
             "edges": m,
             # Random regular
-            "degree": (k := math.floor(m / n)),
+            "degree": (k := math.floor(2 * m / n)),
             # Barabasi Albert
             "initial_nodes": n0,
             "new_edges": m0,
@@ -71,7 +71,7 @@ def score_factory_configs():
 def parameter_experiment_configs():
     def parameter_configs():
         return [{
-            "send_coefficients": [0.01 * c for c in range(80, 161, 10)]
+            "send_coefficients": [c / 100 for c in range(80, 161, 10)]
         }]
 
     yield from merge_configs(
