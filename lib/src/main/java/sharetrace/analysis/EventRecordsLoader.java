@@ -1,13 +1,13 @@
 package sharetrace.analysis;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectReader;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.function.Function;
 import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 import sharetrace.analysis.model.EventRecord;
@@ -20,7 +20,7 @@ public record EventRecordsLoader(ObjectMapper mapper) {
         .filter(this::isEventLog)
         .sorted(this::compare)
         .flatMap(this::lines)
-        .map(new EventRecordParser(mapper)::parse);
+        .map(parseRecords());
   }
 
   private boolean isEventLog(Path path) {
@@ -63,18 +63,14 @@ public record EventRecordsLoader(ObjectMapper mapper) {
     return path.getFileName().toString();
   }
 
-  private record EventRecordParser(ObjectReader reader) {
-
-    public EventRecordParser(ObjectMapper mapper) {
-      this(mapper.readerFor(EventRecord.class));
-    }
-
-    public EventRecord parse(String input) {
+  private Function<String, EventRecord> parseRecords() {
+    var reader = mapper.readerFor(EventRecord.class);
+    return input -> {
       try {
         return reader.readValue(input);
       } catch (IOException e) {
         throw new UncheckedIOException(e);
       }
-    }
+    };
   }
 }
