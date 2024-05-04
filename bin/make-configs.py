@@ -86,10 +86,13 @@ def runtime_experiment_configs(baseline=False):
         for n, m in itertools.product(range(1, 2 if baseline else 11), repeat=2):
             yield n * 10_000, m * 1_000_000
 
-    yield from merge_configs(
-        network_configs(runtime_network_sizes()),
-        contact_time_factory_configs(),
-        score_factory_configs())
+    random_configs = [{
+        "score_value_random": "uniform",
+        "score_time_random": "uniform",
+        "contact_time_random": "uniform",
+    }]
+
+    yield from merge_configs(network_configs(runtime_network_sizes()), random_configs)
 
 
 def merge_configs(*configs):
