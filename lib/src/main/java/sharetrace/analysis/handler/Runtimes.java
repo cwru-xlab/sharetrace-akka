@@ -15,7 +15,7 @@ import sharetrace.logging.event.lifecycle.SendContactsEnd;
 import sharetrace.logging.event.lifecycle.SendContactsStart;
 import sharetrace.logging.event.lifecycle.SendRiskScoresEnd;
 import sharetrace.logging.event.lifecycle.SendRiskScoresStart;
-import sharetrace.logging.event.user.UserEvent;
+import sharetrace.logging.event.user.LastEvent;
 
 public final class Runtimes implements EventHandler {
 
@@ -34,8 +34,8 @@ public final class Runtimes implements EventHandler {
   public void onNext(EventRecord record, Context context) {
     if (record.event() instanceof LifecycleEvent e) {
       events.put(e.getClass(), record.timestamp());
-    } else if (record.event() instanceof UserEvent) {
-      lastEventTime = Math.max(lastEventTime, record.timestamp());
+    } else if (record.event() instanceof LastEvent e) {
+      lastEventTime = Math.max(lastEventTime, e.timestamp());
     }
   }
 
