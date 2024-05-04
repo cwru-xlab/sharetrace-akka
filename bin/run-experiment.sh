@@ -4,7 +4,7 @@ trap "exit" INT
 
 experimentType="$1"
 
-bin/make-configs.py experimentType
+bin/make-configs.py $experimentType
 
 for network in "barabasi-albert" "gnm-random" "random-regular" "watts-strogatz"; do
   # Ref: https://stackoverflow.com/a/54688673
