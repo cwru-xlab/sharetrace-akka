@@ -11,7 +11,7 @@ import java.lang.annotation.Target;
     options =
         @RecordBuilder.Options(
             builderMethodName = "create",
-            useImmutableCollections = true,
+            useUnmodifiableCollections = true,
             addClassRetainedGenerated = true,
             addSingleItemCollectionBuilders = true))
 @Retention(RetentionPolicy.SOURCE)

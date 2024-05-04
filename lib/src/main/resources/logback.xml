@@ -41,7 +41,7 @@
                 <logger>[ignore]</logger>
                 <message>[ignore]</message>
                 <thread>[ignore]</thread>
-                <timestamp>t</timestamp>
+                <timestamp>[ignore]</timestamp>
                 <version>[ignore]</version>
             </fieldNames>
             <timestampPattern>[UNIX_TIMESTAMP_AS_NUMBER]</timestampPattern>
