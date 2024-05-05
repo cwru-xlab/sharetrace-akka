@@ -1,19 +1,33 @@
 import polars as pl
 
-from pymongo import MongoClient
 from pymongo.collection import Collection
 
 
-def get_runtime_results(collection: Collection) -> pl.DataFrame:
+def get_runtime_results(
+        collection: Collection,
+        group_by_randoms=True
+) -> pl.DataFrame:
+    group_id = {'networkType': '$networkFactory.type'}
+    flattened_id = {
+        'datasetId': '$_id.datasetId',
+        'networkId': '$_id.networkId',
+        'networkType': '$_id.networkType',
+    }
+    if group_by_randoms:
+        group_id.update({
+            'ctRandomType': '$networkFactory.timeFactory.random.type',
+            'stRandomType': '$scoreFactory.timeFactory.random.type',
+            'svRandomType': '$scoreFactory.random.type'
+        })
+        flattened_id.update({
+            'ctRandomType': '$_id.ctRandomType',
+            'stRandomType': '$_id.stRandomType',
+            'svRandomType': '$_id.svRandomType',
+        })
     return pl.DataFrame(collection.aggregate([
         {
             '$group': {
-                '_id': {
-                    'networkType': '$networkFactory.type',
-                    'ctRandomType': '$networkFactory.timeFactory.random.type',
-                    'stRandomType': '$scoreFactory.timeFactory.random.type',
-                    'svRandomType': '$scoreFactory.random.type'
-                },
+                '_id': group_id,
                 'count': {'$count': {}},
                 'runtime': {'$push': '$results.runtime.MessagePassing'},
             }
@@ -36,19 +50,8 @@ def get_runtime_results(collection: Collection) -> pl.DataFrame:
                 'lowerRuntimeCi': {'$subtract': ['$avgRuntime', '$seRuntime']},
             }
         },
-        {
-            '$set': {
-                'datasetId': '$_id.datasetId',
-                'networkId': '$_id.networkId',
-                'networkType': '$_id.networkType',
-                'ctRandomType': '$_id.ctRandomType',
-                'stRandomType': '$_id.stRandomType',
-                'svRandomType': '$_id.svRandomType',
-            }
-        },
-        {
-            '$unset': ['_id', 'count', 'runtime']
-        }
+        {'$set': flattened_id},
+        {'$unset': ['_id', 'count', 'runtime']}
     ]))
 
 
