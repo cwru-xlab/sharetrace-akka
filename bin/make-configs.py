@@ -35,7 +35,7 @@ def network_configs(network_sizes):
             "new_edges": m0,
             # Watts Strogatz
             "rewiring_probability": 0.2,
-            "nearest_neighbors": k,
+            "nearest_neighbors": k if k % 2 == 0 else k + 1,
         }
         yield {
             **base,
