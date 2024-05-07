@@ -37,22 +37,10 @@ def network_configs(network_sizes):
             "rewiring_probability": 0.2,
             "nearest_neighbors": k if k % 2 == 0 else k + 1,
         }
-        yield {
-            **base,
-            "network_type": "gnm-random",
-        }
-        yield {
-            **base,
-            "network_type": "barabasi-albert",
-        }
-        yield {
-            **base,
-            "network_type": "random-regular",
-        }
-        yield {
-            **base,
-            "network_type": "watts-strogatz",
-        }
+        yield base | {"network_type": "gnm-random"}
+        yield base | {"network_type": "barabasi-albert"}
+        yield base | {"network_type": "random-regular"}
+        yield base | {"network_type": "watts-strogatz"}
 
 
 def contact_time_factory_configs():
@@ -62,23 +50,19 @@ def contact_time_factory_configs():
 
 def score_factory_configs():
     for sv_random, st_random in itertools.product(randoms, repeat=2):
-        yield {
-            "score_value_random": sv_random,
-            "score_time_random": st_random
-        }
+        yield {"score_value_random": sv_random, "score_time_random": st_random}
 
 
 def parameter_experiment_configs():
     def parameter_configs():
-        return [{
-            "send_coefficients": [c / 100 for c in range(80, 161, 10)]
-        }]
+        return [{"send_coefficients": [c / 10 for c in range(8, 16)]}]
 
     yield from merge_configs(
         network_configs([(5_000, 50_000)]),
         contact_time_factory_configs(),
         score_factory_configs(),
-        parameter_configs())
+        parameter_configs(),
+    )
 
 
 def runtime_experiment_configs(baseline=False):
@@ -86,11 +70,13 @@ def runtime_experiment_configs(baseline=False):
         for n, m in itertools.product(range(1, 2 if baseline else 11), repeat=2):
             yield n * 10_000, m * 1_000_000
 
-    random_configs = [{
-        "score_value_random": "uniform",
-        "score_time_random": "uniform",
-        "contact_time_random": "uniform",
-    }]
+    random_configs = [
+        {
+            "score_value_random": "uniform",
+            "score_time_random": "uniform",
+            "contact_time_random": "uniform",
+        }
+    ]
 
     yield from merge_configs(network_configs(runtime_network_sizes()), random_configs)
 
@@ -127,5 +113,5 @@ def make_configs(experiment_type):
             f.write(template.substitute(values))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     make_configs(sys.argv[1])

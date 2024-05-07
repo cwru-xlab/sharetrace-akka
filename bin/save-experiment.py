@@ -10,7 +10,7 @@ import polars as pl
 def save_experiment(path: Path, kind: str) -> None:
     datasets = _load_mapped_datasets(path, kind)
     df = pl.DataFrame(datasets)
-    df.write_parquet(path / "dataset.parquet")
+    df.write_parquet(path / "experiment.parquet")
 
 
 def _load_mapped_datasets(path: Path, kind: str) -> Iterable[dict]:
@@ -29,11 +29,11 @@ def _to_runtime_dataset(dataset: dict) -> dict:
 
 def _to_parameter_dataset(dataset: dict) -> dict:
     return (
-            _common_properties(dataset)
-            | _reachability_results(dataset)
-            | _runtime_results(dataset)
-            | _updates_results(dataset)
-            | _event_counts_results(dataset)
+        _common_properties(dataset)
+        | _reachability_results(dataset)
+        | _runtime_results(dataset)
+        | _updates_results(dataset)
+        | _event_counts_results(dataset)
     )
 
 
@@ -83,7 +83,7 @@ def _common_properties(dataset: dict) -> dict:
         "sv_random_type": dataset["scoreFactory"]["random"]["type"],
         "st_random_type": dataset["scoreFactory"]["timeFactory"]["random"]["type"],
         "transmission_rate": dataset["parameters"]["transmissionRate"],
-        "send_coefficient": dataset["parameters"]["sendCoefficient"]
+        "send_coefficient": dataset["parameters"]["sendCoefficient"],
     }
 
 
@@ -101,8 +101,13 @@ def _load_dataset(path: Path) -> Iterable[dict]:
         results = json.load(f)
     with (path / "properties.log").open() as f:
         for props in map(json.loads, f):
-            yield {"id": path.name, "key": (key := props["k"]), "results": results[key]} | props["p"]
+            yield {
+                "id": path.name,
+                "key": (key := props["k"]),
+                "results": results[key],
+                **props["p"]
+            }
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     save_experiment(path=Path(sys.argv[1]), kind=sys.argv[2])
