@@ -8,13 +8,13 @@ import polars as pl
 
 
 def save_experiment(path: Path, kind: str) -> None:
-    datasets = _load_mapped_datasets(path, kind)
+    datasets = _load_datasets(path, kind)
     df = pl.DataFrame(datasets)
     df.write_parquet(path / "experiment.parquet")
 
 
-def _load_mapped_datasets(path: Path, kind: str) -> Iterable[dict]:
-    datasets = _load_datasets(path)
+def _load_datasets(path: Path, kind: str) -> Iterable[dict]:
+    datasets = _load_raw_datasets(path)
     if kind == "runtime":
         return map(_to_runtime_dataset, datasets)
     elif kind == "parameter":
@@ -87,16 +87,16 @@ def _common_properties(dataset: dict) -> dict:
     }
 
 
-def _load_datasets(path: Path) -> Iterable[dict]:
+def _load_raw_datasets(path: Path) -> Iterable[dict]:
     for dataset_path in _iterdir(path):
-        yield from _load_dataset(dataset_path)
+        yield from _load_raw_dataset(dataset_path)
 
 
 def _iterdir(path: Path) -> Iterable[Path]:
     return (p for p in path.iterdir() if p.is_dir())
 
 
-def _load_dataset(path: Path) -> Iterable[dict]:
+def _load_raw_dataset(path: Path) -> Iterable[dict]:
     with (path / "results.json").open() as f:
         results = json.load(f)
     with (path / "properties.log").open() as f:
