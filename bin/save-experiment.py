@@ -82,7 +82,6 @@ def _common_properties(dataset: dict) -> dict:
         "ct_random_type": dataset["networkFactory"]["timeFactory"]["random"]["type"],
         "sv_random_type": dataset["scoreFactory"]["random"]["type"],
         "st_random_type": dataset["scoreFactory"]["timeFactory"]["random"]["type"],
-        "transmission_rate": dataset["parameters"]["transmissionRate"],
         "send_coefficient": dataset["parameters"]["sendCoefficient"],
     }
 
