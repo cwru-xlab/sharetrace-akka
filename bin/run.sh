@@ -2,7 +2,7 @@
 
 echo "RUN STARTED"
 
-logsDirectory="logs/$(bin/current-time.sh)"
+logsDirectory="logs/$(bin/uuid.sh)"
 configFile="$1"
 
 echo "Config file: $configFile"
