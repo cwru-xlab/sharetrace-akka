@@ -1,14 +1,12 @@
 package sharetrace.model.factory;
 
-import de.huxhorn.sulky.ulid.ULID;
+import java.util.UUID;
 
 public final class IdFactory {
-
-  private static final ULID ULID = new ULID();
 
   private IdFactory() {}
 
   public static String newId() {
-    return ULID.nextULID();
+    return UUID.randomUUID().toString();
   }
 }
