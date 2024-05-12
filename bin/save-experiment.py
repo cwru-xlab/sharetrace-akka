@@ -77,8 +77,8 @@ def _common_properties(dataset: dict) -> dict:
         "key": dataset["key"],
         "network_id": dataset["network"]["id"],
         "network_type": dataset["networkFactory"]["type"],
-        "nodes": dataset["network"]["nodes"],
-        "edges": dataset["network"]["edges"],
+        "n_nodes": dataset["network"]["nodes"],
+        "n_edges": dataset["network"]["edges"],
         "ct_random_type": dataset["networkFactory"]["timeFactory"]["random"]["type"],
         "sv_random_type": dataset["scoreFactory"]["random"]["type"],
         "st_random_type": dataset["scoreFactory"]["timeFactory"]["random"]["type"],
@@ -104,7 +104,7 @@ def _load_raw_dataset(path: Path) -> Iterable[dict]:
                 "id": path.name,
                 "key": (key := props["k"]),
                 "results": results[key],
-                **props["p"]
+                **props["p"],
             }
 
 

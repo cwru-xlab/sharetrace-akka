@@ -17,5 +17,5 @@ def print_dataset_time_ranges():
             print(f"{path.stem}: {range_days} days")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     print_dataset_time_ranges()
