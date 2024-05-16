@@ -40,7 +40,9 @@ public record ContextParser(Config contextConfig) implements ConfigParser<Contex
 
   private RandomGenerator getRandomGenerator(Config config, long seed) {
     var className = config.getString("random-generator");
-    return InstanceFactory.getInstance(RandomGenerator.class, className, seed);
+    var generator = ClassFactory.getInstance(RandomGenerator.class, className);
+    generator.setSeed(seed);
+    return generator;
   }
 
   private Instant getReferenceTime(Config config) {

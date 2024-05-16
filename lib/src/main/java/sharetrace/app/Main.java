@@ -2,8 +2,8 @@ package sharetrace.app;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
+import sharetrace.config.ClassFactory;
 import sharetrace.config.ContextParser;
-import sharetrace.config.InstanceFactory;
 import sharetrace.config.ParametersParser;
 import sharetrace.model.Context;
 import sharetrace.model.Parameters;
@@ -25,7 +25,7 @@ public final class Main {
   }
 
   private static Runner getRunner(Config config) {
-    return InstanceFactory.getInstance(Runner.class, config.getString("runner.type"));
+    return ClassFactory.getInstance(Runner.class, config.getString("runner.type"));
   }
 
   private static Parameters getParameters(Config config) {

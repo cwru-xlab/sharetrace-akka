@@ -15,7 +15,7 @@ import sharetrace.analysis.handler.EventHandlers;
 import sharetrace.analysis.model.Context;
 import sharetrace.analysis.model.EventRecord;
 import sharetrace.analysis.model.Results;
-import sharetrace.config.InstanceFactory;
+import sharetrace.config.ClassFactory;
 import sharetrace.logging.jackson.Jackson;
 import sharetrace.model.factory.IdFactory;
 
@@ -65,7 +65,7 @@ public final class Main {
 
   private static EventHandler newEventHandler(Config config) {
     return config.getStringList("handlers").stream()
-        .map(className -> InstanceFactory.getInstance(EventHandler.class, className))
+        .map(className -> ClassFactory.getInstance(EventHandler.class, className))
         .collect(Collectors.collectingAndThen(Collectors.toList(), EventHandlers::new));
   }
 

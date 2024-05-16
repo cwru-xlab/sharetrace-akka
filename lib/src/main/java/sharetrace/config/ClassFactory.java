@@ -4,6 +4,14 @@ public final class ClassFactory {
 
   private ClassFactory() {}
 
+  public static <T> T getInstance(Class<T> type, String name) {
+    try {
+      return getClass(type, name).getConstructor().newInstance();
+    } catch (ReflectiveOperationException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
   public static <T> Class<T> getClass(Class<T> expected, String name) {
     try {
       return checkType(expected, Class.forName(name));
