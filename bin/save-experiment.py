@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 import json
 import sys
 from pathlib import Path
@@ -58,8 +59,8 @@ def _event_counts_results(dataset: dict) -> dict:
 def _updates_results(dataset: dict) -> dict:
     namespace = dataset["results"]["user"]["updates"]
     return {
-        "exposure_diffs": namespace["difference"],
-        "exposure_scores": namespace["exposure"],
+        "exposure_diff": namespace["difference"],
+        "exposure_score": namespace["exposure"],
     }
 
 

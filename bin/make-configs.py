@@ -55,7 +55,7 @@ def score_factory_configs():
 
 def parameter_experiment_configs():
     def parameter_configs():
-        return [{"send_coefficients": [c / 10 for c in range(8, 16)]}]
+        return [{"send_coefficients": [c / 10 for c in range(8, 21)]}]
 
     yield from merge_configs(
         network_configs([(5_000, 50_000)]),
