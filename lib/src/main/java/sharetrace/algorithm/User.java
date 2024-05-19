@@ -2,9 +2,7 @@ package sharetrace.algorithm;
 
 import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
-import akka.actor.typed.DispatcherSelector;
 import akka.actor.typed.PostStop;
-import akka.actor.typed.Props;
 import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
@@ -67,10 +65,6 @@ final class User extends AbstractBehavior<UserMessage> {
                   timers -> new User(id, actorContext, context, parameters, monitor, timers));
           return Behaviors.withMdc(UserMessage.class, context.mdc(), user);
         });
-  }
-
-  public static Props props() {
-    return DispatcherSelector.fromConfig("sharetrace.user.dispatcher");
   }
 
   @Override

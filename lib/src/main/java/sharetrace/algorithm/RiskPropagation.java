@@ -2,6 +2,7 @@ package sharetrace.algorithm;
 
 import akka.actor.typed.ActorSystem;
 import akka.actor.typed.Behavior;
+import akka.actor.typed.DispatcherSelector;
 import akka.actor.typed.Terminated;
 import akka.actor.typed.javadsl.Behaviors;
 import java.util.concurrent.ExecutionException;
@@ -68,17 +69,14 @@ public record RiskPropagation(
     }
   }
 
-  private Behavior<Void> behavior(ExecutionProperties properties) {
+  private Behavior<Void> behavior(ExecutionProperties p) {
     return Behaviors.setup(
-        ctx -> {
-          var monitor =
-              Monitor.of(
-                  properties.context(),
-                  properties.parameters(),
-                  properties.scoreFactory(),
-                  properties.network());
-          var ref = ctx.spawn(monitor, Monitor.name(), Monitor.props());
-          ctx.watch(ref);
+        context -> {
+          var behavior = Monitor.of(p.context(), p.parameters(), p.scoreFactory(), p.network());
+          var name = Monitor.class.getSimpleName();
+          var props = DispatcherSelector.fromConfig("sharetrace.monitor.dispatcher");
+          var ref = context.spawn(behavior, name, props);
+          context.watch(ref);
           ref.tell(RunMessage.INSTANCE);
           return Behaviors.receive(Void.class)
               .onSignal(Terminated.class, x -> Behaviors.stopped())

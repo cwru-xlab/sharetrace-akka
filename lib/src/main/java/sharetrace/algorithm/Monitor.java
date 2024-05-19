@@ -4,7 +4,6 @@ import akka.actor.typed.ActorRef;
 import akka.actor.typed.Behavior;
 import akka.actor.typed.DispatcherSelector;
 import akka.actor.typed.PostStop;
-import akka.actor.typed.Props;
 import akka.actor.typed.javadsl.AbstractBehavior;
 import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
@@ -71,14 +70,6 @@ final class Monitor extends AbstractBehavior<MonitorMessage> {
         });
   }
 
-  public static Props props() {
-    return DispatcherSelector.fromConfig("sharetrace.monitor.dispatcher");
-  }
-
-  public static String name() {
-    return Monitor.class.getSimpleName();
-  }
-
   @Override
   public Receive<MonitorMessage> createReceive() {
     return newReceiveBuilder()
@@ -104,8 +95,9 @@ final class Monitor extends AbstractBehavior<MonitorMessage> {
     logEvent(CreateUsersStart.class, CreateUsersStart::new);
     var users = new ActorRef[userCount()];
     for (int i : network.vertexSet()) {
-      var user = User.of(i, context, parameters, getContext().getSelf());
-      users[i] = getContext().spawnAnonymous(user, User.props());
+      var behavior = User.of(i, context, parameters, getContext().getSelf());
+      var props = DispatcherSelector.fromConfig("sharetrace.user.dispatcher");
+      users[i] = getContext().spawn(behavior, "User-" + i, props);
       getContext().watch(users[i]);
     }
     logEvent(CreateUsersEnd.class, CreateUsersEnd::new);
