@@ -21,10 +21,10 @@ def best_barabasi_albert_config(n, m):
 
 
 def network_configs(network_sizes):
-    for i, (n, m) in enumerate(network_sizes):
+    for i, (n, m) in enumerate(network_sizes, 1):
         n0, m0 = best_barabasi_albert_config(n, m)
         base = {
-            "qualifier": i + 1,
+            "qualifier": i,
             "nodes": n,
             # Gnm random
             "edges": m,
