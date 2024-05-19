@@ -57,7 +57,7 @@ public record RiskPropagation(
 
   private void run(ExecutionProperties properties) {
     try {
-      ActorSystem.create(behavior(properties), getClass().getSimpleName())
+      ActorSystem.create(behavior(properties), "RiskPropagation")
           .getWhenTerminated()
           .toCompletableFuture()
           .get();
@@ -73,9 +73,8 @@ public record RiskPropagation(
     return Behaviors.setup(
         context -> {
           var behavior = Monitor.of(p.context(), p.parameters(), p.scoreFactory(), p.network());
-          var name = Monitor.class.getSimpleName();
           var props = DispatcherSelector.fromConfig("sharetrace.monitor.dispatcher");
-          var ref = context.spawn(behavior, name, props);
+          var ref = context.spawn(behavior, "Monitor", props);
           context.watch(ref);
           ref.tell(RunMessage.INSTANCE);
           return Behaviors.receive(Void.class)
