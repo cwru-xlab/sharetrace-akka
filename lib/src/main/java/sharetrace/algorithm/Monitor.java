@@ -10,7 +10,6 @@ import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import akka.actor.typed.javadsl.TimerScheduler;
 import java.util.function.Supplier;
-
 import org.slf4j.MDC;
 import sharetrace.logging.event.Event;
 import sharetrace.logging.event.lifecycle.CreateUsersEnd;
