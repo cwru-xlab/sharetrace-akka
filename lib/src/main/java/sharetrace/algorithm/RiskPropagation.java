@@ -35,12 +35,12 @@ public record RiskPropagation(
   @Override
   public void run() {
     var properties = getExecutionProperties();
-    MDC.setContextMap(properties.context().mdc());
     logProperties(properties);
     run(properties);
   }
 
   private void logProperties(ExecutionProperties properties) {
+    MDC.setContextMap(properties.context().mdc());
     context.logProperty(ExecutionProperties.class, () -> properties);
   }
 

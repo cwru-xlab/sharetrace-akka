@@ -10,6 +10,8 @@ import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import akka.actor.typed.javadsl.TimerScheduler;
 import java.util.function.Supplier;
+
+import org.slf4j.MDC;
 import sharetrace.logging.event.Event;
 import sharetrace.logging.event.lifecycle.CreateUsersEnd;
 import sharetrace.logging.event.lifecycle.CreateUsersStart;
@@ -147,6 +149,8 @@ final class Monitor extends AbstractBehavior<MonitorMessage> {
   @SuppressWarnings("unused")
   private Behavior<MonitorMessage> handle(PostStop stop) {
     // Logging this in response to a PostStop signal is the only way that works.
+    // Set the MDC since Akka sometimes clears it before this event is logged.
+    MDC.setContextMap(context.mdc());
     logEvent(RiskPropagationEnd.class, RiskPropagationEnd::new);
     return this;
   }

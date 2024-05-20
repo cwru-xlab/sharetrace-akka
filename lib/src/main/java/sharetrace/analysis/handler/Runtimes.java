@@ -19,7 +19,7 @@ import sharetrace.logging.event.user.LastEvent;
 
 public final class Runtimes implements EventHandler {
 
-  private static final Object UNKNOWN_RUNTIME = "unknown";
+  private static final long UNKNOWN_RUNTIME = -1;
 
   private final Reference2LongMap<Class<?>> events;
 
