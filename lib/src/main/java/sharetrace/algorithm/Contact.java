@@ -22,6 +22,7 @@ final class Contact implements Expirable, Timestamped, Flushable {
   private final long expiryTime;
   private final Range<Long> relevantTimeRange;
   private final double sendCoefficient;
+  private final double tolerance;
   private final TimeFactory timeFactory;
 
   private TemporalScore sendThreshold;
@@ -34,6 +35,7 @@ final class Contact implements Expirable, Timestamped, Flushable {
     this.expiryTime = message.expiryTime();
     this.relevantTimeRange = Range.lessThan(message.timestamp() + parameters.timeBuffer());
     this.sendCoefficient = parameters.sendCoefficient();
+    this.tolerance = parameters.tolerance();
     this.timeFactory = timeFactory;
     resetThreshold();
   }
@@ -100,7 +102,7 @@ final class Contact implements Expirable, Timestamped, Flushable {
   }
 
   private void setThreshold(RiskScoreMessage message) {
-    sendThreshold = message.score().mapValue(value -> value * sendCoefficient);
+    sendThreshold = message.score().mapValue(value -> value * sendCoefficient + tolerance);
   }
 
   private void resetThreshold() {

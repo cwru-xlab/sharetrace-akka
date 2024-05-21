@@ -35,6 +35,10 @@ public record AppConfig(
     return config.getDoubleList("send-coefficients");
   }
 
+  public List<Double> getTolerances() {
+    return config.getDoubleList("tolerances");
+  }
+
   public RiskScoreFactory getScoreFactory() {
     return scoreFactoryParser.parse(config.getConfig("score-factory"));
   }

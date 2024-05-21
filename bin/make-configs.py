@@ -53,15 +53,22 @@ def score_factory_configs():
         yield {"score_value_random": sv_random, "score_time_random": st_random}
 
 
-def parameter_experiment_configs():
-    def parameter_configs():
-        return [{"send_coefficients": [c / 10 for c in range(8, 21)]}]
+def send_coefficient_experiment_configs():
+    return parameter_experiment_configs(
+        send_coefficients=[c / 10 for c in range(8, 21)]
+    )
 
+
+def tolerance_experiment_configs():
+    return parameter_experiment_configs(tolerances=[t / 1000 for t in range(1, 11)])
+
+
+def parameter_experiment_configs(**parameter_config):
     yield from merge_configs(
         network_configs([(5_000, 50_000)]),
         contact_time_factory_configs(),
         score_factory_configs(),
-        parameter_configs(),
+        [parameter_config],
     )
 
 
@@ -88,8 +95,10 @@ def merge_configs(*configs):
 
 def make_configs(experiment_type):
     base_filename = experiment_type
-    if experiment_type == "parameter":
-        template_values = parameter_experiment_configs()
+    if experiment_type == "send-coefficient":
+        template_values = send_coefficient_experiment_configs()
+    elif experiment_type == "tolerance":
+        template_values = tolerance_experiment_configs()
     elif experiment_type == "runtime":
         template_values = runtime_experiment_configs()
     elif experiment_type == "runtime-baseline":

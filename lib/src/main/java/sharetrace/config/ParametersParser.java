@@ -11,6 +11,7 @@ public record ParametersParser() implements ConfigParser<Parameters> {
     return ParametersBuilder.create()
         .transmissionRate(config.getDouble("transmission-rate"))
         .sendCoefficient(config.getDouble("send-coefficient"))
+        .tolerance(config.getDouble("tolerance"))
         .timeBuffer(getMillisDuration(config, "time-buffer"))
         .scoreExpiry(getMillisDuration(config, "score-expiry"))
         .contactExpiry(getMillisDuration(config, "contact-expiry"))

@@ -25,12 +25,12 @@ def _load_datasets(path: Path, kind: str) -> Iterable[dict]:
 
 
 def _to_runtime_dataset(dataset: dict) -> dict:
-    return _common_properties(dataset) | _runtime_results(dataset)
+    return _properties(dataset) | _runtime_results(dataset)
 
 
 def _to_parameter_dataset(dataset: dict) -> dict:
     return (
-        _common_properties(dataset)
+        _properties(dataset)
         | _reachability_results(dataset)
         | _runtime_results(dataset)
         | _updates_results(dataset)
@@ -72,7 +72,7 @@ def _runtime_results(dataset: dict) -> dict:
     }
 
 
-def _common_properties(dataset: dict) -> dict:
+def _properties(dataset: dict) -> dict:
     return {
         "id": dataset["id"],
         "key": dataset["key"],
@@ -84,6 +84,7 @@ def _common_properties(dataset: dict) -> dict:
         "sv_random_type": dataset["scoreFactory"]["random"]["type"],
         "st_random_type": dataset["scoreFactory"]["timeFactory"]["random"]["type"],
         "send_coefficient": dataset["parameters"]["sendCoefficient"],
+        "tolerance": dataset["parameters"]["tolerance"],
     }
 
 

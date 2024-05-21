@@ -2,7 +2,8 @@ include "parameter-experiment-base.conf"
 
 sharetrace {
   runner {
-    send-coefficients = ${send_coefficients}
+    type = sharetrace.app.ToleranceRunner
+    tolerances = ${tolerances}
 
     contact-time-factory {
       period = $${sharetrace.parameters.contact-expiry}

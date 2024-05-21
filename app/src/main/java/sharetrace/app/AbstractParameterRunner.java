@@ -4,9 +4,8 @@ import sharetrace.algorithm.RiskPropagationBuilder;
 import sharetrace.config.AppConfig;
 import sharetrace.model.Context;
 import sharetrace.model.Parameters;
-import sharetrace.model.ParametersBuilder;
 
-public class ParametersExperimentRunner implements Runner {
+abstract class AbstractParameterRunner<V> implements Runner {
 
   @Override
   public void run(Parameters parameters, Context context) {
@@ -15,10 +14,10 @@ public class ParametersExperimentRunner implements Runner {
     for (var repeats : config.getIterations()) {
       var scoreFactory = config.getScoreFactory();
       var networkFactory = config.getNetworkFactory();
-      for (double sc : config.getSendCoefficients()) {
+      for (var value : parameterValues(config)) {
         RiskPropagationBuilder.create()
             .context(context)
-            .parameters(ParametersBuilder.from(parameters).withSendCoefficient(sc))
+            .parameters(updateParameters(parameters, value))
             .scoreFactory(scoreFactory)
             .networkFactory(networkFactory)
             .keyFactory(keyFactory)
@@ -27,4 +26,8 @@ public class ParametersExperimentRunner implements Runner {
       }
     }
   }
+
+  protected abstract Iterable<V> parameterValues(AppConfig config);
+
+  protected abstract Parameters updateParameters(Parameters parameters, V value);
 }
