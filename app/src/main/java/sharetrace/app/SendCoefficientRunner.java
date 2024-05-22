@@ -4,7 +4,7 @@ import sharetrace.config.AppConfig;
 import sharetrace.model.Parameters;
 import sharetrace.model.ParametersBuilder;
 
-public class SendCoefficientRunner extends AbstractParameterRunner<Double> {
+public final class SendCoefficientRunner extends AbstractParameterRunner<Double> {
 
   @Override
   protected Iterable<Double> parameterValues(AppConfig config) {

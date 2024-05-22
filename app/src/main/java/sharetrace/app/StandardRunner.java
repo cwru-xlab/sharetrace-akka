@@ -5,7 +5,7 @@ import sharetrace.config.AppConfig;
 import sharetrace.model.Context;
 import sharetrace.model.Parameters;
 
-public class StandardRunner implements Runner {
+public final class StandardRunner implements Runner {
 
   @Override
   public void run(Parameters parameters, Context context) {

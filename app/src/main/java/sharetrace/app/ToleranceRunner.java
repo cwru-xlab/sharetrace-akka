@@ -4,7 +4,7 @@ import sharetrace.config.AppConfig;
 import sharetrace.model.Parameters;
 import sharetrace.model.ParametersBuilder;
 
-public class ToleranceRunner extends AbstractParameterRunner<Double> {
+public final class ToleranceRunner extends AbstractParameterRunner<Double> {
 
   @Override
   protected Iterable<Double> parameterValues(AppConfig config) {
