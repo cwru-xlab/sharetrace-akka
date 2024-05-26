@@ -84,7 +84,7 @@ final class Monitor extends AbstractBehavior<MonitorMessage> {
   @SuppressWarnings("unused")
   private Behavior<MonitorMessage> handle(RunMessage message) {
     logEvent(RiskPropagationStart.class, RiskPropagationStart::new);
-    var users = newUsers();
+    var users = createUsers();
     sendContacts(users);
     sendRiskScores(users);
     startIdleTimeoutTimer();
@@ -92,7 +92,7 @@ final class Monitor extends AbstractBehavior<MonitorMessage> {
   }
 
   @SuppressWarnings("unchecked")
-  private ActorRef<UserMessage>[] newUsers() {
+  private ActorRef<UserMessage>[] createUsers() {
     logEvent(CreateUsersStart.class, CreateUsersStart::new);
     var users = new ActorRef[userCount()];
     for (int i : network.vertexSet()) {
