@@ -72,9 +72,17 @@ def parameter_experiment_configs(**parameter_config):
     )
 
 
-def runtime_experiment_configs(baseline=False):
+def runtime_baseline_experiment_configs():
+    yield from merge_configs(
+        network_configs([(10_000, 100_000)]),
+        contact_time_factory_configs(),
+        score_factory_configs(),
+    )
+
+
+def runtime_experiment_configs():
     def runtime_network_sizes():
-        for n, m in itertools.product(range(1, 2 if baseline else 11), repeat=2):
+        for n, m in itertools.product(range(1, 11), repeat=2):
             yield n * 10_000, m * 1_000_000
 
     random_configs = [
@@ -102,7 +110,7 @@ def make_configs(experiment_type):
     elif experiment_type == "runtime":
         template_values = runtime_experiment_configs()
     elif experiment_type == "runtime-baseline":
-        template_values = runtime_experiment_configs(baseline=True)
+        template_values = runtime_baseline_experiment_configs()
         base_filename = "runtime"
     else:
         raise ValueError(f"Invalid experiment type: {experiment_type}")
