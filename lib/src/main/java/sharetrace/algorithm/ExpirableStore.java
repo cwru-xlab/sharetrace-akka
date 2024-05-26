@@ -31,7 +31,7 @@ abstract class ExpirableStore<V extends Expirable> implements Iterable<V> {
     if (minExpiryTime < currentTime) {
       values().removeIf(value -> value.isExpired(currentTime));
       minExpiryTime =
-          values().stream().map(Expirable::expiryTime).min(Long::compare).orElse(Long.MAX_VALUE);
+          values().stream().mapToLong(Expirable::expiryTime).min().orElse(Long.MAX_VALUE);
     }
   }
 
