@@ -39,11 +39,6 @@ public record RiskPropagation(
     run(properties);
   }
 
-  private void logProperties(ExecutionProperties properties) {
-    MDC.setContextMap(properties.context().mdc());
-    context.logProperty(ExecutionProperties.class, () -> properties);
-  }
-
   private ExecutionProperties getExecutionProperties() {
     return ExecutionPropertiesBuilder.create()
         .context(ContextBuilder.builder(context).addMdc("k", keyFactory.getKey()).build())
@@ -53,6 +48,11 @@ public record RiskPropagation(
         .networkFactory(networkFactory)
         .keyFactory(keyFactory)
         .build();
+  }
+
+  private void logProperties(ExecutionProperties properties) {
+    MDC.setContextMap(properties.context().mdc());
+    context.logProperty(ExecutionProperties.class, () -> properties);
   }
 
   private void run(ExecutionProperties properties) {
