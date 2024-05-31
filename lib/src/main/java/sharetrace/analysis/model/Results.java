@@ -6,7 +6,7 @@ import java.util.Map;
 
 public final class Results {
 
-  private final Map<String, Object> results;
+  @JsonValue private final Map<String, Object> results;
 
   public Results() {
     results = new Object2ReferenceOpenHashMap<>();
@@ -19,11 +19,5 @@ public final class Results {
 
   public Results withScope(String scope) {
     return (Results) results.computeIfAbsent(scope, x -> new Results());
-  }
-
-  @JsonValue
-  @SuppressWarnings("unused")
-  private Map<String, Object> value() {
-    return results;
   }
 }
