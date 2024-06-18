@@ -109,32 +109,30 @@ class ParameterDataset(Dataset):
 
     def efficiency_results(
         self,
-        percentiles: Sequence[Real] | None = None,
+        min_parameter_value: Real = 0,
+        normalize: bool = False,
+        aggregate: bool = False,
         by_network_type: bool = False,
-        min_parameter: Real = 0,
-        aggregate: bool = False
     ) -> Self:
-        percentiles = percentiles or [0, 10, 25, 50, 75, 90, 100]
         group_key = [self.parameter]
         if by_network_type:
-            # Prefer to sort first by parameter value and then by network type.
             group_key.insert(0, "network_type")
         result = (
-            self.filter(pl.col(self.parameter).ge(min_parameter))
+            self.filter(pl.col(self.parameter).ge(min_parameter_value))
             .group_by("key", "network_id", *group_key)
-            .agg(pl.col("n_receives").sum())
-            .with_columns(normalized("n_receives", by="max").over("network_id"))
-            .filter(pl.col(self.parameter).gt(min_parameter))
+            .agg(pl.col("n_updates").sum())
         )
+        if normalize:
+            result = result.with_columns(
+                normalized("n_updates", by="max").over("network_id")
+            )
+        result = result.filter(pl.col(self.parameter).gt(min_parameter_value))
         if aggregate:
-            return (
-                result
-                .group_by(group_key)
-                .agg([percentile("n_receives", p) for p in percentiles])
-                .sort(group_key)
+            percentiles = [0, 10, 25, 50, 75, 90, 100]
+            result = result.group_by(group_key).agg(
+                [percentile("n_updates", p) for p in percentiles]
             )
         return result.sort(group_key)
-
 
 
 class RuntimeDataset(Dataset):
