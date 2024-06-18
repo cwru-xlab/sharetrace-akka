@@ -16,6 +16,8 @@ scipy = "^1.9.1"
 statsmodels = "^0.14.2"
 scikit-learn = "^1.4.2"
 seaborn = "^0.13.2"
+selenium = "^4.21.0"
+webdriver-manager = "^4.0.1"
 
 [tool.poetry.dev-dependencies]
 black = { extras = ["d", "jupyter"], version = "^24.4.2" }
