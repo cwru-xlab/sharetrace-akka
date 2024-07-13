@@ -29,13 +29,13 @@ def network_configs(network_sizes):
             # Gnm random
             "edges": m,
             # Random regular
-            "degree": (k := math.floor(2 * m / n)),
+            "degree": (d := math.floor(2 * m / n)),
             # Barabasi Albert
             "initial_nodes": n0,
             "new_edges": m0,
             # Watts Strogatz
             "rewiring_probability": 0.2,
-            "nearest_neighbors": k if k % 2 == 0 else k + 1,
+            "nearest_neighbors": d + (d % 2)
         }
         yield base | {"network_type": "gnm-random"}
         yield base | {"network_type": "barabasi-albert"}
