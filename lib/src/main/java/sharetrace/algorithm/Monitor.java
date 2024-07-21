@@ -95,9 +95,9 @@ final class Monitor extends AbstractBehavior<MonitorMessage> {
   private ActorRef<UserMessage>[] createUsers() {
     logEvent(CreateUsersStart.class, CreateUsersStart::new);
     var users = new ActorRef[userCount()];
+    var props = DispatcherSelector.fromConfig("sharetrace.user.dispatcher");
     for (int i : network.vertexSet()) {
       var behavior = User.of(i, context, parameters, getContext().getSelf());
-      var props = DispatcherSelector.fromConfig("sharetrace.user.dispatcher");
       users[i] = getContext().spawn(behavior, "User-" + i, props);
       getContext().watch(users[i]);
     }
