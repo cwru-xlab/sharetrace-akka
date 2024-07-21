@@ -6,8 +6,9 @@ import java.util.Map;
 import java.util.function.Supplier;
 import org.apache.commons.math3.random.RandomGenerator;
 import sharetrace.Buildable;
-import sharetrace.logging.LogRecord;
+import sharetrace.logging.ExecutionProperties;
 import sharetrace.logging.RecordLogger;
+import sharetrace.logging.event.Event;
 import sharetrace.model.factory.TimeFactory;
 
 @Buildable
@@ -32,11 +33,11 @@ public record Context(
     return systemTimeFactory.getTime();
   }
 
-  public <T extends LogRecord> void logEvent(Class<T> type, Supplier<T> record) {
+  public <T extends Event> void logEvent(Class<T> type, Supplier<T> record) {
     eventLogger.log(type, record);
   }
 
-  public <T extends LogRecord> void logProperty(Class<T> type, Supplier<T> record) {
-    propertyLogger.log(type, record);
+  public void logProperties(ExecutionProperties properties) {
+    propertyLogger.log(ExecutionProperties.class, () -> properties);
   }
 }
