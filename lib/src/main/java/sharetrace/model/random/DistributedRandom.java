@@ -1,14 +1,17 @@
 package sharetrace.model.random;
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@FunctionalInterface
 public interface DistributedRandom {
 
+  @JsonIgnore
   double nextDouble();
 
   default long nextLong(double bound) {
     return Math.round(nextDouble() * bound);
   }
+
+  @JsonProperty
+  String type();
 }

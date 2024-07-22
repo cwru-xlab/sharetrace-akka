@@ -12,6 +12,8 @@ import sharetrace.logging.RecordLogger;
 import sharetrace.logging.RecordLoggerBuilder;
 import sharetrace.model.Context;
 import sharetrace.model.ContextBuilder;
+import sharetrace.model.factory.FixedTimeFactory;
+import sharetrace.model.factory.SystemTimeFactory;
 import sharetrace.model.factory.TimeFactory;
 
 public record ContextParser(Config contextConfig) implements ConfigParser<Context> {
@@ -28,7 +30,7 @@ public record ContextParser(Config contextConfig) implements ConfigParser<Contex
         .propertyLogger(getPropertyLogger(config))
         .systemTimeFactory(getSystemTimeFactory())
         .userTimeFactory(getUserTimeFactory(config, referenceTime))
-        .referenceTime(TimeFactory.fixed(referenceTime).getTime())
+        .referenceTime(getFixedTimeFactory(referenceTime).getTime())
         .build();
   }
 
@@ -53,14 +55,18 @@ public record ContextParser(Config contextConfig) implements ConfigParser<Contex
   private TimeFactory getUserTimeFactory(Config config, Instant referenceTime) {
     var type = config.getString("user-time");
     return switch (type) {
-      case "fixed" -> TimeFactory.fixed(referenceTime);
+      case "fixed" -> getFixedTimeFactory(referenceTime);
       case "system" -> getSystemTimeFactory();
       default -> throw new IllegalArgumentException(type);
     };
   }
 
   private TimeFactory getSystemTimeFactory() {
-    return TimeFactory.system();
+    return new SystemTimeFactory();
+  }
+
+  private TimeFactory getFixedTimeFactory(Instant instant) {
+    return FixedTimeFactory.from(instant);
   }
 
   private RecordLogger getEventLogger(Config config) {

@@ -9,7 +9,6 @@ import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import akka.actor.typed.javadsl.TimerScheduler;
 import com.google.common.collect.Range;
-import java.util.function.Supplier;
 import sharetrace.logging.event.Event;
 import sharetrace.logging.event.user.ContactEvent;
 import sharetrace.logging.event.user.LastEvent;
@@ -51,8 +50,8 @@ final class User extends AbstractBehavior<UserMessage> {
     this.parameters = parameters;
     this.monitor = monitor;
     this.timers = timers;
-    this.scores = new RiskScoreMessageStore(context::getUserTime);
-    this.contacts = new ContactStore(context::getUserTime);
+    this.scores = new RiskScoreMessageStore(context.userTimeFactory());
+    this.contacts = new ContactStore(context.userTimeFactory());
     this.exposureScore = RiskScoreMessage.NULL;
   }
 
@@ -79,7 +78,7 @@ final class User extends AbstractBehavior<UserMessage> {
 
   private Behavior<UserMessage> handle(ContactMessage message) {
     if (!isExpired(message)) {
-      var contact = new Contact(message, parameters, context::getUserTime);
+      var contact = new Contact(message, parameters, context.userTimeFactory());
       contacts.add(contact);
       contact.apply(scores);
       logContactEvent(contact);
@@ -134,7 +133,7 @@ final class User extends AbstractBehavior<UserMessage> {
   }
 
   private boolean isExpired(Expirable expirable) {
-    return expirable.isExpired(context.getUserTime());
+    return expirable.isExpired(context.userTimeFactory().getTime());
   }
 
   private RiskScoreMessage transmitted(RiskScoreMessage message) {
@@ -148,23 +147,23 @@ final class User extends AbstractBehavior<UserMessage> {
   }
 
   private void logContactEvent(Contact contact) {
-    logEvent(ContactEvent.class, () -> new ContactEvent(id, contact.id(), contact.timestamp()));
+    logNonLastEvent(new ContactEvent(id, contact.id(), contact.timestamp()));
   }
 
   private void logReceiveEvent(RiskScoreMessage message) {
-    logEvent(ReceiveEvent.class, () -> new ReceiveEvent(id, message.sender(), message));
+    logNonLastEvent(new ReceiveEvent(id, message.sender(), message));
   }
 
   private void logUpdateEvent(RiskScoreMessage previous, RiskScoreMessage current) {
-    logEvent(UpdateEvent.class, () -> new UpdateEvent(id, previous, current));
+    logNonLastEvent(new UpdateEvent(id, previous, current));
   }
 
   private void logLastEvent() {
-    context.logEvent(LastEvent.class, () -> new LastEvent(id, lastEventTime));
+    context.eventLogger().log(new LastEvent(id, lastEventTime));
   }
 
-  private <T extends Event> void logEvent(Class<T> type, Supplier<T> factory) {
-    lastEventTime = context.getSystemTime();
-    context.logEvent(type, factory);
+  private void logNonLastEvent(Event event) {
+    lastEventTime = context.systemTimeFactory().getTime();
+    context.eventLogger().log(event);
   }
 }

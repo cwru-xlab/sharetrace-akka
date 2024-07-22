@@ -1,12 +1,13 @@
 package sharetrace.model.factory;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@FunctionalInterface
 public interface KeyFactory {
 
   @JsonIgnore
   String getKey();
+
+  @JsonProperty
+  String type();
 }

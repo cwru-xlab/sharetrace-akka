@@ -1,11 +1,9 @@
 package sharetrace.model.factory;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import java.util.concurrent.atomic.AtomicLong;
 
 @SuppressWarnings("unused")
-@JsonTypeName("AutoIncrementing")
 public final class AutoIncrementingKeyFactory implements KeyFactory {
 
   private final long initialValue;
@@ -19,6 +17,11 @@ public final class AutoIncrementingKeyFactory implements KeyFactory {
   @Override
   public String getKey() {
     return String.valueOf(value.getAndIncrement());
+  }
+
+  @Override
+  public String type() {
+    return "AutoIncrementing";
   }
 
   @JsonProperty

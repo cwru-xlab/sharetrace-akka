@@ -52,7 +52,7 @@ public record RiskPropagation(
 
   private void logProperties(ExecutionProperties properties) {
     MDC.setContextMap(properties.context().mdc());
-    context.logProperties(properties);
+    context.propertyLogger().log(properties);
   }
 
   private void run(ExecutionProperties properties) {

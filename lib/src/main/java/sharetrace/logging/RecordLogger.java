@@ -1,7 +1,6 @@
 package sharetrace.logging;
 
 import java.util.Set;
-import java.util.function.Supplier;
 import net.logstash.logback.argument.StructuredArgument;
 import net.logstash.logback.argument.StructuredArguments;
 import org.slf4j.Logger;
@@ -12,17 +11,17 @@ import sharetrace.model.factory.TimeFactory;
 public record RecordLogger(
     Logger logger, String key, Set<Class<? extends LogRecord>> logged, TimeFactory timeFactory) {
 
-  public <T extends LogRecord> void log(Class<T> type, Supplier<T> supplier) {
-    if (logger.isInfoEnabled() && logged.contains(type)) {
-      logger.info(key, currentTime(), record(supplier));
+  public void log(LogRecord record) {
+    if (logger.isInfoEnabled() && logged.contains(record.getClass())) {
+      logger.info(key, timeField(), recordField(record));
     }
   }
 
-  private StructuredArgument currentTime() {
+  private StructuredArgument timeField() {
     return StructuredArguments.keyValue("t", timeFactory.getTime());
   }
 
-  private StructuredArgument record(Supplier<?> supplier) {
-    return StructuredArguments.value(key, supplier.get());
+  private StructuredArgument recordField(LogRecord record) {
+    return StructuredArguments.value(key, record);
   }
 }

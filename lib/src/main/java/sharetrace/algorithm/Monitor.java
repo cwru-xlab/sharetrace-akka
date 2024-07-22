@@ -9,7 +9,6 @@ import akka.actor.typed.javadsl.ActorContext;
 import akka.actor.typed.javadsl.Behaviors;
 import akka.actor.typed.javadsl.Receive;
 import akka.actor.typed.javadsl.TimerScheduler;
-import java.util.function.Supplier;
 import org.slf4j.MDC;
 import sharetrace.logging.event.Event;
 import sharetrace.logging.event.lifecycle.CreateUsersEnd;
@@ -83,7 +82,7 @@ final class Monitor extends AbstractBehavior<MonitorMessage> {
 
   @SuppressWarnings("unused")
   private Behavior<MonitorMessage> handle(RunMessage message) {
-    logEvent(RiskPropagationStart.class, RiskPropagationStart::new);
+    logEvent(new RiskPropagationStart());
     var users = createUsers();
     sendContacts(users);
     sendRiskScores(users);
@@ -93,7 +92,7 @@ final class Monitor extends AbstractBehavior<MonitorMessage> {
 
   @SuppressWarnings("unchecked")
   private ActorRef<UserMessage>[] createUsers() {
-    logEvent(CreateUsersStart.class, CreateUsersStart::new);
+    logEvent(new CreateUsersStart());
     var users = new ActorRef[userCount()];
     var props = DispatcherSelector.fromConfig("sharetrace.user.dispatcher");
     for (int i : network.vertexSet()) {
@@ -101,12 +100,12 @@ final class Monitor extends AbstractBehavior<MonitorMessage> {
       users[i] = getContext().spawn(behavior, "User-" + i, props);
       getContext().watch(users[i]);
     }
-    logEvent(CreateUsersEnd.class, CreateUsersEnd::new);
+    logEvent(new CreateUsersEnd());
     return users;
   }
 
   private void sendContacts(ActorRef<UserMessage>[] users) {
-    logEvent(SendContactsStart.class, SendContactsStart::new);
+    logEvent(new SendContactsStart());
     var expiry = parameters.contactExpiry();
     for (var edge : network.edgeSet()) {
       int i = network.getEdgeSource(edge);
@@ -114,16 +113,16 @@ final class Monitor extends AbstractBehavior<MonitorMessage> {
       users[i].tell(ContactMessage.fromExpiry(users[j], j, edge.getTime(), expiry));
       users[j].tell(ContactMessage.fromExpiry(users[i], i, edge.getTime(), expiry));
     }
-    logEvent(SendContactsEnd.class, SendContactsEnd::new);
+    logEvent(new SendContactsEnd());
   }
 
   private void sendRiskScores(ActorRef<UserMessage>[] users) {
-    logEvent(SendRiskScoresStart.class, SendRiskScoresStart::new);
+    logEvent(new SendRiskScoresStart());
     for (var i = 0; i < userCount(); i++) {
       var score = scoreFactory.getRiskScore(i);
       users[i].tell(RiskScoreMessage.ofOrigin(score, i));
     }
-    logEvent(SendRiskScoresEnd.class, SendRiskScoresEnd::new);
+    logEvent(new SendRiskScoresEnd());
   }
 
   private int userCount() {
@@ -150,11 +149,11 @@ final class Monitor extends AbstractBehavior<MonitorMessage> {
     // Logging this in response to a PostStop signal is the only way that works.
     // Set the MDC since Akka sometimes clears it before this event is logged.
     MDC.setContextMap(context.mdc());
-    logEvent(RiskPropagationEnd.class, RiskPropagationEnd::new);
+    logEvent(new RiskPropagationEnd());
     return this;
   }
 
-  private <T extends Event> void logEvent(Class<T> type, Supplier<T> factory) {
-    context.logEvent(type, factory);
+  private void logEvent(Event event) {
+    context.eventLogger().log(event);
   }
 }
