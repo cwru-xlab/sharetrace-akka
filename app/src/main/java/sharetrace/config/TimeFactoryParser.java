@@ -4,7 +4,7 @@ import com.typesafe.config.Config;
 import sharetrace.model.Context;
 import sharetrace.model.factory.RandomTimeFactoryBuilder;
 import sharetrace.model.factory.TimeFactory;
-import sharetrace.model.random.DistributedRandom;
+import sharetrace.model.DistributedRandom;
 
 public record TimeFactoryParser(Context context, ConfigParser<DistributedRandom> randomParser)
     implements ConfigParser<TimeFactory> {

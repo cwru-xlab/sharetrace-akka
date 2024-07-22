@@ -1,4 +1,4 @@
-package sharetrace.model.random;
+package sharetrace.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;

@@ -6,7 +6,7 @@ import org.apache.commons.math3.distribution.NormalDistribution;
 import org.apache.commons.math3.distribution.UniformRealDistribution;
 import org.apache.commons.math3.random.RandomGenerator;
 import sharetrace.model.random.BetaDistributedRandom;
-import sharetrace.model.random.DistributedRandom;
+import sharetrace.model.DistributedRandom;
 import sharetrace.model.random.NormalDistributedRandom;
 import sharetrace.model.random.UniformDistributedRandom;
 

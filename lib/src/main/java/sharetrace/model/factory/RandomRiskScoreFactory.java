@@ -2,7 +2,7 @@ package sharetrace.model.factory;
 
 import sharetrace.Buildable;
 import sharetrace.model.RiskScore;
-import sharetrace.model.random.DistributedRandom;
+import sharetrace.model.DistributedRandom;
 
 @Buildable
 public record RandomRiskScoreFactory(

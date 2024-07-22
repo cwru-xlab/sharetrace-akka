@@ -3,6 +3,7 @@ package sharetrace.model.random;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.math3.distribution.BetaDistribution;
+import sharetrace.model.DistributedRandom;
 
 @SuppressWarnings("unused")
 public record BetaDistributedRandom(@JsonIgnore BetaDistribution distribution)

@@ -7,7 +7,7 @@ import sharetrace.model.factory.IdFactory;
 import sharetrace.model.factory.RandomRiskScoreFactoryBuilder;
 import sharetrace.model.factory.RiskScoreFactory;
 import sharetrace.model.factory.TimeFactory;
-import sharetrace.model.random.DistributedRandom;
+import sharetrace.model.DistributedRandom;
 
 public record RiskScoreFactoryParser(
     Parameters parameters,
