@@ -17,15 +17,15 @@ public record Context(
     long seed,
     RandomGenerator randomGenerator,
     @JsonIgnore Config config,
-    @JsonIgnore TimeFactory dataTimeFactory,
+    @JsonIgnore TimeFactory userTimeFactory,
     @JsonIgnore TimeFactory systemTimeFactory,
     @JsonIgnore Map<String, String> mdc,
     @JsonIgnore RecordLogger propertyLogger,
     @JsonIgnore RecordLogger eventLogger) {
 
   @JsonIgnore
-  public long getDataTime() {
-    return dataTimeFactory.getTime();
+  public long getUserTime() {
+    return userTimeFactory.getTime();
   }
 
   @JsonIgnore

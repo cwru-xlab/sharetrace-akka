@@ -27,7 +27,7 @@ public record ContextParser(Config contextConfig) implements ConfigParser<Contex
         .eventLogger(getEventLogger(config))
         .propertyLogger(getPropertyLogger(config))
         .systemTimeFactory(getSystemTimeFactory())
-        .dataTimeFactory(getDataTimeFactory(config, referenceTime))
+        .userTimeFactory(getUserTimeFactory(config, referenceTime))
         .referenceTime(TimeFactory.fixed(referenceTime).getTime())
         .build();
   }
@@ -50,12 +50,12 @@ public record ContextParser(Config contextConfig) implements ConfigParser<Contex
     return string.equals("now") ? Instant.now() : Instant.parse(string);
   }
 
-  private TimeFactory getDataTimeFactory(Config config, Instant referenceTime) {
-    var clock = config.getString("data-clock");
-    return switch (clock) {
+  private TimeFactory getUserTimeFactory(Config config, Instant referenceTime) {
+    var type = config.getString("user-time");
+    return switch (type) {
       case "fixed" -> TimeFactory.fixed(referenceTime);
       case "system" -> getSystemTimeFactory();
-      default -> throw new IllegalArgumentException(clock);
+      default -> throw new IllegalArgumentException(type);
     };
   }
 

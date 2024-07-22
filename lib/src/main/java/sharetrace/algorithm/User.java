@@ -51,8 +51,8 @@ final class User extends AbstractBehavior<UserMessage> {
     this.parameters = parameters;
     this.monitor = monitor;
     this.timers = timers;
-    this.scores = new RiskScoreMessageStore(context::getDataTime);
-    this.contacts = new ContactStore(context::getDataTime);
+    this.scores = new RiskScoreMessageStore(context::getUserTime);
+    this.contacts = new ContactStore(context::getUserTime);
     this.exposureScore = RiskScoreMessage.NULL;
   }
 
@@ -79,7 +79,7 @@ final class User extends AbstractBehavior<UserMessage> {
 
   private Behavior<UserMessage> handle(ContactMessage message) {
     if (!isExpired(message)) {
-      var contact = new Contact(message, parameters, context::getDataTime);
+      var contact = new Contact(message, parameters, context::getUserTime);
       contacts.add(contact);
       contact.apply(scores);
       logContactEvent(contact);
@@ -134,7 +134,7 @@ final class User extends AbstractBehavior<UserMessage> {
   }
 
   private boolean isExpired(Expirable expirable) {
-    return expirable.isExpired(context.getDataTime());
+    return expirable.isExpired(context.getUserTime());
   }
 
   private RiskScoreMessage transmitted(RiskScoreMessage message) {
