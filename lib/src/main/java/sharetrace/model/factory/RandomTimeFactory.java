@@ -2,8 +2,8 @@ package sharetrace.model.factory;
 
 import com.google.common.collect.Range;
 import sharetrace.Buildable;
-import sharetrace.model.Ranges;
 import sharetrace.model.DistributedRandom;
+import sharetrace.model.Ranges;
 
 @Buildable
 public record RandomTimeFactory(DistributedRandom random, long period, long referenceTime)

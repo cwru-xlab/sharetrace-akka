@@ -1,13 +1,13 @@
 package sharetrace.config;
 
 import com.typesafe.config.Config;
+import sharetrace.model.DistributedRandom;
 import sharetrace.model.Parameters;
 import sharetrace.model.factory.CachedRiskScoreFactory;
 import sharetrace.model.factory.IdFactory;
 import sharetrace.model.factory.RandomRiskScoreFactoryBuilder;
 import sharetrace.model.factory.RiskScoreFactory;
 import sharetrace.model.factory.TimeFactory;
-import sharetrace.model.DistributedRandom;
 
 public record RiskScoreFactoryParser(
     Parameters parameters,
