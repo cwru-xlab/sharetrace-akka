@@ -12,8 +12,7 @@ import sharetrace.logging.RecordLogger;
 import sharetrace.logging.RecordLoggerBuilder;
 import sharetrace.model.Context;
 import sharetrace.model.ContextBuilder;
-import sharetrace.model.factory.FixedTimeFactory;
-import sharetrace.model.factory.SystemTimeFactory;
+import sharetrace.model.factory.SupplierTimeFactory;
 import sharetrace.model.factory.TimeFactory;
 
 public record ContextParser(Config contextConfig) implements ConfigParser<Context> {
@@ -62,11 +61,12 @@ public record ContextParser(Config contextConfig) implements ConfigParser<Contex
   }
 
   private TimeFactory getSystemTimeFactory() {
-    return new SystemTimeFactory();
+    return new SupplierTimeFactory(System::currentTimeMillis, "System");
   }
 
   private TimeFactory getFixedTimeFactory(Instant instant) {
-    return FixedTimeFactory.from(instant);
+    long time = instant.toEpochMilli();
+    return new SupplierTimeFactory(() -> time, "Fixed");
   }
 
   private RecordLogger getEventLogger(Config config) {
