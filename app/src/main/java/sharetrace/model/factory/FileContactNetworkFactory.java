@@ -1,4 +1,4 @@
-package sharetrace.model.graph;
+package sharetrace.model.factory;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -9,7 +9,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.jgrapht.Graph;
 import org.jgrapht.generate.GraphGenerator;
 import sharetrace.Buildable;
-import sharetrace.model.factory.ContactNetworkFactory;
+import sharetrace.model.graph.Graphs;
+import sharetrace.model.graph.TemporalEdge;
 
 @Buildable
 public record FileContactNetworkFactory(Path path, String delimiter, long referenceTime)

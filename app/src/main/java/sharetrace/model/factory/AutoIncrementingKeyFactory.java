@@ -3,7 +3,6 @@ package sharetrace.model.factory;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.concurrent.atomic.AtomicLong;
 
-@SuppressWarnings("unused")
 public final class AutoIncrementingKeyFactory implements KeyFactory {
 
   private final long initialValue;

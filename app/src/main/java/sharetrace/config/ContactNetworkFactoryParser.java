@@ -3,15 +3,15 @@ package sharetrace.config;
 import com.typesafe.config.Config;
 import java.nio.file.Path;
 import sharetrace.model.Context;
+import sharetrace.model.factory.BarabasiAlbertContactNetworkFactoryBuilder;
 import sharetrace.model.factory.CachedContactNetworkFactory;
 import sharetrace.model.factory.ContactNetworkFactory;
+import sharetrace.model.factory.FileContactNetworkFactoryBuilder;
+import sharetrace.model.factory.GnmRandomContactNetworkFactoryBuilder;
+import sharetrace.model.factory.RandomRegularContactNetworkFactoryBuilder;
+import sharetrace.model.factory.ScaleFreeContactNetworkFactoryBuilder;
 import sharetrace.model.factory.TimeFactory;
-import sharetrace.model.graph.BarabasiAlbertContactNetworkFactoryBuilder;
-import sharetrace.model.graph.FileContactNetworkFactoryBuilder;
-import sharetrace.model.graph.GnmRandomContactNetworkFactoryBuilder;
-import sharetrace.model.graph.RandomRegularContactNetworkFactoryBuilder;
-import sharetrace.model.graph.ScaleFreeContactNetworkFactoryBuilder;
-import sharetrace.model.graph.WattsStrogatzContactNetworkFactoryBuilder;
+import sharetrace.model.factory.WattsStrogatzContactNetworkFactoryBuilder;
 
 public record ContactNetworkFactoryParser(
     Context context, ConfigParser<TimeFactory> timeFactoryParser)

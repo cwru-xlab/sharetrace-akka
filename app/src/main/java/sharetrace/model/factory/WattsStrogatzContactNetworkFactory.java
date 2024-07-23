@@ -1,12 +1,11 @@
-package sharetrace.model.graph;
+package sharetrace.model.factory;
 
 import org.apache.commons.math3.random.RandomAdaptor;
 import org.apache.commons.math3.random.RandomGenerator;
 import org.jgrapht.generate.GraphGenerator;
 import org.jgrapht.generate.WattsStrogatzGraphGenerator;
 import sharetrace.Buildable;
-import sharetrace.model.factory.GeneratedContactNetworkFactory;
-import sharetrace.model.factory.TimeFactory;
+import sharetrace.model.graph.TemporalEdge;
 
 @Buildable
 public record WattsStrogatzContactNetworkFactory(
