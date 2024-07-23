@@ -10,9 +10,4 @@ public record SupplierTimeFactory(@JsonIgnore LongSupplier supplier, String type
   public long getTime() {
     return supplier.getAsLong();
   }
-
-  @Override
-  public String type() {
-    return type;
-  }
 }
