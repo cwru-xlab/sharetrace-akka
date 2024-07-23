@@ -2,5 +2,7 @@ package sharetrace.config;
 
 import com.typesafe.config.Config;
 
-@FunctionalInterface
-public interface ConfigParser<T> extends Parser<Config, T> {}
+public interface ConfigParser<T> {
+
+  T parse(Config config);
+}
