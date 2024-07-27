@@ -93,7 +93,7 @@ final class Monitor extends AbstractBehavior<MonitorMessage> {
   @SuppressWarnings("unchecked")
   private ActorRef<UserMessage>[] createUsers() {
     logEvent(new CreateUsersStart());
-    var users = new ActorRef[userCount()];
+    var users = new ActorRef[network.vertexSet().size()];
     var props = DispatcherSelector.fromConfig("sharetrace.user.dispatcher");
     for (int i : network.vertexSet()) {
       var behavior = User.of(i, context, parameters, getContext().getSelf());
@@ -118,15 +118,11 @@ final class Monitor extends AbstractBehavior<MonitorMessage> {
 
   private void sendRiskScores(ActorRef<UserMessage>[] users) {
     logEvent(new SendRiskScoresStart());
-    for (var i = 0; i < userCount(); i++) {
+    for (int i : network.vertexSet()) {
       var score = scoreFactory.getRiskScore(i);
       users[i].tell(RiskScoreMessage.ofOrigin(score, i));
     }
     logEvent(new SendRiskScoresEnd());
-  }
-
-  private int userCount() {
-    return network.vertexSet().size();
   }
 
   @SuppressWarnings("unused")
