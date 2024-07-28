@@ -8,8 +8,9 @@ import java.util.concurrent.ThreadLocalRandom;
 import org.apache.commons.math3.random.RandomGenerator;
 import org.slf4j.LoggerFactory;
 import sharetrace.logging.LogRecord;
+import sharetrace.logging.NullRecordLogger;
 import sharetrace.logging.RecordLogger;
-import sharetrace.logging.RecordLoggerBuilder;
+import sharetrace.logging.StandardRecordLoggerBuilder;
 import sharetrace.model.Context;
 import sharetrace.model.ContextBuilder;
 import sharetrace.model.factory.SupplierTimeFactory;
@@ -70,21 +71,25 @@ public record ContextParser(Config contextConfig) implements ConfigParser<Contex
   }
 
   private RecordLogger getEventLogger(Config config) {
-    return RecordLoggerBuilder.create()
-        .logger(LoggerFactory.getLogger("EventLogger"))
-        .key("e")
-        .logged(getLogged(config))
-        .timeFactory(getSystemTimeFactory())
-        .build();
+    return getRecordLogger(config, "EventLogger", "e");
   }
 
   private RecordLogger getPropertyLogger(Config config) {
-    return RecordLoggerBuilder.create()
-        .logger(LoggerFactory.getLogger("PropertyLogger"))
-        .key("p")
-        .logged(getLogged(config))
-        .timeFactory(getSystemTimeFactory())
-        .build();
+    return getRecordLogger(config, "PropertyLogger", "p");
+  }
+
+  private RecordLogger getRecordLogger(Config config, String loggerName, String key) {
+    var logger = LoggerFactory.getLogger(loggerName);
+    if (logger.isInfoEnabled()) {
+      return StandardRecordLoggerBuilder.create()
+          .logger(logger)
+          .key(key)
+          .logged(getLogged(config))
+          .timeFactory(getSystemTimeFactory())
+          .build();
+    } else {
+      return new NullRecordLogger();
+    }
   }
 
   private Set<Class<? extends LogRecord>> getLogged(Config config) {
