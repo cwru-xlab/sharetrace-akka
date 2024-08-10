@@ -34,12 +34,12 @@ public record RiskPropagation(
 
   @Override
   public void run() {
-    var properties = getExecutionProperties();
+    var properties = getProperties();
     logProperties(properties);
     run(properties);
   }
 
-  private ExecutionProperties getExecutionProperties() {
+  private ExecutionProperties getProperties() {
     return ExecutionPropertiesBuilder.create()
         .context(ContextBuilder.builder(context).addMdc("k", keyFactory.getKey()).build())
         .parameters(parameters)
