@@ -44,9 +44,7 @@ final class Contact implements Expirable, Timestamped, Flushable {
     refreshThreshold(store);
     if (isApplicable(message)) {
       setThreshold(message);
-      if (message.sender() != id) {
-        buffered = message;
-      }
+      buffered = message;
     }
   }
 
