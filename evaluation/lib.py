@@ -1,203 +1,175 @@
-import functools
 from numbers import Real
-from typing import Self, Sequence
+from typing import Self
 
 import numpy as np
 import polars as pl
 import polars.selectors as cs
 from numpy.typing import NDArray
 
+DF = pl.DataFrame
+Expr = pl.Expr
+
+_network_instance_key = ["key", "network_id"]
+
 
 class InvalidDatasetError(Exception):
     pass
 
 
-class Dataset(pl.DataFrame):
-
-    def __init__(self, data: pl.DataFrame | None = None):
-        super().__init__(data)
-
-    @classmethod
-    def load(cls, name: str) -> Self:
-        return Dataset(pl.read_parquet(f"data/{name}/experiment.parquet"))
+def _first(name: str) -> Expr:
+    return pl.col(name).first()
 
 
-class ParameterDataset(Dataset):
-
-    def __init__(self, parameter: str, data: pl.DataFrame | None = None):
-        super().__init__(data)
-        self._check_users()
-        self._check_contacts()
-        self.parameter = parameter
-
-    @classmethod
-    def load(cls, name: str, parameter: str | None = None) -> Self:
-        data = (
-            super()
-            .load(name)
-            .with_columns(pl.int_ranges("n_nodes").alias("user_id"))
-            .explode(cs.by_dtype(pl.List(pl.Int64), pl.List(pl.Float64)))
-        )
-        return ParameterDataset(parameter or name, data)
-
-    def _check_users(self) -> None:
-        invalid = self.filter(
-            pl.col("n_nodes").first().ne(pl.len()).over("key", "network_id")
-        )
-        if not invalid.is_empty():
-            raise InvalidDatasetError("Number of nodes != number of users")
-
-    def _check_contacts(self) -> None:
-        invalid = self.filter(
-            pl.col("n_edges")
-            .first()
-            .ne(pl.col("n_contacts").sum().truediv(2))
-            .over("key", "network_id")
-        )
-        if not invalid.is_empty():
-            raise InvalidDatasetError("Number of edges != number of contacts")
-
-    def accuracy_results(
-        self, percentiles: Sequence[Real], by_network_type: bool = False
-    ) -> Self:
-        accuracy_key = [self.parameter]
-        if by_network_type:
-            # Prefer to sort first by parameter value and then by network type.
-            accuracy_key.insert(0, "network_type")
-        network_user_key = ["network_id", "user_id"]
-        return (
-            # Only consider users whose exposure score was updated.
-            self.filter(pl.col("exposure_diff").ne(0))
-            # Use the maximum change in exposure score as the baseline for accuracy.
-            .filter(eq_max("exposure_diff").over(network_user_key + [self.parameter]))
-            # Get the accuracy across parameter values for each user.
-            .with_columns(
-                (1 - pl.col("exposure_diff").max().sub(pl.col("exposure_diff")))
-                .over(network_user_key)
-                .alias("accuracy")
-            )
-            # Compute accuracy per parameter value (and network type).
-            .with_columns(
-                [percentile("accuracy", p).over(accuracy_key) for p in percentiles]
-            )
-            # For each user, rank in ascending order the exposure score updates across parameter values...
-            .with_columns(
-                pl.col("exposure_diff")
-                .rank("dense")
-                .over(network_user_key)
-                .alias("exposure_diff_rank")
-            )
-            # and keep the row(s) associated with the most accurate update...
-            .filter(eq_max("exposure_diff_rank").over(network_user_key))
-            # in order to determine the parameter value that offers the most accuracy and efficiency.
-            .filter(eq_max(self.parameter).over(network_user_key))
-            # Group by the parameter value (and network type) to get the frequency normalization constants.
-            .group_by(accuracy_key)
-            .agg(
-                pl.len().alias("frequency"),
-                *[pl.col(f"accuracy_p{p}").first() for p in percentiles],
-            )
-            .sort(accuracy_key)
-            # Frequency accumulates in descending order by parameter value, so use cumulative sum.
-            .with_columns(
-                normalized("frequency", by="sum")
-                .cum_sum(reverse=True)
-                .over("network_type" if by_network_type else None)
-                .alias("normalized_frequency")
-            )
-        )
-
-    def efficiency_results(
-        self,
-        min_parameter_value: Real = 0,
-        normalize: bool = False,
-        aggregate: bool = False,
-        by_network_type: bool = False,
-    ) -> Self:
-        group_key = [self.parameter]
-        if by_network_type:
-            group_key.insert(0, "network_type")
-        result = (
-            self.filter(pl.col(self.parameter).ge(min_parameter_value))
-            .group_by("key", "network_id", *group_key)
-            .agg(pl.col("n_updates").sum())
-        )
-        if normalize:
-            result = result.with_columns(
-                normalized("n_updates", by="max").over("network_id")
-            )
-        result = result.filter(pl.col(self.parameter).gt(min_parameter_value))
-        if aggregate:
-            percentiles = [0, 10, 25, 50, 75, 90, 100]
-            result = result.group_by(group_key).agg(
-                [percentile("n_updates", p) for p in percentiles]
-            )
-        return result.sort(group_key)
+def _eq_max(name: str) -> Expr:
+    return pl.col(name).eq(pl.col(name).max())
 
 
-class RuntimeDataset(Dataset):
-    def __init__(self, data: pl.DataFrame | None = None):
-        super().__init__(data)
-
-    @classmethod
-    def load(cls, name: str) -> Self:
-        return RuntimeDataset(super().load(name))
-
-    # def runtime_results(self) -> Self:
-    #     (
-    #         self
-    #         # Remove the "burn in" iteration for JVM class loading.
-    #         .filter(pl.col("key").ne("1"))
-    #     )
-    #     np.array(
-    #         self
-    #         # Remove the "burn in" iteration for JVM class loading.
-    #         .filter(pl.col("key").ne("1"))
-    #         .filter(pl.col("network_type").eq(network_type))
-    #         .group_by("ct_random_type", "sv_random_type", "st_random_type")
-    #         .agg("msg_runtime")
-    #         .select("msg_runtime")
-    #         .collect()
-    #         .to_series()
-    #         .to_list()
-    #     )
-
-
-def get_network_types(df: pl.DataFrame) -> list[str]:
-    return df.select("network_type").unique().to_series().sort().to_list()
-
-
-def compute_runtime_results(df: pl.DataFrame, network_type: str) -> NDArray:
-    return np.array(
-        df.lazy()
-        # Remove the "burn in" iteration for JVM class loading.
-        .filter(pl.col("key").ne("1"))
-        .filter(pl.col("network_type").eq(network_type))
-        .group_by("ct_random_type", "sv_random_type", "st_random_type")
-        .agg("msg_runtime")
-        .select("msg_runtime")
-        .collect()
-        .to_series()
-        .to_list()
-    )
-
-
-def eq_max(col_name: str) -> pl.Expr:
-    return pl.col(col_name).eq(pl.col(col_name).max())
-
-
-def normalized(col_name: str, by: str) -> pl.Expr:
-    num = pl.col(col_name)
-    den = num.max() if by == "max" else num.sum()
+def _normalized(name: str, by_max: bool = False) -> Expr:
+    num = pl.col(name)
+    den = num.max() if by_max else num.sum()
     return num.truediv(den)
 
 
-def percentile(col_name: str, value: Real) -> pl.Expr:
+def _percentile(name: str, value: Real) -> Expr:
     return (
-        pl.col(col_name)
+        pl.col(name)
         .quantile(value / 100, interpolation="midpoint")
-        .alias(f"{col_name}_p{value}")
+        .alias(f"{name}_p{value}")
     )
+
+
+def load_dataset(name: str = None, path: str = None) -> DF:
+    return pl.read_parquet(path or f"data/{name}/experiment.parquet")
+
+
+def process_runtime_dataset(df: DF, simple: bool = False) -> DF:
+    # Remove the "burn in" iteration for JVM class loading.
+    df = df.filter(pl.col("key").ne("1"))
+    if simple:
+        return df.select("network_type", "n_nodes", "n_edges", "msg_runtime")
+    return df
+
+
+def process_parameter_dataset(df: DF) -> DF:
+    df = _add_user_id_column(df)
+    df = _explode_numeric_columns(df)
+    _check_parameter_dataset_users(df)
+    _check_parameter_dataset_contacts(df)
+    return df
+
+
+def accuracy_results(
+    df: DF, parameter: str, percentiles: list[float], by_network_type: bool = False
+) -> DF:
+    accuracy_key = [parameter]
+    if by_network_type:
+        # Prefer to sort first by parameter value and then by network type.
+        accuracy_key.insert(0, "network_type")
+    network_user_key = ["network_id", "user_id"]
+    return (
+        # Only consider users whose exposure score was updated.
+        df.filter(pl.col("exposure_diff").ne(0))
+        # Use the maximum change in exposure score as the baseline for accuracy.
+        .filter(_eq_max("exposure_diff").over(network_user_key + [parameter]))
+        # Get the accuracy across parameter values for each user.
+        .with_columns(
+            (1 - pl.col("exposure_diff").max().sub(pl.col("exposure_diff")))
+            .over(network_user_key)
+            .alias("accuracy")
+        )
+        # Compute accuracy per parameter value (and network type).
+        .with_columns(
+            [_percentile("accuracy", p).over(accuracy_key) for p in percentiles]
+        )
+        # For each user, rank in ascending order the exposure score updates across parameter values...
+        .with_columns(
+            pl.col("exposure_diff")
+            .rank("dense")
+            .over(network_user_key)
+            .alias("exposure_diff_rank")
+        )
+        # and keep the row(s) associated with the most accurate update...
+        .filter(_eq_max("exposure_diff_rank").over(network_user_key))
+        # in order to determine the parameter value that offers the most accuracy and efficiency.
+        .filter(_eq_max(parameter).over(network_user_key))
+        # Group by the parameter value (and network type) to get the frequency normalization constants.
+        .group_by(accuracy_key)
+        .agg(
+            pl.len().alias("frequency"),
+            *[pl.col(f"accuracy_p{p}").first() for p in percentiles],
+        )
+        .sort(accuracy_key)
+        # Frequency accumulates in descending order by parameter value, so use cumulative sum.
+        .with_columns(
+            _normalized("frequency", by_max=False)
+            .cum_sum(reverse=True)
+            .over("network_type" if by_network_type else None)
+            .alias("normalized_frequency")
+        )
+    )
+
+
+def compute_efficiency_results(
+    df: DF,
+    parameter: str,
+    min_parameter_value: float = 0.0,
+    normalize: bool = False,
+    aggregate: bool = False,
+    by_network_type: bool = False,
+) -> DF:
+    group_key = [parameter]
+    if by_network_type:
+        group_key.insert(0, "network_type")
+    result = (
+        df.filter(pl.col(parameter).ge(min_parameter_value))
+        .group_by(_network_instance_key + group_key)
+        .agg(pl.col("n_updates").sum())
+    )
+    if normalize:
+        result = result.with_columns(
+            _normalized("n_updates", by_max=True).over("network_id")
+        )
+    result = result.filter(pl.col(parameter).gt(min_parameter_value))
+    if aggregate:
+        percentiles = [0, 10, 25, 50, 75, 90, 100]
+        result = result.group_by(group_key).agg(
+            [_percentile("n_updates", p) for p in percentiles]
+        )
+    return result.sort(group_key)
+
+
+def get_network_types(df: DF) -> list[str]:
+    return df.select("network_type").unique().to_series().sort().to_list()
+
+
+def _add_user_id_column(df: DF) -> DF:
+    return df.with_columns(pl.int_ranges("n_nodes").alias("user_id"))
+
+
+def _explode_numeric_columns(df: DF) -> DF:
+    return df.explode(cs.by_dtype(pl.List(pl.Int64), pl.List(pl.Float64)))
+
+
+def _check_parameter_dataset_users(df: DF) -> None:
+    invalid = df.filter(_first("n_nodes").ne(pl.len()).over(_network_instance_key))
+    if len(invalid) > 0:
+        raise InvalidDatasetError("Number of nodes != number of users")
+
+
+def _check_parameter_dataset_contacts(df: DF) -> None:
+    invalid = df.filter(
+        _first("n_edges")
+        .ne(pl.col("n_contacts").sum().truediv(2))
+        .over(_network_instance_key)
+    )
+    if len(invalid) > 0:
+        raise InvalidDatasetError("Number of edges != number of contacts")
+
+
+def get_message_passing_runtimes(df: pl.DataFrame, network_type: str = None) -> NDArray:
+    if network_type is not None:
+        df = df.filter(pl.col("network_type").eq(network_type))
+    return df.select("msg_runtime").to_numpy().flatten()
 
 
 def get_efficiency_box_plot(
@@ -209,6 +181,3 @@ def get_efficiency_box_plot(
     scatter = df.plot.scatter(y=metric, x=parameter, c="orange", size=2)
     scatter = scatter.opts(jitter=0.5)
     return (abs_box * rel_box * scatter).opts(multi_y=True, show_legend=False)
-
-
-__all__ = ["ParameterDataset", "RuntimeDataset"]
