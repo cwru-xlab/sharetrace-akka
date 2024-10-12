@@ -1,5 +1,6 @@
 from typing import Any, Callable
 
+import numpy as np
 import polars as pl
 import polars.selectors as cs
 from numpy.typing import NDArray
@@ -18,12 +19,9 @@ def load_dataset(name: str = None, path: str = None) -> _DF:
     return pl.read_parquet(path or f"data/{name}/experiment.parquet")
 
 
-def process_runtime_dataset(df: _DF, simple: bool = False) -> _DF:
+def process_runtime_dataset(df: _DF) -> _DF:
     # Remove the "burn in" iteration for JVM class loading.
-    df = df.filter(pl.col("key") != "1")
-    if simple:
-        return df.select("network_type", "n_nodes", "n_edges", "msg_runtime")
-    return df
+    return df.filter(pl.col("key") != "1")
 
 
 def process_parameter_dataset(df: _DF) -> _DF:
@@ -121,21 +119,44 @@ def get_network_types(df: _DF) -> list[str]:
     return df.select("network_type").unique().to_series().sort().to_list()
 
 
-def test_runtime_normality(df: _DF, test: Callable[[NDArray], Any]) -> dict[str, Any]:
+def apply_hypothesis_test(
+    df: _DF,
+    test: Callable,
+    by_network_type: bool = False,
+    by_distributions: bool = False,
+    use_total_runtime: bool = False,
+) -> Any:
     # noinspection PyBroadException
-    def test_for_network_type(network_type):
+    def apply_test(network_type=None):
+        runtimes = get_runtimes(
+            df,
+            network_type=network_type,
+            total=use_total_runtime,
+            by_distributions=by_distributions,
+        )
         try:
-            return test(*get_runtimes(df, network_type))
+            return test(*runtimes)
         except:
-            return test(get_runtimes(df, network_type))
+            return test(runtimes)
 
-    return {nt: test_for_network_type(nt) for nt in get_network_types(df)}
+    if by_network_type:
+        return {nt: apply_test(nt) for nt in get_network_types(df)}
+    else:
+        return apply_test()
 
 
-def get_runtimes(df: pl.DataFrame, network_type: str = None) -> NDArray:
+def get_runtimes(
+    df: pl.DataFrame,
+    network_type: str = None,
+    by_distributions: bool = False,
+    total: bool = False,
+) -> NDArray:
     if network_type is not None:
         df = df.filter(pl.col("network_type") == network_type)
-    return df.select("msg_runtime").to_numpy().flatten()
+    if by_distributions:
+        df = df.group_by("ct_random_type", "sv_random_type", "st_random_type").agg("*")
+    df = df.select("total_runtime" if total else "msg_runtime")
+    return np.array(df.to_series().to_list())
 
 
 def get_efficiency_box_plot(
