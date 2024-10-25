@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
-import collections
 import functools
 import itertools
 import json
 import sys
 from pathlib import Path
-from typing import Iterable, Callable, Mapping, MutableMapping
+from typing import Iterable, Callable, Mapping
 
 import polars as pl
 
