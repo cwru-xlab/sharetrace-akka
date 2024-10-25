@@ -9,14 +9,12 @@ from numpy.typing import NDArray
 DF = pl.DataFrame
 Expr = pl.Expr
 
-network_uid = ["dataset_id", "network_source"]
-
 
 class InvalidDatasetError(Exception):
     pass
 
 
-@dataclasses.dataclass(slots=True, frozen=True)
+@dataclasses.dataclass
 class AccuracyResults:
     tabular: DF
     aggregated: DF
@@ -47,14 +45,9 @@ def compute_accuracy_results(
     df: DF,
     parameter: str,
     percentiles: list[float],
+    precision: int = 3,
     by_network_type: bool = False,
-    by_distribution_type: bool = False,
 ) -> AccuracyResults:
-    axes = [parameter]
-    if by_distribution_type:
-        axes = ["contact_time_dist", "score_value_dist", "score_time_dist", *axes]
-    if by_network_type:
-        axes = ["network_type", *axes]
     # Include the data sources to account for multiple iterations with the same
     # parameters, but different contact networks and risk scores.
     user_key = ["dataset_id", "network_source", "score_source", "user_id"]
@@ -62,37 +55,38 @@ def compute_accuracy_results(
         df
         # Only consider users whose exposure score was updated at least once.
         # Users whose exposure score is never updated are not informative of accuracy.
-        .filter((pl.col("score_diff").sum() > 0).over(user_key))
+        .filter((pl.col("score_diff").abs().sum() > 0).over(user_key))
         # Get the accuracy across parameter values for each network user.
         .with_columns(
             accuracy=(1 - maximum("score_diff") + pl.col("score_diff")).over(user_key)
         )
     )
+    axes = [parameter]
+    if by_network_type:
+        axes.insert(0, "network_type")
     aggregated = (
         tabular
         # Per the previous step, accuracy may vary across network users, for a given
         # parameter value. This step captures that variation by quantifying how the
         # accuracy associated with a given parameter value shifts as it changes.
         .with_columns(
-            percentile("accuracy", p).over(axes).alias(f"accuracy_p{p}")
+            percentile("accuracy", p).round(precision).over(axes).alias(f"{p}")
             for p in percentiles
         )
-        # For each user, rank in ascending order the exposure score diffs across parameter values...
-        .with_columns(score_diff_rank=pl.col("score_diff").rank("dense").over(user_key))
-        # and keep the row(s) associated with the most accurate update...
-        .filter(equals_max("score_diff_rank").over(user_key))
-        # in order to determine the parameter value that offers the most accuracy and efficiency.
+        # For each user, rank in ascending order the accuracy across parameter values...
+        .with_columns(rank=pl.col("accuracy").rank("dense").over(user_key))
+        # and keep the row(s) associated with the highest accuracy...
+        .filter(equals_max("rank").over(user_key))
+        # in order to determine the parameter value that offers the highest accuracy.
         .filter(equals_max(parameter).over(user_key))
         .group_by(axes)
-        .agg(
-            pl.len().alias("frequency"),
-            *[first(f"accuracy_p{p}") for p in percentiles],
-        )
+        .agg(freq=pl.len(), *[first(f"{p}") for p in percentiles])
         .sort(axes)
         # Frequency accumulates in descending order by parameter value, so use cumulative sum.
         .with_columns(
-            normalized_frequency=normalized("frequency")
+            norm_freq=normalized("freq")
             .cum_sum(reverse=True)
+            .round(precision)
             .over(set(axes) - {parameter} or None)
         )
     )
@@ -107,13 +101,13 @@ def compute_efficiency_results(
     aggregate: bool = False,
     by_network_type: bool = False,
 ) -> DF:
-    group_key = [parameter]
+    axes = [parameter]
     metrics = ["n_receives", "n_influenced", "n_influences", "msg_reachability"]
     if by_network_type:
-        group_key.insert(0, "network_type")
+        axes.insert(0, "network_type")
     result = (
         df.filter(pl.col(parameter) >= min_parameter_value)
-        .group_by(network_uid + group_key)
+        .group_by(axes + ["dataset_id", "network_source"])
         .agg(summation(m) for m in metrics)
     )
     if normalize:
@@ -123,14 +117,14 @@ def compute_efficiency_results(
     result = result.filter(pl.col(parameter) > min_parameter_value)
     if aggregate:
         percentiles = [0, 10, 25, 50, 75, 90, 100]
-        result = result.group_by(group_key).agg(
+        result = result.group_by(axes).agg(
             percentile(m, p).alias(f"{m}_p{p}") for m in metrics for p in percentiles
         )
-    return result.sort(group_key)
+    return result.sort(axes)
 
 
 def get_network_types(df: DF) -> list[str]:
-    return df.select("network_type").unique().to_series().sort().to_list()
+    return df["network_type"].unique().sort().to_list()
 
 
 def apply_hypothesis_test(
@@ -163,13 +157,12 @@ def get_runtimes(
     by_distributions: bool = False,
 ) -> NDArray:
     if network_type is not None:
-        df = df.filter(pl.col("network_type") == network_type)
+        df = df.filter(network_type=network_type)
     if by_distributions:
         df = df.group_by(
             "contact_time_dist", "score_value_dist", "score_time_dist"
         ).agg("*")
-    df = df.select("msg_runtime")
-    return np.array(df.to_series().to_list())
+    return df["msg_runtime"].to_numpy()
 
 
 def get_efficiency_box_plot(
@@ -214,6 +207,7 @@ __all__ = [
     "get_network_types",
     "get_runtimes",
     "InvalidDatasetError",
+    "AccuracyResults",
     "load_dataset",
     "process_parameter_dataset",
     "process_runtime_dataset",
