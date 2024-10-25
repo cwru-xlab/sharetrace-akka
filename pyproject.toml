@@ -14,7 +14,6 @@ polars = { extras = ["numpy", "pandas"], version = "^0.20.18" }
 pyarrow = "^16.0.0"
 scipy = "^1.9.1"
 statsmodels = "^0.14.2"
-scikit-learn = "^1.4.2"
 seaborn = "^0.13.2"
 selenium = "^4.21.0"
 webdriver-manager = "^4.0.1"
