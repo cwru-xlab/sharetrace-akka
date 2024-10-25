@@ -4,7 +4,7 @@ import itertools
 import json
 import sys
 from pathlib import Path
-from typing import Iterable, Callable, Mapping
+from typing import Iterable, Callable
 
 import polars as pl
 
@@ -52,7 +52,7 @@ def parameters(data: dict) -> dict:
     }
 
 
-def dist_type(data: Mapping) -> str:
+def dist_type(data: dict) -> str:
     return data["random"]["type"]
 
 
