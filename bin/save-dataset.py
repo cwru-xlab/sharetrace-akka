@@ -113,12 +113,10 @@ def runtime_results(data: dict) -> dict:
 
 
 def map_record(record: dict, results: dict, directory: Path) -> dict:
-    base = {
-        "dataset_id": directory.name,
-        "run_id": (run_id := record["k"]),
-    }
+    run_id = record["k"]
     properties = record["p"]
     results = results[run_id]
+    base = {"dataset_id": directory.name, "run_id": run_id}
     return (
         base
         | context(properties)
