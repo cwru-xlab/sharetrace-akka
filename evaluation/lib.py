@@ -1,5 +1,5 @@
 import dataclasses
-from typing import Any, Callable
+from typing import Callable, cast
 
 import numpy as np
 import polars as pl
@@ -41,6 +41,19 @@ def process_parameter_dataset(df: DF) -> DF:
     return df
 
 
+def format_network_types(df: DF) -> DF:
+    return df.with_columns(
+        pl.col("network_type").replace(
+            {
+                "BarabasiAlbert": "Barabasi-Albert",
+                "GnmRandom": "Erdös–Rényi",
+                "RandomRegular": "Random regular",
+                "WattsStrogatz": "Watts-Strogatz",
+            }
+        ),
+    )
+
+
 def compute_accuracy_results(
     df: DF,
     parameter: str,
@@ -58,36 +71,41 @@ def compute_accuracy_results(
         .filter((pl.col("score_diff").abs().sum() > 0).over(user_key))
         # Get the accuracy across parameter values for each network user.
         .with_columns(
-            accuracy=(1 - maximum("score_diff") + pl.col("score_diff")).over(user_key)
+            (1 - pl.col("score_diff").max() + pl.col("score_diff"))
+            .over(user_key)
+            .alias("accuracy")
         )
     )
     axes = [parameter]
     if by_network_type:
+        # Prefer to sort first by the network type, then by the parameter value.
         axes.insert(0, "network_type")
     aggregated = (
         tabular
-        # Per the previous step, accuracy may vary across network users, for a given
-        # parameter value. This step captures that variation by quantifying how the
-        # accuracy associated with a given parameter value shifts as it changes.
+        # For a given parameter value, accuracy may vary across network users.
+        # Quantify this variation by computing various percentiles.
         .with_columns(
             percentile("accuracy", p).round(precision).over(axes).alias(f"{p}")
             for p in percentiles
         )
-        # For each user, rank in ascending order the accuracy across parameter values...
+        # Rank in ascending order the accuracy across parameter values...
         .with_columns(rank=pl.col("accuracy").rank("dense").over(user_key))
         # and keep the row(s) associated with the highest accuracy...
-        .filter(equals_max("rank").over(user_key))
-        # in order to determine the parameter value that offers the highest accuracy.
-        .filter(equals_max(parameter).over(user_key))
+        .filter(is_max("rank").over(user_key))
+        # to determine the parameter value that offers the highest accuracy.
+        .filter(is_max(parameter).over(user_key))
+        # Finally, group by the axes of interest to calculate their frequency.
+        # Keep the previously calculated percentiles as well.
         .group_by(axes)
-        .agg(freq=pl.len(), *[first(f"{p}") for p in percentiles])
+        .agg(freq=pl.len(), *[pl.col(f"{p}").first() for p in percentiles])
         .sort(axes)
-        # Frequency accumulates in descending order by parameter value, so use cumulative sum.
         .with_columns(
-            norm_freq=normalized("freq")
+            normalized("freq")
+            # Frequency accumulates in descending order by parameter value.
             .cum_sum(reverse=True)
             .round(precision)
             .over(set(axes) - {parameter} or None)
+            .alias("norm_freq")
         )
     )
     return AccuracyResults(tabular=tabular, aggregated=aggregated)
@@ -107,8 +125,8 @@ def compute_efficiency_results(
         axes.insert(0, "network_type")
     result = (
         df.filter(pl.col(parameter) >= min_parameter_value)
-        .group_by(axes + ["dataset_id", "network_source"])
-        .agg(summation(m) for m in metrics)
+        .group_by(axes + ["dataset_id", "network_source", "score_source"])
+        .agg(pl.col(m).sum() for m in metrics)
     )
     if normalize:
         result = result.with_columns(
@@ -132,7 +150,7 @@ def apply_hypothesis_test(
     test: Callable,
     by_network_type: bool = False,
     by_distributions: bool = False,
-) -> Any:
+):
     # noinspection PyBroadException
     def apply_test(network_type=None):
         runtimes = get_runtimes(
@@ -162,7 +180,7 @@ def get_runtimes(
         df = df.group_by(
             "contact_time_dist", "score_value_dist", "score_time_dist"
         ).agg("*")
-    return df["msg_runtime"].to_numpy()
+    return np.array(df["msg_runtime"].to_list())
 
 
 def get_efficiency_box_plot(
@@ -176,39 +194,28 @@ def get_efficiency_box_plot(
     return (abs_box * rel_box * scatter).opts(multi_y=True, show_legend=False)
 
 
-def percentile(name: str, value: float, interpolation: str = "midpoint") -> Expr:
-    return pl.col(name).quantile(value / 100, interpolation=interpolation)
+def percentile(name: str, value: float) -> Expr:
+    return pl.col(name).quantile(value / 100, interpolation="midpoint")
 
 
-def first(name: str) -> Expr:
-    return pl.col(name).first()
-
-
-def equals_max(name: str) -> Expr:
-    return pl.col(name).eq(maximum(name))
+def is_max(name: str) -> Expr:
+    return cast(Expr, pl.col(name) == pl.col(name).max())
 
 
 def normalized(name: str, by_max: bool = False) -> Expr:
-    return pl.col(name) / (maximum(name) if by_max else summation(name))
-
-
-def maximum(name: str) -> Expr:
-    return pl.col(name).max()
-
-
-def summation(name: str) -> Expr:
-    return pl.col(name).sum()
+    return pl.col(name) / (pl.col(name).max() if by_max else pl.col(name).sum())
 
 
 __all__ = [
+    "AccuracyResults",
     "apply_hypothesis_test",
     "compute_accuracy_results",
     "compute_efficiency_results",
     "get_network_types",
     "get_runtimes",
     "InvalidDatasetError",
-    "AccuracyResults",
     "load_dataset",
     "process_parameter_dataset",
     "process_runtime_dataset",
+    "format_network_types",
 ]
