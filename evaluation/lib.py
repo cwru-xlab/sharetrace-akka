@@ -1,5 +1,5 @@
 import dataclasses
-from typing import Callable, cast, Literal
+from typing import Callable
 
 import numpy as np
 import polars as pl
@@ -11,6 +11,8 @@ DF = pl.DataFrame
 Expr = pl.Expr
 
 user_key = ("dataset_id", "network_source", "score_source", "user_id")
+
+lists_selector = cs.by_dtype(pl.List(int), pl.List(float))
 
 
 class InvalidDatasetError(Exception):
@@ -32,34 +34,34 @@ def process_runtime_dataset(df: DF) -> DF:
     return df.filter(pl.col("run_id") != "1")
 
 
-def process_parameter_dataset(df: DF) -> DF:
-    list_cols = cs.by_dtype(pl.List(int), pl.List(float))
-    check_lists_cols(df, "n_nodes", list_cols)
-    check_lists_cols(df, "n_edges", list_cols)
-    return df.with_columns(user_id=pl.int_ranges("n_nodes")).explode(list_cols)
-
-
-def check_lists_cols(
-    df: DF, by: Literal["n_nodes", "n_edges"], selector: cs.SelectorType
-) -> None:
-    if by == "n_nodes":
-        trait = "length"
-        equals = selector.list.len() == pl.col(by)
-    else:
-        trait = "sum"
-        equals = selector.list.sum() == pl.col(by)
-    invalid_rows = (
-        df.select(equals)
-        .select(all_equal=pl.all_horizontal("*"))
-        .select(pl.arg_where(pl.col("all_equal") == False))
-        .to_series()
-        .to_list()
-    )
-    if (n_invalid := len(invalid_rows)) > 0:
-        raise InvalidDatasetError(
-            f"{n_invalid} rows contain a list whose {trait} is not equal to "
-            f"'{by}': {invalid_rows}"
+def validate_parameter_dataset(df: DF) -> None:
+    def find_invalid_rows(expected, actual) -> list[int]:
+        return (
+            df.select(expected, actual)
+            .select(pl.arg_where(pl.all_horizontal("*") == False))
+            .to_series()
+            .to_list()
         )
+
+    invalid = find_invalid_rows("n_nodes", lists_selector.list.len())
+    if (n_invalid := len(invalid)) > 0:
+        raise InvalidDatasetError(
+            f"{n_invalid} rows contain a list whose length is not equal to "
+            f"'n_nodes': {invalid}"
+        )
+
+    invalid = find_invalid_rows("n_edges", pl.col("n_contacts").list.sum() / 2)
+    if (n_invalid := len(invalid)) > 0:
+        raise InvalidDatasetError(
+            f"{n_invalid} rows contain a 'n_contacts' list whose half sum is "
+            f"not equal to 'n_edges': {invalid}"
+        )
+
+
+def process_parameter_dataset(df: DF, validate: bool = True) -> DF:
+    if validate:
+        validate_parameter_dataset(df)
+    return df.with_columns(user_id=pl.int_ranges("n_nodes")).explode(lists_selector)
 
 
 def format_network_types(df: DF) -> DF:
@@ -223,7 +225,7 @@ def percentile(name: str, value: float) -> Expr:
 
 
 def is_max(name: str) -> Expr:
-    return cast(Expr, pl.col(name) == pl.col(name).max())
+    return pl.col(name).eq(pl.col(name).max())
 
 
 def normalized(name: str, by_max: bool = False) -> Expr:
