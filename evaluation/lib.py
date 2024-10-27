@@ -5,6 +5,7 @@ import numpy as np
 import polars as pl
 import polars.selectors as cs
 from numpy.typing import NDArray
+import seaborn as sns
 
 DF = pl.DataFrame
 Expr = pl.Expr
@@ -206,8 +207,13 @@ def normalized(name: str, by_max: bool = False) -> Expr:
     return pl.col(name) / (pl.col(name).max() if by_max else pl.col(name).sum())
 
 
+def save_fig(g: sns.FacetGrid, name: str, **kwargs) -> None:
+    g.savefig(f"{name}.png", dpi=500, **kwargs)
+
+
 __all__ = [
     "AccuracyResults",
+    "save_fig",
     "apply_hypothesis_test",
     "compute_accuracy_results",
     "compute_efficiency_results",
