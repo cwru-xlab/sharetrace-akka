@@ -1,5 +1,5 @@
 import dataclasses
-from typing import Callable
+from typing import Callable, Literal
 
 import numpy as np
 import polars as pl
@@ -10,6 +10,8 @@ from numpy.typing import NDArray
 DF = pl.DataFrame
 Expr = pl.Expr
 
+# Include the data sources to account for multiple iterations with the same parameters,
+# but different contact networks and risk scores.
 user_key = ("dataset_id", "network_source", "score_source", "user_id")
 
 lists_selector = cs.by_dtype(pl.List(int), pl.List(float))
@@ -22,7 +24,8 @@ class InvalidDatasetError(Exception):
 @dataclasses.dataclass
 class AccuracyResults:
     tabular: DF
-    aggregated: DF
+    percentiles: DF
+    counts: DF
 
 
 def load_dataset(name: str) -> DF:
@@ -77,10 +80,6 @@ def format_network_types(df: DF) -> DF:
     )
 
 
-def remove_non_updates(df: DF) -> DF:
-    return df.filter((pl.col("score_diff").abs().sum() > 0).over(user_key))
-
-
 def compute_accuracy_results(
     df: DF,
     parameter: str,
@@ -88,13 +87,10 @@ def compute_accuracy_results(
     precision: int = 3,
     by_network_type: bool = False,
 ) -> AccuracyResults:
-    # Include the data sources to account for multiple iterations with the same
-    # parameters, but different contact networks and risk scores.
     tabular = (
         # Only consider users whose exposure score was updated at least once.
-        # Users whose exposure score is never updated are not informative of
-        # accuracy.
-        remove_non_updates(df)
+        # Users whose exposure score is never updated are not informative of accuracy.
+        df.filter((pl.col("score_diff").abs().sum() > 0).over(user_key))
         # Get the accuracy across parameter values for each network user.
         .with_columns(
             (1 - pl.col("score_diff").max() + pl.col("score_diff"))
@@ -106,14 +102,21 @@ def compute_accuracy_results(
     if by_network_type:
         # Prefer to sort first by the network type, then by the parameter value.
         axes.insert(0, "network_type")
-    aggregated = (
-        tabular
-        # For a given parameter value, accuracy may vary across network users.
-        # Quantify this variation by computing various percentiles.
-        .with_columns(
-            percentile("accuracy", p).round(precision).over(axes).alias(f"{p}")
-            for p in percentiles
+    # For a given parameter value, accuracy may vary across network users.
+    # Quantify this variation by computing various percentiles.
+    percentiles_ = (
+        tabular.select(
+            *axes,
+            *(
+                percentile("accuracy", p).round(precision).over(axes).alias(f"{p}")
+                for p in percentiles
+            ),
         )
+        .unique()
+        .sort(axes)
+    )
+    counts = (
+        tabular
         # Rank in ascending order the accuracy across parameter values...
         .with_columns(rank=pl.col("accuracy").rank("dense").over(user_key))
         # and keep the row(s) associated with the highest accuracy...
@@ -123,18 +126,18 @@ def compute_accuracy_results(
         # Finally, group by the axes of interest to calculate their frequency.
         # Keep the previously calculated percentiles as well.
         .group_by(axes)
-        .agg(freq=pl.len(), *[pl.col(f"{p}").first() for p in percentiles])
+        .agg(count=pl.len())
         .sort(axes)
         .with_columns(
-            normalized("freq")
+            normalized("count", by="sum")
             # Frequency accumulates in descending order by parameter value.
             .cum_sum(reverse=True)
             .round(precision)
             .over(set(axes) - {parameter} or None)
-            .alias("norm_freq")
+            .alias("normalized_count")
         )
     )
-    return AccuracyResults(tabular=tabular, aggregated=aggregated)
+    return AccuracyResults(tabular=tabular, percentiles=percentiles_, counts=counts)
 
 
 def compute_efficiency_results(
@@ -156,7 +159,7 @@ def compute_efficiency_results(
     )
     if normalize:
         result = result.with_columns(
-            normalized(m, by_max=True).over("network_source") for m in metrics
+            normalized(m, by="max").over("network_source") for m in metrics
         )
     result = result.filter(pl.col(parameter) > min_parameter_value)
     if aggregate:
@@ -228,12 +231,20 @@ def is_max(name: str) -> Expr:
     return pl.col(name).eq(pl.col(name).max())
 
 
-def normalized(name: str, by_max: bool = False) -> Expr:
-    return pl.col(name) / (pl.col(name).max() if by_max else pl.col(name).sum())
+def normalized(name: str, by: Literal["sum", "max"]) -> Expr:
+    if by == "sum":
+        den = pl.col(name).sum()
+    else:
+        den = pl.col(name).max()
+    return pl.col(name) / den
 
 
-def save_fig(g: sns.FacetGrid, name: str, **kwargs) -> None:
+def save_figure(g: sns.FacetGrid, name: str, **kwargs) -> None:
     g.savefig(f"{name}.png", dpi=500, **kwargs)
+
+
+def save_table(df: DF, name: str, **kwargs) -> None:
+    df.write_csv(f"{name}.csv", **kwargs)
 
 
 __all__ = [
@@ -246,9 +257,10 @@ __all__ = [
     "get_runtimes",
     "InvalidDatasetError",
     "load_dataset",
+    "normalized",
     "process_parameter_dataset",
     "process_runtime_dataset",
-    "remove_non_updates",
-    "save_fig",
-    "validate_parameter_dataset"
+    "save_figure",
+    "save_table",
+    "validate_parameter_dataset",
 ]
