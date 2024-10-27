@@ -1,14 +1,16 @@
 import dataclasses
-from typing import Callable, cast
+from typing import Callable, cast, Literal
 
 import numpy as np
 import polars as pl
 import polars.selectors as cs
-from numpy.typing import NDArray
 import seaborn as sns
+from numpy.typing import NDArray
 
 DF = pl.DataFrame
 Expr = pl.Expr
+
+user_key = ("dataset_id", "network_source", "score_source", "user_id")
 
 
 class InvalidDatasetError(Exception):
@@ -21,8 +23,8 @@ class AccuracyResults:
     aggregated: DF
 
 
-def load_dataset(name: str = None, path: str = None) -> DF:
-    return pl.read_parquet(path or f"data/{name}/dataset.parquet")
+def load_dataset(name: str) -> DF:
+    return pl.read_parquet(f"data/{name}/dataset.parquet")
 
 
 def process_runtime_dataset(df: DF) -> DF:
@@ -31,15 +33,33 @@ def process_runtime_dataset(df: DF) -> DF:
 
 
 def process_parameter_dataset(df: DF) -> DF:
-    invalid = df.filter(pl.col("n_nodes") != pl.col("n_contacts").list.len())
-    if len(invalid) > 0:
-        raise InvalidDatasetError("Number of nodes != number of users")
-    invalid = df.filter(pl.col("n_edges") != pl.col("n_contacts").list.sum() / 2)
-    if len(invalid) > 0:
-        raise InvalidDatasetError("Number of edges != number of contacts")
-    df = df.with_columns(user_id=pl.int_ranges("n_nodes"))
-    df = df.explode(cs.by_dtype(pl.List(pl.Int64), pl.List(pl.Float64)))
-    return df
+    list_cols = cs.by_dtype(pl.List(int), pl.List(float))
+    check_lists_cols(df, "n_nodes", list_cols)
+    check_lists_cols(df, "n_edges", list_cols)
+    return df.with_columns(user_id=pl.int_ranges("n_nodes")).explode(list_cols)
+
+
+def check_lists_cols(
+    df: DF, by: Literal["n_nodes", "n_edges"], selector: cs.SelectorType
+) -> None:
+    if by == "n_nodes":
+        trait = "length"
+        equals = selector.list.len() == pl.col(by)
+    else:
+        trait = "sum"
+        equals = selector.list.sum() == pl.col(by)
+    invalid_rows = (
+        df.select(equals)
+        .select(all_equal=pl.all_horizontal("*"))
+        .select(pl.arg_where(pl.col("all_equal") == False))
+        .to_series()
+        .to_list()
+    )
+    if (n_invalid := len(invalid_rows)) > 0:
+        raise InvalidDatasetError(
+            f"{n_invalid} rows contain a list whose {trait} is not equal to "
+            f"'{by}': {invalid_rows}"
+        )
 
 
 def format_network_types(df: DF) -> DF:
@@ -55,6 +75,10 @@ def format_network_types(df: DF) -> DF:
     )
 
 
+def remove_non_updates(df: DF) -> DF:
+    return df.filter((pl.col("score_diff").abs().sum() > 0).over(user_key))
+
+
 def compute_accuracy_results(
     df: DF,
     parameter: str,
@@ -64,12 +88,11 @@ def compute_accuracy_results(
 ) -> AccuracyResults:
     # Include the data sources to account for multiple iterations with the same
     # parameters, but different contact networks and risk scores.
-    user_key = ["dataset_id", "network_source", "score_source", "user_id"]
     tabular = (
-        df
         # Only consider users whose exposure score was updated at least once.
-        # Users whose exposure score is never updated are not informative of accuracy.
-        .filter((pl.col("score_diff").abs().sum() > 0).over(user_key))
+        # Users whose exposure score is never updated are not informative of
+        # accuracy.
+        remove_non_updates(df)
         # Get the accuracy across parameter values for each network user.
         .with_columns(
             (1 - pl.col("score_diff").max() + pl.col("score_diff"))
@@ -213,15 +236,16 @@ def save_fig(g: sns.FacetGrid, name: str, **kwargs) -> None:
 
 __all__ = [
     "AccuracyResults",
-    "save_fig",
     "apply_hypothesis_test",
     "compute_accuracy_results",
     "compute_efficiency_results",
+    "format_network_types",
     "get_network_types",
     "get_runtimes",
     "InvalidDatasetError",
     "load_dataset",
     "process_parameter_dataset",
     "process_runtime_dataset",
-    "format_network_types",
+    "remove_non_updates",
+    "save_fig",
 ]
