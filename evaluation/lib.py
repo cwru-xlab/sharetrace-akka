@@ -24,7 +24,8 @@ class InvalidDatasetError(Exception):
 @dataclasses.dataclass
 class AccuracyResults:
     tabular: DF
-    percentiles: DF
+    long_percentiles: DF
+    wide_percentiles: DF
     counts: DF
 
 
@@ -98,13 +99,14 @@ def compute_accuracy_results(
             .alias("accuracy")
         )
     )
+
     axes = [parameter]
     if by_network_type:
         # Prefer to sort first by the network type, then by the parameter value.
         axes.insert(0, "network_type")
-    # For a given parameter value, accuracy may vary across network users.
-    # Quantify this variation by computing various percentiles.
-    percentiles_ = (
+
+    # Accuracy may vary across network users.
+    wide_percentiles = (
         tabular.select(
             *axes,
             *(
@@ -115,6 +117,11 @@ def compute_accuracy_results(
         .unique()
         .sort(axes)
     )
+
+    long_percentiles = wide_percentiles.melt(
+        id_vars=axes, variable_name="percentile", value_name="accuracy"
+    ).with_columns(pl.col("percentile").cast(float))
+
     counts = (
         tabular
         # Rank in ascending order the accuracy across parameter values...
@@ -137,7 +144,12 @@ def compute_accuracy_results(
             .alias("normalized_count")
         )
     )
-    return AccuracyResults(tabular=tabular, percentiles=percentiles_, counts=counts)
+    return AccuracyResults(
+        tabular=tabular,
+        wide_percentiles=wide_percentiles,
+        long_percentiles=long_percentiles,
+        counts=counts,
+    )
 
 
 def compute_efficiency_results(
@@ -210,18 +222,6 @@ def get_runtimes(
             "contact_time_dist", "score_value_dist", "score_time_dist"
         ).agg("*")
     return np.array(df["msg_runtime"].to_list())
-
-
-def get_efficiency_box_plot(
-    df: pl.DataFrame, parameter: str, metric: str, group_by: str = None
-):
-    box_kwargs = {"by": parameter, "groupby": group_by}
-    abs_box = df.plot.box(y=metric, **box_kwargs)
-    rel_box = df.plot.box(y=f"{metric}_percent", **box_kwargs)
-    scatter = df.plot.scatter(y=metric, x=parameter, c="orange", size=2)
-    scatter = scatter.opts(jitter=0.5)
-    return (abs_box * rel_box * scatter).opts(multi_y=True, show_legend=False)
-
 
 def percentile(name: str, value: float) -> Expr:
     return pl.col(name).quantile(value / 100, interpolation="midpoint")
