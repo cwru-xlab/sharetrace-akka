@@ -41,20 +41,20 @@ def process_runtime_dataset(df: DF) -> DF:
 def validate_parameter_dataset(df: DF) -> None:
     def find_invalid_rows(expected, actual) -> list[int]:
         return (
-            df.select(expected, actual)
-            .select(pl.arg_where(pl.all_horizontal("*") == False))
+            df.select(expected == actual)
+            .select(pl.arg_where(pl.all_horizontal("*") is False))
             .to_series()
             .to_list()
         )
 
-    invalid = find_invalid_rows("n_nodes", lists_selector.list.len())
+    invalid = find_invalid_rows(pl.col("n_nodes"), lists_selector.list.len())
     if (n_invalid := len(invalid)) > 0:
         raise InvalidDatasetError(
             f"{n_invalid} rows contain a list whose length is not equal to "
             f"'n_nodes': {invalid}"
         )
 
-    invalid = find_invalid_rows("n_edges", pl.col("n_contacts").list.sum() / 2)
+    invalid = find_invalid_rows(pl.col("n_edges"), pl.col("n_contacts").list.sum() / 2)
     if (n_invalid := len(invalid)) > 0:
         raise InvalidDatasetError(
             f"{n_invalid} rows contain a 'n_contacts' list whose half sum is "
@@ -222,6 +222,7 @@ def get_runtimes(
             "contact_time_dist", "score_value_dist", "score_time_dist"
         ).agg("*")
     return np.array(df["msg_runtime"].to_list())
+
 
 def percentile(name: str, value: float) -> Expr:
     return pl.col(name).quantile(value / 100, interpolation="midpoint")
