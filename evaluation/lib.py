@@ -41,8 +41,8 @@ def process_runtime_dataset(df: DF) -> DF:
 def validate_parameter_dataset(df: DF) -> None:
     def find_invalid_rows(expected, actual) -> list[int]:
         return (
-            df.select(expected == actual)
-            .select(pl.arg_where(pl.all_horizontal("*") is False))
+            df.select(values=pl.concat_list(expected, actual))
+            .select(pl.arg_where(pl.col("values").list.n_unique() > 1))
             .to_series()
             .to_list()
         )
@@ -258,6 +258,7 @@ __all__ = [
     "get_runtimes",
     "InvalidDatasetError",
     "load_dataset",
+    "lists_selector",
     "normalized",
     "process_parameter_dataset",
     "process_runtime_dataset",
