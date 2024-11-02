@@ -10,9 +10,7 @@ from numpy.typing import NDArray
 DF = pl.DataFrame
 Expr = pl.Expr
 
-# Include the data sources to account for multiple iterations with the same parameters,
-# but different contact networks and risk scores.
-user_key = ("dataset_id", "network_source", "score_source", "user_id")
+user_key = ("execution_id", "network_id", "score_source", "user_id")
 
 lists_selector = cs.by_dtype(pl.List(int), pl.List(float))
 
@@ -166,12 +164,12 @@ def compute_efficiency_results(
         axes.insert(0, "network_type")
     result = (
         df.filter(pl.col(parameter) >= min_parameter_value)
-        .group_by(axes + ["dataset_id", "network_source", "score_source"])
+        .group_by(axes + ["dataset_id", "network_id", "score_source"])
         .agg(pl.col(m).sum() for m in metrics)
     )
     if normalize:
         result = result.with_columns(
-            normalized(m, by="max").over("network_source") for m in metrics
+            normalized(m, by="max").over("network_id") for m in metrics
         )
     result = result.filter(pl.col(parameter) > min_parameter_value)
     if aggregate:

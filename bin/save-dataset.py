@@ -61,7 +61,7 @@ def network_properties(data: dict) -> dict:
     network = data["network"]
     factory = data["networkFactory"]
     return {
-        "network_source": network["id"],
+        "network_id": network["id"],
         "network_type": factory["type"],
         "n_nodes": network["nodes"],
         "n_edges": network["edges"],
