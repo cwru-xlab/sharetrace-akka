@@ -9,13 +9,8 @@ from typing import Iterable, Callable
 import polars as pl
 
 
-def dig(data: dict, *keys):
-    if len(keys) == 0:
-        return data
-    elif len(keys) == 1:
-        return data[keys[0]]
-    else:
-        return dig(data[keys[0]], *keys[1:])
+def dig(data: dict, keys):
+    return dig(data[keys[0]], keys[1:]) if keys else data
 
 
 def provider(*keys) -> Callable:
@@ -23,7 +18,7 @@ def provider(*keys) -> Callable:
         @functools.wraps(wrapped)
         def provide(data: dict) -> dict:
             try:
-                data = dig(data, *keys)
+                data = dig(data, keys)
             except KeyError:
                 return {}
             return wrapped(data)
