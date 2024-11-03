@@ -1,16 +1,18 @@
 import dataclasses
+import math
+from itertools import count
 from typing import Callable, Literal
 
 import numpy as np
 import polars as pl
 import polars.selectors as cs
 import seaborn as sns
+from matplotlib import pyplot as plt
+from numpy.ma.core import append
 from numpy.typing import NDArray
 
 DF = pl.DataFrame
 Expr = pl.Expr
-
-user_key = ("execution_id", "network_id", "score_source", "user_id")
 
 lists_selector = cs.by_dtype(pl.List(int), pl.List(float))
 
@@ -19,12 +21,18 @@ class InvalidDatasetError(Exception):
     pass
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(slots=True, frozen=True)
+class PercentileResults:
+    aggregate: DF
+    network_type: DF
+
+
+@dataclasses.dataclass(slots=True, frozen=True)
 class AccuracyResults:
     tabular: DF
-    long_percentiles: DF
-    wide_percentiles: DF
+    tabular_percentiles: PercentileResults
     counts: DF
+    count_percentiles: PercentileResults
 
 
 def load_dataset(name: str) -> DF:
@@ -82,10 +90,29 @@ def format_network_types(df: DF) -> DF:
 def compute_accuracy_results(
     df: DF,
     parameter: str,
-    percentiles: list[float],
+    tabular_percentiles: list[float],
+    count_percentiles: list[float],
     precision: int = 3,
-    by_network_type: bool = False,
 ) -> AccuracyResults:
+    run_key = ("dataset_id", "network_id", "score_source")
+    user_key = (*run_key, "user_id")
+
+    def get_percentiles(
+        __df: DF, col: str, percentiles: list[float], by_network_type: bool
+    ) -> DF:
+        axes = ("network_type", parameter) if by_network_type else (parameter,)
+        return (
+            __df.select(
+                *axes,
+                *(
+                    percentile(col, p).round(precision).over(axes).alias(f"{p}")
+                    for p in percentiles
+                ),
+            )
+            .unique()
+            .sort(axes)
+        )
+
     tabular = (
         # Only consider users whose exposure score was updated at least once.
         # Users whose exposure score is never updated are not informative of accuracy.
@@ -98,55 +125,58 @@ def compute_accuracy_results(
         )
     )
 
-    axes = [parameter]
-    if by_network_type:
-        # Prefer to sort first by the network type, then by the parameter value.
-        axes.insert(0, "network_type")
-
-    # Accuracy may vary across network users.
-    wide_percentiles = (
-        tabular.select(
-            *axes,
-            *(
-                percentile("accuracy", p).round(precision).over(axes).alias(f"{p}")
-                for p in percentiles
-            ),
-        )
-        .unique()
-        .sort(axes)
-    )
-
-    long_percentiles = wide_percentiles.melt(
-        id_vars=axes, variable_name="percentile", value_name="accuracy"
-    ).with_columns(pl.col("percentile").cast(float))
-
     counts = (
         tabular
-        # Rank in ascending order the accuracy across parameter values...
-        .with_columns(rank=pl.col("accuracy").rank("dense").over(user_key))
-        # and keep the row(s) associated with the highest accuracy...
-        .filter(is_max("rank").over(user_key))
+        # Keep the row(s) associated with the highest accuracy...
+        .filter(is_max("accuracy").over(user_key))
         # to determine the parameter value that offers the highest accuracy.
         .filter(is_max(parameter).over(user_key))
-        # Finally, group by the axes of interest to calculate their frequency.
-        # Keep the previously calculated percentiles as well.
-        .group_by(axes)
+        # Group by the axes of interest to calculate their frequency.
+        .group_by(*run_key, "network_type", parameter)
         .agg(count=pl.len())
-        .sort(axes)
+        # The parameter column must be last to properly compute proportions.
+        .sort(*run_key, "network_type", parameter)
         .with_columns(
             normalized("count", by="sum")
             # Frequency accumulates in descending order by parameter value.
             .cum_sum(reverse=True)
             .round(precision)
-            .over(set(axes) - {parameter} or None)
-            .alias("normalized_count")
+            .over(run_key)
+            .alias("proportion")
         )
     )
+
     return AccuracyResults(
         tabular=tabular,
-        wide_percentiles=wide_percentiles,
-        long_percentiles=long_percentiles,
+        tabular_percentiles=PercentileResults(
+            aggregate=get_percentiles(
+                tabular,
+                col="accuracy",
+                percentiles=tabular_percentiles,
+                by_network_type=False,
+            ),
+            network_type=get_percentiles(
+                tabular,
+                col="accuracy",
+                percentiles=tabular_percentiles,
+                by_network_type=True,
+            ),
+        ),
         counts=counts,
+        count_percentiles=PercentileResults(
+            aggregate=get_percentiles(
+                counts,
+                col="proportion",
+                percentiles=count_percentiles,
+                by_network_type=False,
+            ),
+            network_type=get_percentiles(
+                counts,
+                col="proportion",
+                percentiles=count_percentiles,
+                by_network_type=True,
+            ),
+        ),
     )
 
 
@@ -238,8 +268,25 @@ def normalized(name: str, by: Literal["sum", "max"]) -> Expr:
     return pl.col(name) / den
 
 
-def save_figure(g: sns.FacetGrid, name: str, **kwargs) -> None:
-    g.savefig(f"{name}.png", dpi=500, **kwargs)
+def make_boxplot(df: DF, by_network_type: bool = False, **kwargs) -> sns.FacetGrid:
+    if by_network_type:
+        df = format_network_types(df)
+        network_types = get_network_types(df)
+        kwargs["col"] = "network_type"
+        kwargs["col_order"] = network_types
+        kwargs["col_wrap"] = math.floor(math.sqrt(len(network_types)))
+    g = sns.catplot(df, kind="box", fill=None, color="black", linewidth=1, **kwargs)
+    g.set_titles("{col_name}")
+    return g
+
+
+def set_legend_line_width(g: sns.FacetGrid, line_width: int) -> None:
+    for line in g.legend.get_lines():
+        line.set_linewidth(line_width)
+
+
+def save_figure(name: str, **kwargs) -> None:
+    plt.savefig(f"{name}.png", dpi=500, bbox_inches="tight", **kwargs)
 
 
 def save_table(df: DF, name: str, **kwargs) -> None:
@@ -255,12 +302,14 @@ __all__ = [
     "get_network_types",
     "get_runtimes",
     "InvalidDatasetError",
-    "load_dataset",
     "lists_selector",
+    "load_dataset",
     "normalized",
+    "make_boxplot",
     "process_parameter_dataset",
     "process_runtime_dataset",
     "save_figure",
     "save_table",
+    "set_legend_line_width",
     "validate_parameter_dataset",
 ]
