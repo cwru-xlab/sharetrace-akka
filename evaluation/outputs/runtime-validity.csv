@@ -1,0 +1,5 @@
+network_type,count,proportion
+BarabasiAlbert,484,0.968
+GnmRandom,491,0.982
+RandomRegular,493,0.986
+WattsStrogatz,487,0.974

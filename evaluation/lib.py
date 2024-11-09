@@ -16,18 +16,20 @@ Expr = pl.Expr
 
 lists_selector = cs.by_dtype(pl.List(int), pl.List(float))
 
+immutable = dataclasses.dataclass(slots=True, frozen=True)
+
 
 class InvalidDatasetError(Exception):
     pass
 
 
-@dataclasses.dataclass(slots=True, frozen=True)
+@immutable
 class PercentileResults:
     aggregate: DF
     network_type: DF
 
 
-@dataclasses.dataclass(slots=True, frozen=True)
+@immutable
 class AccuracyResults:
     tabular: DF
     tabular_percentiles: PercentileResults
@@ -40,8 +42,26 @@ def load_dataset(name: str) -> DF:
 
 
 def process_runtime_dataset(df: DF) -> DF:
-    # Remove the "burn in" iteration for JVM class loading.
-    return df.filter(pl.col("run_id") != "1")
+    return (
+        # Remove the "burn in" iteration for JVM class loading.
+        df.filter(pl.col("run_id") != "1")
+        # A total runtime less than 0 indicates RiskPropagationStart,
+        # RiskPropagationEnd, or both were not logged during execution.
+        .with_columns(valid=pl.col("total_runtime") > 0)
+        # Scale runtimes to seconds.
+        .with_columns(cs.ends_with("_runtime") / 1000)
+    )
+
+
+def compute_valid_runtime_results(df: DF) -> DF:
+    return (
+        df.group_by("network_type", "valid")
+        .agg(count=pl.len())
+        .with_columns(proportion=normalized("count", by="sum").over("network_type"))
+        .filter(valid=True)
+        .select("network_type", "count", "proportion")
+        .sort("network_type")
+    )
 
 
 def validate_parameter_dataset(df: DF) -> None:
@@ -105,7 +125,7 @@ def compute_accuracy_results(
             __df.select(
                 *axes,
                 *(
-                    percentile(col, p).round(precision).over(axes).alias(f"{p}")
+                    percentile(col, p).round(precision).over(axes).alias(f"$P_{p}$")
                     for p in percentiles
                 ),
             )
@@ -238,6 +258,15 @@ def apply_hypothesis_test(
         return apply_test()
 
 
+def binned(df: DF, **scales: float) -> DF:
+    return df.with_columns(
+        ((pl.col(col) / scale).round() * scale)
+        .cast(df[col].dtype)
+        .alias(f"binned" f"_{col}")
+        for col, scale in scales.items()
+    )
+
+
 def get_runtimes(
     df: pl.DataFrame,
     network_type: str = None,
@@ -246,9 +275,7 @@ def get_runtimes(
     if network_type is not None:
         df = df.filter(network_type=network_type)
     if by_distributions:
-        df = df.group_by(
-            "contact_time_dist", "score_value_dist", "score_time_dist"
-        ).agg("*")
+        df = df.group_by(cs.ends_with("_dist")).agg("*")
     return np.array(df["msg_runtime"].to_list())
 
 
@@ -296,8 +323,10 @@ def save_table(df: DF, name: str, **kwargs) -> None:
 __all__ = [
     "AccuracyResults",
     "apply_hypothesis_test",
+    "binned",
     "compute_accuracy_results",
     "compute_efficiency_results",
+    "compute_valid_runtime_results",
     "format_network_types",
     "get_network_types",
     "get_runtimes",
