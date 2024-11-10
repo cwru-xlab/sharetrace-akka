@@ -1,6 +1,5 @@
 import dataclasses
 import math
-from itertools import count
 from typing import Callable, Literal
 
 import numpy as np
@@ -8,7 +7,6 @@ import polars as pl
 import polars.selectors as cs
 import seaborn as sns
 from matplotlib import pyplot as plt
-from numpy.ma.core import append
 from numpy.typing import NDArray
 
 DF = pl.DataFrame
@@ -53,7 +51,7 @@ def process_runtime_dataset(df: DF) -> DF:
     )
 
 
-def compute_valid_runtime_results(df: DF) -> DF:
+def compute_runtime_validity_results(df: DF) -> DF:
     return (
         df.group_by("network_type", "valid")
         .agg(count=pl.len())
@@ -200,36 +198,6 @@ def compute_accuracy_results(
     )
 
 
-def compute_efficiency_results(
-    df: DF,
-    parameter: str,
-    min_parameter_value: float = 0.0,
-    normalize: bool = False,
-    aggregate: bool = False,
-    by_network_type: bool = False,
-) -> DF:
-    axes = [parameter]
-    metrics = ["n_receives", "n_influenced", "n_influences", "msg_reachability"]
-    if by_network_type:
-        axes.insert(0, "network_type")
-    result = (
-        df.filter(pl.col(parameter) >= min_parameter_value)
-        .group_by(axes + ["dataset_id", "network_id", "score_source"])
-        .agg(pl.col(m).sum() for m in metrics)
-    )
-    if normalize:
-        result = result.with_columns(
-            normalized(m, by="max").over("network_id") for m in metrics
-        )
-    result = result.filter(pl.col(parameter) > min_parameter_value)
-    if aggregate:
-        percentiles = [0, 10, 25, 50, 75, 90, 100]
-        result = result.group_by(axes).agg(
-            percentile(m, p).alias(f"{m}_p{p}") for m in metrics for p in percentiles
-        )
-    return result.sort(axes)
-
-
 def get_network_types(df: DF) -> list[str]:
     return df["network_type"].unique().sort().to_list()
 
@@ -258,12 +226,17 @@ def apply_hypothesis_test(
         return apply_test()
 
 
-def binned(df: DF, **scales: float) -> DF:
+def binned(df: DF, col: str, scale: float, rescale: bool | int | float = True) -> DF:
+    if isinstance(rescale, (int, float)) and rescale != 0:
+        new_scale = rescale
+    elif rescale:
+        new_scale = scale
+    else:
+        new_scale = 1
     return df.with_columns(
-        ((pl.col(col) / scale).round() * scale)
+        ((pl.col(col) / scale).round() * new_scale)
         .cast(df[col].dtype)
-        .alias(f"binned" f"_{col}")
-        for col, scale in scales.items()
+        .alias(f"binned_{col}")
     )
 
 
@@ -284,15 +257,11 @@ def percentile(name: str, value: float) -> Expr:
 
 
 def is_max(name: str) -> Expr:
-    return pl.col(name).eq(pl.col(name).max())
+    return pl.col(name) == pl.max(name)
 
 
 def normalized(name: str, by: Literal["sum", "max"]) -> Expr:
-    if by == "sum":
-        den = pl.col(name).sum()
-    else:
-        den = pl.col(name).max()
-    return pl.col(name) / den
+    return pl.col(name) / (pl.sum(name) if by == "sum" else pl.max(name))
 
 
 def make_boxplot(df: DF, by_network_type: bool = False, **kwargs) -> sns.FacetGrid:
@@ -325,8 +294,7 @@ __all__ = [
     "apply_hypothesis_test",
     "binned",
     "compute_accuracy_results",
-    "compute_efficiency_results",
-    "compute_valid_runtime_results",
+    "compute_runtime_validity_results",
     "format_network_types",
     "get_network_types",
     "get_runtimes",
