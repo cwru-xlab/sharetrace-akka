@@ -39,10 +39,12 @@ def load_dataset(name: str) -> DF:
     return pl.read_parquet(f"data/{name}/dataset.parquet")
 
 
-def process_runtime_dataset(df: DF) -> DF:
+def process_runtime_dataset(df: DF, keep_burn_in: bool = False) -> DF:
+    # Remove the "burn in" iteration for JVM class loading.
+    if not keep_burn_in:
+        df = df.filter(pl.col("run_id") != "1")
     return (
-        # Remove the "burn in" iteration for JVM class loading.
-        df.filter(pl.col("run_id") != "1")
+        df
         # A total runtime less than 0 indicates RiskPropagationStart,
         # RiskPropagationEnd, or both were not logged during execution.
         .with_columns(valid=pl.col("total_runtime") > 0)
