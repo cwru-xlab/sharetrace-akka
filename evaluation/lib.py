@@ -1,13 +1,20 @@
 import dataclasses
+import functools
+import itertools
 import math
-from typing import Callable, Literal
+from typing import Callable, Literal, Any
 
 import numpy as np
 import polars as pl
 import polars.selectors as cs
 import seaborn as sns
+import sklearn
+from fontTools.misc.cython import returns
 from matplotlib import pyplot as plt
 from numpy.typing import NDArray
+from sklearn import linear_model, model_selection, metrics
+from sklearn.metrics._scorer import _Scorer
+from sklearn.utils._metadata_requests import _MetadataRequester
 
 DF = pl.DataFrame
 Expr = pl.Expr
@@ -35,6 +42,18 @@ class AccuracyResults:
     count_percentiles: PercentileResults
 
 
+@immutable
+class RuntimeValidityResults:
+    total_runtime: DF
+    msg_runtime: DF
+
+
+@immutable
+class RuntimeModel:
+    estimator: Any
+    scores: Any
+
+
 def load_dataset(name: str) -> DF:
     return pl.read_parquet(f"data/{name}/dataset.parquet")
 
@@ -44,24 +63,91 @@ def process_runtime_dataset(df: DF, keep_burn_in: bool = False) -> DF:
     if not keep_burn_in:
         df = df.filter(pl.col("run_id") != "1")
     return (
-        df
-        # A total runtime less than 0 indicates RiskPropagationStart,
-        # RiskPropagationEnd, or both were not logged during execution.
-        .with_columns(valid=pl.col("total_runtime") > 0)
+        df.with_columns(
+            total_runtime_validity=pl.col("total_runtime") > 0,
+            msg_runtime_validity=pl.col("msg_runtime") > 0,
+        )
         # Scale runtimes to seconds.
         .with_columns(cs.ends_with("_runtime") / 1000)
     )
 
 
-def compute_runtime_validity_results(df: DF) -> DF:
-    return (
-        df.group_by("network_type", "valid")
-        .agg(count=pl.len())
-        .with_columns(proportion=normalized("count", by="sum").over("network_type"))
-        .filter(valid=True)
-        .select("network_type", "count", "proportion")
-        .sort("network_type")
+def compute_runtime_validity_results(df: DF) -> RuntimeValidityResults:
+    def compute(runtime_type: str) -> DF:
+        validity_col = f"{runtime_type}_validity"
+        return (
+            df.group_by("network_type", validity_col)
+            .agg(count=pl.len())
+            .with_columns(proportion=normalized("count", by="sum").over("network_type"))
+            .filter(pl.col(validity_col))
+            .select("network_type", "count", "proportion")
+            .sort("network_type")
+        )
+
+    return RuntimeValidityResults(
+        total_runtime=compute("total_runtime"), msg_runtime=compute("msg_runtime")
     )
+
+
+def fit_runtime_model(df: DF, seed: int = 12345) -> dict[float, RuntimeModel]:
+
+    # noinspection PyPep8Naming
+    X = df["n_edges"].to_numpy().reshape(-1, 1)
+    y = df["msg_runtime"].to_numpy()
+
+    def make_cross_validation():
+        # Ref: https://scikit-learn.org/stable/common_pitfalls.html#controlling-randomness
+        return model_selection.KFold(n_splits=5, shuffle=True, random_state=seed)
+
+    def make_scorer(metric: Callable, quantile: float) -> Callable:
+        # Based on the below references, 'alpha' appears to be intended for the quantile
+        # value, rather than the 'alpha' regularization term that is specified for
+        # QuantileRegressor.
+        # Ref: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.mean_pinball_loss.html
+        # Ref: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.d2_pinball_score.html
+        # Ref: https://scikit-learn.org/stable/auto_examples/ensemble/plot_gradient_boosting_quantile.html
+        return metrics.make_scorer(
+            metric, alpha=quantile, greater_is_better=metric.__name__.endswith("_score")
+        )
+
+    def fit_quantile(quantile: float) -> RuntimeModel:
+        # Ref: https://scikit-learn.org/stable/auto_examples/model_selection/plot_nested_cross_validation_iris.html
+        # Ref: https://machinelearningmastery.com/nested-cross-validation-for-machine-learning-with-python/
+        cv_outer = make_cross_validation()
+        cv_inner = make_cross_validation()
+
+        # Ref: https://scikit-learn.org/stable/modules/linear_model.html#quantile-regression
+        estimator = linear_model.QuantileRegressor(
+            quantile=quantile, fit_intercept=True, solver="highs"
+        )
+
+        common_cv_kwargs = {
+            # Ref: https://scikit-learn.org/stable/modules/model_evaluation.html
+            "scoring": {
+                "d2_pinball_score": make_scorer(metrics.d2_pinball_score, quantile),
+                "mean_pinball_score": make_scorer(metrics.mean_pinball_loss, quantile),
+            },
+            "n_jobs": -1,
+            "error_score": "raise",
+        }
+
+        # Ref: https://scikit-learn.org/stable/modules/grid_search.html
+        grid_search = model_selection.GridSearchCV(
+            estimator=estimator,
+            param_grid={"alpha": [10**-p for p in range(1, 6)]},
+            refit="mean_pinball_score",
+            cv=cv_inner,
+            **common_cv_kwargs,
+        )
+        grid_search.fit(X, y)
+
+        # Ref: https://scikit-learn.org/stable/modules/cross_validation.html
+        scores = model_selection.cross_validate(
+            estimator=grid_search, X=X, y=y, cv=cv_outer, **common_cv_kwargs
+        )
+        return RuntimeModel(estimator=grid_search, scores=scores)
+
+    return {q: fit_quantile(q) for q in (0.05, 0.5, 0.95)}
 
 
 def validate_parameter_dataset(df: DF) -> None:
@@ -99,7 +185,7 @@ def format_network_types(df: DF) -> DF:
         pl.col("network_type").replace(
             {
                 "BarabasiAlbert": "Barabasi-Albert",
-                "GnmRandom": "Erdös–Rényi",
+                "GnmRandom": "Erdős-Rényi",
                 "RandomRegular": "Random regular",
                 "WattsStrogatz": "Watts-Strogatz",
             }
@@ -114,9 +200,6 @@ def compute_accuracy_results(
     count_percentiles: list[float],
     precision: int = 3,
 ) -> AccuracyResults:
-    run_key = ("dataset_id", "network_id", "score_source")
-    user_key = (*run_key, "user_id")
-
     def get_percentiles(
         __df: DF, col: str, percentiles: list[float], by_network_type: bool
     ) -> DF:
@@ -133,13 +216,16 @@ def compute_accuracy_results(
             .sort(axes)
         )
 
+    run_key = ("dataset_id", "network_id", "score_source")
+    user_key = (*run_key, "user_id")
+
     tabular = (
         # Only consider users whose exposure score was updated at least once.
         # Users whose exposure score is never updated are not informative of accuracy.
         df.filter((pl.col("score_diff").abs().sum() > 0).over(user_key))
         # Get the accuracy across parameter values for each network user.
         .with_columns(
-            (1 - pl.col("score_diff").max() + pl.col("score_diff"))
+            (1 - pl.max("score_diff") + pl.col("score_diff"))
             .over(user_key)
             .alias("accuracy")
         )
@@ -258,6 +344,7 @@ def percentile(name: str, value: float) -> Expr:
     return pl.col(name).quantile(value / 100, interpolation="midpoint")
 
 
+# noinspection PyTypeChecker
 def is_max(name: str) -> Expr:
     return pl.col(name) == pl.max(name)
 
@@ -311,4 +398,5 @@ __all__ = [
     "save_table",
     "set_legend_line_width",
     "validate_parameter_dataset",
+    "fit_runtime_model",
 ]

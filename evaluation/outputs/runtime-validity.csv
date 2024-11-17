@@ -1,5 +1,5 @@
 network_type,count,proportion
-Barabasi-Albert,484,0.968
-Erdös–Rényi,491,0.982
-Random regular,493,0.986
-Watts-Strogatz,487,0.974
+Barabasi-Albert,500,1.0
+Erdős-Rényi,500,1.0
+Random regular,500,1.0
+Watts-Strogatz,500,1.0
