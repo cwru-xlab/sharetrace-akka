@@ -1,20 +1,14 @@
 import dataclasses
-import functools
-import itertools
 import math
-from typing import Callable, Literal, Any
+from typing import Callable, Literal
 
 import numpy as np
 import polars as pl
 import polars.selectors as cs
 import seaborn as sns
-import sklearn
-from fontTools.misc.cython import returns
 from matplotlib import pyplot as plt
 from numpy.typing import NDArray
 from sklearn import linear_model, model_selection, metrics
-from sklearn.metrics._scorer import _Scorer
-from sklearn.utils._metadata_requests import _MetadataRequester
 
 DF = pl.DataFrame
 Expr = pl.Expr
@@ -50,8 +44,8 @@ class RuntimeValidityResults:
 
 @immutable
 class RuntimeModel:
-    estimator: Any
-    scores: Any
+    estimator: linear_model.QuantileRegressor
+    params_and_scores: DF
 
 
 def load_dataset(name: str) -> DF:
@@ -89,17 +83,24 @@ def compute_runtime_validity_results(df: DF) -> RuntimeValidityResults:
     )
 
 
-def fit_runtime_model(df: DF, seed: int = 12345) -> dict[float, RuntimeModel]:
-
-    # noinspection PyPep8Naming
-    X = df["n_edges"].to_numpy().reshape(-1, 1)
+# noinspection PyPep8Naming
+def get_runtime_model_data(df: DF, flatten: bool = False) -> (NDArray, NDArray):
+    X = df["n_edges"].to_numpy()
+    if not flatten:
+        X = X.reshape(-1, 1)
     y = df["msg_runtime"].to_numpy()
+    return X, y
+
+
+def fit_runtime_model(df: DF, seed: int) -> (dict, DF):
+    # noinspection PyPep8Naming
+    X, y = get_runtime_model_data(df)
 
     def make_cross_validation():
         # Ref: https://scikit-learn.org/stable/common_pitfalls.html#controlling-randomness
         return model_selection.KFold(n_splits=5, shuffle=True, random_state=seed)
 
-    def make_scorer(metric: Callable, quantile: float) -> Callable:
+    def make_scorer(metric: Callable, _quantile: float) -> Callable:
         # Based on the below references, 'alpha' appears to be intended for the quantile
         # value, rather than the 'alpha' regularization term that is specified for
         # QuantileRegressor.
@@ -107,25 +108,27 @@ def fit_runtime_model(df: DF, seed: int = 12345) -> dict[float, RuntimeModel]:
         # Ref: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.d2_pinball_score.html
         # Ref: https://scikit-learn.org/stable/auto_examples/ensemble/plot_gradient_boosting_quantile.html
         return metrics.make_scorer(
-            metric, alpha=quantile, greater_is_better=metric.__name__.endswith("_score")
+            metric,
+            alpha=_quantile,
+            greater_is_better=metric.__name__.endswith("_score"),
         )
 
-    def fit_quantile(quantile: float) -> RuntimeModel:
+    def fit_quantile(_quantile: float) -> tuple:
         # Ref: https://scikit-learn.org/stable/auto_examples/model_selection/plot_nested_cross_validation_iris.html
         # Ref: https://machinelearningmastery.com/nested-cross-validation-for-machine-learning-with-python/
         cv_outer = make_cross_validation()
         cv_inner = make_cross_validation()
 
         # Ref: https://scikit-learn.org/stable/modules/linear_model.html#quantile-regression
-        estimator = linear_model.QuantileRegressor(
-            quantile=quantile, fit_intercept=True, solver="highs"
+        _estimator = linear_model.QuantileRegressor(
+            quantile=_quantile, fit_intercept=True, solver="highs"
         )
 
         common_cv_kwargs = {
             # Ref: https://scikit-learn.org/stable/modules/model_evaluation.html
             "scoring": {
-                "d2_pinball_score": make_scorer(metrics.d2_pinball_score, quantile),
-                "mean_pinball_score": make_scorer(metrics.mean_pinball_loss, quantile),
+                "d2_pinball_score": make_scorer(metrics.d2_pinball_score, _quantile),
+                "mean_pinball_loss": make_scorer(metrics.mean_pinball_loss, _quantile),
             },
             "n_jobs": -1,
             "error_score": "raise",
@@ -133,21 +136,43 @@ def fit_runtime_model(df: DF, seed: int = 12345) -> dict[float, RuntimeModel]:
 
         # Ref: https://scikit-learn.org/stable/modules/grid_search.html
         grid_search = model_selection.GridSearchCV(
-            estimator=estimator,
+            estimator=_estimator,
             param_grid={"alpha": [10**-p for p in range(1, 6)]},
-            refit="mean_pinball_score",
+            refit="mean_pinball_loss",
             cv=cv_inner,
             **common_cv_kwargs,
         )
         grid_search.fit(X, y)
 
         # Ref: https://scikit-learn.org/stable/modules/cross_validation.html
-        scores = model_selection.cross_validate(
+        _scores = model_selection.cross_validate(
             estimator=grid_search, X=X, y=y, cv=cv_outer, **common_cv_kwargs
         )
-        return RuntimeModel(estimator=grid_search, scores=scores)
+        return grid_search.best_estimator_, _scores
 
-    return {q: fit_quantile(q) for q in (0.05, 0.5, 0.95)}
+    estimators = {}
+    results = []
+    for quantile in (0.05, 0.5, 0.95):
+        estimator, scores = fit_quantile(quantile)
+        estimators[quantile] = estimator
+        mean_pinball_loss = scores["test_mean_pinball_loss"]
+        d2_pinball_score = scores["test_d2_pinball_score"]
+        result = pl.DataFrame(
+            {
+                "quantile": quantile,
+                "intercept": estimator.intercept_,
+                "coefficient": estimator.coef_,
+                "alpha": estimator.alpha,
+                "pinball_loss_mean": np.mean(mean_pinball_loss),
+                "pinball_loss_std_err": std_err(mean_pinball_loss),
+                "d2_pinball_score_mean": np.mean(d2_pinball_score),
+                "d2_pinball_score_std_err": std_err(d2_pinball_score),
+            }
+        )
+        results.append(result)
+    results = pl.concat(results)
+
+    return estimators, results
 
 
 def validate_parameter_dataset(df: DF) -> None:
@@ -172,6 +197,10 @@ def validate_parameter_dataset(df: DF) -> None:
             f"{n_invalid} rows contain a 'n_contacts' list whose half sum is "
             f"not equal to 'n_edges': {invalid}"
         )
+
+
+def std_err(arr: NDArray) -> NDArray:
+    return arr.std() / np.sqrt(arr.size)
 
 
 def process_parameter_dataset(df: DF, validate: bool = True) -> DF:
@@ -399,4 +428,5 @@ __all__ = [
     "set_legend_line_width",
     "validate_parameter_dataset",
     "fit_runtime_model",
+    "get_runtime_model_data",
 ]
