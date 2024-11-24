@@ -113,6 +113,16 @@ def fit_runtime_model(df: DF, seed: int, quantiles: Iterable[float]) -> (dict, D
             greater_is_better=metric.__name__.endswith("_score"),
         )
 
+    def get_best_estimator(outer_cv_results: dict):
+        grid_searches = outer_cv_results["estimator"]
+        if len(reg_params := {s.best_params_["alpha"] for s in grid_searches}) > 1:
+            raise RuntimeError(
+                f"Unable to find a uniquely optimal regularization parameter:"
+                f" {reg_params}"
+            )
+        i_best = outer_cv_results["test_d2_pinball_score"].argmax()
+        return outer_cv_results["estimator"][i_best].best_estimator_
+
     def fit_quantile(_quantile: float) -> tuple:
         # Ref: https://scikit-learn.org/stable/auto_examples/model_selection/plot_nested_cross_validation_iris.html
         # Ref: https://machinelearningmastery.com/nested-cross-validation-for-machine-learning-with-python/
@@ -138,17 +148,21 @@ def fit_runtime_model(df: DF, seed: int, quantiles: Iterable[float]) -> (dict, D
         grid_search = model_selection.GridSearchCV(
             estimator=_estimator,
             param_grid={"alpha": [10**-p for p in range(1, 6)]},
-            refit="mean_pinball_loss",
+            refit="d2_pinball_score",
             cv=cv_inner,
             **common_cv_kwargs,
         )
-        grid_search.fit(X, y)
 
         # Ref: https://scikit-learn.org/stable/modules/cross_validation.html
         _scores = model_selection.cross_validate(
-            estimator=grid_search, X=X, y=y, cv=cv_outer, **common_cv_kwargs
+            estimator=grid_search,
+            X=X,
+            y=y,
+            cv=cv_outer,
+            return_estimator=True,
+            **common_cv_kwargs,
         )
-        return grid_search.best_estimator_, _scores
+        return get_best_estimator(_scores), _scores
 
     estimators = {}
     results = []
