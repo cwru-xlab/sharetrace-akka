@@ -1,6 +1,6 @@
 import dataclasses
 import math
-from typing import Callable, Literal
+from typing import Callable, Literal, Iterable
 
 import numpy as np
 import polars as pl
@@ -92,7 +92,7 @@ def get_runtime_model_data(df: DF, flatten: bool = False) -> (NDArray, NDArray):
     return X, y
 
 
-def fit_runtime_model(df: DF, seed: int) -> (dict, DF):
+def fit_runtime_model(df: DF, seed: int, quantiles: Iterable[float]) -> (dict, DF):
     # noinspection PyPep8Naming
     X, y = get_runtime_model_data(df)
 
@@ -152,12 +152,12 @@ def fit_runtime_model(df: DF, seed: int) -> (dict, DF):
 
     estimators = {}
     results = []
-    for quantile in (0.05, 0.5, 0.95):
+    for quantile in quantiles:
         estimator, scores = fit_quantile(quantile)
         estimators[quantile] = estimator
         mean_pinball_loss = scores["test_mean_pinball_loss"]
         d2_pinball_score = scores["test_d2_pinball_score"]
-        result = pl.DataFrame(
+        results.append(
             {
                 "quantile": quantile,
                 "intercept": estimator.intercept_,
@@ -169,9 +169,7 @@ def fit_runtime_model(df: DF, seed: int) -> (dict, DF):
                 "d2_pinball_score_std_err": std_err(d2_pinball_score),
             }
         )
-        results.append(result)
-    results = pl.concat(results)
-
+    results = pl.DataFrame(results)
     return estimators, results
 
 
