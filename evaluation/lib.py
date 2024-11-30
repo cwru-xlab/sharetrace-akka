@@ -3,12 +3,14 @@ import math
 from typing import Callable, Literal, Iterable
 
 import numpy as np
+import pingouin as pg
 import polars as pl
 import polars.selectors as cs
 import seaborn as sns
 from matplotlib import pyplot as plt
 from numpy.typing import NDArray
 from sklearn import linear_model, model_selection, metrics
+from sklearn.linear_model import QuantileRegressor
 
 DF = pl.DataFrame
 Expr = pl.Expr
@@ -40,12 +42,6 @@ class AccuracyResults:
 class RuntimeValidityResults:
     total_runtime: DF
     msg_runtime: DF
-
-
-@immutable
-class RuntimeModel:
-    estimator: linear_model.QuantileRegressor
-    params_and_scores: DF
 
 
 def load_dataset(name: str) -> DF:
@@ -96,6 +92,8 @@ def fit_runtime_model(df: DF, seed: int, quantiles: Iterable[float]) -> (dict, D
     # noinspection PyPep8Naming
     X, y = get_runtime_model_data(df)
 
+    selection_metric = "d2_pinball_score"
+
     def make_cross_validation():
         # Ref: https://scikit-learn.org/stable/common_pitfalls.html#controlling-randomness
         return model_selection.KFold(n_splits=5, shuffle=True, random_state=seed)
@@ -113,17 +111,17 @@ def fit_runtime_model(df: DF, seed: int, quantiles: Iterable[float]) -> (dict, D
             greater_is_better=metric.__name__.endswith("_score"),
         )
 
-    def get_best_estimator(outer_cv_results: dict):
+    def get_best_estimator(outer_cv_results: dict, metric: str) -> QuantileRegressor:
         grid_searches = outer_cv_results["estimator"]
         if len(reg_params := {s.best_params_["alpha"] for s in grid_searches}) > 1:
             raise RuntimeError(
                 f"Unable to find a uniquely optimal regularization parameter:"
                 f" {reg_params}"
             )
-        i_best = outer_cv_results["test_d2_pinball_score"].argmax()
-        return outer_cv_results["estimator"][i_best].best_estimator_
+        i_best = outer_cv_results[metric].argmax()
+        return grid_searches[i_best].best_estimator_
 
-    def fit_quantile(_quantile: float) -> tuple:
+    def fit_quantile(_quantile: float) -> dict:
         # Ref: https://scikit-learn.org/stable/auto_examples/model_selection/plot_nested_cross_validation_iris.html
         # Ref: https://machinelearningmastery.com/nested-cross-validation-for-machine-learning-with-python/
         cv_outer = make_cross_validation()
@@ -148,13 +146,13 @@ def fit_runtime_model(df: DF, seed: int, quantiles: Iterable[float]) -> (dict, D
         grid_search = model_selection.GridSearchCV(
             estimator=_estimator,
             param_grid={"alpha": [10**-p for p in range(1, 6)]},
-            refit="d2_pinball_score",
+            refit=selection_metric,
             cv=cv_inner,
             **common_cv_kwargs,
         )
 
         # Ref: https://scikit-learn.org/stable/modules/cross_validation.html
-        _scores = model_selection.cross_validate(
+        return model_selection.cross_validate(
             estimator=grid_search,
             X=X,
             y=y,
@@ -162,15 +160,16 @@ def fit_runtime_model(df: DF, seed: int, quantiles: Iterable[float]) -> (dict, D
             return_estimator=True,
             **common_cv_kwargs,
         )
-        return get_best_estimator(_scores), _scores
 
     estimators = {}
     results = []
     for quantile in quantiles:
-        estimator, scores = fit_quantile(quantile)
+        scores = fit_quantile(quantile)
+        estimator = get_best_estimator(scores, f"test_{selection_metric}")
         estimators[quantile] = estimator
         mean_pinball_loss = scores["test_mean_pinball_loss"]
         d2_pinball_score = scores["test_d2_pinball_score"]
+        # noinspection PyUnresolvedReferences
         results.append(
             {
                 "quantile": quantile,
@@ -211,8 +210,8 @@ def validate_parameter_dataset(df: DF) -> None:
         )
 
 
-def std_err(arr: NDArray) -> NDArray:
-    return arr.std() / np.sqrt(arr.size)
+def std_err(arr) -> float:
+    return np.std(arr) / np.sqrt(arr.size)
 
 
 def process_parameter_dataset(df: DF, validate: bool = True) -> DF:
@@ -234,6 +233,49 @@ def format_network_types(df: DF) -> DF:
     )
 
 
+def compute_correlation_matrix(df: DF, cols: dict[str, str]):
+    df = df.rename(cols).to_pandas()
+    stats = pg.pairwise_corr(
+        df,
+        columns=list(cols.values()),
+        covar=["send_coefficient"],
+        method="spearman",
+        padjust="holm",
+        alternative="two-sided",
+    )
+    lower = pl.from_dataframe(stats[["X", "Y", "r"]])
+    upper = lower.rename({"X": "Y", "Y": "X"})[["X", "Y", "r"]]
+    diag = pl.DataFrame([{"X": col, "Y": col, "r": 1.0} for col in cols.values()])
+    matrix = (
+        pl.concat([lower, diag, upper])
+        .sort("X")
+        .to_pandas()
+        .pivot(index="X", columns="Y", values="r")
+    )
+    return matrix, stats
+
+
+def compute_percentiles(
+    df: DF,
+    axes: Iterable[str],
+    col: str,
+    percentiles: list[float],
+    precision: int = 3,
+) -> DF:
+    axes = list(axes)
+    return (
+        df.select(
+            *axes,
+            *(
+                percentile(col, p).round(precision).over(axes).alias(f"$P_{{{p}}}$")
+                for p in percentiles
+            ),
+        )
+        .unique()
+        .sort(axes)
+    )
+
+
 def compute_accuracy_results(
     df: DF,
     parameter: str,
@@ -241,22 +283,6 @@ def compute_accuracy_results(
     count_percentiles: list[float],
     precision: int = 3,
 ) -> AccuracyResults:
-    def get_percentiles(
-        __df: DF, col: str, percentiles: list[float], by_network_type: bool
-    ) -> DF:
-        axes = ("network_type", parameter) if by_network_type else (parameter,)
-        return (
-            __df.select(
-                *axes,
-                *(
-                    percentile(col, p).round(precision).over(axes).alias(f"$P_{p}$")
-                    for p in percentiles
-                ),
-            )
-            .unique()
-            .sort(axes)
-        )
-
     run_key = ("dataset_id", "network_id", "score_source")
     user_key = (*run_key, "user_id")
 
@@ -296,32 +322,36 @@ def compute_accuracy_results(
     return AccuracyResults(
         tabular=tabular,
         tabular_percentiles=PercentileResults(
-            aggregate=get_percentiles(
+            aggregate=compute_percentiles(
                 tabular,
+                axes=[parameter],
                 col="accuracy",
                 percentiles=tabular_percentiles,
-                by_network_type=False,
+                precision=precision,
             ),
-            network_type=get_percentiles(
+            network_type=compute_percentiles(
                 tabular,
+                axes=["network_type", parameter],
                 col="accuracy",
                 percentiles=tabular_percentiles,
-                by_network_type=True,
+                precision=precision,
             ),
         ),
         counts=counts,
         count_percentiles=PercentileResults(
-            aggregate=get_percentiles(
+            aggregate=compute_percentiles(
                 counts,
                 col="proportion",
+                axes=[parameter],
                 percentiles=count_percentiles,
-                by_network_type=False,
+                precision=precision,
             ),
-            network_type=get_percentiles(
+            network_type=compute_percentiles(
                 counts,
                 col="proportion",
+                axes=["network_type", parameter],
                 percentiles=count_percentiles,
-                by_network_type=True,
+                precision=precision,
             ),
         ),
     )
@@ -401,7 +431,14 @@ def make_boxplot(df: DF, by_network_type: bool = False, **kwargs) -> sns.FacetGr
         kwargs["col"] = "network_type"
         kwargs["col_order"] = network_types
         kwargs["col_wrap"] = math.floor(math.sqrt(len(network_types)))
-    g = sns.catplot(df, kind="box", fill=None, color="black", linewidth=1, **kwargs)
+    kwargs = {
+        "kind": "box",
+        "fill": None,
+        "color": "black",
+        "linewidth": 1,
+        **kwargs,
+    }
+    g = sns.catplot(df, **kwargs)
     g.set_titles("{col_name}")
     return g
 
@@ -424,21 +461,23 @@ __all__ = [
     "apply_hypothesis_test",
     "binned",
     "compute_accuracy_results",
+    "compute_correlation_matrix",
+    "compute_percentiles",
     "compute_runtime_validity_results",
+    "fit_runtime_model",
     "format_network_types",
     "get_network_types",
+    "get_runtime_model_data",
     "get_runtimes",
     "InvalidDatasetError",
     "lists_selector",
     "load_dataset",
-    "normalized",
     "make_boxplot",
+    "normalized",
     "process_parameter_dataset",
     "process_runtime_dataset",
     "save_figure",
     "save_table",
     "set_legend_line_width",
     "validate_parameter_dataset",
-    "fit_runtime_model",
-    "get_runtime_model_data",
 ]

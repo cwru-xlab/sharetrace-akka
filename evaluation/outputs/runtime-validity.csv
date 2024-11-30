@@ -1,5 +1,0 @@
-network_type,count,proportion
-Barabasi-Albert,500,1.0
-Erdős-Rényi,500,1.0
-Random regular,500,1.0
-Watts-Strogatz,500,1.0
