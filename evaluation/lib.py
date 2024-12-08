@@ -257,22 +257,24 @@ def compute_correlation_matrix(df: DF, cols: dict[str, str]):
 
 def compute_percentiles(
     df: DF,
-    axes: Iterable[str],
     col: str,
-    percentiles: list[float],
+    percentiles: Iterable[float],
+    axes: Iterable[str] = None,
     precision: int = 3,
 ) -> DF:
-    axes = list(axes)
+    if axes is not None:
+        axes = list(axes)
+    nonnull_axes = axes or []
     return (
         df.select(
-            *axes,
+            *nonnull_axes,
             *(
                 percentile(col, p).round(precision).over(axes).alias(f"$P_{{{p}}}$")
                 for p in percentiles
             ),
         )
         .unique()
-        .sort(axes)
+        .sort(nonnull_axes)
     )
 
 
