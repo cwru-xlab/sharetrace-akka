@@ -16,15 +16,14 @@ import sharetrace.model.message.UserMessage;
 
 final class Contact implements Expirable, Timestamped, Flushable {
 
-  private final int id;
-  private final ActorRef<UserMessage> ref;
-  private final long timestamp;
-  private final long expiryTime;
-  private final Range<Long> relevantTimeRange;
-  private final double sendCoefficient;
-  private final double tolerance;
-  private final TimeFactory timeFactory;
-
+  private int id;
+  private ActorRef<UserMessage> ref;
+  private long timestamp;
+  private long expiryTime;
+  private Range<Long> relevantTimeRange;
+  private double sendCoefficient;
+  private double tolerance;
+  private TimeFactory timeFactory;
   private TemporalScore sendThreshold;
   private RiskScoreMessage buffered;
 
@@ -38,6 +37,27 @@ final class Contact implements Expirable, Timestamped, Flushable {
     this.tolerance = parameters.tolerance();
     this.timeFactory = timeFactory;
     resetThreshold();
+  }
+
+  private Contact() {}
+
+  public static Contact merge(Contact oldValue, Contact newValue) {
+    if (oldValue.id != newValue.id) {
+      throw new IllegalArgumentException("Contact identifiers must be the same");
+    }
+    var result = new Contact();
+    var newer = newValue.timestamp > oldValue.timestamp ? newValue : oldValue;
+    result.id = newer.id;
+    result.ref = newer.ref;
+    result.timestamp = newer.timestamp;
+    result.expiryTime = newer.expiryTime;
+    result.relevantTimeRange = newer.relevantTimeRange;
+    result.sendCoefficient = oldValue.sendCoefficient;
+    result.tolerance = oldValue.tolerance;
+    result.timeFactory = oldValue.timeFactory;
+    result.sendThreshold = oldValue.sendThreshold;
+    result.buffered = oldValue.buffered;
+    return result;
   }
 
   public void apply(RiskScoreMessage message, RiskScoreMessageStore store) {
