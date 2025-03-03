@@ -2,6 +2,7 @@
 
 import collections
 import itertools
+import json
 import math
 import string
 import sys
@@ -98,10 +99,10 @@ def runtime_experiment_configs():
 
 def merge_configs(*configs):
     for configs in itertools.product(*configs):
-        yield collections.ChainMap(*configs)
+        yield dict(collections.ChainMap(*configs))
 
 
-def make_configs(experiment_type):
+def make_configs(experiment_type, output_path = None):
     base_filename = experiment_type
     if experiment_type == "send-coefficient":
         template_values = send_coefficient_experiment_configs()
@@ -114,6 +115,11 @@ def make_configs(experiment_type):
         base_filename = "runtime"
     else:
         raise ValueError(f"Invalid experiment type: {experiment_type}")
+    template_values = list(template_values)
+
+    if output_path:
+        with open(output_path, "w") as f:
+            json.dump(template_values, f, indent=2)
 
     base_dir = "./app/src/main/resources"
     with open(f"{base_dir}/{base_filename}-experiment-config.template") as f:
@@ -131,4 +137,4 @@ def make_configs(experiment_type):
 
 
 if __name__ == "__main__":
-    make_configs(sys.argv[1])
+    make_configs(*sys.argv[1:])
